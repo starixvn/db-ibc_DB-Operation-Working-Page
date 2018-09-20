@@ -1,0 +1,1 @@
+Get-ChildItem * -Include *.sql -Recurse | Where {$_.Fullname -notlike "*Table_Data*"} | gc | out-file D:\result.sql

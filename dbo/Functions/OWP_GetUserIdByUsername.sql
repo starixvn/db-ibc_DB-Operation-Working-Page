@@ -1,0 +1,23 @@
+﻿CREATE FUNCTION [dbo].[OWP_GetUserIdByUsername] (@username VARCHAR(30))
+RETURNS INT
+AS
+/*
+Created: 20170301@Tim.Trinh
+Task : get UserId by Username
+DB: bodb_OWP
+
+Param's Explanation:
+
+Revisions:
+ 
+*/
+BEGIN
+	DECLARE @userid INT
+
+	SELECT TOP 1 @userid = UserId
+	FROM dbo.[User] WITH (NOLOCK)
+	WHERE Nickname = @username
+		OR Username = @username
+
+	RETURN @userid
+END

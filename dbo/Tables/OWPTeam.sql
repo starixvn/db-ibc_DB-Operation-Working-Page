@@ -1,0 +1,6 @@
+﻿CREATE TABLE [dbo].[OWPTeam] (
+    [OWPTeamId]   INT            IDENTITY (1, 1) NOT NULL,
+    [OWPTeamName] NVARCHAR (200) NOT NULL,
+    CONSTRAINT [PK_OWPTeam] PRIMARY KEY CLUSTERED ([OWPTeamId] ASC)
+);
+
