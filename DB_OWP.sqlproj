@@ -285,6 +285,10 @@
       <QuotedIdentifier>Off</QuotedIdentifier>
     </Build>
     <Build Include="grant.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopyWeekly.sql" />
+    <Build Include="dbo\Tables\EmployeeWorkingShiftNote.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateNote.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateShiftCode.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

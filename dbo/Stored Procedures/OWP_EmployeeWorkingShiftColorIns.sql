@@ -1,12 +1,15 @@
-﻿/* =============================================
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShiftColorIns] 
+    @WorkingShift xml = NULL
+AS
+/* =============================================
 Created: 20180213@Jacob
 Task: Employee Working Shift Management
 DB: bodb_OWP
--- =============================================*/
 
-CREATE PROCEDURE dbo.OWP_EmployeeWorkingShiftColorIns 
-    @WorkingShift xml = NULL
-AS
+ Revisions:
+    20180920@Leo: upper working shift
+-- =============================================*/
 BEGIN
     SET NOCOUNT ON;
     DECLARE @TempTable TABLE
@@ -19,7 +22,7 @@ BEGIN
                             Background, 
                             Color
            )
-           SELECT t.c.value('@Name', 'NVARCHAR(50)') AS Name, 
+           SELECT UPPER(t.c.value('@Name', 'NVARCHAR(50)')) AS Name, 
                   t.c.value('@Background', 'VARCHAR(20)') AS Background, 
                   t.c.value('@Color', 'VARCHAR(20)') AS Color
            FROM @WorkingShift.nodes('Data/Row') AS t(c);
