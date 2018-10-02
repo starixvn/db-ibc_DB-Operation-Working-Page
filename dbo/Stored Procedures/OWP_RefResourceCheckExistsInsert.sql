@@ -1,21 +1,22 @@
-﻿/* =============================================
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_RefResourceCheckExistsInsert]
+	@ListValue NVARCHAR (MAX) --list value need to check & insert
+	, @RefName VARCHAR (30)
+AS
+/*
 	Created: Julien@20170303
 	Task: Insert assignment uploading
 	DB: OWP
 	
 	Revision:
-		-
--- =============================================*/
-CREATE PROCEDURE [dbo].[OWP_RefResourceCheckExistsInsert]
-	@ListValue NVARCHAR (MAX) --list value need to check & insert
-	, @RefName VARCHAR (30)
-AS
+		-20181002@Raymond.Le: Fix overflow data type in RefResource
+*/
 BEGIN
 	SET NOCOUNT ON;
 
 	CREATE TABLE #tmp (Name NVARCHAR(200))
 	
-	DECLARE @MaxId SMALLINT 
+	DECLARE @MaxId INT 
 	
 	SELECT @MaxId = CAST(MAX(ResourceId) AS INT)
 	FROM RefResource rs WITH (NOLOCK) 
@@ -23,7 +24,7 @@ BEGIN
 	
 	SET @MaxId = ISNULL(@MaxId,0)
 	
-	CREATE TABLE #TobeInserted (ResourceId SMALLINT IDENTITY(1,1)
+	CREATE TABLE #TobeInserted (ResourceId INT IDENTITY(1,1)
 		, Value NVARCHAR(200))
 
 
@@ -46,3 +47,10 @@ BEGIN
 	DROP TABLE #tmp
 	
 END
+/*      
+GO       
+ GRANT EXECUTE ON [dbo].[OWP_RefResourceCheckExistsInsert] TO [bodbOWPNet]      
+GO       
+ GRANT VIEW DEFINITION ON [dbo].[OWP_RefResourceCheckExistsInsert] TO [bodbOWPNet]      
+GO      
+*/

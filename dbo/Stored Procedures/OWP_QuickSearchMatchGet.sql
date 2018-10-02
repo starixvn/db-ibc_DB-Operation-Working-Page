@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
 	,@SearchKeywords NVARCHAR(100)
 	,@IsNumericKeywords BIT = 0
 	,@SelectTop INT = NULL
@@ -16,6 +17,7 @@ Revisions:
   20170419@Tim.Trinh: modify trader view time
   20170731@Raymond.Le: Implement Quick Search v2.0, can search by assignee name, merge result 15'... to main match
   20180427@leo.vo: Add FM & AIO
+  20181002@Raymond.Le: Fix overflow data type in RefResource
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,8 +51,8 @@ BEGIN
 
 	--Create temp table		
 	CREATE TABLE #tblAssignedRoles (
-		RoleId SMALLINT
-		,SectionId SMALLINT
+		RoleId INT
+		,SectionId INT
 		,SectionName NVARCHAR(50)
 		)
 

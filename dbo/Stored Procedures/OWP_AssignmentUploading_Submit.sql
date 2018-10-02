@@ -1,5 +1,4 @@
-﻿/****** Object:  Stored Procedure dbo.OWP_AssignmentUploading_Submit    Script Date: 6/18/2018 9:30:45 AM ******/
-/****** Object:  Stored Procedure dbo.OWP_AssignmentUploading_Submit    Script Date: 6/14/2018 4:26:37 PM ******/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT = 0
 	,@SessionId NVARCHAR(100)
 	,@ErrCode INT = 0 OUTPUT
@@ -17,6 +16,7 @@ AS
 	20180417@leo.vo: add FM, AIO
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
 	20180723@Raymond.Le: Fix send notification match cancel/postponed/suspended
+	20181002@Raymond.Le: Fix overflow data type in RefResource
 */
 BEGIN
 	SET NOCOUNT ON
@@ -225,7 +225,7 @@ BEGIN
 	CREATE TABLE #tblRefResource (
 		OWPMatchId INT
 		,RefName VARCHAR(30)
-		,ResourceId SMALLINT
+		,ResourceId INT
 		,Value NVARCHAR(400)
 		)
 
