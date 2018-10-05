@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LiveDetailGeneralInfoGet] @OWPMatchId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetailGeneralInfoGet] @OWPMatchId INT
 	,@UserId INT
 AS
 /*
@@ -9,6 +10,7 @@ DB: bodb_OWP
 Revisions:
     20170412@Tim.Trinh: check minor match
     20170420@Tim.Trinh: modify trader view time
+	20181002@Raymond.Le: Fix overflow data type in RefResource
 */
 BEGIN
 	SET NOCOUNT ON
@@ -24,8 +26,8 @@ BEGIN
 		,@IsAllowedToViewDetail BIT = 0
 
 	CREATE TABLE #tblAssignedRoles (
-		RoleId SMALLINT
-		,SectionId SMALLINT
+		RoleId INT
+		,SectionId INT
 		,SectionName NVARCHAR(50)
 		)
 
