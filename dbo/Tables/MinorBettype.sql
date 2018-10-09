@@ -5,7 +5,8 @@
     [InheritedBettypeId] INT            NULL,
     [Alias]              VARCHAR (10)   NULL,
     [IsActive]           BIT            NULL,
-    [IsMinorBettype]     BIT            NULL,
-    [LinkBettypeId]      INT            NULL
+    [IsMinorBettype]     BIT            NULL
 ) ON [PRIMARY];
+
+
 

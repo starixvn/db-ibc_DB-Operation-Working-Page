@@ -1,9 +1,12 @@
 ﻿CREATE TABLE [dbo].[Assignment] (
-    [UserId]         INT      NOT NULL,
-    [OWPMatchId]     INT      NOT NULL,
-    [Bettype]        INT      NOT NULL,
-    [AssignmentType] SMALLINT NOT NULL,
-    [IsLive]         BIT      NOT NULL,
-    CONSTRAINT [PK_Assignment] PRIMARY KEY CLUSTERED ([UserId] ASC, [OWPMatchId] ASC, [Bettype] ASC, [AssignmentType] ASC, [IsLive] ASC)
+    [AssignmentId]   INT            IDENTITY (1, 1) NOT NULL,
+    [OWPMatchId]     INT            NOT NULL,
+    [Bettype]        INT            NOT NULL,
+    [AssignmentType] TINYINT        NOT NULL,
+    [UserId]         INT            NULL,
+    [AssignmentNote] NVARCHAR (200) NULL,
+    CONSTRAINT [PK_Assignment] PRIMARY KEY CLUSTERED ([AssignmentId] ASC)
 );
+
+
 

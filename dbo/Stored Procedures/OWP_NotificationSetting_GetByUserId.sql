@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_NotificationSetting_GetByUserId] @UserId INT
 AS
 /*          
@@ -14,15 +15,9 @@ BEGIN
 
 	SELECT n.NotificationSettingId
 		,n.NAME
-		,n.Code
 		,n.IsWatcher
 		,ISNULL(m.Value, n.DefaultValue) AS Value
 	FROM [dbo].[NotificationSetting] n WITH (NOLOCK)
-		LEFT JOIN (
-		SELECT NotificationSettingId
-			,UserId
-			,Value
-		FROM NotificationSettingMapping WITH (NOLOCK)
-		WHERE UserId = @UserId
-		) m ON n.NotificationSettingId = m.NotificationSettingId
+		LEFT JOIN dbo.NotificationSettingMapping AS m WITH (NOLOCK) ON m.UserId = @UserId
+		AND n.NotificationSettingId = m.NotificationSettingId
 END

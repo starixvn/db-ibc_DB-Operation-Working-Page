@@ -69,7 +69,6 @@
     <Build Include="dbo\Tables\User.sql" />
     <Build Include="dbo\Tables\Trade5MatchPerDay.sql" />
     <Build Include="dbo\Tables\Television.sql" />
-    <Build Include="dbo\Tables\RoleFunction.sql" />
     <Build Include="dbo\Tables\Role.sql" />
     <Build Include="dbo\Tables\RefResource.sql" />
     <Build Include="dbo\Tables\OWPTeam.sql" />
@@ -110,7 +109,6 @@
     <Build Include="dbo\Tables\Filter.sql" />
     <Build Include="dbo\Tables\EmployeeWorkingShiftColor.sql" />
     <Build Include="dbo\Tables\EmployeeWorkingShift.sql" />
-    <Build Include="dbo\Tables\Column.sql" />
     <Build Include="dbo\Tables\AssignmentUploadingResult.sql" />
     <Build Include="dbo\Tables\AssignmentUploadingLog.sql" />
     <Build Include="dbo\Tables\AssignmentUploading.sql" />
@@ -262,7 +260,6 @@
     <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_UpdateHDP.sql" />
     <Build Include="dbo\Stored Procedures\OWP_NotificationSetting_Update.sql" />
     <Build Include="dbo\Stored Procedures\OWP_NotificationSetting_GetByUserId.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_NotificationSetting_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchSetting_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchNote_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Market_GetAll.sql" />
@@ -283,6 +280,15 @@
     <Build Include="dbo\Stored Procedures\OWP_Assignment_Delete.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Assignment_Create.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Agent_GetAll.sql" />
+    <Build Include="dbo\Functions\OWP_ConvertDateGMTplus8.sql" />
+    <Build Include="dbo\Functions\OWP_ConvertDateGMTminus4.sql" />
+    <Build Include="dbo\Tables\Runner.sql" />
+    <Build Include="dbo\Tables\Provider.sql" />
+    <Build Include="dbo\Tables\NotificationSettingMapping.sql" />
+    <Build Include="dbo\Tables\NotificationSetting.sql" />
+    <Build Include="dbo\Tables\MatchRecommendOddsDetail.sql" />
+    <Build Include="dbo\Tables\AssignmentUploadingOtherTrader.sql" />
+    <Build Include="dbo\Tables\Agent.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
