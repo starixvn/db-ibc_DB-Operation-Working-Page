@@ -1,13 +1,17 @@
-﻿CREATE PROCEDURE [dbo].[OWP_Trade5MatchPerDay_RunAfterInsertAssignment] @OWPEventDate DATE
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_Trade5MatchPerDay_RunAfterInsertAssignment] @OWPEventDate DATE
 	,@Trader INT = NULL
 AS
 /*          
- Created: 20170215@razor.nguyen      
- Task : Insert Assignment      
- DB: bodb_OWP          
-          
- Revisions:      
-         @OWPEventDate: GMT-4
+Created: 20170215@razor.nguyen      
+Task : Insert Assignment      
+DB: bodb_OWP          
+
+Param's Explanation:
+	@OWPEventDate: GMT-4
+	        
+Revisions:
+	20181009@Raymond.Le: new structure                
 */
 BEGIN
 	SET NOCOUNT ON
@@ -21,7 +25,7 @@ BEGIN
 		,@FromTime TIME
 		,@ToTime TIME
 	
-	SET @EventDateTime = dbo.[OWP_ConvertDateGMT+8](@OWPEventDate)
+	SET @EventDateTime = dbo.[OWP_ConvertDateGMTplus8](@OWPEventDate)
 	
 	SELECT @FromDate = CAST(@EventDateTime AS DATE)
 		,@ToDate = CAST(DATEADD(DD, 1, @EventDateTime) AS DATE)

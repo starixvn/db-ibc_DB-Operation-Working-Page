@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[OWP_MaxBetGet] (
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[OWP_MaxBetGet] (
 	@OWPMatchId INT
 	,@LeagueId INT
 	,@Bettype INT

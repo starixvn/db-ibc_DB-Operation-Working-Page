@@ -1,9 +1,11 @@
-﻿/*      
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*      
  Created: 20180312@Leo.Vo     
  Task : Working Shift Management
  DB: bodb_OWP      
       
  Revisions:      
+     20180925@Raymond: calculate shift time
      
  -- @Note:    
  EXEC OWP_EmployeeWorkingShift_Upload @Data=N'
@@ -25,30 +27,40 @@ BEGIN
     ( 
         EmployeeId int, 
         ShiftCode  varchar(50), 
-        ShiftDate  date
+        ShiftDate  date,
+		ShiftStartTime datetime,
+		ShiftEndTime datetime
     );
 
     INSERT INTO @tempTable
            SELECT M.C.value('@EmployeeId', 'INT'), 
                   UPPER(M.C.value('@ShiftCode', 'varchar(50)')), 
-                  M.C.value('@ShiftDate', 'DATE')
+                  M.C.value('@ShiftDate', 'DATE'),
+				  M.C.value('@ShiftStartTime', 'DATETIME'),
+				  M.C.value('@ShiftEndTime', 'DATETIME')
            FROM @Data.nodes('Data/Row') AS M(C);
 
     MERGE dbo.EmployeeWorkingShift AS t1
     USING(
              SELECT EmployeeId, 
                     ShiftCode, 
-                    ShiftDate
+                    ShiftDate,
+					ShiftStartTime,
+					ShiftEndTime
              FROM @tempTable
          ) AS t2
     ON t1.EmployeeId = t2.EmployeeId AND 
        t1.ShiftDate = t2.ShiftDate
     WHEN MATCHED
           THEN UPDATE SET t1.ShiftCode = t2.ShiftCode
+						,t1.ShiftStartTime = t2.ShiftStartTime
+						,t1.ShiftEndTime = t2.ShiftEndTime
     WHEN NOT MATCHED
           THEN
           INSERT(EmployeeId, 
                  ShiftCode, 
-                 ShiftDate)
-          VALUES(t2.EmployeeId, t2.ShiftCode, t2.ShiftDate);
+                 ShiftDate,
+				 ShiftStartTime,
+				 ShiftEndTime)
+          VALUES(t2.EmployeeId, t2.ShiftCode, t2.ShiftDate, t2.ShiftStartTime, t2.ShiftEndTime);
 END;

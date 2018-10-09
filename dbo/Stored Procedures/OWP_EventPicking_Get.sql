@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_EventPicking_Get] @Date DATE
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_EventPicking_Get] @Date DATE
 	,@LeagueIds NVARCHAR(MAX) = NULL
 	,@FromTime TIME = NULL
 	,@ToTime TIME = NULL

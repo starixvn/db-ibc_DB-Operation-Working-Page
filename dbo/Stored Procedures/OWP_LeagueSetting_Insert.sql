@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LeagueSetting_Insert] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LeagueSetting_Insert] @UserId INT
 	,@LeagueId INT
 	,@OptionIds INT
 	,@BettypeId INT
@@ -14,6 +15,7 @@ Task : insert league setting
 DB: bodb_OWP
 
 Revisions:
+	20181009@Raymond.Le: new structure 
    
 */
 BEGIN

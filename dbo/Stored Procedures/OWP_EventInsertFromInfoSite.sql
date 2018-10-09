@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" viewers="vnteam" isFunction="0" isNested="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EventInsertFromInfoSite] @UserId INT = 0
 	,@EventInfo NVARCHAR(MAX)
 	,@ErrCode INT = 0 OUTPUT

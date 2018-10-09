@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_WriteLog]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_WriteLog]
 	@CreatorId	INT,
 	@SPName		VARCHAR(50) = NULL,
 	@LoggedDate	DATETIME = NULL,
@@ -6,17 +7,15 @@
 	@ObjectId	INT = NULL,
 	@Data		NVARCHAR(MAX) = NULL,
 	@DataOld	NVARCHAR(MAX) = NULL
-
+AS
 /*
 Created: 20160930@Long.Luu
 Task : Write log user runs store procedure
 DB:  DBOWP.bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: new structure
 */ 
-
-AS
 BEGIN 
 SET NOCOUNT ON 
 

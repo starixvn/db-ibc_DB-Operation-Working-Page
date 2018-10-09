@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[fnc_GetKickOffTimeFilter] (@FilterId INT)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[fnc_GetKickOffTimeFilter] (@FilterId INT)
 RETURNS TABLE WITH SCHEMABINDING
 AS
 /*
@@ -9,6 +10,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
+	20181009@Raymond.Le: new structure
  
 */
 RETURN (

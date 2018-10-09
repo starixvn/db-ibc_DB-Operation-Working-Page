@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OWPLeague_UpdateIsBlackList] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OWPLeague_UpdateIsBlackList] @UserId INT
 	,@OWPLeagueId INT
 	,@IsBlackList BIT
 	,@ErrCode INT = 0 OUTPUT
@@ -10,8 +11,7 @@ Task : Update IsBlackList
 DB: bodb_OWP  
   
 Revisions:
-Param's Explanation:
-     
+	20181009@Raymond.Le: new structure     
 */
 BEGIN
 	SET NOCOUNT ON

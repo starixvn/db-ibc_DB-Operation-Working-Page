@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" viewers="vnteam" isFunction="0" isNested="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_OWPMatch_InsertFromInfoSite] @UserId INT
 	,@InfoSiteMatchKey NVARCHAR(400)
 	,@MatchId INT
@@ -28,14 +28,16 @@ DB: bodb_OWP
 Original: 
 
 Revisions:  
-    20180417@Jacob.Phan: Feature #92487 - Move Event Picking to test DB. 
-    20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite  
-    Param's Explanation:
-    • @ErrCode:
-        = 0: Transaction recorded successfully.
-        > 0: Specific Error.
-    • @ErrMsg: Error description.
-    20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
+20180417@Jacob.Phan: Feature #92487 - Move Event Picking to test DB. 
+20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite  
+20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
+20180927@Leo: new structure of event assignment
+
+Param's Explanation:
+â€¢ @ErrCode:
+	= 0: Transaction recorded successfully.
+	> 0: Specific Error.
+â€¢ @ErrMsg: Error description.
 
 */
 BEGIN
@@ -89,6 +91,7 @@ BEGIN
 		INSERT INTO dbo.OWPMatch (
 			EventDate
 			,KickOffTime
+			,EventDateTime
 			,OWPLeagueId
 			,OWPHomeId
 			,OWPAwayId
@@ -98,6 +101,7 @@ BEGIN
 		VALUES (
 			@EventDate
 			,@KickOffTime
+			,DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), CAST(@KickOffTime AS DATETIME))
 			,@OWPLeagueId
 			,@OWPHomeId
 			,@OWPAwayId
@@ -124,22 +128,21 @@ BEGIN
 			[OWPMatchId]
 			,[TVCode]
 			,[Channel]
-			,[WatchBet]
+			,[WB]
 			,[Provider]
 			,[Runner]
 			,[Phone]
 			,[KOTimeRemark]
 			,[IsSelected]
 			,[SelectedBy]
-			,[IsCancelled]
 			,[Round]
 			,[IsSoloMatch]
-			,[OutSide]
+			,[Division]
 			,[ExtraTimeRemark]
 			,[Venue]
 			,[LocalTV]
 			,[LiveTV]
-			,[Website]
+			,[Website1]
 			,[Agent]
 			,[MatchStatus]
 			)
@@ -154,7 +157,6 @@ BEGIN
 			,''
 			,0
 			,NULL
-			,0
 			,@Round
 			,0
 			,@OutSide

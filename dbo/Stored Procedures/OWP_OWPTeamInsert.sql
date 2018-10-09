@@ -1,19 +1,17 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OWPTeamInsert] 
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OWPTeamInsert] 
 	 @UserId INT
-	,@OWPTeamName	NVARCHAR(50)
-	 
+	,@OWPTeamName	NVARCHAR(50)	 
 	,@TeamId	INT = 0 OUTPUT
 	,@ErrCode	INT = 0 OUTPUT
-	,@ErrMsg	NVARCHAR(200) = '' OUTPUT
-
-	
+	,@ErrMsg	NVARCHAR(200) = '' OUTPUT	
 /*
-	Created: 20160922@John.Ngo
-	Task : Insert new team
-	DB: bodb_OWP
+Created: 20160922@John.Ngo
+Task : Insert new team
+DB: bodb_OWP
 
-	Revisions:
-	   
+Revisions:
+	20181009@Raymond.Le: new structure  
 */
 AS
 BEGIN

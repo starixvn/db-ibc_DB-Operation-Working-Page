@@ -1,4 +1,4 @@
-﻿
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_FilterUpdate] @UserId INT = 0
 	,@FilterId INT = 0
 	,@Details NVARCHAR(max)
@@ -9,7 +9,9 @@ AS
  Created: 20171207@Raymond.Le
  Task : Update Filter 
  DB: bodb_OWP      
-             
+
+ Revisions:
+	20181009@Raymond.Le: new structure           
 */
 BEGIN
 	SET NOCOUNT ON

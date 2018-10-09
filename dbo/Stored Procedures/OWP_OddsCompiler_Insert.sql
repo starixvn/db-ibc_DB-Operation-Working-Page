@@ -1,9 +1,11 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Insert] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Insert] @UserId INT
 	,@OWPMatchId INT
 	,@Bettype INT
-	,@Value SMALLMONEY = NULL
-	,@Choice INT = NULL
-	,@IsOdd BIT
+	,@TeamChoice TINYINT = 0
+	,@HDP SMALLMONEY = NULL
+	,@Choice TINYINT = NULL
+	,@Odds MONEY = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -13,375 +15,75 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-         
+     20181030@Leo: negative Handicap
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @StartRun DATETIME
-		,@EndRun DATETIME
-		,@Duration INT
-		,@Xml XML
-		,@LogData NVARCHAR(MAX)
-		,@Home TINYINT = 1
-		,@Away TINYINT = 2
-		,@Draw TINYINT = 3
-		,@1X2 TINYINT = 5
+	DECLARE @Detail TABLE (Choice TINYINT)
+	DECLARE @1X2 TINYINT = 5
 
-	SET @StartRun = GETDATE()
-
-	--Insert HDP
-	IF @IsOdd = 0
+	IF EXISTS (
+			SELECT 1
+			FROM dbo.MatchRecommendOdds WITH (NOLOCK)
+			WHERE OWPMatchId = @OWPMatchId
+				AND Bettype = @Bettype
+				AND TeamChoice = @TeamChoice
+				AND (
+					(
+						HDP IS NULL
+						AND @HDP IS NULL
+						)
+					OR HDP = @HDP
+					)
+			)
 	BEGIN
-		IF @Value IS NULL
-		BEGIN
-			IF EXISTS (
-					SELECT 1
-					FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-					WHERE OWPMatchId = @OWPMatchId
-						AND Bettype = @Bettype
-						AND HDP IS NULL
-					)
-			BEGIN
-				SELECT @ErrMsg = 'The recommend odds is already existed. Please add another one'
-					,@ErrCode = 7201 -- ActionId + 01
+		SELECT @ErrMsg = 'The recommend odds is already existed. Please add another one'
+			,@ErrCode = 7201 -- ActionId + 01
 
-				RETURN
-			END
-		END
-		ELSE
-		BEGIN
-			IF EXISTS (
-					SELECT 1
-					FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-					WHERE OWPMatchId = @OWPMatchId
-						AND Bettype = @Bettype
-						AND HDP = @Value
-					)
-			BEGIN
-				SELECT @ErrMsg = 'The recommend odds is already existed. Please add another one'
-					,@ErrCode = 7201 -- ActionId + 01
-
-				RETURN
-			END
-		END
-
-		INSERT INTO dbo.MatchRecommendOdds (
-			OWPMatchId
-			,Bettype
-			,HDP
-			,Choice
-			,Odds
-			,CreatedBy
-			,CreatedDate
-			)
-		VALUES (
-			@OWPMatchId
-			,@Bettype
-			,@Value
-			,@Home
-			,NULL
-			,@UserId
-			,GETDATE()
-			)
-
-		IF @Value IS NULL
-		BEGIN
-			SET @Xml = (
-					SELECT Id AS '@id'
-						,OWPMatchId AS '@mt'
-						,Bettype AS '@bt'
-						,HDP AS '@hdp'
-						,Choice AS '@c'
-						,Odds AS '@o'
-					FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-					WHERE OWPMatchId = @OWPMatchId
-						AND Bettype = @Bettype
-						AND HDP IS NULL
-						AND Choice = @Home
-					FOR XML PATH('z')
-						,ROOT('r')
-					)
-		END
-		ELSE
-		BEGIN
-			SET @Xml = (
-					SELECT Id AS '@id'
-						,OWPMatchId AS '@mt'
-						,Bettype AS '@bt'
-						,HDP AS '@hdp'
-						,Choice AS '@c'
-						,Odds AS '@o'
-					FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-					WHERE OWPMatchId = @OWPMatchId
-						AND Bettype = @Bettype
-						AND HDP = @Value
-						AND Choice = @Home
-					FOR XML PATH('z')
-						,ROOT('r')
-					)
-		END
-
-		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-			,@SPName = 'OWP_OddsCompiler_Insert'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @OWPMatchId
-			,@Data = @LogData
-			,@DataOld = NULL
-
-		INSERT INTO dbo.MatchRecommendOdds (
-			OWPMatchId
-			,Bettype
-			,HDP
-			,Choice
-			,Odds
-			,CreatedBy
-			,CreatedDate
-			)
-		VALUES (
-			@OWPMatchId
-			,@Bettype
-			,@Value
-			,@Away
-			,NULL
-			,@UserId
-			,GETDATE()
-			)
-
-		IF @Value IS NULL
-		BEGIN
-			SET @Xml = (
-					SELECT Id AS '@id'
-						,OWPMatchId AS '@mt'
-						,Bettype AS '@bt'
-						,HDP AS '@hdp'
-						,Choice AS '@c'
-						,Odds AS '@o'
-					FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-					WHERE OWPMatchId = @OWPMatchId
-						AND Bettype = @Bettype
-						AND HDP IS NULL
-						AND Choice = @Away
-					FOR XML PATH('z')
-						,ROOT('r')
-					)
-		END
-		ELSE
-		BEGIN
-			SET @Xml = (
-					SELECT Id AS '@id'
-						,OWPMatchId AS '@mt'
-						,Bettype AS '@bt'
-						,HDP AS '@hdp'
-						,Choice AS '@c'
-						,Odds AS '@o'
-					FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-					WHERE OWPMatchId = @OWPMatchId
-						AND Bettype = @Bettype
-						AND HDP = @Value
-						AND Choice = @Away
-					FOR XML PATH('z')
-						,ROOT('r')
-					)
-		END
-
-		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-			,@SPName = 'OWP_OddsCompiler_Insert'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @OWPMatchId
-			,@Data = @LogData
-			,@DataOld = NULL
+		RETURN
 	END
-	ELSE
-		--Insert Odds
+
+	INSERT INTO dbo.MatchRecommendOdds (
+		OWPMatchId
+		,Bettype
+		,TeamChoice
+		,HDP
+		,CreatedBy
+		)
+	VALUES (
+		@OWPMatchId
+		,@Bettype
+		,@TeamChoice
+		,@HDP
+		,@UserId
+		)
+
+	DECLARE @Id INT = @@IDENTITY
+
+	INSERT INTO @Detail
+	VALUES (1)
+		,(2)
+
+	IF @Bettype = @1X2
+		INSERT @Detail
+		VALUES (3)
+
+	INSERT INTO dbo.MatchRecommendOddsDetail (
+		MatchRecommendOddsId
+		,Choice
+		)
+	SELECT @Id
+		,Choice
+	FROM @Detail
+
+	IF @Choice > 0
 	BEGIN
-		IF EXISTS (
-				SELECT 1
-				FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-				WHERE OWPMatchId = @OWPMatchId
-					AND Bettype = @Bettype
-					AND HDP IS NULL
-				)
-		BEGIN
-			SELECT @ErrMsg = 'The recommend odds is already existed. Please add another one'
-				,@ErrCode = 7201 -- ActionId + 01
-
-			RETURN
-		END
-
-		DECLARE @Length INT = 0
-		DECLARE @DefaultHDP SMALLMONEY = NULL
-
-		IF @Bettype = @1X2
-		BEGIN
-			SET @Length = 3
-			SET @DefaultHDP = 0
-		END
-		ELSE
-		BEGIN
-			SET @Length = 2
-		END
-
-		BEGIN
-			DECLARE @Iterator INT
-
-			SET @Iterator = 1
-
-			WHILE (@Iterator <= @Length)
-			BEGIN
-				IF @Iterator = @Choice
-				BEGIN
-					INSERT INTO MatchRecommendOdds (
-						OWPMatchId
-						,Bettype
-						,HDP
-						,Choice
-						,Odds
-						,CreatedBy
-						,CreatedDate
-						)
-					VALUES (
-						@OWPMatchId
-						,@Bettype
-						,@DefaultHDP
-						,@Choice
-						,@Value
-						,@UserId
-						,GETDATE()
-						)
-
-					IF @DefaultHDP IS NULL
-					BEGIN
-						SET @Xml = (
-								SELECT Id AS '@id'
-									,OWPMatchId AS '@mt'
-									,Bettype AS '@bt'
-									,HDP AS '@hdp'
-									,Choice AS '@c'
-									,Odds AS '@o'
-								FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-								WHERE OWPMatchId = @OWPMatchId
-									AND Bettype = @Bettype
-									AND HDP IS NULL
-									AND Choice = @Choice
-								FOR XML PATH('z')
-									,ROOT('r')
-								)
-					END
-					ELSE
-					BEGIN
-						SET @Xml = (
-								SELECT Id AS '@id'
-									,OWPMatchId AS '@mt'
-									,Bettype AS '@bt'
-									,HDP AS '@hdp'
-									,Choice AS '@c'
-									,Odds AS '@o'
-								FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-								WHERE OWPMatchId = @OWPMatchId
-									AND Bettype = @Bettype
-									AND HDP = @DefaultHDP
-									AND Choice = @Choice
-								FOR XML PATH('z')
-									,ROOT('r')
-								)
-					END
-
-					SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-					SET @EndRun = GETDATE()
-					SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-					EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-						,@SPName = 'OWP_OddsCompiler_Insert'
-						,@LoggedDate = @StartRun
-						,@Duration = @Duration
-						,@ObjectId = @OWPMatchId
-						,@Data = @LogData
-						,@DataOld = NULL
-				END
-				ELSE
-				BEGIN
-					INSERT INTO MatchRecommendOdds (
-						OWPMatchId
-						,Bettype
-						,HDP
-						,Choice
-						,Odds
-						,CreatedBy
-						,CreatedDate
-						)
-					VALUES (
-						@OWPMatchId
-						,@Bettype
-						,@DefaultHDP
-						,@Iterator
-						,NULL
-						,@UserId
-						,GETDATE()
-						)
-
-					IF @DefaultHDP IS NULL
-					BEGIN
-						SET @Xml = (
-								SELECT Id AS '@id'
-									,OWPMatchId AS '@mt'
-									,Bettype AS '@bt'
-									,HDP AS '@hdp'
-									,Choice AS '@c'
-									,Odds AS '@o'
-								FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-								WHERE OWPMatchId = @OWPMatchId
-									AND Bettype = @Bettype
-									AND HDP IS NULL
-									AND Choice = @Iterator
-								FOR XML PATH('z')
-									,ROOT('r')
-								)
-					END
-					ELSE
-					BEGIN
-						SET @Xml = (
-								SELECT Id AS '@id'
-									,OWPMatchId AS '@mt'
-									,Bettype AS '@bt'
-									,HDP AS '@hdp'
-									,Choice AS '@c'
-									,Odds AS '@o'
-								FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-								WHERE OWPMatchId = @OWPMatchId
-									AND Bettype = @Bettype
-									AND HDP = @DefaultHDP
-									AND Choice = @Iterator
-								FOR XML PATH('z')
-									,ROOT('r')
-								)
-					END
-
-					SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-					SET @EndRun = GETDATE()
-					SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-					EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-						,@SPName = 'OWP_OddsCompiler_Insert'
-						,@LoggedDate = @StartRun
-						,@Duration = @Duration
-						,@ObjectId = @OWPMatchId
-						,@Data = @LogData
-						,@DataOld = NULL
-				END
-
-				SET @Iterator = @Iterator + 1
-			END
-		END
+		UPDATE dbo.MatchRecommendOddsDetail WITH (ROWLOCK, UPDLOCK)
+		SET Odds = @Odds
+		WHERE MatchRecommendOddsId = @Id
+			AND Choice = @Choice
 	END
+
+	SET @ErrMsg = @Id
 END

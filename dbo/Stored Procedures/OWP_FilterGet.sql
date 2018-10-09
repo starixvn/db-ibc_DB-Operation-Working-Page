@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE[dbo].[OWP_FilterGet] @UserId INT = 0
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE[dbo].[OWP_FilterGet] @UserId INT = 0
 AS
 /*      
  Created: 20161220@Razor.Nguyen

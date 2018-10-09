@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_GetProcess] @SessionId NVARCHAR(100)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_GetProcess] @SessionId VARCHAR(50)
 AS
 /*          
  Created: 20170214@Razor.Nguyen
@@ -6,7 +7,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-         
+         20180621@Leo.Vo: new structure of Upload Assignment
 */
 BEGIN
 	SET NOCOUNT ON
@@ -79,8 +80,8 @@ BEGIN
 		,ref.Value AS 'ResultTypeName'
 		,[Message] AS 'ResultMessage'
 	FROM dbo.AssignmentUploadingResult AS result WITH (NOLOCK)
-		INNER JOIN dbo.RefResource AS ref WITH (NOLOCK) ON result.ResultType = ref.ResourceId
-		INNER JOIN dbo.ValidationRule AS r WITH (NOLOCK) ON r.RuleId = result.RuleId
+	INNER JOIN dbo.RefResource AS ref WITH (NOLOCK) ON result.ResultType = ref.ResourceId
+	INNER JOIN dbo.ValidationRule AS r WITH (NOLOCK) ON r.RuleId = result.RuleId
 	WHERE ref.RefName = 'RuleResultType'
 		AND result.SessionId = @SessionId
 		AND ref.Value != 'Passed'

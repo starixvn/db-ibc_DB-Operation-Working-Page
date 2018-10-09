@@ -1,11 +1,4 @@
-﻿/* =============================================
-	Created: 20170119@Julien
-	Task: User Management
-	DB: bodb_OWP
-	
-	Revision:
-	
--- =============================================*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_UserUpdate] @Editor INT
 	,@UserId INT
 	,@FullName NVARCHAR(200) = NULL
@@ -23,6 +16,14 @@ CREATE PROCEDURE [dbo].[OWP_UserUpdate] @Editor INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
+/*
+Created: 20170119@Julien
+Task : User Management
+DB: bodb_OWP
+
+Revisions:
+	20181009@Raymond.Le: new structure
+*/
 BEGIN
 	SET NOCOUNT ON
 

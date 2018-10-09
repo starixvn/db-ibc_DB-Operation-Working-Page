@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_API_ServiceTimestampUpdate] @ErrCode INT = 0 OUTPUT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_API_ServiceTimestampUpdate] @ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
 /*    
@@ -7,6 +8,7 @@ AS
  DB: bodb_OWP    
     
  Revisions:
+	20180928@Leo: review
 */
 BEGIN
 	SET NOCOUNT ON

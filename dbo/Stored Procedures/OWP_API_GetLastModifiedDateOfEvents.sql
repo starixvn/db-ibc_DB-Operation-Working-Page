@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_API_GetLastModifiedDateOfEvents]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_API_GetLastModifiedDateOfEvents]
 AS
 /*    
  Created: 20170123@Quinn.Vo
@@ -6,6 +7,7 @@ AS
  DB: bodb_OWP
     
  Revisions:
+	20181009@Raymond.Le: new structure
 */
 BEGIN
 	SET NOCOUNT ON

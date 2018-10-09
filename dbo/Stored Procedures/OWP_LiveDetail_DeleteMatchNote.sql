@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LiveDetail_DeleteMatchNote] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_DeleteMatchNote] @UserId INT
 	,@MatchNoteId INT
 	,@SessionId NVARCHAR(50) = NULL
 	,@ErrCode INT = 0 OUTPUT
@@ -11,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
    20170420@Tim.Trinh: modify time to send message
+   20180927@Leo: structure of event assignment
 */
 BEGIN
 	SET NOCOUNT ON
@@ -103,7 +105,6 @@ BEGIN
 				FROM dbo.Assignment AS a WITH (NOLOCK)
 				WHERE a.OWPMatchId = @OWPMatchId
 					AND a.Bettype > 0
-					AND a.IsLive = 1
 				
 				UNION
 				SELECT DISTINCT a.UserId
@@ -136,7 +137,6 @@ BEGIN
 					,@MessageContent = @MessageTemplate
 					,@MessageTo = @Traders
 					,@IsImportant = 0
-					,@IsPermanent = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
 					,@ErrCode = @ErrCode OUTPUT

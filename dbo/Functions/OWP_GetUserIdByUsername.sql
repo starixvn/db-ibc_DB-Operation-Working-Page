@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[OWP_GetUserIdByUsername] (@username VARCHAR(30))
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[OWP_GetUserIdByUsername] (@username VARCHAR(30))
 RETURNS INT
 AS
 /*
@@ -9,6 +10,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
+	20181009@Raymond.Le: new structure
  
 */
 BEGIN

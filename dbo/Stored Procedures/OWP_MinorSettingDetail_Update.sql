@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MinorSettingDetail_Update] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MinorSettingDetail_Update] @UserId INT
 	,@MinorSettingId INT
 	,@MinorBettypeId INT
 	,@IsMaxBet BIT
@@ -13,7 +14,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-         
+    20180806@Raymond.Le: Combine setting X Mins         
 */
 BEGIN
 	SET NOCOUNT ON
@@ -24,6 +25,8 @@ BEGIN
 		,@Xml XML
 		,@LogDataOld NVARCHAR(MAX)
 		,@LogData NVARCHAR(MAX)
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
 
 	SET @StartRun = GETDATE()
 
@@ -73,6 +76,15 @@ BEGIN
 			SET MaxBet = @MaxBet * 1000
 			WHERE MinorBettypeId = @MinorBettypeId
 				AND MinorSettingId = @MinorSettingId
+
+			-- Hardcode insert setting 10mins equal 15mins
+			IF (@MinorBettypeId = @Specific15Mins)
+			BEGIN
+				UPDATE dbo.MinorSettingDetail WITH (ROWLOCK, UPDLOCK)
+				SET MaxBet = @MaxBet * 1000
+				WHERE MinorBettypeId = @Specific10Mins
+					AND MinorSettingId = @MinorSettingId
+			END
 		END
 		ELSE
 		BEGIN
@@ -80,6 +92,15 @@ BEGIN
 			SET Spread = @Spread / 100
 			WHERE MinorBettypeId = @MinorBettypeId
 				AND MinorSettingId = @MinorSettingId
+
+			-- Hardcode insert setting 10mins equal 15mins
+			IF (@MinorBettypeId = @Specific15Mins)
+			BEGIN
+				UPDATE dbo.MinorSettingDetail WITH (ROWLOCK, UPDLOCK)
+				SET Spread = @Spread / 100
+				WHERE MinorBettypeId = @Specific10Mins
+					AND MinorSettingId = @MinorSettingId
+			END
 		END
 
 		-- For write log

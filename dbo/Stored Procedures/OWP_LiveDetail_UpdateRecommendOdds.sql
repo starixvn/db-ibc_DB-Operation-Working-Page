@@ -1,9 +1,12 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LiveDetail_UpdateRecommendOdds] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_UpdateRecommendOdds] @Id INT
+	,@UserId INT
 	,@OWPMatchId INT
 	,@Bettype INT
 	,@OldHandicap SMALLMONEY
 	,@Handicap SMALLMONEY
 	,@RecommendOdds NVARCHAR(MAX)
+	,@TeamChoice INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -13,7 +16,7 @@ Task : update recommend odds
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: new structure 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -28,28 +31,14 @@ BEGIN
 		,@CreatedBy INT
 		,@CreatedDate DATETIME
 
-	IF OBJECT_ID('tempdb..#MatchRecommendOdds') IS NOT NULL
-	BEGIN
-		DROP TABLE #MatchRecommendOdds
-	END
-
-	CREATE TABLE #MatchRecommendOdds (
-		OWPMatchId INT NOT NULL
-		,Bettype INT NOT NULL
-		,HDP SMALLMONEY NULL
-		,Choice INT NOT NULL
-		,Odds MONEY NULL
-		,CreatedBy INT NULL
-		,CreatedDate DATETIME NULL
-		)
-
 	IF OBJECT_ID('tempdb..#RecommendOdds') IS NOT NULL
 	BEGIN
 		DROP TABLE #RecommendOdds
 	END
 
 	CREATE TABLE #RecommendOdds (
-		Choice INT
+		MatchRecommendOddsId INT
+		,Choice INT
 		,Odds MONEY
 		)
 
@@ -68,28 +57,6 @@ BEGIN
 		RETURN
 	END
 
-	-- copy data
-	INSERT INTO #MatchRecommendOdds (
-		OWPMatchId
-		,Bettype
-		,HDP
-		,Choice
-		,Odds
-		,CreatedBy
-		,CreatedDate
-		)
-	SELECT OWPMatchId
-		,Bettype
-		,HDP
-		,Choice
-		,Odds
-		,CreatedBy
-		,CreatedDate
-	FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-	WHERE OWPMatchId = @OWPMatchId
-		AND Bettype = @Bettype
-		AND HDP = @OldHandicap
-
 	EXEC sp_xml_preparedocument @idoc OUTPUT
 		,@RecommendOdds
 
@@ -103,114 +70,37 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
-	-- Log
-	SET @StartRun = GETDATE()
-	SET @Xml = (
-			SELECT OWPMatchId AS '@mt'
-				,Bettype AS '@bt'
-				,HDP AS '@hdp'
-				,Choice AS '@c'
-				,Odds AS '@o'
-			FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-			WHERE OWPMatchId = @OWPMatchId
-				AND Bettype = @Bettype
-				AND HDP = @OldHandicap
-			FOR XML PATH('z')
-				,ROOT('r')
-			)
-	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-
 	BEGIN TRY
-		SELECT TOP 1 @CreatedBy = CreatedBy
-			,@CreatedDate = CreatedDate
-		FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-		WHERE OWPMatchId = @OWPMatchId
-			AND Bettype = @Bettype
-			AND HDP = @OldHandicap
+		UPDATE dbo.MatchRecommendOdds
+		SET HDP = @Handicap
+			,TeamChoice = @TeamChoice
+		WHERE MatchRecommendOddsId = @Id
 
 		DELETE
-		FROM dbo.MatchRecommendOdds WITH (ROWLOCK, UPDLOCK)
-		WHERE OWPMatchId = @OWPMatchId
-			AND Bettype = @Bettype
-			AND HDP = @OldHandicap
-
-		INSERT INTO dbo.MatchRecommendOdds (
-			OWPMatchId
-			,Bettype
-			,HDP
-			,Choice
-			,Odds
-			,CreatedBy
-			,CreatedDate
-			)
-		SELECT DISTINCT @OWPMatchId
-			,@Bettype
-			,@Handicap
-			,Choice
-			,Odds
-			,@CreatedBy
-			,@CreatedDate
-		FROM #RecommendOdds
-
-		SET @Xml = (
-				SELECT OWPMatchId AS '@mt'
-					,Bettype AS '@bt'
-					,HDP AS '@hdp'
-					,Choice AS '@c'
-					,Odds AS '@o'
-				FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-				WHERE OWPMatchId = @OWPMatchId
-					AND Bettype = @Bettype
-					AND HDP = @Handicap
-				FOR XML PATH('z')
-					,ROOT('r')
+		FROM MatchRecommendOddsDetail
+		WHERE MatchRecommendOddsId = @Id
+			AND Choice IN (
+				SELECT Choice
+				FROM #RecommendOdds
 				)
-		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-			,@SPName = 'OWP_LiveDetail_InsertRecommendOdds'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @OWPMatchId
-			,@Data = @LogData
-			,@DataOld = @LogDataOld
+		INSERT INTO dbo.MatchRecommendOddsDetail (
+			MatchRecommendOddsId
+			,Choice
+			,Odds
+			)
+		SELECT DISTINCT @Id
+			,Choice
+			,Odds
+		FROM #RecommendOdds
 	END TRY
 
 	BEGIN CATCH
-		-- rolback
-		DELETE
-		FROM dbo.MatchRecommendOdds WITH (ROWLOCK, UPDLOCK)
-		WHERE OWPMatchId = @OWPMatchId
-			AND Bettype = @Bettype
-			AND HDP = @OldHandicap
-
-		INSERT INTO dbo.MatchRecommendOdds (
-			OWPMatchId
-			,Bettype
-			,HDP
-			,Choice
-			,Odds
-			,CreatedBy
-			,CreatedDate
-			)
-		SELECT OWPMatchId
-			,Bettype
-			,HDP
-			,Choice
-			,Odds
-			,CreatedBy
-			,CreatedDate
-		FROM #MatchRecommendOdds
-
 		SELECT @ErrMsg = 'Update recommend odds failed. Please try again.'
 			,@ErrCode = 4501 -- ActionId + 01
 
 		RETURN
 	END CATCH
-
-	DROP TABLE #MatchRecommendOdds
 
 	DROP TABLE #RecommendOdds
 END

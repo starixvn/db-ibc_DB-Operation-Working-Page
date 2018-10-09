@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LiveDetail_GetHomeAwayToSendMessage] @OWPMatchId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_GetHomeAwayToSendMessage] @OWPMatchId INT
 AS
 /*
 Created: 20161129@Tim.Trinh

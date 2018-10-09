@@ -1,14 +1,18 @@
-﻿-- =============================================
--- Author:		Julien
--- Create date: 19-Oct-2016
--- Description:	Get nickname from OWP. If null get username from main db
--- =============================================
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[OWP_UsernameGetByID]
 (
 	@userid int
 )
 RETURNS VARCHAR(30)
 AS
+/*
+Created: 20161019@julien
+Task : Get nickname from OWP. If null get username from main db
+DB: bodb_OWP
+
+Revisions:
+	20181009@Raymond.Le: new structure
+*/
 BEGIN
 	-- Declare the return variable here
 	DECLARE @username VARCHAR(30)

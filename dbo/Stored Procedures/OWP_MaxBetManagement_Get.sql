@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MaxBetManagement_Get] @League NVARCHAR(500) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MaxBetManagement_Get] @League NVARCHAR(500) = ''
 	,@LeagueGroupId INT = 0
 	,@OptionIds NVARCHAR(MAX)
 	,@IsActive BIT = 1

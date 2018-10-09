@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MinorSettingDetail_Reset] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MinorSettingDetail_Reset] @UserId INT
 	,@MinorBettypeId INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
@@ -9,7 +10,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-         
+	20180806@Raymond.Le: Combine setting X Mins           
 */
 BEGIN
 	SET NOCOUNT ON
@@ -19,6 +20,8 @@ BEGIN
 		,@Duration INT
 		,@Xml XML
 		,@LogData NVARCHAR(MAX)
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
 	DECLARE @Detail TABLE (
 		Id INT
 		,Spread SMALLMONEY
@@ -58,6 +61,15 @@ BEGIN
 	SET Spread = NULL
 		,MaxBet = NULL
 	WHERE MinorBettypeId = @MinorBettypeId
+
+	-- Hardcode insert setting 10mins equal 15mins
+	IF (@MinorBettypeId = @Specific15Mins)
+	BEGIN
+		UPDATE dbo.MinorSettingDetail WITH (ROWLOCK, UPDLOCK)
+		SET Spread = NULL
+			,MaxBet = NULL
+		WHERE MinorBettypeId = @Specific10Mins
+	END
 
 	-- For write log
 	SET @Xml = (

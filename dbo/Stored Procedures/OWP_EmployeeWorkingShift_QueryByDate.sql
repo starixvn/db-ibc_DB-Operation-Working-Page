@@ -7,8 +7,7 @@ AS
  Task : OWP - Search Working Shift by Date
  DB: bodb_OWP      
 
- Revisions:
-	20181209@Kane: Add LeagueName
+ Revisions: 20181209@Kane.Le: Add LeagueName
 
  -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryByDate @Date = '2017/12/14', @UserId = '8';

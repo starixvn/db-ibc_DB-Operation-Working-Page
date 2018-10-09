@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_SoloMatchUpdate]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_SoloMatchUpdate]
 AS
 /*    
  Created: 20161102@Harvey.Nguyen

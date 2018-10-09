@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MinorMatchAutoDetermine]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MinorMatchAutoDetermine]
 AS
 /*
 Created: 20161101@Julien

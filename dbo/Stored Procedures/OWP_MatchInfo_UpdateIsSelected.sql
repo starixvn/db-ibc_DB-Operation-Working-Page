@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MatchInfo_UpdateIsSelected] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MatchInfo_UpdateIsSelected] @UserId INT
 	,@OWPMatchIds NVARCHAR(MAX) = ''
 	,@IsSelected BIT
 	,@ErrCode INT = 0 OUTPUT

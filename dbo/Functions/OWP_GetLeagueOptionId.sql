@@ -1,4 +1,4 @@
-﻿
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[OWP_GetLeagueOptionId] (@OptionsIds INT)
 RETURNS INT
 AS
@@ -10,7 +10,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
- 
+	20181009@Raymond.Le: new structure 
 */
 BEGIN
 	DECLARE @id INT

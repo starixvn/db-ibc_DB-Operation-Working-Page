@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LeagueSetting_DeleteByOptionId] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LeagueSetting_DeleteByOptionId] @UserId INT
 	,@OWPLeagueId INT
 	,@OptionId INT
 	,@ErrCode INT = 0 OUTPUT

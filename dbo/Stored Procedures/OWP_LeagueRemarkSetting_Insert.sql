@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LeagueRemarkSetting_Insert] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LeagueRemarkSetting_Insert] @UserId INT
 	,@LeagueId INT
 	,@OptionId INT
 	,@Remarks NVARCHAR(500)
@@ -11,6 +12,7 @@ Task : insert remarks
 DB: bodb_OWP
 
 Revisions:
+	20181009@Raymond.Le: new structure 
    
 */
 BEGIN

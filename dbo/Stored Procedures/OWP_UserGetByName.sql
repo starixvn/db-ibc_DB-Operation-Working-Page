@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_UserGetByName] @Name NVARCHAR(100)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_UserGetByName] @Name NVARCHAR(100)
 AS
 /*
 Created: 20160922@John.Ngo
@@ -6,6 +7,7 @@ Task : Get CustId By Name
 DB: bodb_OWP
 
 Revisions:
+	20181009@Raymond.Le: new structure
 */
 BEGIN
 	SET NOCOUNT ON

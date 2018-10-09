@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LiveDetail_UpdateMatchNote] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_UpdateMatchNote] @UserId INT
 	,@MatchNoteId INT
 	,@Note NVARCHAR(MAX)
 	,@SessionId NVARCHAR(50) = NULL
@@ -12,6 +13,8 @@ DB: bodb_OWP
 
 Revisions:
    20170420@Tim.Trinh: modify time to send message
+   20170821@Tim.Trinh: update status match note user 
+   20180927@Leo: new structure of event assignment
 */
 BEGIN
 	SET NOCOUNT ON
@@ -67,6 +70,10 @@ BEGIN
 			,CreatedBy = @UserId
 			,CreatedDate = GETDATE()
 		WHERE MatchNoteId = @MatchNoteId
+		
+		UPDATE dbo.MatchNoteUser WITH (ROWLOCK, UPDLOCK)
+		SET IsViewed = 0
+		WHERE MatchNoteId = @MatchNoteId
 
 		-- insert message  
 		SELECT @OWPMatchId = OWPMatchId
@@ -112,7 +119,6 @@ BEGIN
 				FROM dbo.Assignment AS a WITH (NOLOCK)
 				WHERE a.OWPMatchId = @OWPMatchId
 					AND a.Bettype > 0
-					AND a.IsLive = 1
 				
 				UNION
 				SELECT DISTINCT a.UserId
@@ -146,7 +152,6 @@ BEGIN
 					,@MessageContent = @MessageTemplate
 					,@MessageTo = @Traders
 					,@IsImportant = 0
-					,@IsPermanent = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
 					,@ErrCode = @ErrCode OUTPUT

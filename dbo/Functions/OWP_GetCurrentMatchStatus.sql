@@ -1,7 +1,4 @@
-﻿-- =============================================
--- Author:		Raymond.Le
--- Create date: 2017-11-13
--- =============================================
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[OWP_GetCurrentMatchStatus]
 (
 	@EventDate DATETIME
@@ -10,6 +7,14 @@ CREATE FUNCTION [dbo].[OWP_GetCurrentMatchStatus]
 )
 RETURNS NVARCHAR(15)
 AS
+/*
+Created: 20171113@Raymond.Le
+Task : get current match status
+DB: bodb_OWP
+
+Revisions:
+	20181009@Raymond.Le: new structure
+*/
 BEGIN
 	DECLARE	@str_Live NVARCHAR(15) = 'Live'
 			,@str_Inplay NVARCHAR(15) = 'In-play'

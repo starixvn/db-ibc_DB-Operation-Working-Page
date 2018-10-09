@@ -1,15 +1,15 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ResourceIdGetByName]    
-  @ResourceType  VARCHAR(30)    
-  ,@ResourceValues NVARCHAR(MAX)    
-      
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ResourceIdGetByName]    
+   @ResourceType  VARCHAR(30)    
+  ,@ResourceValues NVARCHAR(MAX)         
   ,@ResourceIds  NVARCHAR(200) = '' OUTPUT    
 /*    
 Created: 20161027@Long.Luu    
 Task : Get ResourceId by Name    
 DB: bodb_OWP    
     
-Revisions:    
-       
+Revisions:
+	20181009@Raymond.Le: new structure   
 */    
     
 AS    

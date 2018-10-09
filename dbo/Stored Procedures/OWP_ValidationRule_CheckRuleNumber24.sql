@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber24] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber24] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*
  Created: 20170310@Tim.Trinh
@@ -8,6 +9,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
+    20180621@Leo.Vo: new structure of Upload Assignment
+	20180724@Raymond.Le: Modify rule follow new uploading structure
 */
 BEGIN
 	SET NOCOUNT ON
@@ -18,6 +21,12 @@ BEGIN
 		,@Message NVARCHAR(200)
 		,@Spread VARCHAR(200)
 		,@idoc INT
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
+		,@Specific15MinsNoOfCorners INT = - 5
+		,@Specific15MinsTotalBooking INT = - 8
+		,@FastMarket INT = - 88
+		,@AllInOne INT = - 89
 
 	CREATE TABLE #tblCombineDuplicateMatch (
 		RowNumber INT
@@ -51,6 +60,8 @@ BEGIN
 						AND League = data.League
 						AND Home = data.Home
 						AND Away = data.Away
+						AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
+						AND ISNULL(data.MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 					FOR XML PATH('')
 					), 1, 2, '')
 		FROM (
@@ -59,6 +70,7 @@ BEGIN
 				,League
 				,Home
 				,Away
+				,MinorBettypeId
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 			) AS data

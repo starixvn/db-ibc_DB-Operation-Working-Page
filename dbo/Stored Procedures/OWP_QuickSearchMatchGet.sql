@@ -18,6 +18,7 @@ Revisions:
   20170731@Raymond.Le: Implement Quick Search v2.0, can search by assignee name, merge result 15'... to main match
   20180427@leo.vo: Add FM & AIO
   20181002@Raymond.Le: Fix overflow data type in RefResource
+  20180806@Raymond.Le: Modify follow new structure
 */
 BEGIN
 	SET NOCOUNT ON
@@ -26,18 +27,37 @@ BEGIN
 		,@owpTodayTo DATETIME
 		,@CurrentRow INT = NULL
 		,@FromTimeToGetData DATETIME
+		,@FromTimePM TIME = '12:00:00'
+		,@ToTimePM TIME = '23:59:59'
+		,@YesterdayGMT8 DATETIME = DATEADD(hh, 12, DATEADD(DAY, - 1, GETDATE()))
 	DECLARE @FromTime DATETIME
 		,@ToTime DATETIME
 		,@FromTimeForSpecialBettype DATETIME
 		,@ToTimeViewDetailForSpecialBettype DATETIME
 		,@ToTimeForSpecialBettype DATETIME
-		,@NextCornerId INT = - 4
-		,@NextBookingId INT = - 7
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
+		,@Specific15MinsNoOfCorners INT = - 5
+		,@NoOfCorners INT = - 3
+		,@NextCorners INT = - 4
+		,@LastCorners INT = - 90
+		,@HomeSingleTeamCorners INT = - 94
+		,@AwaySingleTeamCorners INT = - 95
+		,@Specific15MinsTotalBooking INT = - 8
+		,@TotalBooking INT = - 6
+		,@NextBooking INT = - 7
+		,@LastBooking INT = - 91
+		,@FastMarket INT = - 88
+		,@AllInOne INT = - 89
 		,@LA_Section INT = 2
 		,@LG_Section INT = 3
 
 	--Initialize parameter
-	SET @FromTimeToGetData = DATEADD(DAY, DATEDIFF(DAY, 0, DATEADD(DAY, - 1, DATEADD(hh, 12, GETDATE()))), '12:00:00')
+	SELECT @FromTimeToGetData = (CASE 
+			WHEN CAST(@YesterdayGMT8 AS TIME) BETWEEN @FromTimePM
+					AND @ToTimePM THEN DATEADD(dd, DATEDIFF(dd, 0, @YesterdayGMT8), '12:00:00')
+			ELSE DATEADD(dd, DATEDIFF(dd, 0, DATEADD(DAY, - 1, @YesterdayGMT8)), '12:00:00') END
+			)
 
 	SELECT @FromTime = @FromTimeToGetData
 		,@ToTime = ToTime
@@ -121,7 +141,7 @@ BEGIN
 				,ISNULL(om.MatchNo, '') AS MatchNo
 				,om.EventDateTime AS EventDate
 				,(CASE 
-					WHEN minor.MinorBettypeId IN (- 1, - 2, - 5, - 8) THEN NULL
+					WHEN minor.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne) THEN NULL
 					ELSE home.OWPTeamName + ' vs ' + away.OWPTeamName END
 					) AS [Event]
 				,(CASE 
@@ -130,6 +150,8 @@ BEGIN
 					ELSE 0 END
 					) AS IsToday
 			FROM dbo.OWPMatch AS om WITH (NOLOCK)
+				INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+				AND mi.IsSelected = 1
 				LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
 				LEFT JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON om.OWPLeagueId = ol.OWPLeagueId
 				INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId
@@ -182,7 +204,7 @@ BEGIN
 				,ISNULL(om.MatchNo, '') AS MatchNo
 				,om.EventDateTime AS EventDate
 				,(CASE 
-					WHEN minor.MinorBettypeId IN (- 1, - 2, - 5, - 8) THEN NULL
+					WHEN minor.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne) THEN NULL
 					ELSE home.OWPTeamName + ' vs ' + away.OWPTeamName END
 					) AS [Event]
 				,(CASE 
@@ -191,6 +213,8 @@ BEGIN
 					ELSE 0 END
 					) AS IsToday
 			FROM dbo.OWPMatch AS om WITH (NOLOCK)
+				INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+				AND mi.IsSelected = 1
 				LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
 				INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId
 				INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON away.OWPTeamId = om.OWPAwayId
@@ -209,7 +233,7 @@ BEGIN
 				)
 	END
 
-	-- Merge specific 15', 10' to main match
+	-- Merge specific 15', 10', FM, AIO to main match
 	UPDATE sm
 	SET sm.OWPMatchId = om.OWPMatchId
 		,sm.ParentMatchId = NULL
@@ -221,7 +245,7 @@ BEGIN
 		LEFT JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = sm.ParentMatchId
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON away.OWPTeamId = om.OWPAwayId
-	WHERE sm.MinorBettypeId IN (- 1, - 2)
+	WHERE sm.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne)
 
 	-- Merge NoC 15' to NoC, Total booking 15' to Total Booking 
 	UPDATE sm
@@ -233,14 +257,14 @@ BEGIN
 	FROM #tblSuggestedMatches AS sm WITH (ROWLOCK)
 		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON minor.ParentMatchId = sm.ParentMatchId
 		AND minor.MinorBettypeId = (CASE 
-			WHEN sm.MinorBettypeId = - 5 THEN - 3
-			WHEN sm.MinorBettypeId = - 8 THEN - 6
+			WHEN sm.MinorBettypeId = @Specific15MinsNoOfCorners THEN @NoOfCorners
+			WHEN sm.MinorBettypeId = @Specific15MinsTotalBooking THEN @TotalBooking
 			ELSE NULL END
 			)
 		LEFT JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON away.OWPTeamId = om.OWPAwayId
-	WHERE sm.MinorBettypeId IN (- 5, - 8)
+	WHERE sm.MinorBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
 
 	-- GET USER'S ASSIGNED FUNCTIONS
 	INSERT INTO #tblAssignedRoles (
@@ -361,7 +385,7 @@ BEGIN
 				SELECT 1
 				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
 				WHERE sm.OWPMatchId = minor.MinorMatchId
-					AND minor.MinorBettypeId IN (@NextCornerId, @NextBookingId)
+					AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
 					AND minor.IsRepresented = 1
 				)
 			AND NOT EXISTS (
@@ -539,7 +563,7 @@ BEGIN
 		,fr.AssigneeName
 		,fr.AssignmentType
 		,(CASE 
-			WHEN fr.Bettype > 0 OR fr.Bettype IN (-1003, -1004) THEN 1
+			WHEN fr.Bettype > 0 THEN 1
 			ELSE 0 END
 			) AS IsTrader
 	FROM #tblFinalResults AS fr WITH (NOLOCK)

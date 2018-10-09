@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[fnc_GetEventDateFilter] (@FilterId INT)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[fnc_GetEventDateFilter] (@FilterId INT)
 RETURNS DATE
 AS
 /*

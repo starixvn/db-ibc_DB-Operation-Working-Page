@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber13] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber13] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(4000) = NULL
 AS
 /*
  Created: 20170213@Tim.Trinh
@@ -10,6 +11,8 @@ AS
  Revisions:
     20170407@Tim.Trinh: remove check data in bodb02
 	20180417@leo.vo: add FM, AIO
+    20180621@Leo.Vo: new structure of Upload Assignment
+	20180724@Raymond.Le: Modify rule follow new uploading structure 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -19,13 +22,14 @@ BEGIN
 		,@Passed TINYINT
 		,@Message NVARCHAR(MAX)
 		,@MaxMatchTradingPerDay TINYINT
+		------
+		,@FromTimePM TIME = '12:00:00'
+		,@ToTimePM TIME = '23:59:59'
 		,@UserId INT
-		,@Trader NVARCHAR(100)
-		,@owpEventDate DATE
-		,@Timeline TIME = '12:00:00'
+		,@Username NVARCHAR(30)
+		,@EventDate DATE
 		,@idoc INT
-	-- assignment type
-	DECLARE @Assignee TINYINT = 1
+		,@BettypeLA INT = - 1002
 
 	CREATE TABLE #tblAssignmentUploading (
 		RowNumber INT
@@ -37,23 +41,16 @@ BEGIN
 		,UserId INT
 		,Trader NVARCHAR(100)
 		,MinorBettypeId INT NULL
-		,ParentMatchId INT NULL
 		,ParentRowNumber INT NULL
 		)
 
 	CREATE TABLE #tblAssignmentInfo (
 		OWPMatchId INT
-		,owpEventDate DATE
+		,EventDate DATE
 		,UserId INT
 		,MinorBettypeId INT NULL
 		,MinorMatchId INT
 		,ParentMatchId INT NULL
-		)
-
-	CREATE TABLE #tblCountMatchTrading (
-		UserId INT
-		,owpEventDate DATE
-		,Total INT
 		)
 
 	CREATE TABLE #tblTrade5MatchPerDay (
@@ -95,9 +92,9 @@ BEGIN
 			,League
 			,Home
 			,Away
+			,UserId
 			,Trader
 			,MinorBettypeId
-			,ParentMatchId
 			,ParentRowNumber
 			)
 		SELECT DISTINCT RowNumber
@@ -106,9 +103,9 @@ BEGIN
 			,League
 			,Home
 			,Away
+			,u.UserId
 			,unpvt.Trader
 			,MinorBettypeId
-			,ParentMatchId
 			,ParentRowNumber
 		FROM (
 			SELECT RowNumber
@@ -124,7 +121,6 @@ BEGIN
 				,Home
 				,Away
 				,MinorBettypeId
-				,ParentMatchId
 				,ParentRowNumber
 				,TraderHDP
 				,Trader1HHDP
@@ -132,188 +128,43 @@ BEGIN
 				,Trader1HOU
 				,Trader1X2
 				,Trader1H1X2
-				,FM
-				,AIO
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 			) AS upload
-		UNPIVOT(Trader FOR ColumnName IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2, FM, AIO)) unpvt
+		UNPIVOT(Trader FOR ColumnName IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2)) unpvt
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Nickname
+			OR unpvt.Trader = u.Username
 		WHERE ISNULL(unpvt.Trader, '') <> ''
+			AND u.UserId IS NOT NULL
 
-
-		-- clean trader
-		DELETE upload
-		FROM #tblAssignmentUploading AS upload WITH (UPDLOCK)
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Username
-			OR upload.Trader = u.Nickname
-		WHERE u.UserId IS NULL
-
-		-- update UserId
-		UPDATE upload
-		SET upload.UserId = u.UserId
-		FROM #tblAssignmentUploading AS upload WITH (ROWLOCK)
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
-			OR upload.Trader = u.Username
-
-		-- get assignment info
-		INSERT INTO #tblAssignmentInfo (
-			OWPMatchId
-			,owpEventDate
-			,UserId
-			,MinorBettypeId
-			,MinorMatchId
-			,ParentMatchId
-			)
-		SELECT DISTINCT om.OWPMatchId
-			,om.EventDate
-			,a.UserId
-			,minor.MinorBettypeId
-			,minor.MinorMatchId
-			,minor.ParentMatchId
-		FROM dbo.OWPMatch AS om WITH (NOLOCK)
-			INNER JOIN dbo.OWPLeague AS league WITH (NOLOCK) ON om.OWPLeagueId = league.OWPLeagueId
-			INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
-			INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
-			INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON om.OWPMatchId = a.OWPMatchId
-			INNER JOIN #tblAssignmentUploading AS upload WITH (NOLOCK) ON a.UserId = upload.UserId
-			LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
-		WHERE upload.owpEventDate IS NOT NULL
-			AND a.AssignmentType = @Assignee
-			AND (
-				(
-					CAST(om.EventDate AS DATE) = CAST(upload.owpEventDate AS DATE)
-					AND om.KickOffTime >= @Timeline
-					)
-				OR (
-					CAST(om.EventDate AS DATE) = CAST(DATEADD(dd, 1, upload.owpEventDate) AS DATE)
-					AND om.KickOffTime < @Timeline
-					)
-				)
-			AND (
-				DATEADD(dd, DATEDIFF(dd, 0, om.EventDate), CAST(om.KickOffTime AS DATETIME)) <> upload.owpEventDate
-				OR league.OWPLeagueName <> upload.League
-				OR home.OWPTeamName <> upload.Home
-				OR away.OWPTeamName <> upload.Away
-				)
-
-		-- calculate
-		UPDATE assignment
-		SET assignment.ParentMatchId = assignment.OWPMatchId
-		FROM #tblAssignmentUploading AS assignment WITH (ROWLOCK)
-		WHERE assignment.OWPMatchId IS NOT NULL
-			AND assignment.ParentMatchId IS NULL
-			AND assignment.MinorBettypeId IS NULL
-
+		-- Update parentRowNumber for main match
 		UPDATE assignment
 		SET assignment.ParentRowNumber = assignment.RowNumber
 		FROM #tblAssignmentUploading AS assignment WITH (ROWLOCK)
-		WHERE assignment.OWPMatchId IS NULL
-			AND assignment.ParentRowNumber IS NULL
+		WHERE assignment.ParentRowNumber IS NULL
 			AND assignment.MinorBettypeId IS NULL
 
-		UPDATE assignment
-		SET assignment.ParentMatchId = assignment.OWPMatchId
-		FROM #tblAssignmentInfo AS assignment WITH (ROWLOCK)
-		WHERE assignment.MinorBettypeId IS NULL
-
-		INSERT INTO #tblCountMatchTrading (
+		-- get trade 5 matches/day from upload file
+		INSERT INTO #tblTrade5MatchPerDay (
 			UserId
 			,owpEventDate
-			,Total
 			)
 		SELECT data.UserId
 			,data.owpEventDate
-			,COUNT(1)
-		FROM (
-			SELECT RowNumber
-				,owpEventDate
-				,UserId
-			FROM #tblAssignmentUploading WITH (NOLOCK)
-			WHERE MinorBettypeId IS NULL
-			GROUP BY RowNumber
-				,owpEventDate
-				,UserId
-			) AS data
-		GROUP BY data.owpEventDate
-			,data.UserId
-
-		INSERT INTO #tblCountMatchTrading (
-			UserId
-			,owpEventDate
-			,Total
-			)
-		SELECT data.UserId
-			,data.owpEventDate
-			,COUNT(1)
-		FROM (
-			SELECT ParentMatchId
-				,owpEventDate
-				,UserId
-			FROM #tblAssignmentUploading WITH (NOLOCK)
-			WHERE MinorBettypeId IS NOT NULL
-				AND ParentMatchId IS NOT NULL
-			GROUP BY ParentMatchId
-				,owpEventDate
-				,UserId
-			) AS data
-		GROUP BY data.owpEventDate
-			,data.UserId
-
-		INSERT INTO #tblCountMatchTrading (
-			UserId
-			,owpEventDate
-			,Total
-			)
-		SELECT data.UserId
-			,data.owpEventDate
-			,COUNT(1)
 		FROM (
 			SELECT ParentRowNumber
 				,owpEventDate
 				,UserId
 			FROM #tblAssignmentUploading WITH (NOLOCK)
-			WHERE MinorBettypeId IS NOT NULL
-				AND ParentRowNumber IS NOT NULL
-				AND ParentMatchId IS NULL
 			GROUP BY ParentRowNumber
 				,owpEventDate
 				,UserId
 			) AS data
 		GROUP BY data.owpEventDate
 			,data.UserId
+		HAVING COUNT(1) >= @MaxMatchTradingPerDay
 
-		INSERT INTO #tblCountMatchTrading (
-			UserId
-			,owpEventDate
-			,Total
-			)
-		SELECT data.UserId
-			,data.owpEventDate
-			,COUNT(1)
-		FROM (
-			SELECT ParentMatchId
-				,owpEventDate
-				,UserId
-			FROM #tblAssignmentInfo WITH (NOLOCK)
-			GROUP BY ParentMatchId
-				,owpEventDate
-				,UserId
-			) AS data
-		GROUP BY data.UserId
-			,data.owpEventDate
-
-		-- get trade 5 matches/day
-		INSERT INTO #tblTrade5MatchPerDay (
-			UserId
-			,owpEventDate
-			)
-		SELECT UserId
-			,owpEventDate
-		FROM #tblCountMatchTrading WITH (NOLOCK)
-		GROUP BY UserId
-			,owpEventDate
-		HAVING SUM(Total) >= @MaxMatchTradingPerDay
-
+		-- get trade 5 matches/day from table dbo.Trade5MatchPerDay
 		INSERT INTO #tblTrade5MatchPerDay (
 			UserId
 			,owpEventDate
@@ -321,12 +172,12 @@ BEGIN
 		SELECT t.UserId
 			,[Date]
 		FROM dbo.Trade5MatchPerDay AS t WITH (NOLOCK)
-			INNER JOIN #tblCountMatchTrading AS t1 WITH (NOLOCK) ON t.UserId = t1.UserId
+			INNER JOIN #tblTrade5MatchPerDay AS t1 WITH (NOLOCK) ON t.UserId = t1.UserId
 		WHERE MONTH(t.[Date]) = MONTH(t1.owpEventDate)
 			AND YEAR(t.[Date]) = YEAR(t1.owpEventDate)
 			AND t.[Date] NOT IN (
 				SELECT DISTINCT owpEventDate
-				FROM #tblCountMatchTrading WITH (NOLOCK)
+				FROM #tblAssignmentUploading WITH (NOLOCK)
 				)
 
 		-- get 2nd trading 5 matches/day
@@ -334,7 +185,7 @@ BEGIN
 			RowNumber
 			,Trader
 			)
-		SELECT RowNumber
+		SELECT DISTINCT (RowNumber / 10) * 10
 			,Trader
 		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
 		WHERE upload.UserId IN (
@@ -384,20 +235,24 @@ BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value
 
-		SELECT TOP 1 @Trader = Trader
-		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Trader NVARCHAR(100)) AS data
+		SELECT TOP 1 @UserId = data.UserId
+			,@Username = data.Username
+		--,@Bettype = data.Bettype
+		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Username NVARCHAR(30), Bettype INT, UserId INT) AS data
 
 		EXEC sp_xml_removedocument @idoc
 
-		SELECT @owpEventDate = EventDate
-		FROM dbo.OWPMatch WITH (NOLOCK)
+		SELECT @EventDate = (CASE 
+				WHEN CAST(om.KickOffTime AS TIME) BETWEEN @FromTimePM
+						AND @ToTimePM THEN om.EventDate
+				ELSE DATEADD(DAY, - 1, om.EventDate) END
+				)
+		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
-
-		SELECT @UserId = dbo.OWP_GetUserIdByUsername(@Trader)
 
 		INSERT INTO #tblAssignmentInfo (
 			OWPMatchId
-			,owpEventDate
+			,EventDate
 			,UserId
 			,MinorBettypeId
 			,MinorMatchId
@@ -413,56 +268,40 @@ BEGIN
 			INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON om.OWPMatchId = a.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
 		WHERE (
-				(
-					CAST(om.EventDate AS DATE) = @owpEventDate
-					AND om.KickOffTime >= @Timeline
-					)
-				OR (
-					CAST(om.EventDate AS DATE) = CAST(DATEADD(dd, 1, @owpEventDate) AS DATE)
-					AND om.KickOffTime < @Timeline
-					)
+				DATEADD(dd, DATEDIFF(dd, 0, @EventDate), '12:00:00') <= om.EventDateTime
+				AND DATEADD(dd, DATEDIFF(dd, 0, @EventDate) + 1, '11:59:59') >= om.EventDateTime
 				)
 			AND om.OWPMatchId <> @OWPMatchId
+			AND minor.ParentMatchId <> @OWPMatchId
 			AND a.UserId = @UserId
-			AND a.AssignmentType = @Assignee
+			AND a.Bettype <> @BettypeLA
 
 		UPDATE assignment
 		SET assignment.ParentMatchId = assignment.OWPMatchId
 		FROM #tblAssignmentInfo AS assignment WITH (ROWLOCK)
 		WHERE assignment.MinorBettypeId IS NULL
 
-		INSERT INTO #tblCountMatchTrading (
-			UserId
-			,owpEventDate
-			,Total
-			)
-		SELECT data.UserId
-			,data.owpEventDate
-			,COUNT(1)
-		FROM (
-			SELECT ParentMatchId
-				,owpEventDate
-				,UserId
-			FROM #tblAssignmentInfo WITH (NOLOCK)
-			GROUP BY ParentMatchId
-				,owpEventDate
-				,UserId
-			) AS data
-		GROUP BY data.UserId
-			,data.owpEventDate
-
-		-- get trade 5 matches/day
+		-- Get user trade 5 Match In current Event Date
 		INSERT INTO #tblTrade5MatchPerDay (
 			UserId
 			,owpEventDate
 			)
-		SELECT UserId
-			,owpEventDate
-		FROM #tblCountMatchTrading WITH (NOLOCK)
-		GROUP BY UserId
-			,owpEventDate
-		HAVING SUM(Total) >= @MaxMatchTradingPerDay - 1
+		SELECT data.UserId
+			,data.EventDate
+		FROM (
+			SELECT ParentMatchId
+				,EventDate
+				,UserId
+			FROM #tblAssignmentInfo WITH (NOLOCK)
+			GROUP BY ParentMatchId
+				,EventDate
+				,UserId
+			) AS data
+		GROUP BY data.EventDate
+			,data.UserId
+		HAVING COUNT(1) >= @MaxMatchTradingPerDay - 1
 
+		-- Get user trade5match in table Trade5MatchPerDay
 		INSERT INTO #tblTrade5MatchPerDay (
 			UserId
 			,owpEventDate
@@ -470,12 +309,12 @@ BEGIN
 		SELECT t.UserId
 			,[Date]
 		FROM dbo.Trade5MatchPerDay AS t WITH (NOLOCK)
-			INNER JOIN #tblCountMatchTrading AS t1 WITH (NOLOCK) ON t.UserId = t1.UserId
+			INNER JOIN #tblTrade5MatchPerDay AS t1 WITH (NOLOCK) ON t.UserId = t1.UserId
 		WHERE MONTH(t.[Date]) = MONTH(t1.owpEventDate)
 			AND YEAR(t.[Date]) = YEAR(t1.owpEventDate)
 			AND t.[Date] NOT IN (
 				SELECT DISTINCT owpEventDate
-				FROM #tblCountMatchTrading WITH (NOLOCK)
+				FROM #tblAssignmentUploading WITH (NOLOCK)
 				)
 
 		IF EXISTS (
@@ -484,11 +323,11 @@ BEGIN
 				GROUP BY UserId
 					,MONTH(owpEventDate)
 					,YEAR(owpEventDate)
-				HAVING COUNT(1) >= 2
+				HAVING COUNT(1) >= 1
 				)
 		BEGIN
 			SELECT @RuleResultType AS ResultType
-				,REPLACE(@Message, '<content>', @Trader) AS [Message]
+				,REPLACE(@Message, '<content>', @Username) AS [Message]
 		END
 		ELSE
 		BEGIN
@@ -500,8 +339,6 @@ BEGIN
 	DROP TABLE #tblAssignmentUploading
 
 	DROP TABLE #tblAssignmentInfo
-
-	DROP TABLE #tblCountMatchTrading
 
 	DROP TABLE #tblTrade5MatchPerDay
 

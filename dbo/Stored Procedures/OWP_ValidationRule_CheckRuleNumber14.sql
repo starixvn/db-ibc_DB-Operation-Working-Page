@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber14] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber14] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*
  Created: 20170213@Tim.Trinh
@@ -9,6 +10,7 @@ AS
 
  Revisions:
     20170427@Tim.Trinh: change Trader -> Suspender, trim value
+	20180621@Leo.Vo: new structure of Upload Assignment
 */
 BEGIN
 	SET NOCOUNT ON
@@ -43,6 +45,23 @@ BEGIN
 		,ColumnName NVARCHAR(MAX)
 		)
 
+	CREATE TABLE #tblOtherLA (
+		RowNumber INT
+		,LA NVARCHAR(200)
+		,IsValid INT
+		)
+
+	CREATE TABLE #tblGroupOtherLA (
+		RowNumber INT
+		,ColumnName NVARCHAR(100)
+		,IsValid INT
+		)
+
+	CREATE TABLE #tblInvalidOtherLA (
+		RowNumber INT
+		,ColumnName NVARCHAR(2000)
+		)
+
 	-- upload
 	IF LEN(@SessionId) > 0
 	BEGIN
@@ -53,43 +72,95 @@ BEGIN
 			,IsValid
 			)
 		SELECT DISTINCT RowNumber
-			,(CASE unpvt.ColumnName
-				WHEN 'LA1H' THEN 'Suspender (1H LA)'
-				WHEN 'Standby1HLA' THEN 'Standby (1H LA)'
-				WHEN 'OtherTime1HLA' THEN 'Other Time (1H LA)'
-				WHEN 'ETPK1HLA' THEN 'ET & PK (1H LA)'
-				WHEN 'LA2H' THEN 'Suspender (2H LA)'
-				WHEN 'Standby2HLA' THEN 'Standby (2H LA)'
-				WHEN 'OtherTime2HLA' THEN 'Other Time (2H LA)'
-				WHEN 'ETPK2HLA' THEN 'ET & PK (2H LA)' END
-				) AS ColumnName
+			,unpvt.ColumnName
 			,unpvt.Trader
 			,0
 		FROM (
 			SELECT RowNumber
-				,LTRIM(RTRIM(LA1H)) AS LA1H
-				,LTRIM(RTRIM(Standby1HLA)) AS Standby1HLA
-				,LTRIM(RTRIM(OtherTime1HLA)) AS OtherTime1HLA
-				,LTRIM(RTRIM(ETPK1HLA)) AS ETPK1HLA
-				,LTRIM(RTRIM(LA2H)) AS LA2H
-				,LTRIM(RTRIM(Standby2HLA)) AS Standby2HLA
-				,LTRIM(RTRIM(OtherTime2HLA)) AS OtherTime2HLA
-				,LTRIM(RTRIM(ETPK2HLA)) AS ETPK2HLA
+				,LA
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 			) AS upload
-		UNPIVOT(Trader FOR ColumnName IN (LA1H, Standby1HLA, OtherTime1HLA, ETPK1HLA, LA2H, Standby2HLA, OtherTime2HLA, ETPK2HLA)) unpvt
+		UNPIVOT(Trader FOR ColumnName IN (LA)) unpvt
 		WHERE ISNULL(unpvt.Trader, '') <> ''
+
+		-- check other LA
+		INSERT INTO #tblOtherLA (
+			RowNumber
+			,LA
+			,IsValid
+			) (
+			SELECT ot.RowNumber
+			,ot.Trader
+			,(
+				CASE ISNULL(u.UserId, 0)
+					WHEN 0
+						THEN 0
+					ELSE 1
+					END
+				) AS IsValid FROM AssignmentUploadingOtherTrader AS ot LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Nickname
+			OR ot.Trader = u.Username WHERE ISNULL(ot.Trader, '') <> '' AND ot.SessionId = @SessionId
+			AND ot.Bettype = - 1002
+			)
+
+		INSERT INTO #tblGroupOtherLA (
+			RowNumber
+			,ColumnName
+			,IsValid
+			) (
+			SELECT RowNumber
+			,'OtherLA' AS ColumnName
+			,Min(IsValid) FROM #tblOtherLA GROUP BY RowNumber
+			)
+
+		INSERT INTO #tblInvalidOtherLA (
+			RowNumber
+			,ColumnName
+			)
+		SELECT ol1.RowNumber
+			,gol.ColumnName + ': ' + STUFF((
+					SELECT DISTINCT ', ' + ol2.LA
+					FROM #tblOtherLA ol2
+					WHERE ol2.RowNumber = ol1.RowNumber
+						AND ol2.IsValid = 0
+					FOR XML PATH('')
+						,TYPE
+					).value('(./text())[1]', 'VARCHAR(200)'), 1, 2, '') AS ColumnName
+		FROM #tblOtherLA ol1
+		INNER JOIN #tblGroupOtherLA gol ON ol1.RowNumber = gol.RowNumber
+		WHERE ol1.IsValid = 0
+		GROUP BY ol1.RowNumber
+			,gol.ColumnName
 
 		-- check trader name
 		UPDATE upload
 		SET upload.IsValid = 1
 		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
+		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
 			OR upload.Trader = u.Username
 		WHERE upload.IsValid = 0
 
 		-- combine
+		CREATE TABLE #tblUnionInvalidLA (
+			RowNumber INT
+			,ColumnName NVARCHAR(2000)
+			)
+
+		INSERT INTO #tblUnionInvalidLA (
+			RowNumber
+			,ColumnName
+			)
+		SELECT RowNumber
+			,ColumnName
+		FROM #tblAssignmentUploading WITH (NOLOCK)
+		WHERE IsValid = 0
+		
+		UNION
+		
+		SELECT RowNumber
+			,ColumnName
+		FROM #tblInvalidOtherLA WITH (NOLOCK)
+
 		INSERT INTO #tblCombineInvalidTrader (
 			RowNumber
 			,ColumnName
@@ -97,31 +168,35 @@ BEGIN
 		SELECT data.RowNumber
 			,STUFF((
 					SELECT '; ' + ColumnName
-					FROM #tblAssignmentUploading WITH (NOLOCK)
+					FROM #tblUnionInvalidLA WITH (NOLOCK)
 					WHERE RowNumber = data.RowNumber
-						AND IsValid = 0
 					FOR XML PATH('')
 					), 1, 2, '')
 		FROM (
 			SELECT DISTINCT RowNumber
-			FROM #tblAssignmentUploading WITH (NOLOCK)
-			WHERE IsValid = 0
+			FROM #tblUnionInvalidLA WITH (NOLOCK)
 			) AS data
 
 		-- result
 		SELECT @SessionId
 			,upload.RowNumber
 			,@RuleId AS RuleId
-			,(CASE 
-				WHEN trader.RowNumber IS NOT NULL THEN @RuleResultType
-				ELSE @Passed END
+			,(
+				CASE 
+					WHEN trader.RowNumber IS NOT NULL
+						THEN @RuleResultType
+					ELSE @Passed
+					END
 				) AS ResultType
-			,(CASE 
-				WHEN trader.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', trader.ColumnName)
-				ELSE '' END
+			,(
+				CASE 
+					WHEN trader.RowNumber IS NOT NULL
+						THEN REPLACE(@Message, '<content>', trader.ColumnName)
+					ELSE ''
+					END
 				) AS [Message]
 		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			LEFT JOIN #tblCombineInvalidTrader AS trader WITH (NOLOCK) ON upload.RowNumber = trader.RowNumber
+		LEFT JOIN #tblCombineInvalidTrader AS trader WITH (NOLOCK) ON upload.RowNumber = trader.RowNumber
 		WHERE SessionId = @SessionId
 	END
 	ELSE -- edit
