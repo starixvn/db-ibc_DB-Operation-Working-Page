@@ -30,22 +30,22 @@ BEGIN
 	DELETE
 	FROM dbo.AssignmentUploading WITH (UPDLOCK)
 	WHERE SessionId IN (
-		SELECT SessionId
-		FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
-		WHERE DATEDIFF(DD, CreatedDate, @Today) > @NumberDayDeleteOldData
-		)
+			SELECT SessionId
+			FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
+			WHERE CreatedDate < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
+			)
 
 	DELETE
 	FROM dbo.AssignmentUploadingResult WITH (UPDLOCK)
 	WHERE SessionId IN (
-		SELECT SessionId
-		FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
-		WHERE DATEDIFF(DD, CreatedDate, @Today) > @NumberDayDeleteOldData
-		)
+			SELECT SessionId
+			FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
+			WHERE CreatedDate < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
+			)
 
 	DELETE
 	FROM dbo.AssignmentUploadingLog WITH (UPDLOCK)
-	WHERE DATEDIFF(DD, CreatedDate, @Today) > @NumberDayDeleteOldData
+	WHERE CreatedDate < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
 
 
 	-- insert raw data
@@ -294,7 +294,8 @@ BEGIN
 	UPDATE dbo.AssignmentUploading WITH (ROWLOCK)
 	SET LA = ''
 		,OtherLA = NULL
-	WHERE MinorBettypeId IN (-4, -7)
+	WHERE MinorBettypeId IN (- 4, - 7)
+		AND SessionId = @SessionId
 	
 
 	-- insert minor matches 10' & 15'

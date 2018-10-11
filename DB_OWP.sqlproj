@@ -113,15 +113,11 @@
     <Build Include="dbo\Tables\AssignmentUploadingLog.sql" />
     <Build Include="dbo\Tables\AssignmentUploading.sql" />
     <Build Include="dbo\Tables\Assignment.sql" />
-    <Build Include="dbo\Functions\OWP_UsernameGetByID.sql" />
     <Build Include="dbo\Functions\OWP_SpreadGet.sql" />
     <Build Include="dbo\Functions\OWP_MaxBetGet.sql" />
     <Build Include="dbo\Functions\OWP_GetUsernameByUserId.sql" />
     <Build Include="dbo\Functions\OWP_GetUserIdByUsername.sql" />
-    <Build Include="dbo\Functions\OWP_GetLeagueOptionId.sql" />
     <Build Include="dbo\Functions\OWP_GetCurrentMatchStatus.sql" />
-    <Build Include="dbo\Functions\OWP_ConvertDateGMT-4.sql" />
-    <Build Include="dbo\Functions\OWP_ConvertDateGMT+8.sql" />
     <Build Include="dbo\Functions\fnc_GetValueFilter.sql" />
     <Build Include="dbo\Functions\fnc_GetEventDateFilter.sql" />
     <Build Include="dbo\Functions\fnc_GetDateTimeForTraderViewTime.sql" />
@@ -252,7 +248,6 @@
     <Build Include="dbo\Tables\EmployeeWorkingShiftNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateShiftCode.sql" />
-    <Build Include="dbo\Functions\fnc_ResourceIdGetByName.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Runner_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_RecommendOdds_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Provider_GetAll.sql" />
@@ -281,7 +276,6 @@
     <Build Include="dbo\Stored Procedures\OWP_Assignment_Create.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Agent_GetAll.sql" />
     <Build Include="dbo\Functions\OWP_ConvertDateGMTplus8.sql" />
-    <Build Include="dbo\Functions\OWP_ConvertDateGMTminus4.sql" />
     <Build Include="dbo\Tables\Runner.sql" />
     <Build Include="dbo\Tables\Provider.sql" />
     <Build Include="dbo\Tables\NotificationSettingMapping.sql" />

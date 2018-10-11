@@ -63,12 +63,12 @@ BEGIN
 				AND au.Away NOT LIKE '%' + mmd.[Value] + '%' THEN 0
 			ELSE 1
 			END
-	FROM dbo.AssignmentUploading AS au
-		,dbo.MinorMatchDetemination AS mmd WITH (NOLOCK)
+	FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
+		CROSS JOIN dbo.MinorMatchDetemination AS mmd WITH (NOLOCK)
 	WHERE au.SessionId = @SessionId
 		AND ISDATE(KickOffTime) = 1
 		AND (
-			MatchId = ''
+			au.MatchId = ''
 			OR ISNUMERIC(MatchId) = 1
 			)
 		AND mmd.Field IN (1, 2, 3)
@@ -188,6 +188,7 @@ BEGIN
 		FROM #tblSingleTeamMatch AS st
 		WHERE st.TeamType IS NOT NULL
 		) AS st ON au.RowNumber = st.RowNumber
+		AND au.SessionId = @SessionId
 
 	--update minor matches as main matches if has no ParentRowNumber
 	UPDATE au
