@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
    20170419@Tim.Trinh: delete remark
+   20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

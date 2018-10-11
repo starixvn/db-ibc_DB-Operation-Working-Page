@@ -6,6 +6,7 @@
       
  Revisions:      
      20180925@Raymond: calculate shift time
+	 20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
      
  -- @Note:    
  EXEC OWP_EmployeeWorkingShift_Upload @Data=N'

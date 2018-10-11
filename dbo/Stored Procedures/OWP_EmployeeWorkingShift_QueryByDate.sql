@@ -7,7 +7,9 @@ AS
  Task : OWP - Search Working Shift by Date
  DB: bodb_OWP      
 
- Revisions: 20181209@Kane.Le: Add LeagueName
+ Revisions:
+	20181209@Kane.Le: Add LeagueName
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 
  -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryByDate @Date = '2017/12/14', @UserId = '8';

@@ -13,7 +13,7 @@ Task : get current match status
 DB: bodb_OWP
 
 Revisions:
-	20181009@Raymond.Le: new structure
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	DECLARE	@str_Live NVARCHAR(15) = 'Live'

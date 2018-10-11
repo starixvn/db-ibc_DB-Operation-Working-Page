@@ -7,7 +7,7 @@ AS
  DB: bodb_OWP      
       
  Revisions:          
-	20180927@Leo: new structure of event assignment
+	20180927@Leo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

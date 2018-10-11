@@ -42,7 +42,7 @@ Revisions:
 	20180613@Jacob: Hotfix - Live Detail - Ignore representated
     20180614@Leo: Display Round/OutSide/Remark independent
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
-	20180706@Raymond.Le: Modify follow new structure of event assignment
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

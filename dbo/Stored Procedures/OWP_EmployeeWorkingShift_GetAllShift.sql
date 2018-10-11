@@ -7,7 +7,7 @@ Task : Get
 DB: bodb_OWP
 
 Revisions:
-20180917@Kane.Le: Get Color of Shift
+	20180917@Kane.Le: New structure of event assignment - [Redmine: #92868]
    
 */
 BEGIN

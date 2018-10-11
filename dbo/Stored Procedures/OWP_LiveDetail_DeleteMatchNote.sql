@@ -12,7 +12,7 @@ DB: bodb_OWP
 
 Revisions:
    20170420@Tim.Trinh: modify time to send message
-   20180927@Leo: structure of event assignment
+   20180927@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

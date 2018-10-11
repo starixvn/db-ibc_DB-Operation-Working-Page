@@ -7,7 +7,8 @@ AS
  DB: bodb_OWP    
     
  Revisions:
- 20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite  
+	20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite  
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

@@ -9,7 +9,7 @@ Param's Explanation:
 	You need to use option: option (maxrecursion 0) at the statement if the lengh of string exceed 100 levels  
 
 Revisions:
-	20181009@Raymond.Le: new structure          
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]  
 	                 
 */        
 RETURNS TABLE

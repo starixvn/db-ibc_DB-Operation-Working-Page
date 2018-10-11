@@ -28,6 +28,7 @@ DB: bodb_OWP
 Revisions:
     20170824@Tim.Trinh: send message when update Cancel status
 	20180814@Raymond.Le: new design Live Detail
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

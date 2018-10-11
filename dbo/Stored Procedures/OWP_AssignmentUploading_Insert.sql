@@ -14,7 +14,7 @@ AS
     20171012@Tim.Trinh: add OtherTime, Website, Website2, Website3, Website4 column,
 	20180416@leo.vo: add FM, AIO
 	20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
-	20180621@Leo.Vo: new structure of Upload Assignment
+	20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

@@ -15,7 +15,7 @@ DB: bodb_OWP
 Revisions:
    20170901@Tim.Trinh: insert MatchNoteUser
    20170420@Tim.Trinh: modify time to send message
-   20180821@Leo: new event structure
+   20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

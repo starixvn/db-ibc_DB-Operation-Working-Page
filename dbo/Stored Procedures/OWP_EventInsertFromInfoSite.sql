@@ -17,6 +17,7 @@ AS
     <Row RowNum="1" EventDate="10/2/2016" .... Note="Away no Website" />  
     </Root>'
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

@@ -10,7 +10,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
-	20180730@Leo: remove linked servers
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
  
 */
 AS

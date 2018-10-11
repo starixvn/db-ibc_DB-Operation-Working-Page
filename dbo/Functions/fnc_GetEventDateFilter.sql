@@ -11,6 +11,7 @@ Param's Explanation:
 
 Revisions:
     20171109@Quinn.Vo: get Yesterday
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	DECLARE @EventDate DATE
