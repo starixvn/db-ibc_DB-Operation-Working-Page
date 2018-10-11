@@ -8,7 +8,7 @@ AS
  DB: bodb_OWP_Test          
           
  Revisions:      
-	20181008@Kane.Le Improve selected data
+	20181008@Kane.Le Improve selected data - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

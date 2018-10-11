@@ -9,7 +9,7 @@ AS
  DB: bodb_OWP
 
  Revisions:
-    20180725@Raymond.Le: Missing main assignment of {bet type}
+    20180725@Raymond.Le: Missing main assignment of {bet type} - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

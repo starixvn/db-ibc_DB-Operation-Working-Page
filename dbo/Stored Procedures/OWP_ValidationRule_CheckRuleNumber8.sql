@@ -11,8 +11,8 @@ AS
  Revisions:
     20170407@Tim.Trinh: check match 15mins, 10mins
 	20180416@leo.vo: check FM, AIO
-	20180621@Leo.Vo: new structure of Upload Assignment
-	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 8 + 14 
+	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 8 + 14 - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

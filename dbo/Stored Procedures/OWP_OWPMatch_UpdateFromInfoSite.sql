@@ -32,7 +32,7 @@ Revisions:
 20180417@Jacob.Phan: Feature #92487 - Move Event Picking to test DB.  
 20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite   
 20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
-20180927@Leo: new structure of event assignment
+20180927@Leo: New structure of event assignment - [Redmine: #92868]
 
 Param's Explanation:
 â€¢ @ErrCode:

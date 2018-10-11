@@ -7,7 +7,7 @@ AS
  DB: bodb_OWP    
   
  Revisions:       
- 20180310@Kane.Le: Get MatchRecommendOddsDetail
+ 20180310@Kane.Le: Get MatchRecommendOddsDetail - [Redmine: #92868]
  */
 BEGIN
 	SET NOCOUNT ON

@@ -13,7 +13,7 @@ Revisions:
   20170116@Tim.Trinh: get message type  
   20170725@Tim.Trinh: messages for match cancelled
   20180614@Jacob.Phan: Message - Only display yesterday and today message in message box - Hotfix #96282
-  20180813@Leo: default value for parameters
+  20180813@Leo: default value for parameters - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

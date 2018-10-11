@@ -9,7 +9,7 @@ AS
  DB: bodb_OWP
  
  Revisions:     
-	20180621@Leo.Vo: new structure of Upload Assignment
+	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

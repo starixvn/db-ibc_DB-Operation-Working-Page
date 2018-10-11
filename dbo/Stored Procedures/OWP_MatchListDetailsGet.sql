@@ -11,7 +11,7 @@ AS
     20170725@Tim.Trinh: get IsCanceled, Round, OutSite, Remark, NoHDP, MatchOffer
     20171012@Tim.Trinh: get OtherTime, Website, Website2, Website3, Website4
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
-	20180618@Leo: new event assignment
+	20180618@Leo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

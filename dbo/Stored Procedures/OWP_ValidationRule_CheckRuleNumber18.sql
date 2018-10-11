@@ -9,7 +9,7 @@ AS
  DB: bodb_OWP
 
  Revisions:
-	20180730@Raymond.Le: Exceed LA working shift
+	20180730@Raymond.Le: Validate exceed LA working shift - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

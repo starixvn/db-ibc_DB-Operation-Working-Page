@@ -7,7 +7,7 @@ AS
  DB: bodb_OWP
 
  Revisions: 
-	20180914@Kane.Le: Get Username output
+	20180914@Kane.Le: Get Username output - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

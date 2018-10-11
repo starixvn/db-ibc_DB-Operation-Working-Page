@@ -18,7 +18,7 @@ Revisions:
   20170731@Raymond.Le: Implement Quick Search v2.0, can search by assignee name, merge result 15'... to main match
   20180427@leo.vo: Add FM & AIO
   20181002@Raymond.Le: Fix overflow data type in RefResource
-  20180806@Raymond.Le: Modify follow new structure
+  20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

@@ -8,7 +8,7 @@ DB: bodb_OWP
     
 Revisions:
     20170725@Tim.Trinh: message for match cancelled
-	20180831@Leo: new structure - replace in JS
+	20180831@Leo: New structure of event assignment, replace in JS - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

@@ -9,7 +9,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-	20181004@Kane.Le: delete odds compiler
+	20181004@Kane.Le: delete odds compiler - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

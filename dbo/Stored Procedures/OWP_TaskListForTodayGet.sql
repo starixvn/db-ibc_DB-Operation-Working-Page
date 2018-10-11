@@ -14,7 +14,7 @@ AS
 	20171213@Quinn.Vo: remove @ShowAll & enhance performance
 	20180614@Leo: Display Round/OutSide/Remark independent
 	20180723@Raymond.Le: Fix show matchStatus for minorBettype
-	20180805@Raymond.Le: Modify follow new structure of event assignment, add params IsGetYesterdayEvent
+	20180805@Raymond.Le: Modify follow new structure of event assignment, add params IsGetYesterdayEvent - [Redmine: #92868]
 */
 BEGIN
 	DECLARE @FromTime DATETIME

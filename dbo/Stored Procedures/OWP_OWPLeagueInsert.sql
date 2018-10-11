@@ -13,7 +13,7 @@ Task : Insert new OWPLeague
 DB: bodb_OWP
 
 Revisions:
-	20181009@Raymond.Le: new structure 
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 AS
 BEGIN

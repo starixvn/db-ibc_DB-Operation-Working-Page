@@ -7,7 +7,7 @@ Task : Get all TVs
 DB: bodb_OWP
 
 Revisions:
-	20180807@Leo: new structure
+	20180807@Leo: New structure of event assignment - [Redmine: #92868]
 */
 
 BEGIN

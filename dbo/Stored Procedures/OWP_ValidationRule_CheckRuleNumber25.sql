@@ -10,8 +10,8 @@ AS
 
  Revisions:
     20170407@Tim.Trinh: check match 15mins, 10mins
-    20180621@Leo.Vo: new structure of Upload Assignment
-	20180725@Raymond.Le: Modify rule follow new uploading structure
+    20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

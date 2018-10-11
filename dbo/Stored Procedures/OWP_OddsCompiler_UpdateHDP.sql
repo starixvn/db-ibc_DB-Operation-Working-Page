@@ -12,7 +12,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-        20181030@Leo: negative Handicap
+        20181030@Leo: negative Handicap - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

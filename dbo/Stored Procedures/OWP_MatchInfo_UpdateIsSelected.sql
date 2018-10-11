@@ -10,10 +10,12 @@ Created: 20161220@Tim.Trinh
 Task : Update IsSelected
 DB: bodb_OWP  
   
-Revisions:
-• 20170411@Alvin.Nguyen: update all minor match to @IsSelected when update parent
 Param's Explanation:
-• @OWPMatchIds: '1,2' 
+	@OWPMatchIds: '1,2'
+
+Revisions:
+	20170411@Alvin.Nguyen: update all minor match to @IsSelected when update parent
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
      
 */
 BEGIN

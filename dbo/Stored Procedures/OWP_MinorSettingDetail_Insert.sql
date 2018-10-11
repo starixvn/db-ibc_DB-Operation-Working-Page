@@ -13,7 +13,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-	20180806@Raymond.Le: Combine setting X Mins           
+	20180806@Raymond.Le: Combine setting X Mins - [Redmine: #92868]       
 */
 BEGIN
 	SET NOCOUNT ON

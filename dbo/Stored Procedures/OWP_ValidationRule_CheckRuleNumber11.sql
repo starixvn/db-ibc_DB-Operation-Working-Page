@@ -12,7 +12,7 @@ AS
  Revisions:
     20170407@Tim.Trinh: remove check data in bodb02
 	20180416@leo.vo: add FM, AIO
-	20180723@Raymond.Le: Modify rule follow new uploading structure 
+	20180723@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868] 
 */
 BEGIN
 	SET NOCOUNT ON

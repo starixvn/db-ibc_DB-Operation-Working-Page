@@ -9,7 +9,7 @@ AS
  DB: bodb_OWP
 
  Revisions:
-	20180727@Raymond.Le: Exceed trader working shift
+	20180727@Raymond.Le: Validate exceed trader working shift - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

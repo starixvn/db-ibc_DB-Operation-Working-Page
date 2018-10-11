@@ -9,8 +9,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
-    20180621@Leo.Vo: new structure of Upload Assignment
-	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 9 + 10 + 15
+    20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 9 + 10 + 15 - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

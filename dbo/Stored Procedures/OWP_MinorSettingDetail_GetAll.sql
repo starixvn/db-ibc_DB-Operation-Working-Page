@@ -7,7 +7,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-    20180801@Raymond.Le: Display for new minor bettype & Combine setting X Mins    
+    20180801@Raymond.Le: Display for new minor bettype & Combine setting X Mins - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

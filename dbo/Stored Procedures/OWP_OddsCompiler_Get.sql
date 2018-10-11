@@ -13,6 +13,7 @@ AS
  Revisions:
     20170421@Tim.Trinh: refactor code
 	20180131@Raymone.Le: show match when match status is Live
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

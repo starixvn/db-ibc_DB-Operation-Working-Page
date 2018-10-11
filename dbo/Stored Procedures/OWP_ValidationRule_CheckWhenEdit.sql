@@ -17,7 +17,7 @@ AS
 	@IsValidateAssignment: check is validate assignee or match info
 
  Revisions:
-	20180927@Raymond: new assignment     
+	20180927@Raymond.Le: New structure of event assignment - [Redmine: #92868]   
  */
 BEGIN
 	SET NOCOUNT ON

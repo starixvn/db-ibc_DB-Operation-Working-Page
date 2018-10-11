@@ -15,7 +15,7 @@ DB: bodb_OWP
   
 Revisions:  
   20170116@Tim.Trinh: add MessageType   
-  20180927@Leo: remove unused columns
+  20180927@Leo: remove unused columns - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

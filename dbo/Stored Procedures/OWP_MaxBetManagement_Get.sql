@@ -15,7 +15,7 @@ DB: bodb_OWP
 Revisions:
    20170317@Tim.Trinh: add @OptionIds
    20170418@Tim.Trinh: fix bug get option
-   20180601@Leo.VO: change param type
+   20180601@Leo.VO: change param type - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

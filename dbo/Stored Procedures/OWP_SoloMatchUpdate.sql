@@ -8,6 +8,7 @@ AS
     
  Revisions:
    20170420@Tim.Trinh: fix bug
+   20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
