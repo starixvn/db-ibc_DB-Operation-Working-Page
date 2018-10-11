@@ -1,13 +1,15 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber30] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber30] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*  
  Created: 20171012@Tim.Trinh
  Task : Rule number 30: Invalid other time
  DB: bodb_OWP
  
- Revisions:     
+ Revisions:
+    20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -35,15 +37,21 @@ BEGIN
 		SELECT @SessionId
 			,RowNumber
 			,@RuleId AS RuleId
-			,(CASE 
-				WHEN ISNULL(OtherTime, '') <> ''
-					AND ISDATE(OtherTime) = 0 THEN @RuleResultType
-				ELSE @Passed END
+			,(
+				CASE 
+					WHEN ISNULL(OtherTime, '') <> ''
+						AND ISDATE(OtherTime) = 0
+						THEN @RuleResultType
+					ELSE @Passed
+					END
 				) AS ResultType
-			,(CASE 
-				WHEN ISNULL(OtherTime, '') <> ''
-					AND ISDATE(OtherTime) = 0 THEN @Message
-				ELSE '' END
+			,(
+				CASE 
+					WHEN ISNULL(OtherTime, '') <> ''
+						AND ISDATE(OtherTime) = 0
+						THEN @Message
+					ELSE ''
+					END
 				) AS [Message]
 		FROM dbo.AssignmentUploading WITH (NOLOCK)
 		WHERE SessionId = @SessionId

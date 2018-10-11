@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LeagueSetting_DeleteByOptionId] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LeagueSetting_DeleteByOptionId] @UserId INT
 	,@OWPLeagueId INT
 	,@OptionId INT
 	,@ErrCode INT = 0 OUTPUT
@@ -11,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
    20170419@Tim.Trinh: delete remark
+   20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

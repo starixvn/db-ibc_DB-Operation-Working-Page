@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" viewers="vnteam" isFunction="0" isNested="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EventInsertFromInfoSite] @UserId INT = 0
 	,@EventInfo NVARCHAR(MAX)
 	,@ErrCode INT = 0 OUTPUT
@@ -17,6 +17,7 @@ AS
     <Row RowNum="1" EventDate="10/2/2016" .... Note="Away no Website" />  
     </Root>'
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

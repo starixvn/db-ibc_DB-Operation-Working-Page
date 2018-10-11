@@ -1,20 +1,20 @@
-﻿CREATE PROCEDURE [dbo].[OWP_TelevisionGetAll]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_TelevisionGetAll]
 AS	
-	/*
-	Created: 2016-10-06@Aaron
-	Task : Get all TVs
-	DB: bodb_OWP
+/*
+Created: 2016-10-06@Aaron
+Task : Get all TVs
+DB: bodb_OWP
 
-	Revisions:   
-	*/
+Revisions:
+	20180807@Leo: New structure of event assignment - [Redmine: #92868]
+*/
 
 BEGIN
 	SET NOCOUNT ON
 	
-	SELECT	 t.TVCode
-			,t.TVName
-			,t.Decoder
-			,t.Country
+	SELECT t.TVId
+		,t.TVCode
+		,t.Color
 	FROM dbo.Television t WITH (NOLOCK)
-	WHERE t.IsActive = 1
 END

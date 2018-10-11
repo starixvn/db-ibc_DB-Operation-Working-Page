@@ -2,14 +2,16 @@
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateShiftCode] @EmployeeId INT
 	,@ShiftCode NVARCHAR(50)
 	,@ShiftDate DATE
+	,@ShiftStartTime DATETIME = NULL
+	,@ShiftEndTime DATETIME = NULL
 AS
 /*    
- Created: 20180314@Kane.Le
+ Created: 20180914@Kane.Le
  Task : Edit working shift by date
  DB: bodb_OWP
  
- Revisions: 
-	20180312@Kane: Edit working shift by date
+Revisions:
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -23,6 +25,8 @@ BEGIN
 	BEGIN
 		UPDATE dbo.EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
 		SET ShiftCode = @ShiftCode
+			,ShiftStartTime = @ShiftStartTime
+			,ShiftEndTime = @ShiftEndTime
 		WHERE EmployeeId = @EmployeeId
 			AND ShiftDate = @ShiftDate
 	END
@@ -32,11 +36,15 @@ BEGIN
 			EmployeeId
 			,ShiftCode
 			,ShiftDate
+			,ShiftStartTime
+			,ShiftEndTime
 			)
 		VALUES (
 			@EmployeeId
 			,@ShiftCode
 			,@ShiftDate
+			,@ShiftStartTime
+			,@ShiftEndTime
 			);
 	END
 END

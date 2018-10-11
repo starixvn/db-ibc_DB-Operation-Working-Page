@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber20] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber20] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*
  Created: 20170213@Tim.Trinh
@@ -8,6 +9,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
+    20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868] 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -18,6 +21,12 @@ BEGIN
 		,@Message NVARCHAR(200)
 		,@MaxBet VARCHAR(200)
 		,@idoc INT
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
+		,@Specific15MinsNoOfCorners INT = - 5
+		,@Specific15MinsTotalBooking INT = - 8
+		,@FastMarket INT = - 88
+		,@AllInOne INT = - 89
 
 	CREATE TABLE #tblAssignmentUploading (
 		RowNumber INT
@@ -57,7 +66,9 @@ BEGIN
 				WHEN 'MaxBetOU' THEN 'Max Bet (O/U)'
 				WHEN 'MaxBet1HOU' THEN 'Max Bet (1H O/U)'
 				WHEN 'MaxBet1X2' THEN 'Max Bet (1X2)'
-				WHEN 'MaxBet1H1X2' THEN 'Max Bet (1H 1X2)' END
+				WHEN 'MaxBet1H1X2' THEN 'Max Bet (1H 1X2)'
+				WHEN 'MaxBetXMins' THEN 'Max Bet (x mins)'
+				WHEN 'MaxBetFM' THEN 'Max Bet (FM)' END
 				) AS ColumnName
 			,unpvt.MaxBet
 			,0
@@ -87,17 +98,29 @@ BEGIN
 					WHEN RIGHT(LOWER(MaxBet1H1X2), 1) = 'k' THEN SUBSTRING(MaxBet1H1X2, 0, LEN(MaxBet1H1X2))
 					ELSE MaxBet1H1X2 END
 					) AS MaxBet1H1X2
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBetXMins), 1) = 'k' THEN SUBSTRING(MaxBetXMins, 0, LEN(MaxBetXMins))
+					ELSE MaxBetXMins END
+					) AS MaxBetXMins
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBetFM), 1) = 'k' THEN SUBSTRING(MaxBetFM, 0, LEN(MaxBetFM))
+					ELSE MaxBetFM END
+					) AS MaxBetFM
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
+				AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			) AS upload
-		UNPIVOT(MaxBet FOR ColumnName IN (MaxBetHDP, MaxBet1HHDP, MaxBetOU, MaxBet1HOU, MaxBet1X2, MaxBet1H1X2)) unpvt
+		UNPIVOT(MaxBet FOR ColumnName IN (MaxBetHDP, MaxBet1HHDP, MaxBetOU, MaxBet1HOU, MaxBet1X2, MaxBet1H1X2, MaxBetXMins, MaxBetFM)) unpvt
 
 		-- check maxbet
 		UPDATE upload
 		SET upload.IsValid = 1
 		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
 		WHERE ISNULL(upload.MaxBet, '') = ''
-			OR ISNUMERIC(upload.MaxBet) = 1
+			OR (
+				ISNUMERIC(upload.MaxBet) = 1
+				AND SIGN(upload.MaxBet) > 0
+				)
 
 		-- combine
 		INSERT INTO #tblCombineInvalidMaxBet (

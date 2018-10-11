@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber6] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber6] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*
  Created: 20170213@Tim.Trinh
@@ -8,6 +9,7 @@ AS
  DB: bodb_OWP
  
  Revisions:
+	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -36,17 +38,23 @@ BEGIN
 		SELECT @SessionId
 			,RowNumber
 			,@RuleId AS RuleId
-			,(CASE 
-				WHEN ISNULL(Runner, '') = ''
-					AND ISNULL(Phone, '') = ''
-					AND ISNULL(MinorBettypeId, '') = '' THEN @RuleResultType
-				ELSE @Passed END
+			,(
+				CASE 
+					WHEN ISNULL(Runner, '') = ''
+						AND ISNULL(Phone, '') = ''
+						AND ISNULL(MinorBettypeId, '') = ''
+						THEN @RuleResultType
+					ELSE @Passed
+					END
 				) AS ResultType
-			,(CASE 
-				WHEN ISNULL(Runner, '') = ''
-					AND ISNULL(Phone, '') = ''
-					AND ISNULL(MinorBettypeId, '') = '' THEN @Message
-				ELSE '' END
+			,(
+				CASE 
+					WHEN ISNULL(Runner, '') = ''
+						AND ISNULL(Phone, '') = ''
+						AND ISNULL(MinorBettypeId, '') = ''
+						THEN @Message
+					ELSE ''
+					END
 				) AS [Message]
 		FROM dbo.AssignmentUploading WITH (NOLOCK)
 		WHERE SessionId = @SessionId
@@ -58,7 +66,10 @@ BEGIN
 
 		SELECT TOP 1 @Phone = data.Phone
 			,@Runner = data.Runner
-		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Phone NVARCHAR(50), Runner NVARCHAR(100)) AS data
+		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
+				Phone NVARCHAR(50)
+				,Runner NVARCHAR(100)
+				) AS data
 
 		EXEC sp_xml_removedocument @idoc
 
@@ -67,7 +78,7 @@ BEGIN
 			AND NOT EXISTS (
 				SELECT 1
 				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-					INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON minor.MinorMatchId = m.OWPMatchId
+				INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON minor.MinorMatchId = m.OWPMatchId
 				WHERE m.OWPMatchId = @OWPMatchId
 				)
 		BEGIN

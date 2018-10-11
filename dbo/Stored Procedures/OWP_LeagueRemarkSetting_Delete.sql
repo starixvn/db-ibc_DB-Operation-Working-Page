@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LeagueRemarkSetting_Delete] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LeagueRemarkSetting_Delete] @UserId INT
 	,@LeagueId INT
 	,@OptionId INT
 	,@ErrCode INT = 0 OUTPUT
@@ -10,6 +11,7 @@ Task : delete remarks
 DB: bodb_OWP
 
 Revisions:
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
    
 */
 BEGIN

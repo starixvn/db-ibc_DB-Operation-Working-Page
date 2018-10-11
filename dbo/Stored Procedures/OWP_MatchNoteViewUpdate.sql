@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MatchNoteViewUpdate] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MatchNoteViewUpdate] @UserId INT
 	,@MatchId INT
 AS
 /*
@@ -7,7 +8,7 @@ Task : update IsViewed
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

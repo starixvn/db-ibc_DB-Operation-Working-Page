@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber16] @SessionId NVARCHAR(50) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber16] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*
  Created: 20170213@Tim.Trinh
@@ -8,6 +9,7 @@ AS
  DB: bodb_OWP
 
  Revisions:
+    20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -16,11 +18,11 @@ BEGIN
 		,@RuleResultType TINYINT
 		,@Passed TINYINT
 		,@Message NVARCHAR(200)
-		,@Trader2HLA NVARCHAR(100)
+		,@LA NVARCHAR(100)
 		,@Bettype INT
 		,@AssignmentType TINYINT
 		,@Assignee TINYINT
-		,@LA2nd INT = - 1002
+		,@BettypeLA INT = - 1002
 		,@idoc INT
 
 	SELECT @RuleResultType = RuleResultType
@@ -45,11 +47,11 @@ BEGIN
 			,RowNumber
 			,@RuleId AS RuleId
 			,(CASE 
-				WHEN ISNULL(LA2H, '') = '' THEN @RuleResultType
+				WHEN ISNULL(LA, '') = '' THEN @RuleResultType
 				ELSE @Passed END
 				) AS ResultType
 			,(CASE 
-				WHEN ISNULL(LA2H, '') = '' THEN @Message
+				WHEN ISNULL(LA, '') = '' THEN @Message
 				ELSE '' END
 				) AS [Message]
 		FROM dbo.AssignmentUploading WITH (NOLOCK)
@@ -60,15 +62,15 @@ BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value
 
-		SELECT TOP 1 @Trader2HLA = data.Trader
+		SELECT TOP 1 @LA = data.Trader
 			,@Bettype = data.Bettype
 			,@AssignmentType = data.AssignmentType
 		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Trader NVARCHAR(100), Bettype INT, AssignmentType TINYINT) AS data
 
 		EXEC sp_xml_removedocument @idoc
 
-		IF ISNULL(@Trader2HLA, '') = ''
-			AND @Bettype = @LA2nd
+		IF ISNULL(@LA, '') = ''
+			AND @Bettype = @BettypeLA
 			AND @AssignmentType = @Assignee
 		BEGIN
 			SELECT @RuleResultType AS ResultType

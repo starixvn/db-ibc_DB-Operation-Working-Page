@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
 	,@League NVARCHAR(500) = ''
 	,@PageIndex INT = NULL
 	,@ItemsPerPage INT = NULL
@@ -12,6 +13,7 @@ AS
  Revisions:
     20170421@Tim.Trinh: refactor code
 	20180131@Raymone.Le: show match when match status is Live
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -267,16 +269,18 @@ BEGIN
 			)
 
 	--get recommend odds
-	SELECT mr.Id
+	SELECT mr.MatchRecommendOddsId AS Id
 		,mr.OWPMatchId
 		,mr.Bettype
 		,mr.HDP AS Handicap
-		,mr.Choice
-		,mr.Odds
+		,mr.TeamChoice
+		,mrd.Choice
+		,mrd.Odds
 	FROM #tblFinalMatchId AS mid WITH (NOLOCK)
 		INNER JOIN dbo.MatchRecommendOdds AS mr WITH (NOLOCK) ON mid.OWPMatchId = mr.OWPMatchId
+		LEFT JOIN dbo.MatchRecommendOddsDetail AS mrd WITH (NOLOCK) ON mr.MatchRecommendOddsId = mrd.MatchRecommendOddsId
 	WHERE mr.Bettype IN (@Handicap, @OverUnder, @1X2)
-	ORDER BY mr.Id
+	ORDER BY mr.MatchRecommendOddsId
 
 	-- total item
 	SELECT @TotalItem = COUNT(1)

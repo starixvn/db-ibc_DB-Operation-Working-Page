@@ -15,6 +15,7 @@ AS
      20180510@leo.vo: add filter @ShiftCode
      20180912@Kane: show user has no WS
      20180913@Leo: show WS note
+	 20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';

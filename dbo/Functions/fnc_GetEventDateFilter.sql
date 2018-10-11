@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[fnc_GetEventDateFilter] (@FilterId INT)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[fnc_GetEventDateFilter] (@FilterId INT)
 RETURNS DATE
 AS
 /*
@@ -10,6 +11,7 @@ Param's Explanation:
 
 Revisions:
     20171109@Quinn.Vo: get Yesterday
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	DECLARE @EventDate DATE

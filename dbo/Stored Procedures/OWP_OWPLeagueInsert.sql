@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OWPLeagueInsert] 
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OWPLeagueInsert] 
 	 @UserId INT
 	,@OWPLeagueName NVARCHAR(2000)
 	
@@ -12,7 +13,7 @@ Task : Insert new OWPLeague
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 AS
 BEGIN

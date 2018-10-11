@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OWPLeague_Get] @Keywords NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OWPLeague_Get] @Keywords NVARCHAR(100) = ''
 	,@SelectTop INT = NULL
 AS
 /*
@@ -7,7 +8,7 @@ Task : select league with search string
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

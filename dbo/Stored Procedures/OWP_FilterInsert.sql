@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_FilterInsert] @UserId INT = 0
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_FilterInsert] @UserId INT = 0
 	,@Name NVARCHAR(max)
 	,@IsPublic BIT
 	,@Details NVARCHAR(max)
@@ -12,6 +13,7 @@ AS
       
  Revisions:          
     20171101@Raymond.Le: remove @ColumnIds
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

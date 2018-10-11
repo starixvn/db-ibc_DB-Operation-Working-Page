@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MinorSettingDetail_Insert] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MinorSettingDetail_Insert] @UserId INT
 	,@MinorSettingId INT
 	,@MinorBettypeId INT
 	,@Spread SMALLMONEY
@@ -12,7 +13,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-         
+	20180806@Raymond.Le: Combine setting X Mins - [Redmine: #92868]       
 */
 BEGIN
 	SET NOCOUNT ON
@@ -23,6 +24,8 @@ BEGIN
 		,@Xml XML
 		,@LogData NVARCHAR(MAX)
 		,@Id INT
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
 
 	SET @StartRun = GETDATE()
 
@@ -51,6 +54,23 @@ BEGIN
 		,@Spread/100
 		,@MaxBet*1000
 		)
+
+	-- Hardcode insert setting 10mins equal 15mins
+	IF (@MinorBettypeId = @Specific15Mins)
+	BEGIN
+	INSERT INTO dbo.MinorSettingDetail (
+		MinorBettypeId
+		,MinorSettingId
+		,Spread
+		,MaxBet
+		)
+	VALUES (
+		@Specific10Mins
+		,@MinorSettingId
+		,@Spread/100
+		,@MaxBet*1000
+		)		
+	END
 
 	SET @Id = SCOPE_IDENTITY()
 	-- For write log

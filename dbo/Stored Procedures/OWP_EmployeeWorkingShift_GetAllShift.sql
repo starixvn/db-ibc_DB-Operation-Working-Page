@@ -7,14 +7,20 @@ Task : Get
 DB: bodb_OWP
 
 Revisions:
-	20180917@Kane.Le: Get Color of Shift
+	20180917@Kane.Le: New structure of event assignment - [Redmine: #92868]
    
 */
 BEGIN
 	SET NOCOUNT ON;
 
-	SELECT Name AS ShiftCode
-		,Background
-		,Color
+	SELECT UPPER(NAME) AS ShiftCode
+		,CASE 
+			WHEN ISNULL(LTRIM(RTRIM(Background)), '') = '' THEN '#ffffff'
+			ELSE Background 
+			END AS Background
+		,CASE 
+			WHEN ISNULL(LTRIM(RTRIM(Color)), '') = '' THEN '#000000'
+			ELSE Color
+			END  AS Color
 	FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK)
 END;

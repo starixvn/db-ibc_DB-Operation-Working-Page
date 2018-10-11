@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OWPLeague_UpdateIsActive] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OWPLeague_UpdateIsActive] @UserId INT
 	,@OWPLeagueId INT
 	,@IsActive BIT
 	,@ErrCode INT = 0 OUTPUT
@@ -10,7 +11,7 @@ Task : Update IsActive
 DB: bodb_OWP
   
 Revisions:
-Param's Explanation:
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
      
 */
 BEGIN

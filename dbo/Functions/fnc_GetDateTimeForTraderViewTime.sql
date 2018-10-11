@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[fnc_GetDateTimeForTraderViewTime] ()
+﻿/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[fnc_GetDateTimeForTraderViewTime] ()
 RETURNS @TraderViewTime TABLE (
 	FromTime DATETIME
 	,ToTime DATETIME
@@ -11,11 +12,10 @@ AS
 Created: Quinn.Vo@20170421
 Task: Get date time for trader view time.
 DB: bodb_OWP
-Original: 
 
-Revisions:  
 Param's Explanation:
-
+Revisions:
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	DECLARE @Today DATETIME = GETDATE() -- GMT-4

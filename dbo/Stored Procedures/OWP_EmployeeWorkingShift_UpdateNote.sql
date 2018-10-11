@@ -6,8 +6,9 @@ AS
  Created: 20180312@Leo
  Task : Add working shift note
  DB: bodb_OWP
+
  Revisions:
-	20180312@Leo: Add working shift note
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON;

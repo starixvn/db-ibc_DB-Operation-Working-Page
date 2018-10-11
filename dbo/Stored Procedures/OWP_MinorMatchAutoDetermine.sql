@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MinorMatchAutoDetermine]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MinorMatchAutoDetermine]
 AS
 /*
 Created: 20161101@Julien
@@ -13,6 +14,7 @@ Revisions:
     20170727@Tim.Trinh: fix bug determine next cornor, next booking
     20171013@Tim.Trinh: allow determine yesterday event
 	20180613@Jacob: Hotfix - Live Detail - Ignore representated
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

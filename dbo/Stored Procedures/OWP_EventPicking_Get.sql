@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_EventPicking_Get] @Date DATE
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_EventPicking_Get] @Date DATE
 	,@LeagueIds NVARCHAR(MAX) = NULL
 	,@FromTime TIME = NULL
 	,@ToTime TIME = NULL
@@ -21,6 +22,7 @@ Revisions:
         • @LeageIds: '1,2'
     20171218@Raymond.Le: Show match is live
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
    
 */
 BEGIN

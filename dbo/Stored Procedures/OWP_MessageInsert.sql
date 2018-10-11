@@ -1,8 +1,8 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MessageInsert] @UserId INT = 0
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MessageInsert] @UserId INT = 0
 	,@MessageContent NVARCHAR(MAX) = ''
 	,@MessageTo NVARCHAR(MAX) = 'All' -- in case of send to list of users, UserId separated by a comma
 	,@IsImportant BIT = 0
-	,@IsPermanent BIT = 0
 	,@MessageType TINYINT = 1
 	,@SessionId NVARCHAR(100) = NULL
 	,@ErrCode INT = 0 OUTPUT
@@ -15,6 +15,7 @@ DB: bodb_OWP
   
 Revisions:  
   20170116@Tim.Trinh: add MessageType   
+  20180927@Leo: remove unused columns - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,7 +50,6 @@ BEGIN
 			,CreatedBy
 			,CreatedDate
 			,IsImportant
-			,IsPermanent
 			,MessageType
 			)
 		VALUES (
@@ -57,7 +57,6 @@ BEGIN
 			,@UserId
 			,GETDATE()
 			,@IsImportant
-			,@IsPermanent
 			,@MessageType
 			)
 
@@ -102,7 +101,7 @@ BEGIN
 			SELECT @MessageContent AS '@mc'
 				,@MessageTo AS '@mt'
 				,@IsImportant AS '@ii'
-				,@IsPermanent AS '@ip'
+				,0 AS '@ip'
 				,@MessageType AS '@type'
 			FOR XML PATH('z')
 				,ROOT('r')

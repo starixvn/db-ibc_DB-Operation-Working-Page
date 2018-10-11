@@ -1,9 +1,14 @@
-﻿-- =============================================
--- 20161004@Julien		:	Initiate
--- =============================================
-
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EventMgt_MatchLinking] 
 AS
+/*    
+ Created: 20161004@Julien
+ Task : OWP
+ DB: bodb_OWP    
+    
+ Revisions:
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+*/
 BEGIN
 	SET NOCOUNT ON;
 

@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE[dbo].[OWP_FilterGet] @UserId INT = 0
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE[dbo].[OWP_FilterGet] @UserId INT = 0
 AS
 /*      
  Created: 20161220@Razor.Nguyen
@@ -6,7 +7,7 @@ AS
  DB: bodb_OWP      
       
  Revisions:          
- 
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

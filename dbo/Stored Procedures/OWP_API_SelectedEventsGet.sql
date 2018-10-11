@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" viewers="vnteam" isFunction="0" isNested="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_API_SelectedEventsGet]
 AS
 /*    
@@ -7,7 +7,8 @@ AS
  DB: bodb_OWP    
     
  Revisions:
- 20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite  
+	20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite  
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

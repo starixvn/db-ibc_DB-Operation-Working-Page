@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LeagueSetting_CopySetting] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LeagueSetting_CopySetting] @UserId INT
 	,@Details NVARCHAR(MAX) = ''
 	,@Value MONEY = NULL
 	,@IsMaxBet BIT = 1
@@ -11,7 +12,7 @@ Task : copy league setting
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

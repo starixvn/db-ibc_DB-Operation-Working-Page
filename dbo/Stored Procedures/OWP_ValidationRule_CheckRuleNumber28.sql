@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber28] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber28] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*
  Created: 20170809@Tim.Trinh
@@ -8,6 +9,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
+	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -48,7 +51,7 @@ BEGIN
 					AND NOT EXISTS (
 						SELECT 1
 						FROM #tblNoOfHandicap WITH (NOLOCK)
-						WHERE UPPER(REPLACE(LTRIM(RTRIM(NoHDP)), ' ', '')) = Value
+						WHERE UPPER(REPLACE(NoHDP, ' ', '')) = Value
 						) THEN @RuleResultType
 				ELSE @Passed END
 				) AS ResultType
@@ -57,7 +60,7 @@ BEGIN
 					AND NOT EXISTS (
 						SELECT 1
 						FROM #tblNoOfHandicap WITH (NOLOCK)
-						WHERE UPPER(REPLACE(LTRIM(RTRIM(NoHDP)), ' ', '')) = Value
+						WHERE UPPER(REPLACE(NoHDP, ' ', '')) = Value
 						) THEN @Message
 				ELSE '' END
 				) AS [Message]
@@ -89,4 +92,6 @@ BEGIN
 				,'' AS [Message]
 		END
 	END
+
+	DROP TABLE #tblNoOfHandicap
 END

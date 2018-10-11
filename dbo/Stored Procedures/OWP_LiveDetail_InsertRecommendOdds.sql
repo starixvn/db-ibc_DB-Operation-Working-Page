@@ -1,10 +1,13 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LiveDetail_InsertRecommendOdds] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_InsertRecommendOdds] @UserId INT
 	,@OWPMatchId INT
 	,@Bettype INT
 	,@Handicap SMALLMONEY
 	,@RecommendOdds NVARCHAR(MAX)
+	,@TeamChoice INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
+	,@Id INT OUTPUT
 AS
 /*
 Created: 20161205@Tim.Trinh
@@ -12,18 +15,39 @@ Task : insert recommend odds
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]  
 */
 BEGIN
 	SET NOCOUNT ON
 
+		IF EXISTS (
+			SELECT 1
+			FROM dbo.MatchRecommendOdds WITH (NOLOCK)
+			WHERE OWPMatchId = @OWPMatchId
+				AND Bettype = @Bettype
+				AND TeamChoice = @TeamChoice
+				AND (
+					(
+						HDP IS NULL
+						AND @Handicap IS NULL
+						)
+					OR HDP = @Handicap
+					)
+			)
+	BEGIN
+		SELECT @ErrMsg = 'The recommend odds is already existed. Please add another one'
+			,@ErrCode = 7201 -- ActionId + 01
+
+		RETURN
+	END
+	
 	DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
 		,@Duration INT
 		,@LogDataOld NVARCHAR(MAX)
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
-		,@idoc INT
+		,@idoc INT		 
 
 	IF EXISTS (
 			SELECT 1
@@ -69,44 +93,32 @@ BEGIN
 			OWPMatchId
 			,Bettype
 			,HDP
-			,Choice
-			,Odds
+			,TeamChoice
 			,CreatedBy
 			,CreatedDate
 			)
-		SELECT DISTINCT @OWPMatchId
+		VALUES (
+			@OWPMatchId
 			,@Bettype
 			,@Handicap
-			,Choice
-			,Odds
+			,@TeamChoice
 			,@UserId
 			,GETDATE()
+			)
+
+		SELECT @Id = @@IDENTITY
+
+		INSERT INTO dbo.MatchRecommendOddsDetail (
+			MatchRecommendOddsId
+			,Choice
+			,Odds
+			)
+		SELECT DISTINCT @Id
+			,Choice
+			,Odds
 		FROM #RecommendOdds
-
-		SET @Xml = (
-				SELECT OWPMatchId AS '@mt'
-					,Bettype AS '@bt'
-					,HDP AS '@hdp'
-					,Choice AS '@c'
-					,Odds AS '@o'
-				FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-				WHERE OWPMatchId = @OWPMatchId
-					AND Bettype = @Bettype
-					AND HDP = @Handicap
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-			,@SPName = 'OWP_LiveDetail_InsertRecommendOdds'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @OWPMatchId
-			,@Data = @LogData
-			,@DataOld = NULL
+		
+		SELECT @ErrMsg = @Id
 	END TRY
 
 	BEGIN CATCH

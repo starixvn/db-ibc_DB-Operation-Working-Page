@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_MatchNoteInsert] @UserId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MatchNoteInsert] @UserId INT
 	,@OWPMatchId INT
 	,@Note NVARCHAR(max)
 	,@ErrCode INT = 0 OUTPUT
@@ -10,7 +11,7 @@ Task : Insert new MatchNote
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 
 BEGIN

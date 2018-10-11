@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[fnc_GetSpreadFilter] (@FilterId INT)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[fnc_GetSpreadFilter] (@FilterId INT)
 RETURNS TABLE WITH SCHEMABINDING
 AS
 /*
@@ -9,6 +10,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
  
 */
 RETURN (

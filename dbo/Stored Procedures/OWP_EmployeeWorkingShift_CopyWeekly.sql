@@ -8,7 +8,7 @@ Task : clone week from previous
 DB: bodb_OWP
 
 Revisions:
-	20180913@Leo: clone week from previous
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -21,11 +21,16 @@ BEGIN
 		EmployeeId INT
 		,ShiftCode VARCHAR(50)
 		,ShiftDate DATE
+		,ShiftStartTime DATETIME
+		,ShiftEndTime DATETIME
 		)
+
 	DECLARE @OutputWorkingShift TABLE (
 		EmployeeId INT
 		,ShiftCode VARCHAR(50)
 		,ShiftDate DATE
+		,ShiftStartTime DATETIME
+		,ShiftEndTime DATETIME
 		)
 
 	-- get working shift need to be copied
@@ -33,6 +38,8 @@ BEGIN
 	SELECT EmployeeId
 		,ShiftCode
 		,DATEADD(DAY, 7, ShiftDate) AS ShiftDate
+		,DATEADD(DAY, 7, ShiftStartTime) AS ShiftStartTime
+		,DATEADD(DAY, 7, ShiftEndTime) AS ShiftEndTime
 	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
 	WHERE EmployeeId = @UserId
 		AND ShiftDate >= @PreviousFromDate
@@ -49,22 +56,30 @@ BEGIN
 		SELECT EmployeeId
 			,ShiftCode
 			,ShiftDate
+			,ShiftStartTime
+			,ShiftEndTime
 		FROM @CopyWorkingShift
 		) AS s ON s.EmployeeId = t.EmployeeId
 			AND s.ShiftDate = t.ShiftDate
 	WHEN MATCHED THEN
 			UPDATE
 			SET t.ShiftCode = s.ShiftCode
+				,t.ShiftStartTime = s.ShiftStartTime
+				,t.ShiftEndTime = s.ShiftEndTime
 	WHEN NOT MATCHED BY TARGET THEN
 			INSERT
 			VALUES (
 				s.EmployeeId
 				,s.ShiftCode
 				,s.ShiftDate
+				,s.ShiftStartTime
+				,s.ShiftEndTime
 				)
 	OUTPUT inserted.EmployeeId
 		,inserted.ShiftCode
 		,inserted.ShiftDate
+		,inserted.ShiftStartTime
+		,inserted.ShiftEndTime
 	INTO @OutputWorkingShift;
 
 	SELECT ISNULL(s.EmployeeId, 0) AS EmployeeId

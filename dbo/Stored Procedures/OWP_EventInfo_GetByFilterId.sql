@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_EventInfo_GetByFilterId] @FilterId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_EventInfo_GetByFilterId] @FilterId INT
 	,@PageIndex INT = NULL
 	,@ItemsPerPage INT = NULL
 	,@TotalItem INT = NULL OUT
@@ -12,7 +13,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
- 
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

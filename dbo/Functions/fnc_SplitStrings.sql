@@ -1,15 +1,16 @@
-﻿CREATE FUNCTION [dbo].[fnc_SplitStrings](@string nvarchar(max),@splitter nvarchar(max))
+﻿/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[fnc_SplitStrings](@string nvarchar(max),@splitter nvarchar(max))
 /*          
-	Created:           
-	Task:           
-	DB:       
-	Original:          
-	       
-	Revisions:          
-	      
-	Param's Explanation:    
-	You need to use option: option (maxrecursion 0) at the statement if the lengh of string exceed 100 levels      
-	        
+Created: 00000000@User.Name
+Task : split strings
+DB: bodb_OWP
+
+Param's Explanation:    
+	You need to use option: option (maxrecursion 0) at the statement if the lengh of string exceed 100 levels  
+
+Revisions:
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]  
+	                 
 */        
 RETURNS TABLE
 AS

@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[OWP_GetUsernameByUserId] (@userid INT)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[OWP_GetUsernameByUserId] (@userid INT)
 RETURNS VARCHAR(30)
 AS
 /*
@@ -9,7 +10,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
- 
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	DECLARE @username VARCHAR(30)

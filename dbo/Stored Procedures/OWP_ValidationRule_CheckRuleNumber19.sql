@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber19] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber19] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(4000) = NULL
 AS
 /*
  Created: 20170213@Tim.Trinh
@@ -8,6 +9,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
+	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -15,9 +18,6 @@ BEGIN
 	DECLARE @RuleId INT = 19
 		,@RuleResultType TINYINT
 		,@Passed TINYINT
-		,@Bettype INT
-		,@idoc INT
-		,@MaxBet MONEY
 		,@Message NVARCHAR(200)
 		,@MaxBet20000 MONEY = 20000
 		,@MaxBet21000 MONEY = 21000
@@ -25,9 +25,23 @@ BEGIN
 		,@MaxBet61000 MONEY = 61000
 		,@MaxBet150000 MONEY = 150000
 		,@MaxBet151000 MONEY = 151000
-		,@MaxBet400000 MONEY = 400000
-	DECLARE @Handicap TINYINT = 1
-		,@Assignee TINYINT = 1
+		------
+		,@Username NVARCHAR(30)
+		,@Bettype INT
+		,@UserId INT
+		,@idoc INT
+		,@MaxBet MONEY
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
+		,@Specific15MinsNoOfCorners INT = - 5
+		,@Specific15MinsTotalBooking INT = - 8
+		,@FastMarket INT = - 88
+		,@AllInOne INT = - 89
+		,@MainAssignment TINYINT = 1
+		,@BettypeHDP INT = 1
+		,@BettypeOU INT = 3
+		,@Bettype1HHDP INT = 7
+		,@Bettype1HOU INT = 8
 
 	SELECT @RuleResultType = RuleResultType
 		,@Message = MessageFormat
@@ -50,6 +64,10 @@ BEGIN
 	CREATE TABLE #tblAssignmentUploading (
 		RowNumber INT
 		,MaxBetHDP MONEY
+		,TraderHDP NVARCHAR(200)
+		,Trader1HHDP NVARCHAR(200)
+		,TraderOU NVARCHAR(200)
+		,Trader1HOU NVARCHAR(200)
 		)
 
 	CREATE TABLE #tblWrongPriorityAssignment (
@@ -68,12 +86,23 @@ BEGIN
 		INSERT INTO #tblAssignmentUploading (
 			RowNumber
 			,MaxBetHDP
+			,TraderHDP
+			,Trader1HHDP
+			,TraderOU
+			,Trader1HOU
 			)
 		SELECT RowNumber
-			,CAST(MaxBetHDP AS MONEY)
+			,CASE 
+				WHEN ISNUMERIC(MaxBetHDP) = 1 THEN CAST(MaxBetHDP AS MONEY)
+				ELSE NULL
+				END
+			,TraderHDP
+			,Trader1HHDP
+			,TraderOU
+			,Trader1HOU
 		FROM dbo.AssignmentUploading WITH (NOLOCK)
 		WHERE SessionId = @SessionId
-			AND ISNUMERIC(MaxBetHDP) = 1
+			AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 
 		-- MaxBet [0-20k]
 		INSERT INTO #tblWrongPriorityAssignment (
@@ -81,11 +110,10 @@ BEGIN
 			,MaxBet
 			)
 		SELECT upload.RowNumber
-			,upload1.MaxBetHDP
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			INNER JOIN #tblAssignmentUploading AS upload1 WITH (NOLOCK) ON upload.RowNumber = upload1.RowNumber
-		WHERE SessionId = @SessionId
-			AND upload1.MaxBetHDP BETWEEN 0
+			,upload.MaxBetHDP
+		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
+		WHERE upload.MaxBetHDP IS NOT NULL
+			AND upload.MaxBetHDP BETWEEN 0
 				AND @MaxBet20000
 			AND (
 				upload.TraderHDP <> upload.Trader1HHDP
@@ -99,11 +127,10 @@ BEGIN
 			,MaxBet
 			)
 		SELECT upload.RowNumber
-			,upload1.MaxBetHDP
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			INNER JOIN #tblAssignmentUploading AS upload1 WITH (NOLOCK) ON upload.RowNumber = upload1.RowNumber
-		WHERE SessionId = @SessionId
-			AND upload1.MaxBetHDP BETWEEN @MaxBet21000
+			,upload.MaxBetHDP
+		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
+		WHERE upload.MaxBetHDP IS NOT NULL
+			AND upload.MaxBetHDP BETWEEN @MaxBet21000
 				AND @MaxBet60000
 			AND (
 				upload.TraderHDP = upload.TraderOU
@@ -118,11 +145,10 @@ BEGIN
 			,MaxBet
 			)
 		SELECT upload.RowNumber
-			,upload1.MaxBetHDP
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			INNER JOIN #tblAssignmentUploading AS upload1 WITH (NOLOCK) ON upload.RowNumber = upload1.RowNumber
-		WHERE SessionId = @SessionId
-			AND upload1.MaxBetHDP BETWEEN @MaxBet61000
+			,upload.MaxBetHDP
+		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
+		WHERE upload.MaxBetHDP IS NOT NULL
+			AND upload.MaxBetHDP BETWEEN @MaxBet61000
 				AND @MaxBet150000
 			AND (
 				upload.TraderHDP = upload.TraderOU
@@ -131,18 +157,16 @@ BEGIN
 				OR upload.Trader1HHDP <> upload.Trader1HOU
 				)
 
-		-- MaxBet [151k-400k]
+		-- MaxBet [>=151k]
 		INSERT INTO #tblWrongPriorityAssignment (
 			RowNumber
 			,MaxBet
 			)
 		SELECT upload.RowNumber
-			,upload1.MaxBetHDP
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			INNER JOIN #tblAssignmentUploading AS upload1 WITH (NOLOCK) ON upload.RowNumber = upload1.RowNumber
-		WHERE SessionId = @SessionId
-			AND upload1.MaxBetHDP BETWEEN @MaxBet151000
-				AND @MaxBet400000
+			,upload.MaxBetHDP
+		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
+		WHERE upload.MaxBetHDP IS NOT NULL
+			AND upload.MaxBetHDP >= @MaxBet151000
 			AND (
 				upload.TraderHDP = upload.TraderOU
 				OR upload.TraderHDP = upload.Trader1HHDP
@@ -158,18 +182,9 @@ BEGIN
 			,MaxBet
 			)
 		SELECT upload.RowNumber
-			,upload1.MaxBetHDP
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			INNER JOIN #tblAssignmentUploading AS upload1 WITH (NOLOCK) ON upload.RowNumber = upload1.RowNumber
-		WHERE SessionId = @SessionId
-			AND upload1.MaxBetHDP NOT BETWEEN 0
-				AND @MaxBet20000
-			AND upload1.MaxBetHDP NOT BETWEEN @MaxBet21000
-				AND @MaxBet60000
-			AND upload1.MaxBetHDP NOT BETWEEN @MaxBet61000
-				AND @MaxBet150000
-			AND upload1.MaxBetHDP NOT BETWEEN @MaxBet151000
-				AND @MaxBet400000
+			,upload.MaxBetHDP
+		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
+		WHERE ISNULL(upload.MaxBetHDP, '') = ''
 			AND (
 				(
 					ISNULL(upload.TraderHDP, '') <> ''
@@ -211,7 +226,7 @@ BEGIN
 				ELSE @Passed END
 				) AS ResultType
 			,(CASE 
-				WHEN m.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', m.MaxBet)
+				WHEN m.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', ISNULL(m.MaxBet, ''))
 				ELSE '' END
 				) AS [Message]
 		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
@@ -223,173 +238,174 @@ BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value
 
-		SELECT TOP 1 @MaxBet = data.MaxBet
+		SELECT TOP 1 @UserId = data.UserId
 			,@Bettype = data.Bettype
-		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (MaxBet MONEY, Bettype INT) AS data
+		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Bettype INT, UserId INT) AS data
 
 		EXEC sp_xml_removedocument @idoc
 
-		IF @Bettype = @Handicap
+		-- Get assignmet of 4 bettype HDP, OU, 1HHDP, 1HOU
+		INSERT INTO #tblAssignment (
+			OWPMatchId
+			,TraderHDP
+			,TraderOU
+			,Trader1HHDP
+			,Trader1HOU
+			)
+		SELECT OWPMatchId
+			,MAX((CASE 
+					WHEN Bettype = @BettypeHDP
+						AND Bettype = @Bettype THEN @UserId
+					WHEN Bettype = @BettypeHDP THEN UserId
+					ELSE NULL END
+					)) AS TraderHDP
+			,MAX((CASE 
+					WHEN Bettype = @BettypeOU
+						AND Bettype = @Bettype THEN @UserId
+					WHEN Bettype = @BettypeOU THEN UserId
+					ELSE NULL END
+					)) AS TraderOU
+			,MAX((CASE 
+					WHEN Bettype = @Bettype1HHDP
+						AND Bettype = @Bettype THEN @UserId
+					WHEN Bettype = @Bettype1HHDP THEN UserId
+					ELSE NULL END
+					)) AS Trader1HHDP
+			,MAX((CASE 
+					WHEN Bettype = @Bettype1HOU
+						AND Bettype = @Bettype THEN @UserId
+					WHEN Bettype = @Bettype1HOU THEN UserId
+					ELSE NULL END
+					)) AS Trader1HOU
+		FROM dbo.Assignment WITH (NOLOCK)
+		WHERE OWPMatchId = @OWPMatchId
+			AND AssignmentType = @MainAssignment
+			AND Bettype IN (@BettypeHDP, @BettypeOU, @Bettype1HHDP, @Bettype1HOU)
+		GROUP BY OWPMatchId
+
+		-- Get MaxBet HDP of current match (This match must be main match)
+		SELECT @MaxBet = ms.Maxbet
+		FROM dbo.MatchSetting AS ms WITH (NOLOCK)
+		WHERE ms.OWPMatchId = @OWPMatchId
+			AND ms.Bettype = @BettypeHDP
+
+		IF @MaxBet IS NULL
 		BEGIN
-			INSERT INTO #tblAssignment (
-				OWPMatchId
-				,TraderHDP
-				,TraderOU
-				,Trader1HHDP
-				,Trader1HOU
-				)
-			SELECT OWPMatchId
-				,MAX((CASE 
-						WHEN Bettype = 1 THEN UserId
-						ELSE NULL END
-						)) AS TraderHDP
-				,MAX((CASE 
-						WHEN Bettype = 3 THEN UserId
-						ELSE NULL END
-						)) AS TraderOU
-				,MAX((CASE 
-						WHEN Bettype = 7 THEN UserId
-						ELSE NULL END
-						)) AS Trader1HHDP
-				,MAX((CASE 
-						WHEN Bettype = 8 THEN UserId
-						ELSE NULL END
-						)) AS Trader1HOU
-			FROM dbo.Assignment WITH (NOLOCK)
-			WHERE OWPMatchId = @OWPMatchId
-				AND AssignmentType = @Assignee
-				AND Bettype IN (1, 3, 7, 8)
-			GROUP BY OWPMatchId
-
-			-- MaxBet [0-20k]
-			INSERT INTO #tblWrongPriorityAssignment (
-				RowNumber
-				,MaxBet
-				)
-			SELECT 1
-				,@MaxBet
-			FROM #tblAssignment WITH (NOLOCK)
-			WHERE @MaxBet BETWEEN 0
-					AND @MaxBet20000
-				AND (
-					TraderHDP <> Trader1HHDP
-					OR TraderHDP <> TraderOU
-					OR TraderHDP <> Trader1HOU
-					)
-
-			-- MaxBet [21k-60k]
-			INSERT INTO #tblWrongPriorityAssignment (
-				RowNumber
-				,MaxBet
-				)
-			SELECT 1
-				,@MaxBet
-			FROM #tblAssignment WITH (NOLOCK)
-			WHERE @MaxBet BETWEEN @MaxBet21000
-					AND @MaxBet60000
-				AND (
-					TraderHDP = TraderOU
-					OR TraderHDP = Trader1HOU
-					OR TraderHDP <> Trader1HHDP
-					OR TraderOU <> Trader1HOU
-					)
-
-			-- MaxBet [61k-150k]
-			INSERT INTO #tblWrongPriorityAssignment (
-				RowNumber
-				,MaxBet
-				)
-			SELECT 1
-				,@MaxBet
-			FROM #tblAssignment WITH (NOLOCK)
-			WHERE @MaxBet BETWEEN @MaxBet61000
-					AND @MaxBet150000
-				AND (
-					TraderHDP = TraderOU
-					OR TraderHDP = Trader1HHDP
-					OR TraderOU = Trader1HHDP
-					OR Trader1HHDP <> Trader1HOU
-					)
-
-			-- MaxBet [151k-400k]
-			INSERT INTO #tblWrongPriorityAssignment (
-				RowNumber
-				,MaxBet
-				)
-			SELECT 1
-				,@MaxBet
-			FROM #tblAssignment WITH (NOLOCK)
-			WHERE @MaxBet BETWEEN @MaxBet151000
-					AND @MaxBet400000
-				AND (
-					TraderHDP = TraderOU
-					OR TraderHDP = Trader1HHDP
-					OR TraderHDP = Trader1HOU
-					OR TraderOU = Trader1HHDP
-					OR TraderOU = Trader1HOU
-					OR Trader1HHDP = Trader1HOU
-					)
-
-			-- without HDP MaxBet
-			INSERT INTO #tblWrongPriorityAssignment (
-				RowNumber
-				,MaxBet
-				)
-			SELECT 1
-				,@MaxBet
-			FROM #tblAssignment WITH (NOLOCK)
-			WHERE @MaxBet NOT BETWEEN 0
-					AND @MaxBet20000
-				AND @MaxBet NOT BETWEEN @MaxBet21000
-					AND @MaxBet60000
-				AND @MaxBet NOT BETWEEN @MaxBet61000
-					AND @MaxBet150000
-				AND @MaxBet NOT BETWEEN @MaxBet151000
-					AND @MaxBet400000
-				AND (
-					(
-						ISNULL(TraderHDP, '') <> ''
-						AND ISNULL(TraderOU, '') <> ''
-						AND TraderHDP = TraderOU
-						)
-					OR (
-						ISNULL(TraderHDP, '') <> ''
-						AND ISNULL(Trader1HOU, '') <> ''
-						AND TraderHDP = Trader1HOU
-						)
-					OR (
-						ISNULL(TraderOU, '') <> ''
-						AND ISNULL(Trader1HHDP, '') <> ''
-						AND TraderOU = Trader1HHDP
-						)
-					)
-
-			-- result
-			SELECT (CASE 
-					WHEN EXISTS (
-							SELECT 1
-							FROM #tblWrongPriorityAssignment WITH (NOLOCK)
-							) THEN @RuleResultType
-					ELSE @Passed END
-					) AS ResultType
-				,(CASE 
-					WHEN EXISTS (
-							SELECT 1
-							FROM #tblWrongPriorityAssignment WITH (NOLOCK)
-							) THEN REPLACE(@Message, '<content>', STUFF((
-									SELECT DISTINCT '; ' + CAST(MaxBet AS NVARCHAR(50))
-									FROM #tblWrongPriorityAssignment WITH (NOLOCK)
-									WHERE RowNumber = 1
-									FOR XML PATH('')
-									), 1, 2, ''))
-					ELSE '' END
-					) AS [Message]
+			SELECT @MaxBet = dbo.OWP_MaxBetGet(om.OWPMatchId, om.OWPLeagueId, @Bettype)
+			FROM dbo.OWPMatch AS om WITH (NOLOCK)
+			WHERE om.OWPMatchId = @OWPMatchId
 		END
-		ELSE
-		BEGIN
-			SELECT @Passed AS ResultType
-				,'' AS [Message]
-		END
+
+		-- MaxBet [0-20k]
+		INSERT INTO #tblWrongPriorityAssignment (
+			RowNumber
+			,MaxBet
+			)
+		SELECT 1
+			,@MaxBet
+		FROM #tblAssignment WITH (NOLOCK)
+		WHERE @MaxBet BETWEEN 0
+				AND @MaxBet20000
+			AND (
+				TraderHDP <> Trader1HHDP
+				OR TraderHDP <> TraderOU
+				OR TraderHDP <> Trader1HOU
+				)
+
+		-- MaxBet [21k-60k]
+		INSERT INTO #tblWrongPriorityAssignment (
+			RowNumber
+			,MaxBet
+			)
+		SELECT 1
+			,@MaxBet
+		FROM #tblAssignment WITH (NOLOCK)
+		WHERE @MaxBet BETWEEN @MaxBet21000
+				AND @MaxBet60000
+			AND (
+				TraderHDP = TraderOU
+				OR TraderHDP = Trader1HOU
+				OR TraderHDP <> Trader1HHDP
+				OR TraderOU <> Trader1HOU
+				)
+
+		-- MaxBet [61k-150k]
+		INSERT INTO #tblWrongPriorityAssignment (
+			RowNumber
+			,MaxBet
+			)
+		SELECT 1
+			,@MaxBet
+		FROM #tblAssignment WITH (NOLOCK)
+		WHERE @MaxBet BETWEEN @MaxBet61000
+				AND @MaxBet150000
+			AND (
+				TraderHDP = TraderOU
+				OR TraderHDP = Trader1HHDP
+				OR TraderOU = Trader1HHDP
+				OR Trader1HHDP <> Trader1HOU
+				)
+
+		-- MaxBet [>=151k]
+		INSERT INTO #tblWrongPriorityAssignment (
+			RowNumber
+			,MaxBet
+			)
+		SELECT 1
+			,@MaxBet
+		FROM #tblAssignment WITH (NOLOCK)
+		WHERE @MaxBet >= @MaxBet151000
+			AND (
+				TraderHDP = TraderOU
+				OR TraderHDP = Trader1HHDP
+				OR TraderHDP = Trader1HOU
+				OR TraderOU = Trader1HHDP
+				OR TraderOU = Trader1HOU
+				OR Trader1HHDP = Trader1HOU
+				)
+
+		-- without HDP MaxBet
+		INSERT INTO #tblWrongPriorityAssignment (
+			RowNumber
+			,MaxBet
+			)
+		SELECT 1
+			,@MaxBet
+		FROM #tblAssignment WITH (NOLOCK)
+		WHERE ISNULL(@MaxBet, '') = ''
+			AND (
+				(
+					ISNULL(TraderHDP, '') <> ''
+					AND ISNULL(TraderOU, '') <> ''
+					AND TraderHDP = TraderOU
+					)
+				OR (
+					ISNULL(TraderHDP, '') <> ''
+					AND ISNULL(Trader1HOU, '') <> ''
+					AND TraderHDP = Trader1HOU
+					)
+				OR (
+					ISNULL(TraderOU, '') <> ''
+					AND ISNULL(Trader1HHDP, '') <> ''
+					AND TraderOU = Trader1HHDP
+					)
+				)
+
+		-- result
+		SELECT (CASE 
+				WHEN EXISTS (
+						SELECT 1
+						FROM #tblWrongPriorityAssignment WITH (NOLOCK)
+						) THEN @RuleResultType
+				ELSE @Passed END
+				) AS ResultType
+			,(CASE 
+				WHEN EXISTS (
+						SELECT 1
+						FROM #tblWrongPriorityAssignment WITH (NOLOCK)
+						) THEN REPLACE(@Message, '<content>', '')
+				ELSE '' END
+				) AS [Message]
 	END
 
 	DROP TABLE #tblAssignment

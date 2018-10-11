@@ -7,8 +7,7 @@ AS
  DB: bodb_OWP
 
  Revisions: 
- 20180914@Kane.Le
- Task: Get Username output
+	20180914@Kane.Le: Get Username output - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -16,29 +15,29 @@ BEGIN
 	CREATE TABLE #tblUsers (
 		UserId INT
 		,Username NVARCHAR(150)
-		,NickName NVARCHAR(150)
+		,Nickname NVARCHAR(150)
 		)
 
 	INSERT INTO #tblUsers (
 		UserId
 		,Username
-		,NickName
+		,Nickname
 		)
 	SELECT UserId
 		,Username
-		,NickName
+		,Nickname
 	FROM dbo.[User] WITH (NOLOCK)
-	WHERE NickName LIKE @Keyword + '%'
+	WHERE Nickname LIKE @Keyword + '%'
 		OR Username LIKE @Keyword + '%'
 
 	INSERT INTO #tblUsers (
 		UserId
 		,Username
-		,NickName
+		,Nickname
 		)
 	SELECT UserId
 		,Username
-		,NickName
+		,Nickname
 	FROM dbo.[User] WITH (NOLOCK)
 	WHERE Username LIKE @Keyword + '%'
 		AND UserId NOT IN (
@@ -48,7 +47,7 @@ BEGIN
 
 	SELECT TOP 10 UserId
 		,Username
-		,NickName
+		,Nickname
 	FROM #tblUsers WITH (NOLOCK)
 
 	DROP TABLE #tblUsers

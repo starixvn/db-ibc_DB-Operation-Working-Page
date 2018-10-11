@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" viewers="vnteam" isFunction="0" isNested="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_OWPMatch_UpdateFromInfoSite] @UserId INT
 	,@InfoSiteMatchKey NVARCHAR(400)
 	,@InfoSiteMergeMatchKey NVARCHAR(400)
@@ -9,8 +9,8 @@ CREATE PROCEDURE [dbo].[OWP_OWPMatch_UpdateFromInfoSite] @UserId INT
 	,@HomeName NVARCHAR(200)
 	,@AwayName NVARCHAR(200)
 	,@WatchBet NVARCHAR(100)
-	,@Round NVARCHAR(2000)
-	,@OutSide NVARCHAR(2000)
+	,@Round NVARCHAR(100)
+	,@OutSide NVARCHAR(100)
 	,@Agent NVARCHAR(100)
 	,@ExtraTimeRemark NVARCHAR(100)
 	,@Venue NVARCHAR(100)
@@ -29,14 +29,16 @@ DB: bodb_OWP
 Original: 
 
 Revisions: 
-    20180417@Jacob.Phan: Feature #92487 - Move Event Picking to test DB.  
-    20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite   
-    Param's Explanation:
-    • @ErrCode:
-        = 0: Transaction recorded successfully.
-        > 0: Specific Error.
-    • @ErrMsg: Error description.
-    20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
+20180417@Jacob.Phan: Feature #92487 - Move Event Picking to test DB.  
+20180423@Jacob.Phan: Feature #93888 - Apply new API from InfoSite   
+20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
+20180927@Leo: New structure of event assignment - [Redmine: #92868]
+
+Param's Explanation:
+â€¢ @ErrCode:
+	= 0: Transaction recorded successfully.
+	> 0: Specific Error.
+â€¢ @ErrMsg: Error description.
 
 */
 BEGIN
@@ -153,15 +155,15 @@ BEGIN
 			AND OWPAwayId = @OWPAwayId
 	END
 
-	SELECT @OldWatchBet = ISNULL(WatchBet, '')
+	SELECT @OldWatchBet = ISNULL(WB, '')
 		,@OldRound = ISNULL(Round, '')
-		,@OldOutSide = ISNULL(OutSide, '')
+		,@OldOutSide = ISNULL(Division, '')
 		,@OldAgent = ISNULL(Agent, '')
 		,@OldExtraTimeRemark = ISNULL(ExtraTimeRemark, '')
 		,@OldVenue = ISNULL(Venue, '')
 		,@OldLocalTV = ISNULL(LocalTV, '')
 		,@OldLiveTV = ISNULL(LiveTV, '')
-		,@OldWebsite = ISNULL(Website, '')
+		,@OldWebsite = ISNULL(Website1, '')
 		,@OldProvider = ISNULL(Provider, '')
 	FROM dbo.MatchInfo WITH (NOLOCK)
 	WHERE [OWPMatchId] = @OWPMatchId
@@ -212,15 +214,15 @@ BEGIN
 			OR @OldProvider <> @ProviderIds
 		BEGIN
 			UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
-			SET [WatchBet] = @WatchBet
+			SET [WB] = @WatchBet
 				,[Provider] = @ProviderIds
 				,[Round] = @Round
-				,[OutSide] = @OutSide
+				,[Division] = @OutSide
 				,[ExtraTimeRemark] = @ExtraTimeRemark
 				,[Venue] = @Venue
 				,[LocalTV] = @LocalTV
 				,[LiveTV] = @LiveTV
-				,[Website] = @Website
+				,[Website1] = @Website
 				,[Agent] = @AgentIds
 			WHERE [OWPMatchId] = @OWPMatchId
 
@@ -331,15 +333,15 @@ BEGIN
 		IF (@IsChangeMatchInfo = 1)
 		BEGIN
 			UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
-			SET [WatchBet] = @OldWatchBet
+			SET [WB] = @OldWatchBet
 				,[Provider] = @OldProvider
 				,[Round] = @OldRound
-				,[OutSide] = @OldOutSide
+				,[Division] = @OldOutSide
 				,[ExtraTimeRemark] = @OldExtraTimeRemark
 				,[Venue] = @OldVenue
 				,[LocalTV] = @OldLocalTV
 				,[LiveTV] = @OldLiveTV
-				,[Website] = @OldWebsite
+				,[Website1] = @OldWebsite
 				,[Agent] = @OldAgent
 			WHERE [OWPMatchId] = @OWPMatchId
 		END

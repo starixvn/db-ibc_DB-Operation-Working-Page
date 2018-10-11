@@ -1,5 +1,4 @@
-﻿
-
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_FilterDetail_Get] @FilterId INT = 0
 AS
 /*      
@@ -8,7 +7,7 @@ AS
  DB: bodb_OWP      
       
  Revisions:          
- 
+	20180927@Leo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -52,12 +51,27 @@ BEGIN
 
 	CREATE TABLE #tblTelevision (
 		TVCode NVARCHAR(100)
-		,TVName NVARCHAR(100)
-		,Decoder NVARCHAR(100)
-		,Country NVARCHAR(100)
+		,IsSelected BIT
+	)
+	
+	CREATE TABLE #tblAgent (
+		AgentId INT
+		,AgentName NVARCHAR(100)
 		,IsSelected BIT
 	)
 
+	CREATE TABLE #tblRunner (
+		RunnerId INT
+		,RunnerName NVARCHAR(100)
+		,IsSelected BIT
+	)
+	
+	CREATE TABLE #tblProvider (
+		ProviderId INT
+		,ProviderName NVARCHAR(100)
+		,IsSelected BIT
+	)
+	
 	CREATE TABLE #tblRefResource (
 		RefResourceId INT
 		,RefName NVARCHAR(30)
@@ -145,20 +159,13 @@ BEGIN
 	BEGIN
 		INSERT INTO #tblTelevision (
 			TVCode
-			,TVName
-			,Decoder
-			,Country
 			,IsSelected
 		)
 		SELECT	 t.TVCode
-				,t.TVName
-				,t.Decoder
-				,t.Country
 				,CASE WHEN tvc.val IS NOT NULL THEN 1
 					ELSE 0 END
 		FROM dbo.Television AS t WITH (NOLOCK)
 			LEFT JOIN dbo.strSplit(@TVCodes, ',') AS tvc ON t.TVCode = tvc.val
-		WHERE t.IsActive = 1
 	END
 
 	--- Get Provider list
@@ -168,22 +175,17 @@ BEGIN
 
 	IF @ProviderIds IS NOT NULL 
 	BEGIN
-		INSERT INTO #tblRefResource (
-			RefResourceId
-			,RefName
-			,ResourceId
-			,Value
+		INSERT INTO #tblProvider (
+			ProviderId
+			,ProviderName
 			,IsSelected
 		)
-		SELECT	r.RefResourceId
-				,r.RefName
-				,r.ResourceId
-				,r.Value
+		SELECT	r.ProviderId
+				,r.ProviderName
 				,CASE WHEN pid.val IS NOT NULL THEN 1
 					ELSE 0 END
-		FROM dbo.RefResource AS r WITH (NOLOCK)
-			LEFT JOIN dbo.strSplit(@ProviderIds, ',') AS pid ON r.ResourceId = pid.val
-		WHERE r.RefName = 'Provider' 
+		FROM dbo.Provider AS r WITH (NOLOCK)
+			LEFT JOIN dbo.strSplit(@ProviderIds, ',') AS pid ON r.ProviderId = pid.val
 	END
 
 	--- Get Runner list
@@ -193,22 +195,17 @@ BEGIN
 
 	IF @RunnerIds IS NOT NULL 
 	BEGIN
-		INSERT INTO #tblRefResource (
-			RefResourceId
-			,RefName
-			,ResourceId
-			,Value
+		INSERT INTO #tblRunner (
+			RunnerId
+			,RunnerName
 			,IsSelected
 		)
-		SELECT 	r.RefResourceId
-				,r.RefName
-				,r.ResourceId
-				,r.Value
+		SELECT 	r.RunnerId
+				,r.RunnerName
 				,CASE WHEN rid.val IS NOT NULL THEN 1
 					ELSE 0 END
-		FROM dbo.RefResource AS r WITH (NOLOCK)
-			LEFT JOIN dbo.strSplit(@RunnerIds, ',') AS rid ON r.ResourceId = rid.val
-		WHERE r.RefName = 'Runner' 
+		FROM dbo.Runner AS r WITH (NOLOCK)
+			LEFT JOIN dbo.strSplit(@RunnerIds, ',') AS rid ON r.RunnerId = rid.val
 	END
 
 	--- Get Agent list
@@ -218,22 +215,17 @@ BEGIN
 
 	IF @AgentIds IS NOT NULL 
 	BEGIN
-		INSERT INTO #tblRefResource (
-			RefResourceId
-			,RefName
-			,ResourceId
-			,Value
+		INSERT INTO #tblAgent(
+			AgentId
+			,AgentName
 			,IsSelected
 		)
-		SELECT 	r.RefResourceId
-				,r.RefName
-				,r.ResourceId
-				,r.Value
+		SELECT 	r.AgentId
+				,r.AgentName
 				,CASE WHEN aid.val IS NOT NULL THEN 1
 					ELSE 0 END
-		FROM dbo.RefResource AS r WITH (NOLOCK)
-			LEFT JOIN dbo.strSplit(@AgentIds, ',') AS aid ON r.ResourceId = aid.val
-		WHERE r.RefName = 'Agent' 
+		FROM dbo.Agent AS r WITH (NOLOCK)
+			LEFT JOIN dbo.strSplit(@AgentIds, ',') AS aid ON r.AgentId = aid.val
 	END
 
 	--- Get Match status list
@@ -250,7 +242,7 @@ BEGIN
 			,Value
 			,IsSelected
 		)
-		SELECT 	r.RefResourceId
+		SELECT  r.RefResourceId
 				,r.RefName
 				,r.ResourceId
 				,r.Value
@@ -296,12 +288,24 @@ BEGIN
 	FROM #tblUsers
 
 	SELECT 	TVCode
-			,TVName
-			,Decoder
-			,Country
 			,IsSelected
 	FROM #tblTelevision
 
+	SELECT 	AgentId
+			,AgentName
+			,IsSelected
+	FROM #tblAgent
+	
+	SELECT 	RunnerId
+			,RunnerName
+			,IsSelected
+	FROM #tblRunner
+	
+	SELECT 	ProviderId
+			,ProviderName
+			,IsSelected
+	FROM #tblProvider
+	
 	SELECT 	RefResourceId
 			,RefName
 			,ResourceId
@@ -317,14 +321,13 @@ BEGIN
 
     DROP TABLE #tblTelevision
 
+	DROP TABLE #tblAgent
+	
+	DROP TABLE #tblRunner
+	
+	DROP TABLE #tblProvider
+	
 	DROP TABLE #tblRefResource
 
 	DROP TABLE #tblFilterInfo
 END
-/*
-GO
-GRANT EXECUTE ON [dbo].[OWP_FilterDetail_Get] TO [bodbOWPNet]
-GO
-GRANT VIEW DEFINITION ON [dbo].[OWP_FilterDetail_Get] TO [bodbOWPNet]
-GO
-*/

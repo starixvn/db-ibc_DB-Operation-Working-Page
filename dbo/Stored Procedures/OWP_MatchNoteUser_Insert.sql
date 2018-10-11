@@ -1,6 +1,4 @@
-﻿
-
-/****** Object:  Stored Procedure dbo.OWP_MatchNoteUser_Insert    Script Date: 1/16/2017 3:13:31 PM ******/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_MatchNoteUser_Insert] @MatchNoteId INT
 	,@CreatorId INT
 	,@UserIds NVARCHAR(MAX) = ''
@@ -13,7 +11,7 @@ Task : Insert new MatchNoteUser
 DB: bodb_OWP
 
 Revisions:
-   
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868] 
 */
 BEGIN
 	SET NOCOUNT ON

@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[fnc_GetValueFilter] (
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[fnc_GetValueFilter] (
 	@FilterId INT
 	,@FilterName VARCHAR(500)
 	)
@@ -12,6 +13,7 @@ DB: bodb_OWP
 Param's Explanation:
 
 Revisions:
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
  
 */
 BEGIN

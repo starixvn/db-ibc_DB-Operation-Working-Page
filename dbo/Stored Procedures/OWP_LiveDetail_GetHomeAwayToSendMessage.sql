@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_LiveDetail_GetHomeAwayToSendMessage] @OWPMatchId INT
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_GetHomeAwayToSendMessage] @OWPMatchId INT
 AS
 /*
 Created: 20161129@Tim.Trinh
@@ -7,6 +8,7 @@ DB: bodb_OWP
 
 Revisions:
    20170412@Tim.Trinh: remove get data from bodb02
+   20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON

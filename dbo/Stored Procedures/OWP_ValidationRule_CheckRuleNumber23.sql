@@ -1,6 +1,7 @@
-﻿CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber23] @SessionId NVARCHAR(100) = ''
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber23] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
-	,@Value NVARCHAR(MAX) = NULL
+	,@Value NVARCHAR(2000) = NULL
 AS
 /*
  Created: 20170213@Tim.Trinh
@@ -8,6 +9,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
+	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -18,6 +21,14 @@ BEGIN
 		,@Message NVARCHAR(200)
 		,@Spread VARCHAR(200)
 		,@idoc INT
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
+		,@Specific15MinsNoOfCorners INT = - 5
+		,@Specific15MinsTotalBooking INT = - 8
+		,@FastMarket INT = - 88
+		,@AllInOne INT = - 89
+		,@NoOfCorners INT = - 3
+		,@TotalBooking INT = - 6
 
 	CREATE TABLE #tblAssignmentUploading (
 		RowNumber INT
@@ -51,13 +62,18 @@ BEGIN
 			,IsValid
 			)
 		SELECT RowNumber
-			,(CASE ColumnName
-				WHEN 'SpreadHDP' THEN 'Spread (HDP)'
-				WHEN 'Spread1HHDP' THEN 'Spread (1H HDP)'
-				WHEN 'SpreadOU' THEN 'Spread (O/U)'
-				WHEN 'Spread1HOU' THEN 'Spread (1H O/U)'
-				WHEN 'Spread1X2' THEN 'Spread (1X2)'
-				WHEN 'Spread1H1X2' THEN 'Spread (1H 1X2)' END
+			,(CASE 
+				WHEN ColumnName = 'SpreadHDP' THEN 'Spread (HDP)'
+				WHEN ColumnName = 'Spread1HHDP' THEN 'Spread (1H HDP)'
+				WHEN ColumnName = 'SpreadOU' THEN 'Spread (O/U)'
+				WHEN ColumnName = 'Spread1HOU' THEN 'Spread (1H O/U)'
+				WHEN ColumnName = 'Spread1X2' THEN 'Spread (1X2)'
+				WHEN ColumnName = 'Spread1H1X2' THEN 'Spread (1H 1X2)'
+				WHEN ColumnName = 'SpreadXMins'
+					AND ISNULL(unpvt.MinorBettypeId, 0) IN (0, @NoOfCorners, @TotalBooking) THEN 'Spread (x mins)'
+				WHEN (ColumnName = 'SpreadFM')
+					AND unpvt.MinorBettypeId IS NULL THEN 'Spread (FM)' 
+				ELSE 'ignore' END
 				) AS ColumnName
 			,unpvt.Spread
 			,0
@@ -69,16 +85,21 @@ BEGIN
 				,Spread1HOU
 				,Spread1X2
 				,Spread1H1X2
+				,SpreadXMins
+				,SpreadFM
+				,MinorBettypeId
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
+				AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			) AS upload
-		UNPIVOT(Spread FOR ColumnName IN (SpreadHDP, Spread1HHDP, SpreadOU, Spread1HOU, Spread1X2, Spread1H1X2)) unpvt
+		UNPIVOT(Spread FOR ColumnName IN (SpreadHDP, Spread1HHDP, SpreadOU, Spread1HOU, Spread1X2, Spread1H1X2, SpreadXMins, SpreadFM)) unpvt
 
 		-- check spread
 		UPDATE upload
 		SET upload.IsValid = 1
 		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
 		WHERE ISNULL(upload.Spread, '') <> ''
+			OR upload.ColumnName = 'ignore'
 
 		-- combine
 		INSERT INTO #tblCombineInvalidSpread (
