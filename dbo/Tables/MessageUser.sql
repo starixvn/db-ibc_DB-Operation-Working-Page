@@ -6,8 +6,27 @@
     [CreatedDate]   DATETIME       CONSTRAINT [DF_MessageUser_CreatedDate] DEFAULT (getdate()) NULL,
     [CreatedBy]     INT            NULL,
     [SessionId]     NVARCHAR (100) NULL,
-    CONSTRAINT [PK_MessageUser] PRIMARY KEY CLUSTERED ([MessageUserId] ASC, [MessageId] ASC, [UserId] ASC)
+    CONSTRAINT [PK_MessageUser] PRIMARY KEY NONCLUSTERED ([MessageUserId] ASC) ON [OWP_Index]
 );
 
 
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_MessageUser_SessionId]
+    ON [dbo].[MessageUser]([SessionId] ASC)
+    ON [OWP_Index];
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_MessageUser_MessageId]
+    ON [dbo].[MessageUser]([MessageId] ASC)
+    ON [OWP_Index];
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_MessageUser]
+    ON [dbo].[MessageUser]([UserId] ASC);
 

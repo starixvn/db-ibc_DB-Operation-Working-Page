@@ -5,5 +5,12 @@
     [Away]           NVARCHAR (200)  NULL,
     [IsRepresented]  BIT             NOT NULL,
     [IsActive]       BIT             NOT NULL
-) ON [PRIMARY];
+);
+
+
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_MinorMatchTemplateSetting]
+    ON [dbo].[MinorMatchTemplateSetting]([MinorBettypeId] DESC);
 

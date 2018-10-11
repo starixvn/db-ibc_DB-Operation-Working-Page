@@ -3,5 +3,12 @@
     [Field]          SMALLINT        NULL,
     [Condition]      SMALLINT        NULL,
     [Value]          NVARCHAR (2000) NULL
-) ON [PRIMARY];
+);
+
+
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_MinorMatchDetemination]
+    ON [dbo].[MinorMatchDetemination]([MinorBettypeId] DESC);
 

@@ -5,8 +5,18 @@
     [InheritedBettypeId] INT            NULL,
     [Alias]              VARCHAR (10)   NULL,
     [IsActive]           BIT            NULL,
-    [IsMinorBettype]     BIT            NULL
-) ON [PRIMARY];
+    [IsMinorBettype]     BIT            NULL,
+    CONSTRAINT [PK_MinorBettype] PRIMARY KEY CLUSTERED ([MinorBettypeId] DESC)
+);
 
 
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_MinorBettype_ParentInherited]
+    ON [dbo].[MinorBettype]([ParentBettypeId] ASC, [InheritedBettypeId] ASC)
+    INCLUDE([MinorBettypeName], [IsActive])
+    ON [OWP_Index];
 

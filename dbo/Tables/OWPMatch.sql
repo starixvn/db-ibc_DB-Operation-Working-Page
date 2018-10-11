@@ -17,22 +17,16 @@
 
 
 
-GO
-CREATE NONCLUSTERED INDEX [IX_OWPLeagueId]
-    ON [dbo].[OWPMatch]([OWPLeagueId] ASC)
-    ON [OWP_Index];
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_MatchNo]
-    ON [dbo].[OWPMatch]([MatchNo] ASC)
-    INCLUDE([OWPHomeId], [OWPAwayId])
-    ON [OWP_Index];
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_MatchId]
-    ON [dbo].[OWPMatch]([MatchId] ASC)
-    INCLUDE([EventDate], [KickOffTime])
-    ON [OWP_Index];
+
+
+
+GO
+
 

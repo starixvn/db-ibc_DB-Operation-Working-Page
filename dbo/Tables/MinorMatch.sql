@@ -4,6 +4,14 @@
     [ParentMatchId]  INT NOT NULL,
     [MinorBettypeId] INT NOT NULL,
     [IsRepresented]  BIT NOT NULL,
-    [GroupId]        INT NULL
-) ON [PRIMARY];
+    [GroupId]        INT NULL,
+    CONSTRAINT [PK_MinorMatch] PRIMARY KEY NONCLUSTERED ([RelationshipId] ASC)
+);
+
+
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_MinorMatch]
+    ON [dbo].[MinorMatch]([MinorMatchId] ASC);
 

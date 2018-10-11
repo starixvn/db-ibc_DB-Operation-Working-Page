@@ -283,6 +283,7 @@
     <Build Include="dbo\Tables\MatchRecommendOddsDetail.sql" />
     <Build Include="dbo\Tables\AssignmentUploadingOtherTrader.sql" />
     <Build Include="dbo\Tables\Agent.sql" />
+    <Build Include="dbo\Tables\MatchPickingQueue.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

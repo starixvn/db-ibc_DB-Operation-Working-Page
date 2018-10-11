@@ -7,8 +7,15 @@
     [CreatedDate]        DATETIME        CONSTRAINT [DF_MessageTemplate_CreatedDate] DEFAULT (getdate()) NOT NULL,
     [IsActive]           BIT             CONSTRAINT [DF_MessageTemplate_IsActive] DEFAULT ((1)) NOT NULL,
     [SystemMessageType]  TINYINT         NOT NULL,
-    CONSTRAINT [PK_MessageTemplate] PRIMARY KEY CLUSTERED ([MsgTemplateId] ASC, [MsgTemplateCode] ASC)
+    CONSTRAINT [PK_MessageTemplate] PRIMARY KEY NONCLUSTERED ([MsgTemplateId] ASC) ON [OWP_Index]
 );
 
 
+
+
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_MessageTemplate]
+    ON [dbo].[MessageTemplate]([MsgTemplateCode] ASC);
 

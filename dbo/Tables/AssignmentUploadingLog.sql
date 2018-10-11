@@ -7,8 +7,16 @@
     [EndDate]        DATETIME      NULL,
     [Status]         TINYINT       NOT NULL,
     [LogMessage]     VARCHAR (MAX) CONSTRAINT [DF_AssignmentUploadingLog_LogMessage] DEFAULT ('') NOT NULL,
-    CONSTRAINT [PK_AssignmentUploadingLog] PRIMARY KEY CLUSTERED ([SessionId] ASC) ON [PRIMARY]
-) TEXTIMAGE_ON [PRIMARY];
+    CONSTRAINT [PK_AssignmentUploadingLog] PRIMARY KEY CLUSTERED ([SessionId] ASC)
+);
 
 
+
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AssginmentUploadingLog]
+    ON [dbo].[AssignmentUploadingLog]([CreatedDate] ASC)
+    ON [OWP_Index];
 

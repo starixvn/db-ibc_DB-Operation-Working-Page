@@ -5,6 +5,13 @@
     [Bettype]      INT            NOT NULL,
     [Trader]       NVARCHAR (200) CONSTRAINT [DF_AssignmentUploadingOtherTrader_Trader] DEFAULT ('') NOT NULL,
     [Note]         NVARCHAR (200) CONSTRAINT [DF_AssignmentUploadingOtherTrader_Note] DEFAULT ('') NOT NULL,
-    CONSTRAINT [PK_AssignmentUploadingOtherTrader] PRIMARY KEY CLUSTERED ([AssignmentId] ASC)
+    CONSTRAINT [PK_AssignmentUploadingOtherTrader] PRIMARY KEY NONCLUSTERED ([AssignmentId] ASC) ON [OWP_Index]
 );
+
+
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_AssignmentUploadingOtherTrader]
+    ON [dbo].[AssignmentUploadingOtherTrader]([SessionId] ASC, [RowNumber] ASC, [Trader] ASC);
 

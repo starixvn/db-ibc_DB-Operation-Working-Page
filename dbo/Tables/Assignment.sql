@@ -5,8 +5,15 @@
     [AssignmentType] TINYINT        NOT NULL,
     [UserId]         INT            NULL,
     [AssignmentNote] NVARCHAR (200) NULL,
-    CONSTRAINT [PK_Assignment] PRIMARY KEY CLUSTERED ([AssignmentId] ASC)
+    CONSTRAINT [PK_Assignment] PRIMARY KEY NONCLUSTERED ([AssignmentId] ASC) ON [OWP_Index]
 );
 
 
+
+
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_Assignment]
+    ON [dbo].[Assignment]([OWPMatchId] ASC, [Bettype] ASC, [AssignmentType] ASC);
 
