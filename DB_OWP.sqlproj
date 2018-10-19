@@ -61,6 +61,7 @@
     <Folder Include="dbo\Tables\" />
     <Folder Include="dbo\Functions\" />
     <Folder Include="dbo\Stored Procedures\" />
+    <Folder Include="dbo\User Defined Types\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\ValidationRule.sql" />
@@ -284,6 +285,15 @@
     <Build Include="dbo\Tables\AssignmentUploadingOtherTrader.sql" />
     <Build Include="dbo\Tables\Agent.sql" />
     <Build Include="dbo\Tables\MatchPickingQueue.sql" />
+    <Build Include="dbo\Functions\fnc_ReplaceMessageTemplate.sql" />
+    <Build Include="dbo\Functions\fnc_IsMatchInTimeRange.sql" />
+    <Build Include="dbo\Functions\fnc_GetUsernameByUserId.sql" />
+    <Build Include="dbo\Functions\fnc_GetWatcherToSendMessage.sql" />
+    <Build Include="dbo\Functions\fnc_GetAssigneeToSendMessage.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ValidateBeforeDelete_WorkingShiftColor.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickInsert_WorkingShiftColor.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickDelete_WorkingShiftColor.sql" />
+    <Build Include="dbo\User Defined Types\TVP_INT.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

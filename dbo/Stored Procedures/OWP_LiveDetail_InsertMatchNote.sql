@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_InsertMatchNote] @MatchNoteId INT OUTPUT
 	,@UserId INT
 	,@OWPMatchId INT
@@ -16,30 +17,19 @@ Revisions:
    20170901@Tim.Trinh: insert MatchNoteUser
    20170420@Tim.Trinh: modify time to send message
    20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+   20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @MessageTemplate NVARCHAR(MAX) = ''
 		,@MessageType INT
-		,@Username NVARCHAR(100)
-		,@Traders NVARCHAR(MAX)
 		,@StartRun DATETIME
 		,@EndRun DATETIME
 		,@Duration INT
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
-		,@EventDateTime DATETIME
-		,@IsSelected BIT = 0
-		,@FromTime DATETIME
-		,@ToTime DATETIME
-		,@FromTimeForSpecialBettype DATETIME
-		,@ToTimeViewDetailForSpecialBettype DATETIME
-		,@ToTimeForSpecialBettype DATETIME
-	DECLARE @HomeVsAway TABLE (
-		Home NVARCHAR(200)
-		,Away NVARCHAR(200)
-		)
+		,@Assignee TVP_INT
 
 	SET @StartRun = GETDATE()
 
@@ -58,100 +48,49 @@ BEGIN
 	SELECT @MatchNoteId = SCOPE_IDENTITY()
 
 	-- insert message
-	SELECT @FromTime = FromTime
-		,@ToTime = ToTime
-		,@FromTimeForSpecialBettype = FromTimeForSpecialBettype
-		,@ToTimeForSpecialBettype = ToTimeForSpecialBettype
-		,@ToTimeViewDetailForSpecialBettype = ToTimeViewDetailForSpecialBettype
-	FROM dbo.fnc_GetDateTimeForTraderViewTime()
-
-	SELECT @EventDateTime = DATEADD(DAY, DATEDIFF(DAY, 0, om.EventDate), CAST(om.KickOffTime AS DATETIME))
-		,@IsSelected = info.IsSelected
-	FROM dbo.OWPMatch AS om WITH (NOLOCK)
-		INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON om.OWPMatchId = info.OWPMatchId
-	WHERE om.OWPMatchId = @OWPMatchId
-
-	IF (@IsSelected = 1
-		AND @EventDateTime BETWEEN @FromTime
-		AND @ToTimeForSpecialBettype
-	)
+	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
 		SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageType = mt.MsgTemplateId
+			,@MessageType = mt.MsgTemplateId
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'MatchNoteInsert'
 
-		SELECT @Username = dbo.[OWP_GetUsernameByUserId](@UserId)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newnote>', @Note)
+		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
-		INSERT INTO @HomeVsAway (
-			Home
-			,Away
-			)
-		EXEC dbo.OWP_LiveDetail_GetHomeAwayToSendMessage @OWPMatchId
+		INSERT INTO @Assignee
+		SELECT UserId
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 3)
 
-		SELECT @Traders = COALESCE(@Traders + ',', '') + CAST(data.UserId AS NVARCHAR(10))
-		FROM (
-			SELECT DISTINCT a.UserId
-			FROM dbo.Assignment AS a WITH (NOLOCK)
-			WHERE a.OWPMatchId = @OWPMatchId
-				AND a.Bettype > 0
-			UNION
-			SELECT DISTINCT a.UserId
-			FROM dbo.MinorMatch AS mm WITH (NOLOCK)
-				INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mm.MinorBettypeId = mb.ParentBettypeId
-				INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON mm.MinorMatchId = a.OWPMatchId
-				AND mb.InheritedBettypeId = a.Bettype
-			WHERE mm.IsRepresented = 1
-				AND mm.ParentMatchId = @OWPMatchId
-			) AS data
+		-- insert MatchNoteUser
+		EXEC dbo.OWP_MatchNoteUser_Insert @MatchNoteId = @MatchNoteId
+			,@CreatorId = @UserId
+			,@UserIds = @Assignee
+			,@ErrCode = @ErrCode OUTPUT
+			,@ErrMsg = @ErrMsg OUTPUT
 
-		IF LEN(@MessageTemplate) > 0
-		BEGIN
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<user>', @Username)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<home>', (
-						SELECT Home
-						FROM @HomeVsAway
-						))
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<away>', (
-						SELECT Away
-						FROM @HomeVsAway
-						))
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<newnote>', @Note)
-		END
-
-		IF LEN(@Traders) > 0
-			AND LEN(@MessageTemplate) > 0
-		BEGIN
-			-- insert MatchNoteUser
-			EXEC dbo.OWP_MatchNoteUser_Insert @MatchNoteId = @MatchNoteId
-				,@CreatorId = @UserId
-				,@UserIds = @Traders
-				,@ErrCode = @ErrCode OUTPUT
-				,@ErrMsg = @ErrMsg OUTPUT
-
-			-- insert message
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageTo = @Traders
-				,@IsImportant = 0
-				,@MessageType = @MessageType
-				,@SessionId = @SessionId
-				,@ErrCode = @ErrCode OUTPUT
-				,@ErrMsg = @ErrMsg OUTPUT
-		END
+		-- insert message
+		EXEC dbo.OWP_MessageInsert @UserId = @UserId
+			,@MessageContent = @MessageTemplate
+			,@MessageTo = @Assignee
+			,@IsImportant = 0
+			,@MessageType = @MessageType
+			,@SessionId = @SessionId
+			,@ErrCode = @ErrCode OUTPUT
+			,@ErrMsg = @ErrMsg OUTPUT
 	END
 
 	SELECT @ErrMsg = @MatchNoteId
 
 	-- For write log
 	SET @Xml = (
-		SELECT @OWPMatchId AS '@mt'
-			,@Note AS '@nt'
-			,@UserId AS '@cb'
-			,GETDATE() AS '@cd'
-		FOR XML PATH('z')
-			,ROOT('r')
-		)
+			SELECT @OWPMatchId AS '@mt'
+				,@Note AS '@nt'
+				,@UserId AS '@cb'
+				,GETDATE() AS '@cd'
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
 	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 	SET @EndRun = GETDATE()
 	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)

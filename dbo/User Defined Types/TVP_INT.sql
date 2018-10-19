@@ -1,0 +1,3 @@
+﻿CREATE TYPE [dbo].[TVP_INT] AS TABLE (
+    [Id] INT NULL);
+

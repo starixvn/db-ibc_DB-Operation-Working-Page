@@ -1,7 +1,8 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_MatchNoteUser_Insert] @MatchNoteId INT
 	,@CreatorId INT
-	,@UserIds NVARCHAR(MAX) = ''
+	,@UserIds TVP_INT READONLY
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -12,15 +13,10 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868] 
+	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 */
 BEGIN
 	SET NOCOUNT ON
-
-	CREATE TABLE #tmpUser (UserId INT)
-
-	INSERT INTO #tmpUser (UserId)
-	SELECT CAST(RTRIM(LTRIM(val)) AS INT)
-	FROM dbo.strSplit(@UserIds, ',')
 
 	-- Log
 	DECLARE @StartRun DATETIME
@@ -39,9 +35,9 @@ BEGIN
 			,IsViewed
 			)
 		SELECT @MatchNoteId
-			,UserId
+			,Id
 			,0
-		FROM #tmpUser WITH (NOLOCK)
+		FROM @UserIds
 
 		-- For write log
 		SET @Xml = (
