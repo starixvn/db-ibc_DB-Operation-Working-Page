@@ -15,6 +15,7 @@ AS
 	20180416@leo.vo: add FM, AIO
 	20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
 	20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20181015@Raymond.Le: Allow input LA trader of Next Corners, Next Booking - [Redmine: #103202]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -288,15 +289,6 @@ BEGIN
 		,OtherTradersAIO = NULL
 	WHERE SessionId = @SessionId
 		AND MinorBettypeId IS NOT NULL
-
-
-	-- remove LA data of minor match Next Cornors and Next Booking
-	UPDATE dbo.AssignmentUploading WITH (ROWLOCK)
-	SET LA = ''
-		,OtherLA = NULL
-	WHERE MinorBettypeId IN (- 4, - 7)
-		AND SessionId = @SessionId
-	
 
 	-- insert minor matches 10' & 15'
 	EXEC dbo.OWP_AssignmentUploading_InsertMinorMatch @SessionId

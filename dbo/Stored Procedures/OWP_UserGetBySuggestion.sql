@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_UserGetBySuggestion] @Keyword NVARCHAR(100)
 AS
 /*
@@ -8,6 +9,7 @@ AS
 
  Revisions: 
 	20180914@Kane.Le: Get Username output - [Redmine: #92868]
+	20181015@Kane.Le Get Nickname as Username if NULL - [Redmine: #103202]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -47,7 +49,7 @@ BEGIN
 
 	SELECT TOP 10 UserId
 		,Username
-		,Nickname
+		,ISNULL(Nickname, Username) AS Nickname
 	FROM #tblUsers WITH (NOLOCK)
 
 	DROP TABLE #tblUsers
