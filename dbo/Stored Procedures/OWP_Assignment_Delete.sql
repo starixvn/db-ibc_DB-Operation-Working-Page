@@ -149,10 +149,10 @@ BEGIN
 		,IsImportant
 		)
 	SELECT a.UserId
-		,REPLACE(REPLACE(CASE 
-					WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
-					ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
-					END, '<bettype>', @BetTypeName), '<event>', @HomeTeam + ' vs ' + @AwayTeam)
+		,REPLACE(CASE 
+				WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
+				ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
+				END, '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName)
 		,CASE 
 			WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignmentId
 			ELSE @MessageDeleteOtherAssignmentId
@@ -169,7 +169,7 @@ BEGIN
 
 	-- send message to traders have match assigned
 	SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
-	
+
 	INSERT INTO #tblMessage (
 		UserId
 		,MessageContent
@@ -186,13 +186,13 @@ BEGIN
 		,0
 	FROM (
 		SELECT u.UserId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<oldAssignee>', CASE 
-										WHEN s.AssignmentNote IS NULL THEN ISNULL(us.Nickname, us.Username)
-										ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE 
-															WHEN us.UserId IS NULL THEN ''
-															ELSE '#' + ISNULL(us.Nickname, us.Username)
-															END)))
-										END), '<bettype>', @BetTypeName), '<home>', @HomeTeam), '<away>', @AwayTeam), '<user>', @ActorName), '<newAssignee>', '') AS MessageContent
+			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<oldAssignee>', CASE 
+								WHEN s.AssignmentNote IS NULL THEN ISNULL(us.Nickname, us.Username)
+								ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE 
+													WHEN us.UserId IS NULL THEN ''
+													ELSE '#' + ISNULL(us.Nickname, us.Username)
+													END)))
+								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<newAssignee>', '') AS MessageContent
 			,@MessageChangeOfAssignmentId AS MessageTypeId
 			,@MinorBetTypeId AS MinorBetTypeId
 			,@EventDateTime AS EventDateTime

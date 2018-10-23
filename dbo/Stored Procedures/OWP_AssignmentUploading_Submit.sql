@@ -253,6 +253,12 @@ BEGIN
 		,ParentMatchId INT
 		)
 
+	-- store all match (main + minor) in TimeRange
+	CREATE TABLE #tblMatchInTimeRange (
+		OWPMatchId INT NOT NULL
+		,ParentMatchId INT
+		)
+
 	CREATE TABLE #tblUsersReceivedMessageUpdateMatchInfo (
 		OWPMatchId INT NOT NULL
 		,MessageTemplateCode NVARCHAR(50)
@@ -263,13 +269,6 @@ BEGIN
 		OWPMatchId INT NOT NULL
 		,MessageTemplateCode NVARCHAR(50)
 		,MessageId INT
-		)
-
-	CREATE TABLE #tblChangeOfAssignmentMessage (
-		UserId INT
-		,MessageContent NVARCHAR(2000)
-		,MinorBetTypeId INT
-		,EventDateTime DATETIME
 		)
 
 	--save of MatchInfo of existed matches, used to send message if MatchStatus changed
@@ -338,7 +337,7 @@ BEGIN
 		,AssignmentNote NVARCHAR(200)
 		)
 
-	--log for actions on table Assignment
+	--log for actions on table Assignment for current upload session
 	CREATE TABLE #tblAssignmentLog (
 		[Action] VARCHAR(10) -- value is DELETE or INSERT or UPDATE
 		,OWPMatchId INT NOT NULL
@@ -348,11 +347,26 @@ BEGIN
 		,Username NVARCHAR(30)
 		,AssignmentNote NVARCHAR(200)
 		,OldUserId INT
-		,OldAssignmentNote NVARCHAR(200)
 		,OldUsername NVARCHAR(30)
+		,OldAssignmentNote NVARCHAR(200)
 		)
 
-	--list of other Assignment of existed matches
+	CREATE TABLE #tblAssignmentInTimeRange (
+		[Action] VARCHAR(10) -- value is DELETE or INSERT or UPDATE
+		,OWPMatchId INT NOT NULL
+		,ParentMatchId INT
+		,BetType INT NOT NULL
+		,AssignmentType INT NOT NULL
+		,UserId INT
+		,Username NVARCHAR(30)
+		,AssignmentNote NVARCHAR(200)
+		,OldUserId INT
+		,OldUsername NVARCHAR(30)
+		,OldAssignmentNote NVARCHAR(200)
+		,EventName NVARCHAR(2000)
+		)
+
+	--list of old other Assignment of uploaded matches (will be removed)
 	CREATE TABLE #tblOldOtherAssignment (
 		OWPMatchId INT NOT NULL
 		,BetType INT NOT NULL
@@ -360,14 +374,28 @@ BEGIN
 		,AssignmentNote NVARCHAR(200)
 		)
 
+	-- list of message for change of assignment. UserId is related to change of assignment or can be NULL if assignment is other with note only
+	CREATE TABLE #tblChangeOfAssignmentMessage (
+		OWPMatchId INT NOT NULL
+		,ParentMatchId INT NOT NULL
+		,UserId INT
+		,MessageContent NVARCHAR(2000)
+		)
+
 	--list of messages will be sent
+	CREATE TABLE #tblAssignmentMessage (
+		UserId INT NOT NULL
+		,MessageContent NVARCHAR(MAX) NOT NULL
+		,MessageTypeId INT NOT NULL
+		,NotificationSettingId INT NOT NULL
+		,IsImportant BIT NOT NULL
+		)
+
 	CREATE TABLE #tblMessage (
-		UserId INT
-		,MessageContent NVARCHAR(MAX)
-		,MessageTypeId INT
-		,MinorBetTypeId INT
-		,EventDateTime DATETIME
-		,IsImportant BIT
+		UserId INT NOT NULL
+		,MessageContent NVARCHAR(MAX) NOT NULL
+		,MessageTypeId INT NOT NULL
+		,IsImportant BIT NOT NULL
 		)
 
 	BEGIN TRY
@@ -1837,7 +1865,7 @@ BEGIN
 			INNER JOIN #tblMatch AS m ON ta.OWPMatchId = m.OWPMatchId
 		WHERE ta.AssignmentType = 2
 
-		-- when other assignment of upload match has changed and we removed other assignment and inserted new other assignment.
+		-- when other assignment of upload match has changed and we remove other assignment and insert new other assignment.
 		-- So we need compare before & after to get changed (DELETE or INSERT). Note: can't detect case UPDATE
 		INSERT INTO #tblAssignmentLog (
 			[Action]
@@ -1876,6 +1904,45 @@ BEGIN
 		WHERE a.OWPMatchId IS NULL
 			OR oa.OWPMatchId IS NULL
 
+		-- when change status of match to 'Live', we also need send message for assignee in these matches
+		INSERT INTO #tblAssignmentLog (
+			[Action]
+			,OWPMatchId
+			,BetType
+			,AssignmentType
+			,UserId
+			,AssignmentNote
+			)
+		SELECT d.Action
+			,d.OWPMatchId
+			,d.Bettype
+			,d.AssignmentType
+			,d.UserId
+			,d.AssignmentNote
+		FROM (
+			SELECT 'INSERT' AS [Action]
+				,mi.OWPMatchId AS OWPMatchId
+				,a.Bettype AS Bettype
+				,a.AssignmentType AS AssignmentType
+				,a.UserId AS UserId
+				,a.AssignmentNote AS AssignmentNote
+			FROM dbo.MatchInfo AS mi WITH (NOLOCK)
+				INNER JOIN #tblOldMatchInfo AS omi ON mi.OWPMatchId = omi.OWPMatchId
+				AND mi.MatchStatus = @str_Live
+				AND omi.MatchStatus <> @str_Live
+				INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mi.OWPMatchId
+			) AS d
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblAssignmentLog AS a
+				WHERE d.[Action] = a.[Action]
+					AND d.OWPMatchId = a.OWPMatchId
+					AND d.Bettype = a.BetType
+					AND d.AssignmentType = a.AssignmentType
+					AND ISNULL(d.UserId, 0) = ISNULL(a.UserId, 0)
+					AND ISNULL(d.AssignmentNote, '') = ISNULL(a.AssignmentNote, '')
+				)
+
 		-- get message template
 		SELECT @MessageInsertAssignment = mt.MsgTemplateContent
 			,@MessageInsertAssignmentId = mt.MsgTemplateId
@@ -1912,6 +1979,43 @@ BEGIN
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
 
+		--Store list of upload matchs in Time Range
+		INSERT INTO #tblMatchInTimeRange (
+			OWPMatchId
+			,ParentMatchId
+			)
+		SELECT m.OWPMatchId
+			,ISNULL(mm.ParentMatchId, m.OWPMatchId)
+		FROM #tblMatch AS m
+			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.OWPMatchId = om.OWPMatchId
+			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+		WHERE (
+				(
+					mm.MinorBettypeId IS NULL
+					AND om.EventDateTime >= @FromTimeSendMessage
+					AND om.EventDateTime <= @ToTimeSendMessage
+					)
+				OR (
+					mm.MinorBettypeId IS NOT NULL
+					AND 1 = (CASE 
+						WHEN EXISTS (
+								SELECT 1
+								FROM #tblCornerBookingBetTypes
+								WHERE MinorBettypeId = mm.MinorBettypeId
+								) THEN CASE 
+								WHEN om.EventDateTime >= @FromTimeSendMessageSpecialBettype
+									AND om.EventDateTime <= @ToTimeSendMessageSpecialBettype THEN 1
+								ELSE 0
+								END
+						ELSE CASE 
+								WHEN om.EventDateTime >= @FromTimeSendMessage
+									AND om.EventDateTime <= @ToTimeSendMessage THEN 1
+								ELSE 0
+								END END
+						)
+					)
+				)
+
 		-- update Username & oldUsername
 		UPDATE a
 		SET a.Username = ISNULL(u.Nickname, u.Username)
@@ -1923,257 +2027,162 @@ BEGIN
 		FROM #tblAssignmentLog AS a
 			INNER JOIN dbo.[User] AS u ON u.UserId = a.OldUserId
 
+		INSERT INTO #tblAssignmentInTimeRange (
+			[Action]
+			,OWPMatchId
+			,ParentMatchId
+			,BetType
+			,AssignmentType
+			,UserId
+			,Username
+			,AssignmentNote
+			,OldUserId
+			,OldUsername
+			,OldAssignmentNote
+			,EventName
+			)
+		SELECT [Action]
+			,al.OWPMatchId
+			,mt.ParentMatchId
+			,BetType
+			,AssignmentType
+			,UserId
+			,Username
+			,AssignmentNote
+			,OldUserId
+			,OldUsername
+			,OldAssignmentNote
+			,h.OWPTeamName + ' vs ' + a.OWPTeamName + ' - bettype: ' + (CASE 
+				WHEN mjb.BettypeId IS NOT NULL THEN mjb.ShortName
+				ELSE mb.MinorBettypeName END
+				)
+		FROM #tblAssignmentLog AS al
+			INNER JOIN #tblMatchInTimeRange AS mt ON al.OWPMatchId = mt.OWPMatchId
+			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON m.OWPMatchId = mt.ParentMatchId
+			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
+			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
+			LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON al.BetType = mjb.BettypeId
+			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON al.OWPMatchId = mm.MinorMatchId
+			LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mm.MinorBettypeId = mb.ParentBettypeId
+			AND al.BetType = mb.InheritedBettypeId
+
 		-- send message to trader unassigned
-		INSERT INTO #tblMessage (
+		INSERT INTO #tblAssignmentMessage (
 			UserId
 			,MessageContent
 			,MessageTypeId
-			,MinorBetTypeId
-			,EventDateTime
+			,NotificationSettingId
 			,IsImportant
 			)
-		SELECT al.UserId
-			,REPLACE(REPLACE(CASE 
-						WHEN al.AssignmentNote IS NULL THEN @MessageDeleteAssignment
-						ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(al.AssignmentNote, '#<user>', ''))))
-						END, '<bettype>', al.BetTypeName), '<event>', h.OWPTeamName + ' vs ' + a.OWPTeamName)
+		SELECT a.OldUserId
+			,REPLACE(CASE 
+					WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
+					ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.OldAssignmentNote, '#<user>', ''))))
+					END, '<event>', a.EventName)
 			,CASE 
-				WHEN al.AssignmentNote IS NULL THEN @MessageDeleteAssignmentId
+				WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignmentId
 				ELSE @MessageDeleteOtherAssignmentId
 				END
-			,al.MinorBetTypeId
-			,m.EventDateTime
 			,1
-		FROM (
-			SELECT (CASE 
-					WHEN mm.MinorMatchId IS NULL THEN d.OWPMatchId
-					ELSE mm.ParentMatchId END
-					) AS OWPMatchId
-				,(CASE 
-					WHEN mm.MinorMatchId IS NULL THEN mjb.ShortName
-					ELSE mb.MinorBettypeName END
-					) AS BetTypeName
-				,d.UserId
-				,d.AssignmentNote
-				,mm.MinorBettypeId
-			FROM (
-				SELECT OWPMatchId
-					,BetType
-					,OldUserId AS UserId
-					,OldAssignmentNote AS AssignmentNote
-				FROM #tblAssignmentLog
-				WHERE OldUserId IS NOT NULL
-					AND [Action] = 'DELETE'
-				
-				UNION ALL
-				SELECT OWPMatchId
-					,BetType
-					,OldUserId AS UserId
-					,OldAssignmentNote AS AssignmentNote
-				FROM #tblAssignmentLog
-				WHERE OldUserId IS NOT NULL
-					AND [Action] = 'UPDATE'
-				) AS d
-				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON d.BetType = mjb.BettypeId
-				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON d.OWPMatchId = mm.MinorMatchId
-				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mm.MinorBettypeId = mb.ParentBettypeId
-				AND d.BetType = mb.InheritedBettypeId
-			) AS al
-			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON al.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
-			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = 1
-			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = al.UserId
-		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+			,1
+		FROM #tblAssignmentInTimeRange a
+		WHERE a.OldUserId IS NOT NULL
+			AND a.[Action] IN ('DELETE', 'UPDATE')
 
 		-- send message to trader assigned
-		INSERT INTO #tblMessage (
+		INSERT INTO #tblAssignmentMessage (
 			UserId
 			,MessageContent
 			,MessageTypeId
-			,MinorBetTypeId
-			,EventDateTime
+			,NotificationSettingId
 			,IsImportant
 			)
-		SELECT al.UserId
-			,REPLACE(REPLACE(CASE 
-						WHEN al.AssignmentNote IS NULL THEN @MessageInsertAssignment
-						ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(al.AssignmentNote, '#<user>', ''))))
-						END, '<bettype>', al.BetTypeName), '<event>', h.OWPTeamName + ' vs ' + a.OWPTeamName)
+		SELECT a.UserId
+			,REPLACE(CASE 
+					WHEN a.AssignmentType = 1 THEN @MessageInsertAssignment
+					ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
+					END, '<event>', a.EventName)
 			,CASE 
-				WHEN al.AssignmentNote IS NULL THEN @MessageInsertAssignmentId
+				WHEN a.AssignmentType = 1 THEN @MessageInsertAssignmentId
 				ELSE @MessageInsertOtherAssignmentId
 				END
-			,al.MinorBetTypeId
-			,m.EventDateTime
 			,1
-		FROM (
-			SELECT (CASE 
-					WHEN mm.MinorMatchId IS NULL THEN d.OWPMatchId
-					ELSE mm.ParentMatchId END
-					) AS OWPMatchId
-				,(CASE 
-					WHEN mm.MinorMatchId IS NULL THEN mjb.ShortName
-					ELSE mb.MinorBettypeName END
-					) AS BetTypeName
-				,d.UserId
-				,d.AssignmentNote
-				,mm.MinorBettypeId
-			FROM (
-				SELECT OWPMatchId
-					,BetType
-					,UserId
-					,AssignmentNote
-				FROM #tblAssignmentLog
-				WHERE UserId IS NOT NULL
-					AND (
-						[Action] = 'INSERT'
-						OR [Action] = 'UPDATE'
-						)
-				
-				UNION
-				SELECT mi.OWPMatchId
-					,ass.Bettype
-					,ass.UserId
-					,AssignmentNote
-				FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-					INNER JOIN #tblOldMatchInfo AS omi ON mi.OWPMatchId = omi.OWPMatchId
-					AND mi.MatchStatus = @str_Live
-					AND omi.MatchStatus <> @str_Live
-					INNER JOIN dbo.Assignment AS ass WITH (NOLOCK) ON ass.OWPMatchId = mi.OWPMatchId
-					AND ass.UserId IS NOT NULL
-				) AS d
-				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON d.BetType = mjb.BettypeId
-				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON d.OWPMatchId = mm.MinorMatchId
-				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mm.MinorBettypeId = mb.ParentBettypeId
-				AND d.BetType = mb.InheritedBettypeId
-			) AS al
-			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON al.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
-			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = 1
-			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = al.UserId
-		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+			,1
+		FROM #tblAssignmentInTimeRange a
+		WHERE a.UserId IS NOT NULL
+			AND a.[Action] IN ('INSERT', 'UPDATE')
 
 		-- send message to trader have match assigned to inform about assignment edited
 		INSERT INTO #tblChangeOfAssignmentMessage (
-			UserId
+			OWPMatchId
+			,ParentMatchId
+			,UserId
 			,MessageContent
-			,MinorBetTypeId
-			,EventDateTime
 			)
-		SELECT ISNULL(al.UserId, al.OldUserId)
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
-										WHEN al.[Action] <> 'DELETE' THEN CASE 
-												WHEN al.AssignmentNote IS NULL THEN '#' + al.Username
-												ELSE RTRIM(LTRIM(REPLACE(al.AssignmentNote, '#<user>', CASE 
-																	WHEN al.Username IS NOT NULL THEN '#' + al.Username
-																	ELSE ''
-																	END)))
-												END
-										ELSE ''
-										END), '<bettype>', al.BetTypeName), '<home>', h.OWPTeamName), '<away>', a.OWPTeamName), '<user>', @Username), '<oldAssignee>', CASE 
-					WHEN al.[Action] <> 'INSERT' THEN CASE 
-							WHEN al.OldAssignmentNote IS NULL THEN '#' + al.OldUsername
-							ELSE RTRIM(LTRIM(REPLACE(al.OldAssignmentNote, '#<user>', CASE 
-												WHEN al.OldUsername IS NOT NULL THEN '#' + al.OldUsername
+		SELECT a.OWPMatchId
+			,a.ParentMatchId
+			,ISNULL(a.UserId, a.OldUserId)
+			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
+								WHEN a.[Action] <> 'DELETE' THEN CASE 
+										WHEN a.AssignmentType = 1 THEN '#' + a.Username
+										ELSE RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', CASE 
+															WHEN a.Username IS NOT NULL THEN '#' + a.Username
+															ELSE ''
+															END)))
+										END
+								ELSE ''
+								END), '<event>', a.EventName), '<user>', @Username), '<oldAssignee>', CASE 
+					WHEN a.[Action] <> 'INSERT' THEN CASE 
+							WHEN a.AssignmentType = 1 THEN '#' + a.OldUsername
+							ELSE RTRIM(LTRIM(REPLACE(a.OldAssignmentNote, '#<user>', CASE 
+												WHEN a.OldUsername IS NOT NULL THEN '#' + a.OldUsername
 												ELSE ''
 												END)))
 							END
 					ELSE ''
 					END) AS MessageContent
-			,al.MinorBetTypeId
-			,m.EventDateTime
-		FROM (
-			SELECT (CASE 
-					WHEN mm.MinorMatchId IS NULL THEN d.OWPMatchId
-					ELSE mm.ParentMatchId END
-					) AS OWPMatchId
-				,(CASE 
-					WHEN mm.MinorMatchId IS NULL THEN mjb.ShortName
-					ELSE mb.MinorBettypeName END
-					) AS BetTypeName
-				,d.UserId
-				,d.Username
-				,d.AssignmentNote
-				,d.OldUserId
-				,d.OldUsername
-				,d.OldAssignmentNote
-				,mm.MinorBettypeId
-				,d.[Action]
-			FROM (
-				SELECT [Action]
-					,OWPMatchId
-					,BetType
-					,UserId
-					,Username
-					,AssignmentNote
-					,OldUserId
-					,OldUsername
-					,OldAssignmentNote
-				FROM #tblAssignmentLog
-				
-				UNION
-				SELECT 'INSERT'
-					,mi.OWPMatchId
-					,a.Bettype
-					,a.UserId
-					,ISNULL(u.Nickname, u.Username)
-					,AssignmentNote
-					,NULL
-					,NULL
-					,NULL
-				FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-					INNER JOIN #tblOldMatchInfo AS omi ON mi.OWPMatchId = omi.OWPMatchId
-					AND mi.MatchStatus = @str_Live
-					AND omi.MatchStatus <> @str_Live
-					INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mi.OWPMatchId
-					LEFT JOIN dbo.[User] AS u ON u.UserId = a.UserId
-				) AS d
-				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON d.BetType = mjb.BettypeId
-				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON d.OWPMatchId = mm.MinorMatchId
-				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mm.MinorBettypeId = mb.ParentBettypeId
-				AND d.BetType = mb.InheritedBettypeId
-			) AS al
-			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON al.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
-			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
+		FROM #tblAssignmentInTimeRange AS a
 
-		INSERT INTO #tblMessage (
+		INSERT INTO #tblAssignmentMessage (
 			UserId
 			,MessageContent
 			,MessageTypeId
-			,MinorBetTypeId
-			,EventDateTime
+			,NotificationSettingId
 			,IsImportant
 			)
-		SELECT ass.UserId
+		SELECT a.UserId
 			,m.MessageContent
 			,@MessageChangeOfAssignmentId
-			,m.MinorBetTypeId
-			,m.EventDateTime
+			,2
 			,0
 		FROM #tblChangeOfAssignmentMessage AS m
 			CROSS JOIN (
-			SELECT DISTINCT UserId
-			FROM #tblAssignment
-			WHERE UserId IS NOT NULL
-			) AS ass
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = 2
+			SELECT DISTINCT a.UserId
+				,ISNULL(mm.ParentMatchId, a.OWPMatchId) AS ParentMatchId
+			FROM #tblAssignment AS a
+				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
+			WHERE a.UserId IS NOT NULL
+			) AS a
+		WHERE m.UserId <> a.UserId
+			AND m.ParentMatchId = a.ParentMatchId
+
+		INSERT INTO #tblMessage
+		SELECT m.UserId
+			,m.MessageContent
+			,m.MessageTypeId
+			,m.IsImportant
+		FROM #tblAssignmentMessage AS m
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = m.NotificationSettingId
 			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = ass.UserId
-		WHERE ass.UserId <> ISNULL(m.UserId, 0)
-			AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+			AND nsm.UserId = m.UserId
+		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
 		-- send message	if MatchStatus changed to Cancel, Suspended or Postponed
 		INSERT INTO #tblMessage (
 			UserId
 			,MessageContent
 			,MessageTypeId
-			,MinorBetTypeId
-			,EventDateTime
+			,IsImportant
 			)
 		SELECT al.UserId
 			,REPLACE(REPLACE(REPLACE(CASE 
@@ -2187,13 +2196,9 @@ BEGIN
 				WHEN al.MinorBettypeId IS NULL THEN @MessageMatchStatusId
 				ELSE @MessageMinorMatchStatusId END
 				) AS MessageTypeId
-			,al.MinorBetTypeId
-			,m.EventDateTime
+			,1
 		FROM (
-			SELECT DISTINCT (CASE 
-					WHEN mm.MinorMatchId IS NULL THEN mi.OWPMatchId
-					ELSE mm.ParentMatchId END
-					) AS OWPMatchId
+			SELECT DISTINCT ISNULL(mm.ParentMatchId, mi.OWPMatchId) AS OWPMatchId
 				,mi.MatchStatus
 				,mm.MinorBettypeId
 				,mb.MinorBettypeName
@@ -2202,7 +2207,7 @@ BEGIN
 				INNER JOIN #tblOldMatchInfo AS omi ON mi.OWPMatchId = omi.OWPMatchId
 				AND mi.MatchStatus <> omi.MatchStatus
 				AND mi.MatchStatus <> @str_Live
-				INNER JOIN dbo.Assignment AS ass WITH (NOLOCK) ON mi.OWPMatchId = ass.OWPMatchId
+				INNER JOIN #tblAssignment AS ass ON mi.OWPMatchId = ass.OWPMatchId
 				AND ass.UserId IS NOT NULL
 				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
 				LEFT JOIN dbo.MinorBetType AS mb WITH (NOLOCK) ON mm.MinorBettypeId = mb.MinorBettypeId
@@ -2224,30 +2229,6 @@ BEGIN
 				,m.MessageTypeId
 				,m.IsImportant
 			FROM #tblMessage AS m
-			WHERE (
-					m.MinorBetTypeId IS NULL
-					AND m.EventDateTime >= @FromTimeSendMessage
-					AND m.EventDateTime <= @ToTimeSendMessage
-					)
-				OR (
-					m.MinorBetTypeId IS NOT NULL
-					AND 1 = (CASE 
-						WHEN EXISTS (
-								SELECT 1
-								FROM #tblCornerBookingBetTypes
-								WHERE MinorBetTypeId = m.MinorBetTypeId
-								) THEN CASE 
-								WHEN m.EventDateTime >= @FromTimeSendMessageSpecialBettype
-									AND m.EventDateTime <= @ToTimeSendMessageSpecialBettype THEN 1
-								ELSE 0
-								END
-						ELSE CASE 
-								WHEN m.EventDateTime >= @FromTimeSendMessage
-									AND m.EventDateTime <= @ToTimeSendMessage THEN 1
-								ELSE 0
-								END END
-						)
-					)
 			) AS msn ON 1 = 0
 		WHEN NOT MATCHED THEN
 				INSERT (
@@ -2463,10 +2444,14 @@ BEGIN
 	DROP TABLE #tblAssignment
 
 	DROP TABLE #tblAssignmentLog
-	
+
 	DROP TABLE #tblChangeOfAssignmentMessage
 
 	DROP TABLE #tblOldOtherAssignment
+
+	DROP TABLE #tblAssignmentMessage
+	
+	DROP TABLE #tblAssignmentInTimeRange
 
 	DROP TABLE #tblMessage
 END

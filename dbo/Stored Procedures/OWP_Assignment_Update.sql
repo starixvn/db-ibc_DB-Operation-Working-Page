@@ -181,10 +181,10 @@ BEGIN
 			,1
 		FROM (
 			SELECT @OldUserId AS UserId
-				,REPLACE(REPLACE(CASE 
-							WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignment
-							ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
-							END, '<bettype>', @BettypeName), '<event>', @HomeTeam + ' vs ' + @AwayTeam) AS MessageContent
+				,REPLACE(CASE 
+						WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignment
+						ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
+						END, '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName) AS MessageContent
 				,(CASE 
 					WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignmentId
 					ELSE @MessageDeleteOtherAssignmentId END
@@ -219,10 +219,10 @@ BEGIN
 			,1
 		FROM (
 			SELECT @UserId AS UserId
-				,REPLACE(REPLACE(CASE 
-							WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
-							ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
-							END, '<bettype>', @BettypeName), '<event>', @HomeTeam + ' vs ' + @AwayTeam) AS MessageContent
+				,REPLACE(CASE 
+						WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
+						ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
+						END, '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' bettype: ' + @BettypeName) AS MessageContent
 				,(CASE 
 					WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignmentId
 					ELSE @MessageInsertOtherAssignmentId END
@@ -257,7 +257,7 @@ BEGIN
 			,1
 		FROM (
 			SELECT @UserId AS UserId
-				,REPLACE(REPLACE(REPLACE(REPLACE(@MessageUpdateOtherAssignment, '<newnote>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', '')))), '<oldnote>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', '')))), '<bettype>', @Bettype), '<event>', @HomeTeam + ' vs ' + @AwayTeam) AS MessageContent
+				,REPLACE(REPLACE(REPLACE(@MessageUpdateOtherAssignment, '<newnote>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', '')))), '<oldnote>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', '')))), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName) AS MessageContent
 				,(CASE 
 					WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignmentId
 					ELSE @MessageInsertOtherAssignmentId END
@@ -291,10 +291,10 @@ BEGIN
 		,0
 	FROM (
 		SELECT u.UserId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
-										WHEN @AssignmentNote IS NULL THEN ''
-										ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', dbo.[fnc_GetUsernameByUserId](@UserId))))
-										END), '<bettype>', @BetTypeName), '<home>', @HomeTeam), '<away>', @AwayTeam), '<user>', @ActorName), '<oldAssignee>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
+								WHEN @AssignmentNote IS NULL THEN ''
+								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', dbo.[fnc_GetUsernameByUserId](@UserId))))
+								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', CASE 
 					WHEN @OldAssignmentNote IS NULL THEN ''
 					ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', dbo.[fnc_GetUsernameByUserId](@OldUserId))))
 					END) AS MessageContent
