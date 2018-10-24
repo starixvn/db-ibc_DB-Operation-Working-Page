@@ -2188,10 +2188,7 @@ BEGIN
 			,REPLACE(REPLACE(REPLACE(CASE 
 							WHEN al.MinorBettypeId IS NULL THEN @MessageMatchStatus
 							ELSE @MessageMinorMatchStatus
-							END, '<event>', (CASE 
-							WHEN m.MatchNo = '' THEN ''
-							ELSE m.MatchNo + ' - ' END
-							) + h.OWPTeamName + ' vs ' + a.OWPTeamName), '<bettype>', ISNULL(al.MinorBettypeName, '')), '<status>', al.MatchStatus) AS MessageContent
+							END, '<event>', h.OWPTeamName + ' vs ' + a.OWPTeamName), '<bettype>', ISNULL(al.MinorBettypeName, '')), '<status>', al.MatchStatus) AS MessageContent
 			,(CASE 
 				WHEN al.MinorBettypeId IS NULL THEN @MessageMatchStatusId
 				ELSE @MessageMinorMatchStatusId END
