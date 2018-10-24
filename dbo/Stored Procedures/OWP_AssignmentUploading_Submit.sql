@@ -2053,7 +2053,7 @@ BEGIN
 			,OldUsername
 			,OldAssignmentNote
 			,h.OWPTeamName + ' vs ' + a.OWPTeamName + ' - bettype: ' + (CASE 
-				WHEN mjb.BettypeId IS NOT NULL THEN mjb.ShortName
+				WHEN mm.MinorMatchId IS NULL THEN mjb.ShortName
 				ELSE mb.MinorBettypeName END
 				)
 		FROM #tblAssignmentLog AS al
