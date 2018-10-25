@@ -32,6 +32,7 @@ BEGIN
 		,@OWPMatchId INT
 		,@OldNote NVARCHAR(2000)
 		,@Assignee TVP_INT
+		,@NotificationSettingId INT = 3
 
 	SELECT @OldNote = Note
 		,@OWPMatchId = OWPMatchId
@@ -67,7 +68,7 @@ BEGIN
 		WHERE MatchNoteId = @MatchNoteId
 
 		-- insert message  
-		IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+		IF dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1
 		BEGIN
 			SELECT @MessageTemplate = mt.MsgTemplateContent
 				,@MessageType = mt.MsgTemplateId
@@ -80,9 +81,9 @@ BEGIN
 
 			INSERT INTO @Assignee
 			SELECT UserId
-			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 3)
+			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
 
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
+			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 				,@MessageContent = @MessageTemplate
 				,@MessageTo = @Assignee
 				,@IsImportant = 0
@@ -107,7 +108,7 @@ BEGIN
 		SET @EndRun = GETDATE()
 		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+		EXECUTE dbo.OWP_WriteLog @CreatorId = @UserId
 			,@SPName = 'OWP_LiveDetail_UpdateMatchNote'
 			,@LoggedDate = @StartRun
 			,@Duration = @Duration

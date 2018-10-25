@@ -29,6 +29,8 @@ BEGIN
 		,@MessageTemplate NVARCHAR(MAX) = ''
 		,@MessageType INT
 		,@Assignee TVP_INT
+		,@NotificationSettingId INT = 3
+		
 	DECLARE @HomeVsAway TABLE (
 		Home NVARCHAR(200)
 		,Away NVARCHAR(200)
@@ -73,9 +75,9 @@ BEGIN
 
 			INSERT INTO @Assignee
 			SELECT UserId
-			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 3)
+			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
 
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
+			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 				,@MessageContent = @MessageTemplate
 				,@MessageTo = @Assignee
 				,@IsImportant = 0
@@ -89,7 +91,7 @@ BEGIN
 		SET @EndRun = GETDATE()
 		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+		EXECUTE dbo.OWP_WriteLog @CreatorId = @UserId
 			,@SPName = 'OWP_LiveDetail_DeleteMatchNote'
 			,@LoggedDate = @StartRun
 			,@Duration = @Duration

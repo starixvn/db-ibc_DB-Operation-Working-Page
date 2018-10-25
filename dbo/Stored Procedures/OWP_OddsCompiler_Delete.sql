@@ -1,8 +1,8 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Delete] @MatchRecommendOddsIds NVARCHAR(MAX)
+CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Delete] @MatchRecommendOddsIds VARCHAR(200)
+	,@SessionId VARCHAR(50)
 	,@UserId INT
-	,@SessionId VARCHAR(50) = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -18,111 +18,188 @@ AS
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @Iterator INT
-		,@TeamChoice TINYINT
-		,@TotalOWPMatch INT
-		,@OWPMatchId INT
-		,@MatchRecommendOddsDetail INT
-		,@OldHandicap DECIMAL(4)
-		,@BetTypeId INT
+	DECLARE @OWPMatchId INT
+		,@Bettype INT
 		,@BettypeName NVARCHAR(50) = ''
-		,@HomeOrAwayString NVARCHAR(50) = ''
-		,@HandicapTextString NVARCHAR(50) = NULL
-		,@MessageTemplate NVARCHAR(MAX) = ''
+		,@OldTeamChoice TINYINT
+		,@OldTeamName NVARCHAR(50) = ''
+		,@OldHandicap SMALLMONEY
+		,@OldHandicapText NVARCHAR(50) = ''
 		,@OldOddsText NVARCHAR(50) = ''
+		,@MessageTemplate NVARCHAR(2000) = ''
+		,@MatchMessageTemplate NVARCHAR(2000) = ''
 		,@MessageType INT
 		,@Assignee TVP_INT
+		,@NotificationSettingId INT = 4
+		,@Id INT = 1
+		,@Total INT
+		,@MatchRecommendOddId INT
+		,@BettypeHDP INT = 1
+		,@Bettype1HHDP INT = 7
+		,@BettypeOU INT = 3
+		,@Bettype1HOU INT = 8
 
-	CREATE TABLE #MatchRecommendOddsIds (
-		Idx SMALLINT PRIMARY KEY IDENTITY
-		,Id INT
+	CREATE TABLE #MatchRecommendOddsIds (MatchRecommendOddsId INT)
+
+	CREATE TABLE #ValidMatchRecommendOddsIds (
+		Id INT IDENTITY(1, 1)
+		,MatchRecommendOddsId INT
 		)
 
-	INSERT INTO #MatchRecommendOddsIds
+	INSERT INTO #MatchRecommendOddsIds (MatchRecommendOddsId)
 	SELECT val
 	FROM dbo.strSplit(@MatchRecommendOddsIds, ',')
 
-	-----
-	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
-	BEGIN
-		SELECT @TotalOWPMatch = COUNT(m.Id)
-		FROM #MatchRecommendOddsIds m
+	CREATE TABLE #ValidMatchRecommendOdds (
+		MatchRecommendOddsId INT NOT NULL
+		,OWPMatchId INT NOT NULL
+		,Bettype INT NOT NULL
+		,TeamChoice TINYINT
+		,HDP SMALLMONEY
+		)
 
-		IF @TotalOWPMatch > 0
-			SELECT @OWPMatchId = m.OWPMatchId
-			FROM MatchRecommendOdds m
-			WHERE m.MatchRecommendOddsId IN (
-					SELECT Id
-					FROM #MatchRecommendOddsIds
-					)
+	CREATE TABLE #ValidMatchRecommendOddsDetail (
+		MatchRecommendOddsId INT NOT NULL
+		,Choice TINYINT NOT NULL
+		,Odds MONEY
+		)
 
-		SET @Iterator = 1
+	INSERT INTO #ValidMatchRecommendOddsIds (MatchRecommendOddsId)
+	SELECT m.MatchRecommendOddsId
+	FROM #MatchRecommendOddsIds AS i
+		INNER JOIN dbo.MatchRecommendOdds AS m WITH (NOLOCK) ON m.MatchRecommendOddsId = i.MatchRecommendOddsId
+	WHERE Bettype IN (5, 15)
+		OR HDP IS NOT NULL
 
-		WHILE (
-				@Iterator <= (
-					SELECT MAX(Idx)
-					FROM #MatchRecommendOddsIds
-					)
-				)
-		BEGIN
-			SELECT @MatchRecommendOddsDetail = Id
+	DELETE id
+	FROM #ValidMatchRecommendOddsIds AS id
+	WHERE EXISTS (
+			SELECT 1
+			FROM dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK)
+			WHERE id = d.MatchRecommendOddsId
+				AND d.Odds IS NULL
+			)
+
+	INSERT INTO #ValidMatchRecommendOdds (
+		MatchRecommendOddsId
+		,OWPMatchId
+		,Bettype
+		,TeamChoice
+		,HDP
+		)
+	SELECT i.MatchRecommendOddsId
+		,OWPMatchId
+		,Bettype
+		,TeamChoice
+		,HDP
+	FROM #ValidMatchRecommendOddsIds AS i
+		INNER JOIN dbo.MatchRecommendOdds AS m WITH (NOLOCK) ON i.MatchRecommendOddsId = m.MatchRecommendOddsId
+
+	INSERT INTO #ValidMatchRecommendOddsDetail (
+		MatchRecommendOddsId
+		,Choice
+		,Odds
+		)
+	SELECT i.MatchRecommendOddsId
+		,Choice
+		,Odds
+	FROM #ValidMatchRecommendOddsIds AS i
+		INNER JOIN dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK) ON i.MatchRecommendOddsId = d.MatchRecommendOddsId
+	WHERE Odds IS NOT NULL
+
+	-- remove main records
+	DELETE
+	FROM dbo.MatchRecommendOdds
+	WHERE MatchRecommendOddsId IN (
+			SELECT MatchRecommendOddsId
 			FROM #MatchRecommendOddsIds
-			WHERE Idx = @Iterator
+			)
 
-			SELECT @BetTypeId = m.Bettype
-			FROM MatchRecommendOdds m WITH (NOLOCK)
-			WHERE MatchRecommendOddsId = @MatchRecommendOddsDetail
+	-- remove detail records
+	DELETE
+	FROM dbo.MatchRecommendOddsDetail
+	WHERE MatchRecommendOddsId IN (
+			SELECT MatchRecommendOddsId
+			FROM #MatchRecommendOddsIds
+			)
 
-			SELECT @TeamChoice = m.TeamChoice
-			FROM MatchRecommendOdds m WITH (NOLOCK)
-			WHERE m.MatchRecommendOddsId = @MatchRecommendOddsDetail
-				AND m.Bettype = @BetTypeId
+	SELECT @OWPMatchId = OWPMatchId
+	FROM #ValidMatchRecommendOdds
 
-			IF @TeamChoice = 1
-				SET @HomeOrAwayString = 'Home@'
-			ELSE IF @TeamChoice = 2
-				SET @HomeOrAwayString = 'Away@'
+	-- send message
+	IF @OWPMatchId IS NOT NULL
+		AND dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1
+	BEGIN
+		SELECT @MessageTemplate = mt.MsgTemplateContent
+			,@MessageType = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
+
+		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
+
+		INSERT INTO @Assignee
+		SELECT UserId
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
+
+		DECLARE Id_Cursor CURSOR
+		FOR
+		SELECT Id
+		FROM #ValidMatchRecommendOddsIds
+
+		SELECT @Total = COUNT(1)
+		FROM #ValidMatchRecommendOddsIds
+
+		SET @Id = 1
+
+		WHILE @Id <= @Total
+		BEGIN
+			SELECT @MatchRecommendOddId = MatchRecommendOddsId
+			FROM #ValidMatchRecommendOddsIds
+			WHERE Id = @Id
+
+			SELECT @Bettype = Bettype
+				,@OldTeamChoice = TeamChoice
+				,@OldHandicap = HDP
+			FROM #ValidMatchRecommendOdds
+			WHERE MatchRecommendOddsId = @MatchRecommendOddId
 
 			SELECT @BettypeName = ShortName
 			FROM dbo.MajorBettype WITH (NOLOCK)
-			WHERE BettypeId = @BetTypeId
+			WHERE BettypeId = @Bettype
 
-			IF @BetTypeId = 1
-				OR @BetTypeId = 7
+			SELECT @OldTeamName = ''
+				,@OldHandicapText = ''
+
+			IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
 			BEGIN
-				SELECT @OldHandicap = m.HDP
-				FROM MatchRecommendOdds m
-				WHERE m.MatchRecommendOddsId = @MatchRecommendOddsDetail
+				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
+
+				IF @OldTeamChoice = 1
+					SET @OldTeamName = 'Home@'
+				ELSE IF @OldTeamChoice = 2
+					SET @OldTeamName = 'Away@'
+			END
+			ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
+			BEGIN
+				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
 			END
 
-			IF @OldHandicap IS NULL
-				OR @OldHandicap = 0
-				SET @HandicapTextString = ''
-			ELSE
-				SET @HandicapTextString = @OldHandicap
+			SELECT @OldOddsText = STUFF((
+						SELECT '/' + CAST(Odds AS NVARCHAR(30))
+						FROM #ValidMatchRecommendOddsDetail
+						WHERE MatchRecommendOddsId = @MatchRecommendOddId
+						ORDER BY Choice ASC
+						FOR XML PATH('')
+						), 1, 1, '')
 
-			--SET @OldOddsText = ''
-			SELECT @OldOddsText = COALESCE(@OldOddsText + '/', '') + CAST(ISNULL(Odds, 0) AS VARCHAR)
-			FROM MatchRecommendOddsDetail
-			WHERE MatchRecommendOddsId = @MatchRecommendOddsDetail
+			SET @OldOddsText = @OldTeamName + @OldHandicapText + @OldOddsText
+			SET @MatchMessageTemplate = @MessageTemplate
+			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<bettype>', @BettypeName)
+			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<oldodds>', @OldOddsText)
+			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<newodds>', '')
 
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageType = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'MatchRecommendOddsUpdate'
-
-			SET @OldOddsText = @HomeOrAwayString + ISNULL(@HandicapTextString, '') + ' ' + @OldOddsText
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', ISNULL(@BettypeName, ''))
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', ISNULL(@OldOddsText, ''))
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', '')
-			SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
-
-			INSERT INTO @Assignee
-			SELECT UserId
-			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 4)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
+			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+				,@MessageContent = @MatchMessageTemplate
 				,@MessageTo = @Assignee
 				,@IsImportant = 0
 				,@MessageType = @MessageType
@@ -130,23 +207,15 @@ BEGIN
 				,@ErrCode = @ErrCode OUTPUT
 				,@ErrMsg = @ErrMsg OUTPUT
 
-			SET @Iterator = @Iterator + 1
+			SET @Id = @Id + 1
 		END
 	END
 
-	DELETE
-	FROM dbo.MatchRecommendOddsDetail
-	WHERE MatchRecommendOddsId IN (
-			SELECT Id
-			FROM #MatchRecommendOddsIds
-			)
-
-	DELETE
-	FROM dbo.MatchRecommendOdds
-	WHERE MatchRecommendOddsId IN (
-			SELECT Id
-			FROM #MatchRecommendOddsIds
-			)
-
 	DROP TABLE #MatchRecommendOddsIds
+
+	DROP TABLE #ValidMatchRecommendOddsIds
+
+	DROP TABLE #ValidMatchRecommendOdds
+
+	DROP TABLE #ValidMatchRecommendOddsDetail
 END

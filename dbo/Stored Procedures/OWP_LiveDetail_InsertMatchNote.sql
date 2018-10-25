@@ -30,6 +30,7 @@ BEGIN
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
 		,@Assignee TVP_INT
+		,@NotificationSettingId INT = 3
 
 	SET @StartRun = GETDATE()
 
@@ -60,7 +61,7 @@ BEGIN
 
 		INSERT INTO @Assignee
 		SELECT UserId
-		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 3)
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
 
 		-- insert MatchNoteUser
 		EXEC dbo.OWP_MatchNoteUser_Insert @MatchNoteId = @MatchNoteId
@@ -70,7 +71,7 @@ BEGIN
 			,@ErrMsg = @ErrMsg OUTPUT
 
 		-- insert message
-		EXEC dbo.OWP_MessageInsert @UserId = @UserId
+		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 			,@MessageContent = @MessageTemplate
 			,@MessageTo = @Assignee
 			,@IsImportant = 0
@@ -95,7 +96,7 @@ BEGIN
 	SET @EndRun = GETDATE()
 	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-	EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+	EXECUTE dbo.OWP_WriteLog @CreatorId = @UserId
 		,@SPName = 'OWP_LiveDetail_InsertMatchNote'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration

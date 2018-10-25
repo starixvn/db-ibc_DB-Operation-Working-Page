@@ -36,6 +36,11 @@ BEGIN
 		,@Bettype INT
 		,@OldHandicap DECIMAL
 		,@OldTeamChoice TINYINT
+		,@NotificationSettingId INT = 4
+		,@BettypeHDP INT = 1
+		,@Bettype1HHDP INT = 7
+		,@BettypeOU INT = 3
+		,@Bettype1HOU INT = 8
 
 	SELECT @OWPMatchId = OWPMatchId
 		,@Bettype = Bettype
@@ -125,7 +130,7 @@ BEGIN
 				,s.Odds
 				);
 
-	-- insert message  		
+	-- insert message
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
 		SELECT @MessageTemplate = mt.MsgTemplateContent
@@ -137,7 +142,7 @@ BEGIN
 		FROM dbo.MajorBettype WITH (NOLOCK)
 		WHERE BettypeId = @Bettype
 
-		IF @Bettype IN (1, 7)
+		IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
 		BEGIN
 			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
 			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
@@ -152,7 +157,7 @@ BEGIN
 			ELSE IF @OldTeamChoice = 2
 				SET @OldTeamName = 'Away@'
 		END
-		ELSE IF @Bettype IN (3, 8)
+		ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
 		BEGIN
 			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
 			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
@@ -181,9 +186,9 @@ BEGIN
 
 		INSERT INTO @Assignee
 		SELECT UserId
-		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 4)
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
 
-		EXEC dbo.OWP_MessageInsert @UserId = @UserId
+		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 			,@MessageContent = @MessageTemplate
 			,@MessageTo = @Assignee
 			,@IsImportant = 0

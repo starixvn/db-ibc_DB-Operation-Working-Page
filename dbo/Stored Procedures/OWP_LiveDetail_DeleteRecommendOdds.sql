@@ -30,6 +30,11 @@ BEGIN
 		,@MessageTemplate NVARCHAR(MAX) = ''
 		,@MessageType INT
 		,@Assignee TVP_INT
+		,@NotificationSettingId INT = 4
+		,@BettypeHDP INT = 1
+		,@Bettype1HHDP INT = 7
+		,@BettypeOU INT = 3
+		,@Bettype1HOU INT = 8
 
 	SELECT @OWPMatchId = OWPMatchId
 		,@Bettype = Bettype
@@ -73,7 +78,7 @@ BEGIN
 		FROM dbo.MajorBettype WITH (NOLOCK)
 		WHERE BettypeId = @Bettype
 
-		IF @Bettype IN (1, 7)
+		IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
 		BEGIN
 			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
 
@@ -82,7 +87,7 @@ BEGIN
 			ELSE IF @OldTeamChoice = 2
 				SET @OldTeamName = 'Away@'
 		END
-		ELSE IF @Bettype IN (3, 8)
+		ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
 		BEGIN
 			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
 		END
@@ -102,9 +107,9 @@ BEGIN
 
 		INSERT INTO @Assignee
 		SELECT UserId
-		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 4)
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
 
-		EXEC dbo.OWP_MessageInsert @UserId = @UserId
+		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 			,@MessageContent = @MessageTemplate
 			,@MessageTo = @Assignee
 			,@IsImportant = 0

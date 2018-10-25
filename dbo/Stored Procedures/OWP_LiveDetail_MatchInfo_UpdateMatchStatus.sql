@@ -209,7 +209,7 @@ BEGIN
 					,asm.MinorBettypeId
 					,@EventDateTime
 				FROM (
-					SELECT DISTINCT a.OWPMatchId
+					SELECT DISTINCT a.OWPMatchId --Minor match
 						,a.UserId
 						,mibt.MinorBettypeName AS BettypeName
 						,minor.MinorBettypeId
@@ -220,12 +220,36 @@ BEGIN
 						AND minor.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 					
 					UNION
-					SELECT DISTINCT a.OWPMatchId
+					SELECT DISTINCT pmm.MinorMatchId --Minor match @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking
+						,a.UserId
+						,mibt.MinorBettypeName AS BettypeName
+						,pmm.MinorBettypeId
+					FROM dbo.Assignment AS a WITH (NOLOCK)
+						INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
+						LEFT JOIN dbo.MinorMatch AS pmm WITH (NOLOCK) ON pmm.ParentMatchId = @OWPMatchId 
+																AND pmm.MinorBettypeId = (CASE WHEN minor.MinorBettypeId = @Specific15MinsNoOfCorners THEN @NoOfCorners
+																							ELSE @TotalBooking END)
+						INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON mibt.MinorBettypeId = pmm.MinorBettypeId
+					WHERE minor.ParentMatchId = @OWPMatchId
+						AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
+										
+					UNION -- Parent match
+					SELECT DISTINCT a.OWPMatchId 
 						,a.UserId
 						,NULL AS BettypeName
 						,NULL AS MinorBettypeId
 					FROM dbo.Assignment AS a WITH (NOLOCK)
 					WHERE a.OWPMatchId = @OWPMatchId
+
+					UNION -- Match 15mis 10mins FM AIO
+					SELECT DISTINCT @OWPMatchId
+						,a.UserId
+						,NULL AS BettypeName
+						,NULL
+					FROM dbo.Assignment AS a WITH (NOLOCK)
+						INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
+					WHERE minor.ParentMatchId = @OWPMatchId
+						AND minor.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne)
 					) AS asm
 					INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON asm.OWPMatchId = info.OWPMatchId
 					LEFT JOIN #tblOldMatchInfo AS oldinfo ON asm.OWPMatchId = oldinfo.OWPMatchId
