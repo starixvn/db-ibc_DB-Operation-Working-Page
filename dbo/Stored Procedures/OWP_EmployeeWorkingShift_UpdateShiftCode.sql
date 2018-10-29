@@ -24,7 +24,7 @@ BEGIN
 			)
 	BEGIN
 		UPDATE dbo.EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
-		SET ShiftCode = @ShiftCode
+		SET ShiftCode = UPPER(RTRIM(LTRIM(@ShiftCode)))
 			,ShiftStartTime = @ShiftStartTime
 			,ShiftEndTime = @ShiftEndTime
 		WHERE EmployeeId = @EmployeeId
@@ -41,7 +41,7 @@ BEGIN
 			)
 		VALUES (
 			@EmployeeId
-			,@ShiftCode
+			,UPPER(RTRIM(LTRIM(@ShiftCode)))
 			,@ShiftDate
 			,@ShiftStartTime
 			,@ShiftEndTime

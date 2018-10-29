@@ -76,7 +76,7 @@ BEGIN
 	WHERE EXISTS (
 			SELECT 1
 			FROM dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK)
-			WHERE id = d.MatchRecommendOddsId
+			WHERE id.MatchRecommendOddsId = d.MatchRecommendOddsId
 				AND d.Odds IS NULL
 			)
 

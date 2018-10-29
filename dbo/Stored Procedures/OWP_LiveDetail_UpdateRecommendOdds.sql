@@ -34,7 +34,7 @@ BEGIN
 		,@Assignee TVP_INT
 		,@OWPMatchId INT
 		,@Bettype INT
-		,@OldHandicap DECIMAL
+		,@OldHandicap SMALLMONEY
 		,@OldTeamChoice TINYINT
 		,@NotificationSettingId INT = 4
 		,@BettypeHDP INT = 1
