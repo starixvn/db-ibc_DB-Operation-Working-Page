@@ -2,7 +2,6 @@
 CREATE PROCEDURE [dbo].[OWP_EventInfo_GetByFilterId] @FilterId INT
 	,@PageIndex INT = NULL
 	,@ItemsPerPage INT = NULL
-	,@TotalItem INT = NULL OUT
 	,@ShowAll BIT = 0
 AS
 /*
@@ -14,6 +13,7 @@ Param's Explanation:
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -36,7 +36,7 @@ BEGIN
 		,@AgentIds NVARCHAR(MAX)
 		,@ProviderIds NVARCHAR(MAX)
 		,@RunnerIds NVARCHAR(MAX)
-		,@TVCodes NVARCHAR(MAX)
+		,@TVIds NVARCHAR(MAX)
 		,@IsSelected INT
 		,@MatchNumber NVARCHAR(50)
 		,@Remark NVARCHAR(500) 
@@ -55,7 +55,7 @@ BEGIN
 	SET @AgentIds = dbo.fnc_GetValueFilter(@FilterId, 'Agent')
 	SET @ProviderIds = dbo.fnc_GetValueFilter(@FilterId, 'Provider')
 	SET @RunnerIds = dbo.fnc_GetValueFilter(@FilterId, 'Runner')
-	SET @TVCodes = dbo.fnc_GetValueFilter(@FilterId, 'TV')
+	SET @TVIds = dbo.fnc_GetValueFilter(@FilterId, 'TV')
 	SET @IsSelected = ISNULL(dbo.fnc_GetValueFilter(@FilterId, 'IsSelected'), 1)
 	SET @MatchNumber = dbo.fnc_GetValueFilter(@FilterId, 'MatchNumber')
 	SET @Remark = dbo.fnc_GetValueFilter(@FilterId, 'Remark')
@@ -91,10 +91,9 @@ BEGIN
 		,@AgentIds = @AgentIds
 		,@ProviderIds = @ProviderIds
 		,@RunnerIds = @RunnerIds
-		,@TVCodes = @TVCodes
+		,@TVIds = @TVIds
 		,@PageIndex = @PageIndex
 		,@ItemsPerPage = @ItemsPerPage
-		,@TotalItem = @TotalItem OUT
 		,@IsSelected = @IsSelected
 		,@MatchNumber = @MatchNumber
 		,@Remark = @Remark
