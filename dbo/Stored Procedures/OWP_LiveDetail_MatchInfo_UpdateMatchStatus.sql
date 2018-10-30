@@ -92,10 +92,7 @@ BEGIN
 
 		-- Get Main match name 
 		SELECT @EventDateTime = om.EventDateTime
-			,@MatchName = (CASE 
-				WHEN LEN(ISNULL(om.MatchNo, '')) = '' THEN ''
-				ELSE om.MatchNo + ' - ' END
-				) + home.OWPTeamName + ' vs ' + away.OWPTeamName
+			,@MatchName = home.OWPTeamName + ' vs ' + away.OWPTeamName
 		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 			INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
 			INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
@@ -130,10 +127,10 @@ BEGIN
 					,EventDateTime
 					)
 				SELECT asm.UserId
-					,REPLACE(REPLACE(CASE 
+					,REPLACE(CASE 
 								WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignment
 								ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(asm.AssignmentNote, '#<user>', ''))))
-								END, '<bettype>', asm.BettypeName), '<event>', @MatchName)
+								END, '<event>', @MatchName + ' - bettype: ' + asm.BettypeName)
 					,CASE 
 						WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignmentId
 						ELSE @MessageInsertOtherAssignmentId
