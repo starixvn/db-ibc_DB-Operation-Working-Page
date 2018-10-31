@@ -20,6 +20,7 @@ AS
 	20181002@Raymond.Le: Fix overflow data type in RefResource
 	20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181016@Raymond.Le: Notify assignee follow Notification Setting - [Redmine: #102867] 
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -171,6 +172,7 @@ BEGIN
 		,Website2 NVARCHAR(1000)
 		,Website3 NVARCHAR(1000)
 		,Website4 NVARCHAR(1000)
+		,InfoSiteMatchId INT
 		)
 
 	--list of existed matches
@@ -454,14 +456,12 @@ BEGIN
 			,Website2
 			,Website3
 			,Website4
+			,InfoSiteMatchId
 			)
 		SELECT au.RowNumber
 			,au.ParentRowNumber
 			,au.MinorBettypeId
-			,CASE 
-				WHEN ISNUMERIC(au.MatchId) = 1 THEN CAST(au.MatchId AS INT)
-				ELSE NULL
-				END
+			,NULL
 			,au.EventDate
 			,au.League
 			,au.Home
@@ -562,6 +562,10 @@ BEGIN
 			,au.Website2
 			,au.Website3
 			,au.Website4
+			,CASE 
+				WHEN ISNUMERIC(au.InfoSiteMatchId) = 1 AND CAST(au.InfoSiteMatchId AS BIGINT) <= 2147483647 THEN au.InfoSiteMatchId
+				ELSE NULL
+				END -- Should run VALIDATION InfoSiteMatchId before insert into table OWPMatch
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
 		WHERE SessionId = @SessionId
 
@@ -651,6 +655,7 @@ BEGIN
 			,om.EventDate = m.EventDate
 			,om.KickOffTime = m.KickOffTime
 			,om.EventDateTime = m.EventDateTime
+			,om.InfoSiteMatchId = m.InfoSiteMatchId
 		OUTPUT m.RowNumber
 			,m.OWPMatchId
 		INTO #tblExistedMatch(RowNumber, OWPMatchId)
@@ -670,6 +675,7 @@ BEGIN
 				,m.OWPAwayId
 				,m.OtherTime
 				,m.EventDateTime
+				,m.InfoSiteMatchId
 			FROM #tblMatch AS m
 			WHERE m.OWPMatchId IS NULL
 			) AS mat ON 1 = 0 --https://stackoverflow.com/questions/37692711/tsql-the-multi-part-identifier-b-id-could-not-be-bound-using-insert-output-se
@@ -683,6 +689,7 @@ BEGIN
 					,OWPAwayId
 					,OtherTime
 					,EventDateTime
+					,InfoSiteMatchId
 					)
 				VALUES (
 					mat.MatchNo
@@ -693,6 +700,7 @@ BEGIN
 					,mat.OWPAwayId
 					,mat.OtherTime
 					,mat.EventDateTime
+					,mat.InfoSiteMatchId
 					)
 		OUTPUT mat.RowNumber
 			,inserted.OWPMatchId

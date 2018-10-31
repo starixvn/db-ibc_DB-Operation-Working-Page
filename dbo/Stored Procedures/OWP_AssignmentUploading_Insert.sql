@@ -16,6 +16,7 @@ AS
 	20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
 	20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181015@Raymond.Le: Allow input LA trader of Next Corners, Next Booking - [Redmine: #103202]
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052] 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -59,7 +60,7 @@ BEGIN
 		,EventDate
 		,MatchNo
 		,MatchStatus
-		,MatchId
+		,InfoSiteMatchId
 		,KickOffTime
 		,OtherTime
 		,MatchOffer
@@ -128,7 +129,7 @@ BEGIN
 		,EventDate
 		,MatchNo
 		,MatchStatus
-		,MatchId
+		,InfoSiteMatchId
 		,KickOffTime
 		,OtherTime
 		,MatchOffer
@@ -196,7 +197,7 @@ BEGIN
 		,[EventDate] [date]
 		,[MatchNo] [varchar](50)
 		,[MatchStatus] [varchar](15)
-		,[MatchId] [nvarchar](200)
+		,[InfoSiteMatchId] [nvarchar](200)
 		,[KickOffTime] [nvarchar](200)
 		,[OtherTime] [nvarchar](200)
 		,[MatchOffer] [nvarchar](50)

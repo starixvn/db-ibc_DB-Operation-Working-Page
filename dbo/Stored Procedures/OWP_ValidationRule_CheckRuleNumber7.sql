@@ -11,7 +11,8 @@ AS
  Revisions:
     20170407@Tim.Trinh: remove check data in bodb02
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
-	20180718@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868] 
+	20180718@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052] 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -34,7 +35,6 @@ BEGIN
 
 	CREATE TABLE #tblAssignmentUploading (
 		RowNumber INT
-		,OWPMatchId INT NULL
 		,owpEventDate DATETIME NULL
 		,League NVARCHAR(2000)
 		,Home NVARCHAR(200)
@@ -74,7 +74,6 @@ BEGIN
 	BEGIN
 		INSERT INTO #tblAssignmentUploading (
 			RowNumber
-			,OWPMatchId
 			,owpEventDate
 			,League
 			,Home
@@ -85,10 +84,6 @@ BEGIN
 			,ParentRowNumber
 			)
 		SELECT RowNumber
-			,(CASE 
-				WHEN ISNUMERIC(MatchId) = 1 THEN CAST(MatchId AS INT)
-				ELSE NULL END
-				) AS OWPMatchId
 			,(CASE 
 				WHEN ISDATE(KickOffTime) = 1 THEN DATEADD(dd, DATEDIFF(dd, 0, EventDate), CAST(KickOffTime AS DATETIME))
 				ELSE NULL END

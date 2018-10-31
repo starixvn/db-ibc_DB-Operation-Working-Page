@@ -10,6 +10,7 @@ Param's Explanation:
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052] 
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -67,10 +68,6 @@ BEGIN
 		CROSS JOIN dbo.MinorMatchDetemination AS mmd WITH (NOLOCK)
 	WHERE au.SessionId = @SessionId
 		AND ISDATE(KickOffTime) = 1
-		AND (
-			au.MatchId = ''
-			OR ISNUMERIC(MatchId) = 1
-			)
 		AND mmd.Field IN (1, 2, 3)
 
 	-- update MinorBettypeId if match is minor
