@@ -294,6 +294,9 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickInsert_WorkingShiftColor.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickDelete_WorkingShiftColor.sql" />
     <Build Include="dbo\User Defined Types\TVP_INT.sql" />
+    <Build Include="dbo\Tables\InfoSiteMatch.sql" />
+    <Build Include="dbo\Stored Procedures\Task_OWP_SyncInfoSiteMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_PushInfoSiteMatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
