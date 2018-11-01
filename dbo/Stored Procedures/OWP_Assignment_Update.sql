@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_Assignment_Update] @ActorId INT
 	,@SessionId VARCHAR(50)
 	,@AssignmentId INT
@@ -275,6 +274,12 @@ BEGIN
 	-- send message to traders have match assigned
 	SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
+	IF @UserId IS NOT NULL
+		SET @Username = dbo.[fnc_GetUsernameByUserId](@UserId)
+
+	IF @OldUserId IS NOT NULL
+		SET @OldUsername = dbo.[fnc_GetUsernameByUserId](@OldUserId)
+
 	INSERT INTO #tblMessage (
 		UserId
 		,MessageContent
@@ -293,10 +298,10 @@ BEGIN
 		SELECT u.UserId
 			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
 								WHEN @AssignmentNote IS NULL THEN ''
-								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', dbo.[fnc_GetUsernameByUserId](@UserId))))
+								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
 								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', CASE 
 					WHEN @OldAssignmentNote IS NULL THEN ''
-					ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', dbo.[fnc_GetUsernameByUserId](@OldUserId))))
+					ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername)))
 					END) AS MessageContent
 			,@MessageChangeOfAssignmentId AS MessageTypeId
 			,@MinorBetTypeId AS MinorBetTypeId
