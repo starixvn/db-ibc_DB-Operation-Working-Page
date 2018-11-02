@@ -4,7 +4,7 @@
     [EventDate]          DATE            NOT NULL,
     [MatchNo]            VARCHAR (50)    CONSTRAINT [DF_AssignmentUploading_MatchNo] DEFAULT ('') NOT NULL,
     [MatchStatus]        VARCHAR (15)    CONSTRAINT [DF_AssignmentUploading_MatchStatus] DEFAULT ('Live') NOT NULL,
-    [MatchId]            NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MatchId] DEFAULT (N'') NOT NULL,
+    [InfoSiteMatchId]    NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_InfoSiteMatchId] DEFAULT (N'') NOT NULL,
     [KickOffTime]        NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_KickOffTime] DEFAULT (N'') NOT NULL,
     [OtherTime]          NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_OtherTime] DEFAULT (N'') NOT NULL,
     [MatchOffer]         NVARCHAR (50)   CONSTRAINT [DF_AssignmentUploading_MatchOffer] DEFAULT (N'') NOT NULL,
@@ -69,6 +69,8 @@
     [ParentRowNumber]    INT             NULL,
     CONSTRAINT [PK_AssignmentUploading] PRIMARY KEY CLUSTERED ([SessionId] ASC, [RowNumber] ASC)
 );
+
+
 
 
 

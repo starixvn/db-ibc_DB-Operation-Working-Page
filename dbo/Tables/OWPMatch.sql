@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[OWPMatch] (
+CREATE TABLE [dbo].[OWPMatch] (
     [OWPMatchId]       INT            IDENTITY (1, 1) NOT NULL,
     [MatchNo]          VARCHAR (50)   CONSTRAINT [DF_OWPMatch_MatchNo] DEFAULT ('') NOT NULL,
     [EventDate]        DATETIME       NOT NULL,
@@ -11,6 +11,7 @@
     [EventDateTime]    DATETIME       NULL,
     [InfositeMatchKey] NVARCHAR (400) NULL,
     [IsChecked]        BIT            NULL,
+    [InfoSiteMatchId]  INT            NULL,
     CONSTRAINT [PK_OWPMatch] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC)
 );
 
@@ -19,14 +20,18 @@
 
 
 
+
+
+GO
+
+
+
 GO
 
 
 
 GO
-
-
-
-GO
-
+CREATE NONCLUSTERED INDEX [IX_OWPMatch_EventDateTime]
+    ON [dbo].[OWPMatch]([EventDateTime] ASC)
+    ON [OWP_Index];
 
