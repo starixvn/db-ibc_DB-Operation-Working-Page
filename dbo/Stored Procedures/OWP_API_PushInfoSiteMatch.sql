@@ -43,9 +43,11 @@ BEGIN
 
 	CREATE TABLE #tblInfoSiteMatch (
 		[InfoSiteMatchId] [int] NOT NULL
-		,[LeagueName] [nvarchar](2000) NULL
-		,[HomeName] [nvarchar](2000) NULL
-		,[AwayName] [nvarchar](2000) NULL
+		,[EventDateTime] [datetime] NOT NULL
+		,[UpdatedTime] [datetime] NOT NULL
+		,[LeagueName] [nvarchar](2000) NOT NULL
+		,[HomeName] [nvarchar](2000) NOT NULL
+		,[AwayName] [nvarchar](2000) NOT NULL
 		,[Round] [nvarchar](2000) NULL
 		,[Division] [nvarchar](2000) NULL
 		,[Agent] [nvarchar](2000) NULL
@@ -56,7 +58,6 @@ BEGIN
 		,[Website2] [nvarchar](2000) NULL
 		,[Website3] [nvarchar](2000) NULL
 		,[Website4] [nvarchar](2000) NULL
-		,[EventDate] [date] NULL
 		,[OWPLeagueId] INT NULL
 		,[OWPHomeId] INT NULL
 		,[OWPAwayId] INT NULL
@@ -66,6 +67,8 @@ BEGIN
 
 	INSERT INTO #tblInfoSiteMatch (
 		[InfoSiteMatchId]
+		,[EventDateTime]
+		,[UpdatedTime]
 		,[LeagueName]
 		,[HomeName]
 		,[AwayName]
@@ -79,9 +82,10 @@ BEGIN
 		,[Website2]
 		,[Website3]
 		,[Website4]
-		,[EventDate]
 		)
 	SELECT [InfoSiteMatchId]
+		,[EventDateTime]
+		,[UpdatedTime]
 		,[LeagueName]
 		,[HomeName]
 		,[AwayName]
@@ -95,8 +99,7 @@ BEGIN
 		,[Website2]
 		,[Website3]
 		,[Website4]
-		,[EventDate]
-	FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([InfoSiteMatchId] [int], [LeagueName] [nvarchar](2000), [HomeName] [nvarchar](2000), [AwayName] [nvarchar](2000), [Round] [nvarchar](2000), [Division] [nvarchar](2000), [Agent] [nvarchar](2000), [LocalTV] [nvarchar](2000), [LiveTV] [nvarchar](2000), [WatchBet] [nvarchar](2000), [Website1] [nvarchar](2000), [Website2] [nvarchar](2000), [Website3] [nvarchar](2000), [Website4] [nvarchar](2000), [EventDate] [date])
+	FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([InfoSiteMatchId] [int], [EventDateTime] [datetime], [UpdatedTime] [datetime], [LeagueName] [nvarchar](2000), [HomeName] [nvarchar](2000), [AwayName] [nvarchar](2000), [Round] [nvarchar](2000), [Division] [nvarchar](2000), [Agent] [nvarchar](2000), [LocalTV] [nvarchar](2000), [LiveTV] [nvarchar](2000), [WatchBet] [nvarchar](2000), [Website1] [nvarchar](2000), [Website2] [nvarchar](2000), [Website3] [nvarchar](2000), [Website4] [nvarchar](2000))
 
 	EXEC sp_xml_removedocument @idoc
 
@@ -252,6 +255,8 @@ BEGIN
 	MERGE INTO dbo.InfoSiteMatch AS t
 	USING (
 		SELECT [InfoSiteMatchId]
+			,[EventDateTime]
+			,[UpdatedTime]
 			,[LeagueName]
 			,[HomeName]
 			,[AwayName]
@@ -265,7 +270,6 @@ BEGIN
 			,[Website2]
 			,[Website3]
 			,[Website4]
-			,[EventDate]
 			,[OWPLeagueId]
 			,[OWPHomeId]
 			,[OWPAwayId]
@@ -276,6 +280,7 @@ BEGIN
 	WHEN MATCHED THEN
 			UPDATE
 			SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
+				,t.[EventDateTime] = s.[EventDateTime]
 				,t.[LeagueName] = s.[LeagueName]
 				,t.[HomeName] = s.[HomeName]
 				,t.[AwayName] = s.[AwayName]
@@ -289,7 +294,6 @@ BEGIN
 				,t.[Website2] = s.[Website2]
 				,t.[Website3] = s.[Website3]
 				,t.[Website4] = s.[Website4]
-				,t.[EventDate] = s.[EventDate]
 				,t.[OWPLeagueId] = s.[OWPLeagueId]
 				,t.[OWPHomeId] = s.[OWPHomeId]
 				,t.[OWPAwayId] = s.[OWPAwayId]
@@ -298,6 +302,8 @@ BEGIN
 	WHEN NOT MATCHED BY TARGET THEN
 			INSERT (
 				[InfoSiteMatchId]
+				,[EventDateTime]
+				,[UpdatedTime]
 				,[LeagueName]
 				,[HomeName]
 				,[AwayName]
@@ -311,7 +317,6 @@ BEGIN
 				,[Website2]
 				,[Website3]
 				,[Website4]
-				,[EventDate]
 				,[OWPLeagueId]
 				,[OWPHomeId]
 				,[OWPAwayId]
@@ -320,6 +325,8 @@ BEGIN
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
+				,s.[EventDateTime]
+				,s.[UpdatedTime]
 				,s.[LeagueName]
 				,s.[HomeName]
 				,s.[AwayName]
@@ -333,7 +340,6 @@ BEGIN
 				,s.[Website2]
 				,s.[Website3]
 				,s.[Website4]
-				,s.[EventDate]
 				,s.[OWPLeagueId]
 				,s.[OWPHomeId]
 				,s.[OWPAwayId]

@@ -18,7 +18,7 @@ BEGIN
 
 	-- remove old data
 	DELETE dbo.InfoSiteMatch WITH (ROWLOCK, UPDLOCK)
-	WHERE EventDate < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
+	WHERE EventDateTime < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
 
 	-- sync League
 	MERGE INTO dbo.OWPMatch AS om
