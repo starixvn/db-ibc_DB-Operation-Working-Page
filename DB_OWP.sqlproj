@@ -297,6 +297,7 @@
     <Build Include="dbo\Tables\InfoSiteMatch.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_SyncInfoSiteMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_API_PushInfoSiteMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveShiftCode.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

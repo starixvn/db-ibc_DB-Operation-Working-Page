@@ -3,3 +3,4 @@
 *.orig
 *.dbmdl
 *.jfm
+/obj
