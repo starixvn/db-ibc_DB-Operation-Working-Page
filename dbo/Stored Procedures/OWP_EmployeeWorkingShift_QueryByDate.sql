@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryByDate] @Date DATE
 	,@UserId VARCHAR(max) = ''
 AS
@@ -10,6 +11,7 @@ AS
  Revisions:
 	20181209@Kane.Le: Add LeagueName
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20181209@Kane.Le: Add Runner, Provider, IsMinorMatch - [Redmine: #104291]
 
  -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryByDate @Date = '2017/12/14', @UserId = '8';
@@ -51,11 +53,11 @@ BEGIN
 		,a.OWPMatchId
 		,a.Bettype
 	FROM @tblUser u
-		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
-		LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
-		LEFT JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
-		LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
-		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
+	LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
+	LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
+	LEFT JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+	LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
+	LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
 	WHERE mi.MatchStatus <> 'Cancel'
 		AND a.AssignmentType = 1
 		AND m.EventDateTime >= @FromDate
@@ -72,11 +74,11 @@ BEGIN
 		,mm.ParentMatchId
 		,mb.MinorBettypeId
 	FROM @tblUser u
-		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
-		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
-		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
-		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+	INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
+	INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
+	INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
+	INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
 		AND mm.MinorBettypeId = mb.ParentBettypeId
 	WHERE mi.MatchStatus <> 'Cancel'
 		AND a.AssignmentType = 1
@@ -96,22 +98,48 @@ BEGIN
 
 	SELECT m.OWPMatchId
 		,m.MatchNo
+		,STUFF((
+				SELECT ', ' + CAST(dbo.[Provider].ProviderName AS NVARCHAR(30))
+				FROM dbo.[Provider]
+				WHERE dbo.[Provider].ProviderId IN (
+						SELECT val
+						FROM dbo.[strSplit](mi.[Provider], ',')
+						)
+				FOR XML PATH('')
+				), 1, 1, '') AS 'Provider'
+		,STUFF((
+				SELECT ', ' + CAST(dbo.[Runner].RunnerName AS NVARCHAR(30))
+				FROM dbo.[Runner]
+				WHERE dbo.[Runner].RunnerId IN (
+						SELECT val
+						FROM dbo.[strSplit](mi.[Runner], ',')
+						)
+				FOR XML PATH('')
+				), 1, 1, '') AS 'Runner'
 		,m.EventDateTime
+		,(
+			SELECT COUNT(1)
+			FROM dbo.[MinorMatch] 
+			WHERE dbo.[MinorMatch].MinorMatchId = m.OWPMatchId
+			) AS 'IsMinorMatch'
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'
 		,h.OWPTeamName AS 'HomeName'
 		,a.OWPTeamName AS 'AwayName'
-		,(CASE 
-			WHEN ms.Maxbet IS NOT NULL THEN ms.Maxbet
-			ELSE dbo.OWP_MaxBetGet(m.OWPMatchId, m.OWPLeagueId, 1) END
+		,(
+			CASE 
+				WHEN ms.Maxbet IS NOT NULL
+					THEN ms.Maxbet
+				ELSE dbo.OWP_MaxBetGet(m.OWPMatchId, m.OWPLeagueId, 1)
+				END
 			) AS MaxBet
 	FROM @tblMatch match
-		INNER JOIN dbo.OWPMatch m WITH (NOLOCK) ON m.OWPMatchId = match.OWPMatchId
-		INNER JOIN dbo.OWPLeague l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-		INNER JOIN dbo.MatchInfo mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
-		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
+	INNER JOIN dbo.OWPMatch m WITH (NOLOCK) ON m.OWPMatchId = match.OWPMatchId
+	INNER JOIN dbo.OWPLeague l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+	INNER JOIN dbo.MatchInfo mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+	LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
 		AND ms.Bettype = 1
 
 	DROP TABLE #tblUserBettype
