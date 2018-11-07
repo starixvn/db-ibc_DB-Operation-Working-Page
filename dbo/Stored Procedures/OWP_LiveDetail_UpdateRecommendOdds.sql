@@ -1,12 +1,11 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveDetail_UpdateRecommendOdds] @Id INT
-	,@UserId INT
-	,@OWPMatchId INT
-	,@Bettype INT
-	,@OldHandicap SMALLMONEY
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_UpdateRecommendOdds] @UserId INT
+	,@SessionId NVARCHAR(50) = NULL
+	,@Id INT
 	,@Handicap SMALLMONEY
+	,@TeamChoice TINYINT
 	,@RecommendOdds NVARCHAR(MAX)
-	,@TeamChoice INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -17,30 +16,46 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @StartRun DATETIME
-		,@EndRun DATETIME
-		,@Duration INT
-		,@LogDataOld NVARCHAR(MAX)
-		,@LogData NVARCHAR(MAX)
-		,@Xml XML
-		,@idoc INT
-		,@CreatedBy INT
-		,@CreatedDate DATETIME
+	DECLARE @idoc INT
+		,@OldTeamName NVARCHAR(50) = ''
+		,@TeamName NVARCHAR(50) = ''
+		,@OldHandicapText NVARCHAR(50) = ''
+		,@HandicapText NVARCHAR(50) = ''
+		,@BettypeName NVARCHAR(50) = ''
+		,@OldOddsText NVARCHAR(50) = ''
+		,@NewOddsText NVARCHAR(50) = ''
+		,@MessageTemplate NVARCHAR(MAX) = ''
+		,@MessageType INT
+		,@Assignee TVP_INT
+		,@OWPMatchId INT
+		,@Bettype INT
+		,@OldHandicap SMALLMONEY
+		,@OldTeamChoice TINYINT
+		,@NotificationSettingId INT = 4
+		,@BettypeHDP INT = 1
+		,@Bettype1HHDP INT = 7
+		,@BettypeOU INT = 3
+		,@Bettype1HOU INT = 8
 
-	IF OBJECT_ID('tempdb..#RecommendOdds') IS NOT NULL
+	SELECT @OWPMatchId = OWPMatchId
+		,@Bettype = Bettype
+		,@OldHandicap = HDP
+		,@OldTeamChoice = TeamChoice
+	FROM dbo.MatchRecommendOdds WITH (NOLOCK)
+	WHERE MatchRecommendOddsId = @Id
+
+	IF @OWPMatchId IS NULL
 	BEGIN
-		DROP TABLE #RecommendOdds
-	END
+		SELECT @ErrMsg = 'Recommend odds is not existed or deleted'
+			,@ErrCode = 4503 -- ActionId + 03
 
-	CREATE TABLE #RecommendOdds (
-		MatchRecommendOddsId INT
-		,Choice INT
-		,Odds MONEY
-		)
+		RETURN
+	END
 
 	IF EXISTS (
 			SELECT 1
@@ -48,7 +63,8 @@ BEGIN
 			WHERE OWPMatchId = @OWPMatchId
 				AND Bettype = @Bettype
 				AND HDP = @Handicap
-				AND HDP <> @OldHandicap
+				AND TeamChoice = @TeamChoice
+				AND MatchRecommendOddsId <> @Id
 			)
 	BEGIN
 		SELECT @ErrMsg = 'Duplicate recommend odds'
@@ -56,6 +72,22 @@ BEGIN
 
 		RETURN
 	END
+
+	CREATE TABLE #OldRecommendOdds (
+		Choice TINYINT
+		,Odds MONEY
+		)
+
+	CREATE TABLE #RecommendOdds (
+		Choice TINYINT
+		,Odds MONEY
+		)
+
+	INSERT INTO #OldRecommendOdds
+	SELECT Choice
+		,Odds
+	FROM dbo.MatchRecommendOddsDetail WITH (NOLOCK)
+	WHERE MatchRecommendOddsId = @Id
 
 	EXEC sp_xml_preparedocument @idoc OUTPUT
 		,@RecommendOdds
@@ -70,37 +102,101 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
-	BEGIN TRY
-		UPDATE dbo.MatchRecommendOdds
-		SET HDP = @Handicap
-			,TeamChoice = @TeamChoice
-		WHERE MatchRecommendOddsId = @Id
+	SELECT @OldOddsText = COALESCE(@OldOddsText + '/', '') + CAST(ISNULL(Odds, 0) AS VARCHAR)
+	FROM MatchRecommendOddsDetail
+	WHERE MatchRecommendOddsId = @Id
 
-		DELETE
-		FROM MatchRecommendOddsDetail
-		WHERE MatchRecommendOddsId = @Id
-			AND Choice IN (
-				SELECT Choice
-				FROM #RecommendOdds
-				)
+	-- update table MatchRecommendOdds with Handicap & TeamChoice
+	UPDATE dbo.MatchRecommendOdds
+	SET TeamChoice = @TeamChoice
+		,HDP = @Handicap
+	WHERE MatchRecommendOddsId = @Id
 
-		INSERT INTO dbo.MatchRecommendOddsDetail (
-			MatchRecommendOddsId
-			,Choice
-			,Odds
-			)
-		SELECT DISTINCT @Id
-			,Choice
+	MERGE INTO MatchRecommendOddsDetail AS t
+	USING (
+		SELECT Choice
 			,Odds
 		FROM #RecommendOdds
-	END TRY
+		) AS s ON t.MatchRecommendOddsId = @Id
+			AND t.Choice = s.Choice
+	WHEN MATCHED THEN
+			UPDATE
+			SET t.Odds = s.Odds
+	WHEN NOT MATCHED BY TARGET THEN
+			INSERT
+			VALUES (
+				@Id
+				,s.Choice
+				,s.Odds
+				);
 
-	BEGIN CATCH
-		SELECT @ErrMsg = 'Update recommend odds failed. Please try again.'
-			,@ErrCode = 4501 -- ActionId + 01
+	-- insert message
+	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+	BEGIN
+		SELECT @MessageTemplate = mt.MsgTemplateContent
+			,@MessageType = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
 
-		RETURN
-	END CATCH
+		SELECT @BettypeName = ShortName
+		FROM dbo.MajorBettype WITH (NOLOCK)
+		WHERE BettypeId = @Bettype
+
+		IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
+		BEGIN
+			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
+			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
+
+			IF @TeamChoice = 1
+				SET @TeamName = 'Home@'
+			ELSE IF @TeamChoice = 2
+				SET @TeamName = 'Away@'
+
+			IF @OldTeamChoice = 1
+				SET @OldTeamName = 'Home@'
+			ELSE IF @OldTeamChoice = 2
+				SET @OldTeamName = 'Away@'
+		END
+		ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
+		BEGIN
+			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
+			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
+		END
+
+		SELECT @OldOddsText = STUFF((
+			SELECT '/' + CAST(Odds AS NVARCHAR(30))
+			FROM #OldRecommendOdds
+			ORDER BY Choice ASC
+			FOR XML PATH('')
+			), 1, 1, '')
+		SET @OldOddsText = @OldTeamName + @OldHandicapText + @OldOddsText
+
+		SELECT @NewOddsText = STUFF((
+			SELECT '/' + CAST(Odds AS NVARCHAR(30))
+			FROM #RecommendOdds
+			ORDER BY Choice ASC
+			FOR XML PATH('')
+			), 1, 1, '')
+		SET @NewOddsText = @TeamName + @HandicapText + @NewOddsText
+
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', @OldOddsText)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
+		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
+
+		INSERT INTO @Assignee
+		SELECT UserId
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
+
+		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+			,@MessageContent = @MessageTemplate
+			,@MessageTo = @Assignee
+			,@IsImportant = 0
+			,@MessageType = @MessageType
+			,@SessionId = @SessionId
+			,@ErrCode = @ErrCode OUTPUT
+			,@ErrMsg = @ErrMsg OUTPUT
+	END
 
 	DROP TABLE #RecommendOdds
 END

@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_UpdateMatchStatus] @UserId INT
 	,@SessionId NVARCHAR(100)
 	,@OWPMatchId INT
@@ -13,6 +14,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -47,6 +49,7 @@ BEGIN
 		,@str_Cancel NVARCHAR(15) = 'Cancel'
 		,@str_Postponed NVARCHAR(15) = 'Postponed'
 		,@str_Suspended NVARCHAR(15) = 'Suspended'
+		,@NotificationSettingId SMALLINT = 5
 
 	CREATE TABLE #tblMessage (
 		UserId INT
@@ -89,21 +92,11 @@ BEGIN
 
 		-- Get Main match name 
 		SELECT @EventDateTime = om.EventDateTime
-			,@MatchName = (CASE 
-				WHEN LEN(ISNULL(om.MatchNo, '')) = '' THEN ''
-				ELSE om.MatchNo + ' - ' END
-				) + home.OWPTeamName + ' vs ' + away.OWPTeamName
+			,@MatchName = home.OWPTeamName + ' vs ' + away.OWPTeamName
 		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 			INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
 			INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
 		WHERE om.OWPMatchId = @OWPMatchId
-
-		-- send message by condition date
-		SELECT @FromTimeSendMessage = FromTime
-			,@ToTimeSendMessage = ToTime
-			,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
-		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
 		IF @OldMatchStatus <> @MatchStatus
 		BEGIN
@@ -134,10 +127,10 @@ BEGIN
 					,EventDateTime
 					)
 				SELECT asm.UserId
-					,REPLACE(REPLACE(CASE 
+					,REPLACE(CASE 
 								WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignment
 								ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(asm.AssignmentNote, '#<user>', ''))))
-								END, '<bettype>', asm.BettypeName), '<event>', @MatchName)
+								END, '<event>', @MatchName + ' - bettype: ' + asm.BettypeName)
 					,CASE 
 						WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignmentId
 						ELSE @MessageInsertOtherAssignmentId
@@ -166,6 +159,10 @@ BEGIN
 						INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
 					WHERE m.OWPMatchId = @OWPMatchId
 					) AS asm
+					LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotificationSettingId
+					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+					AND nsm.UserId = asm.UserId
+				WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 			END
 			ELSE
 			BEGIN
@@ -209,7 +206,7 @@ BEGIN
 					,asm.MinorBettypeId
 					,@EventDateTime
 				FROM (
-					SELECT DISTINCT a.OWPMatchId
+					SELECT DISTINCT a.OWPMatchId --Minor match
 						,a.UserId
 						,mibt.MinorBettypeName AS BettypeName
 						,minor.MinorBettypeId
@@ -220,20 +217,54 @@ BEGIN
 						AND minor.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 					
 					UNION
-					SELECT DISTINCT a.OWPMatchId
+					SELECT DISTINCT pmm.MinorMatchId --Minor match @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking
+						,a.UserId
+						,mibt.MinorBettypeName AS BettypeName
+						,pmm.MinorBettypeId
+					FROM dbo.Assignment AS a WITH (NOLOCK)
+						INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
+						LEFT JOIN dbo.MinorMatch AS pmm WITH (NOLOCK) ON pmm.ParentMatchId = @OWPMatchId 
+																AND pmm.MinorBettypeId = (CASE WHEN minor.MinorBettypeId = @Specific15MinsNoOfCorners THEN @NoOfCorners
+																							ELSE @TotalBooking END)
+						INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON mibt.MinorBettypeId = pmm.MinorBettypeId
+					WHERE minor.ParentMatchId = @OWPMatchId
+						AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
+										
+					UNION -- Parent match
+					SELECT DISTINCT a.OWPMatchId 
 						,a.UserId
 						,NULL AS BettypeName
 						,NULL AS MinorBettypeId
 					FROM dbo.Assignment AS a WITH (NOLOCK)
 					WHERE a.OWPMatchId = @OWPMatchId
+
+					UNION -- Match 15mis 10mins FM AIO
+					SELECT DISTINCT @OWPMatchId
+						,a.UserId
+						,NULL AS BettypeName
+						,NULL
+					FROM dbo.Assignment AS a WITH (NOLOCK)
+						INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
+					WHERE minor.ParentMatchId = @OWPMatchId
+						AND minor.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne)
 					) AS asm
 					INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON asm.OWPMatchId = info.OWPMatchId
 					LEFT JOIN #tblOldMatchInfo AS oldinfo ON asm.OWPMatchId = oldinfo.OWPMatchId
-				WHERE info.MatchStatus <> oldinfo.MatchStatus -- NOTE: (to send message to match has diff status)
+					LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotificationSettingId
+					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+					AND nsm.UserId = asm.UserId
+				WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+					AND info.MatchStatus <> oldinfo.MatchStatus -- NOTE: (to send message to match has diff status)
 			END
 
-			-----------		
-			--Insert Message
+			-- send message by condition date
+			SELECT @FromTimeSendMessage = FromTime
+				,@ToTimeSendMessage = ToTime
+				,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
+				,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
+			FROM dbo.fnc_GetDateTimeForTraderViewTime()
+
+			-- Insert Message
 			MERGE dbo.[Message] AS ms
 			USING (
 				SELECT m.UserId
@@ -289,6 +320,7 @@ BEGIN
 	BEGIN CATCH
 		SELECT @ErrMsg = 'Update Match Status failed!'
 			,@ErrCode = 1
+
 		RETURN
 	END CATCH
 

@@ -1,10 +1,12 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @FromDate DATE
 	,@ToDate DATE
-	,@UserId VARCHAR(2000) = ''
+	,@User VARCHAR(2000) = ''
 	,@SectionId VARCHAR(2000) = ''
 	,@ShiftCode VARCHAR(2000) = ''
 	,@CategoryId VARCHAR(2000) = ''
+	,@LocationCode VARCHAR(2000) = ''
+	,@ExcludeClosedAccount BIT = 0
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -15,7 +17,8 @@ AS
      20180510@leo.vo: add filter @ShiftCode
      20180912@Kane: show user has no WS
      20180913@Leo: show WS note
-	 20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+     20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+     20181009@Leo.Vo: Filter WS - [Redmine: #102867]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -83,6 +86,14 @@ BEGIN
 			LEFT JOIN dbo.RefResource WITH (NOLOCK) ON RefName = 'UserCategory'
 			AND val = ResourceId
 	END;
+	
+	-- table of locations
+	DECLARE @tblLocation TABLE (
+		LocationCode VARCHAR(10)
+		);
+	INSERT INTO @tblLocation
+	SELECT val
+	FROM dbo.strSplit(@LocationCode, ',')
 
 	-- table of users
 	DECLARE @tblUser TABLE (
@@ -92,35 +103,24 @@ BEGIN
 		,ProfilePic NVARCHAR(500)
 		,SectionId SMALLINT
 		,CategoryId SMALLINT
+		,LocationCode VARCHAR(10)
 		);
 
-	IF LEN(ISNULL(@UserId, '')) = 0
-	BEGIN
-		INSERT INTO @tblUser
-		SELECT u.UserId
-			,u.Nickname
-			,u.Username
-			,u.ProfilePic
-			,ISNULL(u.SectionId, 0)
-			,ISNULL(u.CategoryId, 0)
-		FROM dbo.[User] AS u WITH (NOLOCK)
-			LEFT JOIN @tblSection AS s ON u.SectionId = s.SectionId
-			LEFT JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId;
-	END;
-	ELSE
-	BEGIN
-		INSERT INTO @tblUser
-		SELECT u.UserId
-			,u.Nickname
-			,u.Username
-			,u.ProfilePic
-			,ISNULL(u.SectionId, 0)
-			,ISNULL(u.CategoryId, 0)
-		FROM dbo.strSplit(@UserId, ',') u1
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u1.val = u.UserId
-			LEFT JOIN @tblSection s ON u.SectionId = s.SectionId
-			LEFT JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId
-	END;
+	INSERT INTO @tblUser
+	SELECT u.UserId
+		,u.Nickname
+		,u.Username
+		,u.ProfilePic
+		,ISNULL(u.SectionId, 0)
+		,ISNULL(u.CategoryId, 0)
+		,ISNULL(u.LocationCode, 'None')
+	FROM dbo.[User] AS u WITH (NOLOCK)
+		LEFT JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+		LEFT JOIN @tblSection AS s ON u.SectionId = s.SectionId
+		LEFT JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId
+		LEFT JOIN @tblLocation AS l ON u.LocationCode = l.LocationCode
+	WHERE (@ExcludeClosedAccount = 0 OR (ci.closed = 0 AND ci.reject = 0 AND ci.[Enabled] = 1))
+		AND (LEN(ISNULL(@User, '')) = 0 OR u.Nickname LIKE '%'+ @User + '%' OR u.Username LIKE '%'+ @User + '%')
 
 	-- table of shift codes
 	DECLARE @tblShift TABLE (ShiftCode VARCHAR(50));
@@ -148,6 +148,7 @@ BEGIN
 	FROM @tblUser AS u
 		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
 		INNER JOIN @tblCategory AS tc ON tc.CategoryId = u.CategoryId
+		INNER JOIN @tblLocation AS tl ON tl.LocationCode = u.LocationCode
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
 	ORDER BY SectionName
 		,[Name];

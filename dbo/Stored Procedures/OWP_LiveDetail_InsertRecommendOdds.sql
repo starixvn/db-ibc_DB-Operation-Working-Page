@@ -1,10 +1,12 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_InsertRecommendOdds] @UserId INT
+	,@SessionId NVARCHAR(50)
 	,@OWPMatchId INT
 	,@Bettype INT
+	,@TeamChoice INT
 	,@Handicap SMALLMONEY
 	,@RecommendOdds NVARCHAR(MAX)
-	,@TeamChoice INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 	,@Id INT OUTPUT
@@ -16,38 +18,24 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]  
+	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 */
 BEGIN
 	SET NOCOUNT ON
 
-		IF EXISTS (
-			SELECT 1
-			FROM dbo.MatchRecommendOdds WITH (NOLOCK)
-			WHERE OWPMatchId = @OWPMatchId
-				AND Bettype = @Bettype
-				AND TeamChoice = @TeamChoice
-				AND (
-					(
-						HDP IS NULL
-						AND @Handicap IS NULL
-						)
-					OR HDP = @Handicap
-					)
-			)
-	BEGIN
-		SELECT @ErrMsg = 'The recommend odds is already existed. Please add another one'
-			,@ErrCode = 7201 -- ActionId + 01
-
-		RETURN
-	END
-	
-	DECLARE @StartRun DATETIME
-		,@EndRun DATETIME
-		,@Duration INT
-		,@LogDataOld NVARCHAR(MAX)
-		,@LogData NVARCHAR(MAX)
-		,@Xml XML
-		,@idoc INT		 
+	DECLARE @idoc INT
+		,@BettypeName NVARCHAR(50) = ''
+		,@NewOddsText NVARCHAR(200) = ''
+		,@TeamName NVARCHAR(50) = ''
+		,@HandicapText NVARCHAR(50) = ''
+		,@MessageTemplate NVARCHAR(MAX) = ''
+		,@MessageType INT
+		,@Assignee TVP_INT
+		,@NotificationSettingId INT = 4
+		,@BettypeHDP INT = 1
+		,@Bettype1HHDP INT = 7
+		,@BettypeOU INT = 3
+		,@Bettype1HOU INT = 8
 
 	IF EXISTS (
 			SELECT 1
@@ -55,17 +43,13 @@ BEGIN
 			WHERE OWPMatchId = @OWPMatchId
 				AND Bettype = @Bettype
 				AND HDP = @Handicap
+				AND TeamChoice = @TeamChoice
 			)
 	BEGIN
-		SELECT @ErrMsg = 'Duplicate recommend odds'
-			,@ErrCode = 4402 -- ActionId + 02
+		SELECT @ErrMsg = 'The recommend odds is already existed. Please add another one'
+			,@ErrCode = 7201 -- ActionId + 01
 
 		RETURN
-	END
-
-	IF OBJECT_ID('tempdb..#RecommendOdds') IS NOT NULL
-	BEGIN
-		DROP TABLE #RecommendOdds
 	END
 
 	CREATE TABLE #RecommendOdds (
@@ -86,47 +70,89 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
-	SET @StartRun = GETDATE()
+	INSERT INTO dbo.MatchRecommendOdds (
+		OWPMatchId
+		,Bettype
+		,HDP
+		,TeamChoice
+		,CreatedBy
+		,CreatedDate
+		)
+	VALUES (
+		@OWPMatchId
+		,@Bettype
+		,@Handicap
+		,@TeamChoice
+		,@UserId
+		,GETDATE()
+		)
 
-	BEGIN TRY
-		INSERT INTO dbo.MatchRecommendOdds (
-			OWPMatchId
-			,Bettype
-			,HDP
-			,TeamChoice
-			,CreatedBy
-			,CreatedDate
-			)
-		VALUES (
-			@OWPMatchId
-			,@Bettype
-			,@Handicap
-			,@TeamChoice
-			,@UserId
-			,GETDATE()
-			)
+	SELECT @Id = @@IDENTITY
 
-		SELECT @Id = @@IDENTITY
+	INSERT INTO dbo.MatchRecommendOddsDetail (
+		MatchRecommendOddsId
+		,Choice
+		,Odds
+		)
+	SELECT @Id
+		,Choice
+		,Odds
+	FROM #RecommendOdds
 
-		INSERT INTO dbo.MatchRecommendOddsDetail (
-			MatchRecommendOddsId
-			,Choice
-			,Odds
-			)
-		SELECT DISTINCT @Id
-			,Choice
-			,Odds
-		FROM #RecommendOdds
-		
-		SELECT @ErrMsg = @Id
-	END TRY
+	-- insert message  	
+	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+	BEGIN
+		SELECT @MessageTemplate = mt.MsgTemplateContent
+			,@MessageType = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
 
-	BEGIN CATCH
-		SELECT @ErrMsg = 'Insert recommend odds failed. Please try again.'
-			,@ErrCode = 4401 -- ActionId + 01
+		SELECT @BettypeName = ShortName
+		FROM dbo.MajorBettype WITH (NOLOCK)
+		WHERE BettypeId = @Bettype
 
-		RETURN
-	END CATCH
+		IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
+		BEGIN
+			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
+
+			IF @TeamChoice = 1
+				SET @TeamName = 'Home@'
+			ELSE IF @TeamChoice = 2
+				SET @TeamName = 'Away@'
+		END
+		ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
+		BEGIN
+			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
+		END
+
+		SELECT @NewOddsText = STUFF((
+					SELECT '/' + CAST(Odds AS NVARCHAR(30))
+					FROM #RecommendOdds
+					ORDER BY Choice ASC
+					FOR XML PATH('')
+					), 1, 1, '')
+
+		SET @NewOddsText = @TeamName + @HandicapText + @NewOddsText
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', '')
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
+		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
+
+		INSERT INTO @Assignee
+		SELECT UserId
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
+
+		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+			,@MessageContent = @MessageTemplate
+			,@MessageTo = @Assignee
+			,@IsImportant = 0
+			,@MessageType = @MessageType
+			,@SessionId = @SessionId
+			,@ErrCode = @ErrCode OUTPUT
+			,@ErrMsg = @ErrMsg OUTPUT
+	END
+
+	SELECT @ErrMsg = @Id
 
 	DROP TABLE #RecommendOdds
 END
