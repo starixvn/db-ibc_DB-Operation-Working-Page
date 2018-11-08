@@ -116,12 +116,7 @@ BEGIN
 						)
 				FOR XML PATH('')
 				), 1, 1, '') AS 'Runner'
-		,m.EventDateTime
-		,(
-			SELECT COUNT(1)
-			FROM dbo.[MinorMatch] 
-			WHERE dbo.[MinorMatch].MinorMatchId = m.OWPMatchId
-			) AS 'IsMinorMatch'
+		,m.EventDateTime		
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'
 		,h.OWPTeamName AS 'HomeName'
