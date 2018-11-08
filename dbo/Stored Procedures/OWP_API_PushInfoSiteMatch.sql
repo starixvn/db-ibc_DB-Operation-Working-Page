@@ -281,6 +281,7 @@ BEGIN
 			UPDATE
 			SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
 				,t.[EventDateTime] = s.[EventDateTime]
+				,t.[UpdatedTime] = s.[UpdatedTime]
 				,t.[LeagueName] = s.[LeagueName]
 				,t.[HomeName] = s.[HomeName]
 				,t.[AwayName] = s.[AwayName]
