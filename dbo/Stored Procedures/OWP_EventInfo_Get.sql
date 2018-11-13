@@ -18,9 +18,6 @@ CREATE PROCEDURE [dbo].[OWP_EventInfo_Get] @EventDate DATE
 	,@ProviderIds NVARCHAR(MAX) = NULL
 	,@RunnerIds NVARCHAR(MAX) = NULL
 	,@TVIds NVARCHAR(MAX) = NULL
-	,@PageIndex INT = 1
-	,@ItemsPerPage INT = 50
-	,@IsSelected INT = 1
 	,@MatchNumber NVARCHAR(50) = NULL
 	,@Remark NVARCHAR(500) = NULL
 	,@AssigneeLocation INT = - 1
@@ -43,6 +40,7 @@ Revisions:
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
+	20181106@Raymond.Le: Remove paging in SP - [Redmine: #104291]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -926,8 +924,9 @@ BEGIN
 			)
 
 	-- Return Match Info
-	SELECT final.OWPMatchId
-		,final.ParentMatchId
+	SELECT mf.OWPMatchId
+		,mf.ParentMatchId
+		,tm.IsMinorMatch
 		,tm.EventDate
 		,tm.KickOffTime
 		,tm.League
@@ -949,30 +948,13 @@ BEGIN
 		,tm.MatchStatus
 		,tm.MinorBettypeId
 		,tm.IsAllowedToViewDetail
-		,final.RowIndex
-		,CAST((RowIndex - 1) / @ItemsPerPage AS INT) + 1 AS PageIndex
-		,(CASE 
-			WHEN (
-					RowIndex BETWEEN ((@PageIndex - 1) * @ItemsPerPage + 1)
-						AND (@PageIndex * @ItemsPerPage)
-					) THEN 1
-			ELSE 0 END
-			) AS IsDisplay
-	FROM (
-		SELECT ROW_NUMBER() OVER (
-				ORDER BY tm.EventDate
-					,tm.KickOffTime
-					,tm.MatchNo
-				) AS RowIndex
-			,mf.OWPMatchId
-			,mf.ParentMatchId
-		FROM #tblMatchFiltered AS mf
-			INNER JOIN #tblMatch AS tm ON mf.OWPMatchId = tm.OWPMatchId
+	FROM #tblMatchFiltered AS mf
+		INNER JOIN #tblMatch AS tm ON mf.OWPMatchId = tm.OWPMatchId
 		WHERE mf.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			OR mf.MinorBettypeId IS NULL
-		) AS final
-		INNER JOIN #tblMatch AS tm ON final.OWPMatchId = tm.OWPMatchId
-	ORDER BY final.RowIndex
+	ORDER BY tm.EventDate
+		,tm.KickOffTime
+		,tm.MatchNo
 
 	-- Return Assignment
 	SELECT mf.OWPMatchId

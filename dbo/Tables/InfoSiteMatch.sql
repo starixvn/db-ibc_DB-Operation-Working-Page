@@ -25,3 +25,11 @@
 
 
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_InfoSiteMatch_EventDateTime]
+    ON [dbo].[InfoSiteMatch]([EventDateTime] ASC)
+    ON [OWP_Index];
+

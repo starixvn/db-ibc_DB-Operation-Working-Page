@@ -1,7 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EventInfo_GetByFilterId] @FilterId INT
-	,@PageIndex INT = NULL
-	,@ItemsPerPage INT = NULL
 	,@ShowAll BIT = 0
 AS
 /*
@@ -14,6 +12,7 @@ Param's Explanation:
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
+	20181106@Raymond.Le: Remove paging in SP - [Redmine: #104291]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -37,7 +36,6 @@ BEGIN
 		,@ProviderIds NVARCHAR(MAX)
 		,@RunnerIds NVARCHAR(MAX)
 		,@TVIds NVARCHAR(MAX)
-		,@IsSelected INT
 		,@MatchNumber NVARCHAR(50)
 		,@Remark NVARCHAR(500) 
 		,@AssigneeLocation INT
@@ -56,7 +54,6 @@ BEGIN
 	SET @ProviderIds = dbo.fnc_GetValueFilter(@FilterId, 'Provider')
 	SET @RunnerIds = dbo.fnc_GetValueFilter(@FilterId, 'Runner')
 	SET @TVIds = dbo.fnc_GetValueFilter(@FilterId, 'TV')
-	SET @IsSelected = ISNULL(dbo.fnc_GetValueFilter(@FilterId, 'IsSelected'), 1)
 	SET @MatchNumber = dbo.fnc_GetValueFilter(@FilterId, 'MatchNumber')
 	SET @Remark = dbo.fnc_GetValueFilter(@FilterId, 'Remark')
 	SET @AssigneeLocation = ISNULL(dbo.fnc_GetValueFilter(@FilterId, 'AssigneeLocation'), -1)
@@ -92,9 +89,6 @@ BEGIN
 		,@ProviderIds = @ProviderIds
 		,@RunnerIds = @RunnerIds
 		,@TVIds = @TVIds
-		,@PageIndex = @PageIndex
-		,@ItemsPerPage = @ItemsPerPage
-		,@IsSelected = @IsSelected
 		,@MatchNumber = @MatchNumber
 		,@Remark = @Remark
 		,@AssigneeLocation = @AssigneeLocation
