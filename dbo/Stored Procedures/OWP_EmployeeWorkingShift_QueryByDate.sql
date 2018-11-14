@@ -72,7 +72,7 @@ BEGIN
 		)
 	SELECT DISTINCT u.UserId
 		,mm.ParentMatchId
-		,mb.MinorBettypeId
+		,mb.ParentBettypeId
 	FROM @tblUser u
 	INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
 	INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
