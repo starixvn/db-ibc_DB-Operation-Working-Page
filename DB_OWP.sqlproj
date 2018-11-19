@@ -62,6 +62,7 @@
     <Folder Include="dbo\Functions\" />
     <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="dbo\User Defined Types\" />
+    <Folder Include="Storage\" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\ValidationRule.sql" />
@@ -159,7 +160,6 @@
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber12.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber11.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber10.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber1.sql" />
     <Build Include="dbo\Stored Procedures\OWP_UserUpdate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_UserListGet.sql" />
     <Build Include="dbo\Stored Procedures\OWP_UserGetBySuggestion.sql" />
@@ -298,6 +298,8 @@
     <Build Include="dbo\Stored Procedures\Task_OWP_SyncInfoSiteMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_API_PushInfoSiteMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveShiftCode.sql" />
+    <Build Include="Storage\OWP_Index.sql" />
+    <Build Include="Storage\OWP_Data.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

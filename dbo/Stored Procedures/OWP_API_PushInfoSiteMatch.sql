@@ -103,6 +103,12 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
+	-- not process on existed records and no update
+	DELETE tism
+	FROM #tblInfoSiteMatch AS tism
+		INNER JOIN dbo.InfoSiteMatch AS dism WITH (NOLOCK) ON tism.InfoSiteMatchId = dism.InfoSiteMatchId
+		AND tism.UpdatedTime = dism.UpdatedTime
+
 	-- insert new league
 	INSERT INTO dbo.OWPLeague (OWPLeagueName)
 	SELECT im.LeagueName

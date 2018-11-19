@@ -9,7 +9,7 @@
   <TargetModelProvider>
     <ProjectBasedModelProvider>
       <ProjectGuid>{d48091d6-cd58-48b2-966d-88991693ad4c}</ProjectGuid>
-      <Name>Fanex.NAP.OWP.StoreProcedures</Name>
+      <Name>DB_OWP</Name>
     </ProjectBasedModelProvider>
   </TargetModelProvider>
   <SchemaCompareSettingsService>
@@ -290,7 +290,7 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>TargetDatabaseName</Name>
-        <Value>Fanex.NAP.OWP.StoreProcedures</Value>
+        <Value>DB_OWP</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>TargetConnectionString</Name>
@@ -670,7 +670,7 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>ExcludeFilegroups</Name>
-        <Value>True</Value>
+        <Value>False</Value>
       </PropertyElementName>
       <PropertyElementName>
         <Name>ExcludeFileTables</Name>
@@ -906,10 +906,6 @@
       </PropertyElementName>
       <PropertyElementName>
         <Name>Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlUser</Name>
-        <Value>ExcludedType</Value>
-      </PropertyElementName>
-      <PropertyElementName>
-        <Name>Microsoft.Data.Tools.Schema.Sql.SchemaModel.SqlFilegroup</Name>
         <Value>ExcludedType</Value>
       </PropertyElementName>
       <PropertyElementName>
