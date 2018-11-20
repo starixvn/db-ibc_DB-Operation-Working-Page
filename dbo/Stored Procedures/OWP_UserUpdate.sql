@@ -13,6 +13,9 @@ CREATE PROCEDURE [dbo].[OWP_UserUpdate] @Editor INT
 	,@SectionId SMALLINT = NULL
 	,@RoleId SMALLINT = NULL
 	,@LocationCode VARCHAR(10) = NULL
+	,@Pickup BIT = NULL
+	,@Address NVARCHAR(500) = NULL
+	,@LEVEL NVARCHAR(10) = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -47,7 +50,10 @@ BEGIN
 		,DepartmentId SMALLINT
 		,SectionId SMALLINT
 		,RoleId SMALLINT
+		,Pickup BIT
 		,LocationCode VARCHAR(10)
+		,Address NVARCHAR(500)
+		,Level NVARCHAR(10)
 		)
 
 	IF @UserId IS NOT NULL
@@ -81,6 +87,9 @@ BEGIN
 			,SectionId
 			,RoleId
 			,LocationCode
+			,Pickup
+			,Address
+			,Level
 			)
 		SELECT u.UserId
 			,u.FullName
@@ -95,6 +104,9 @@ BEGIN
 			,u.SectionId
 			,ur.RoleId
 			,u.LocationCode
+			,u.Pickup
+			,u.Address
+			,u.Level
 		FROM [User] u WITH (NOLOCK)
 			LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
 		WHERE u.UserId = @UserId
@@ -131,6 +143,9 @@ BEGIN
 			,DepartmentId = @DepartmentId
 			,SectionId = @SectionId
 			,LocationCode = @LocationCode
+			,Pickup = @Pickup
+			,Address = @Address
+			,Level = @Level
 		WHERE UserId = @UserId
 
 		DELETE
@@ -199,6 +214,18 @@ BEGIN
 						WHEN ISNULL(ou.LocationCode, '') <> ISNULL(@LocationCode, '') THEN ou.LocationCode
 						ELSE NULL
 						END AS '@lo'
+					,CASE 
+						WHEN ISNULL(ou.Pickup, '') <> ISNULL(@Pickup, '') THEN ou.Pickup
+						ELSE NULL
+						END AS '@pk'
+					,CASE 
+						WHEN ISNULL(ou.Address, '') <> ISNULL(@Address, '') THEN ou.Address
+						ELSE NULL
+						END AS '@ad'
+					,CASE 
+						WHEN ISNULL(ou.Level, '') <> ISNULL(@Level, '') THEN ou.Level
+						ELSE NULL
+						END AS '@lv'
 				FROM #OldUser AS ou
 				FOR XML PATH('z')
 					,ROOT('r')
@@ -255,6 +282,18 @@ BEGIN
 						WHEN ISNULL(ou.LocationCode, '') <> ISNULL(@LocationCode, '') THEN ISNULL(@LocationCode, '')
 						ELSE NULL
 						END AS '@lo'
+					,CASE 
+						WHEN ISNULL(ou.Pickup, '') <> ISNULL(@Pickup, '') THEN ou.Pickup
+						ELSE NULL
+						END AS '@pk'
+					,CASE 
+						WHEN ISNULL(ou.Address, '') <> ISNULL(@Address, '') THEN ou.Address
+						ELSE NULL
+						END AS '@ad'
+					,CASE 
+						WHEN ISNULL(ou.Level, '') <> ISNULL(@Level, '') THEN ou.Level
+						ELSE NULL
+						END AS '@lv'
 				FROM #OldUser AS ou
 				FOR XML PATH('z')
 					,ROOT('r')

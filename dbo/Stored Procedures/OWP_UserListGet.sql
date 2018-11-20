@@ -86,6 +86,9 @@ BEGIN
 		,ur.RoleId
 		,r.RoleName AS 'RoleName'
 		,u.LocationCode
+		,u.Pickup
+		,u.Address
+		,u.Level
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
 		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
