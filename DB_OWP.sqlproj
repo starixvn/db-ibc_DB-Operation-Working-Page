@@ -63,6 +63,7 @@
     <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="dbo\User Defined Types\" />
     <Folder Include="Storage\" />
+    <Folder Include="Scripts" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\ValidationRule.sql" />
@@ -244,7 +245,6 @@
       <AnsiNulls>Off</AnsiNulls>
       <QuotedIdentifier>Off</QuotedIdentifier>
     </Build>
-    <Build Include="grant.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopyWeekly.sql" />
     <Build Include="dbo\Tables\EmployeeWorkingShiftNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateNote.sql" />
@@ -300,6 +300,8 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveShiftCode.sql" />
     <Build Include="Storage\OWP_Index.sql" />
     <Build Include="Storage\OWP_Data.sql" />
+    <Build Include="Scripts\backup&amp;restore.sql" />
+    <Build Include="Scripts\grant.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
