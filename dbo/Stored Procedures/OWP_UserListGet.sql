@@ -13,6 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+		20181120@Kane.Le: DB - SP Alter schema + alter sp [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON

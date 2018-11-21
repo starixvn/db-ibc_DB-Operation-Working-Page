@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_UserUpdate] @Editor INT
 	,@UserId INT
 	,@FullName NVARCHAR(200) = NULL
@@ -26,9 +27,38 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20181120@Kane.Le: DB - SP Alter schema + alter sp [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
+
+	IF NOT EXISTS (
+			SELECT u.UserId
+			FROM dbo.[User] u WITH (NOLOCK)
+			WHERE u.UserId = @UserId
+			)
+	BEGIN
+		SELECT @ErrMsg = 'User ID is invalid!'
+			,@ErrCode = 5801 -- ActionId + 01
+
+		RETURN
+	END
+
+	IF EXISTS (
+			SELECT TOP 1 u.UserId
+			FROM dbo.[User] AS u WITH (NOLOCK)
+			WHERE u.UserId <> @UserId
+				AND (
+					u.Nickname = @NickName
+					OR u.Username = @NickName
+					)
+			)
+	BEGIN
+		SELECT @ErrMsg = 'Nickname already exists!'
+			,@ErrCode = 5802
+
+		RETURN
+	END
 
 	DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
@@ -53,23 +83,10 @@ BEGIN
 		,Pickup BIT
 		,LocationCode VARCHAR(10)
 		,Address NVARCHAR(500)
-		,Level NVARCHAR(10)
+		,LEVEL NVARCHAR(10)
 		)
 
-	IF @UserId IS NOT NULL
 	BEGIN TRY
-		IF NOT EXISTS (
-				SELECT u.UserId
-				FROM dbo.[User] u WITH (NOLOCK)
-				WHERE u.UserId = @UserId
-				)
-		BEGIN
-			SELECT @ErrMsg = 'User ID is invalid!'
-				,@ErrCode = 5801 -- ActionId + 01
-
-			RETURN
-		END
-
 		SET @StartRun = GETDATE()
 
 		--Get Old data
@@ -89,7 +106,7 @@ BEGIN
 			,LocationCode
 			,Pickup
 			,Address
-			,Level
+			,LEVEL
 			)
 		SELECT u.UserId
 			,u.FullName
@@ -106,32 +123,43 @@ BEGIN
 			,u.LocationCode
 			,u.Pickup
 			,u.Address
-			,u.Level
+			,u.LEVEL
 		FROM [User] u WITH (NOLOCK)
-			LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
+		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
 		WHERE u.UserId = @UserId
 
-		IF @Nickname IS NOT NULL
-			AND EXISTS (
-				SELECT u.UserId
-				FROM dbo.[User] AS u WITH (NOLOCK)
-				WHERE u.UserId <> @UserId
-					AND (
-						u.Nickname = @NickName
-						OR u.Username = @NickName
-						)
+		--Old Data
+		SET @Xml = (
+				SELECT ISNULL(ou.FullName, '') AS '@fn'
+					,ISNULL(ou.NickName, '') AS '@nn'
+					,ISNULL(ou.EmployeeId, '') AS '@eid'
+					,ISNULL(ou.CategoryId, 0) AS '@ca'
+					,ISNULL(ou.Extension, '') AS '@ex'
+					,ISNULL(ou.Phone, '') AS '@p'
+					,ISNULL(ou.Email, '') AS '@e'
+					,ISNULL(ou.Skype, '') AS '@s'
+					,ISNULL(ou.DepartmentId, 0) AS '@d'
+					,ISNULL(ou.SectionId, 0) AS '@sec'
+					,ISNULL(ur.RoleId, 0) AS '@r'
+					,ISNULL(ou.LocationCode, '') AS '@lo'
+					,ISNULL(ou.Pickup, '') AS '@pk'
+					,ISNULL(ou.Address, '') AS '@ad'
+					,ISNULL(ou.LEVEL, '') AS '@lv'
+				FROM [User] ou WITH (NOLOCK)
+				LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
+				WHERE ou.UserId = @UserId
+				FOR XML PATH('z')
+					,ROOT('r')
 				)
-		BEGIN
-			SELECT @ErrMsg = 'Nickname already exists!'
-				,@ErrCode = 5802
-
-			PRINT '5802'
-
-			RETURN
-		END
+		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
 		--Update
-		UPDATE dbo.[User] WITH (UPDLOCK, ROWLOCK)
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
 		SET FullName = @FullName
 			,Nickname = @NickName
 			,EmployeeId = @EmployeeId
@@ -145,14 +173,14 @@ BEGIN
 			,LocationCode = @LocationCode
 			,Pickup = @Pickup
 			,Address = @Address
-			,Level = @Level
+			,LEVEL = @Level
 		WHERE UserId = @UserId
 
 		DELETE
 		FROM dbo.UserRole
 		WHERE UserId = @UserId
 
-		IF(@RoleId IS NOT NULL)
+		IF (@RoleId IS NOT NULL)
 		BEGIN
 			INSERT INTO dbo.UserRole (
 				UserId
@@ -164,137 +192,23 @@ BEGIN
 				)
 		END
 
-		--Old Data
-		SET @Xml = (
-				SELECT CASE 
-						WHEN ISNULL(ou.FullName, '') <> ISNULL(@FullName, '') THEN ou.FullName
-						ELSE NULL
-						END AS '@fn'
-					,CASE 
-						WHEN ISNULL(ou.NickName, '') <> ISNULL(@NickName, '') THEN ou.NickName
-						ELSE NULL
-						END AS '@nn'
-					,CASE 
-						WHEN ISNULL(ou.EmployeeId, '') <> ISNULL(@EmployeeId, '') THEN ou.EmployeeId
-						ELSE NULL
-						END AS '@eid'
-					,CASE 
-						WHEN ISNULL(ou.CategoryId, 0) <> ISNULL(@CategoryId, 0) THEN ou.CategoryId
-						ELSE NULL
-						END AS '@ca'
-					,CASE 
-						WHEN ISNULL(ou.Extension, '') <> ISNULL(@Extension, '') THEN ou.Extension
-						ELSE NULL
-						END AS '@ex'
-					,CASE 
-						WHEN ISNULL(ou.Phone, '') <> ISNULL(@Phone, '') THEN ou.Phone
-						ELSE NULL
-						END AS '@p'
-					,CASE 
-						WHEN ISNULL(ou.Email, '') <> ISNULL(@Email, '') THEN ou.Email
-						ELSE NULL
-						END AS '@e'
-					,CASE 
-						WHEN ISNULL(ou.Skype, '') <> ISNULL(@Skype, '') THEN ou.Skype
-						ELSE NULL
-						END AS '@s'
-					,CASE 
-						WHEN ISNULL(ou.DepartmentId, 0) <> ISNULL(@DepartmentId, 0) THEN ou.DepartmentId
-						ELSE NULL
-						END AS '@d'
-					,CASE 
-						WHEN ISNULL(ou.SectionId, 0) <> ISNULL(@SectionId, 0) THEN ou.SectionId
-						ELSE NULL
-						END AS '@sec'
-					,CASE 
-						WHEN ISNULL(ou.RoleId, 0) <> ISNULL(@RoleId, 0) THEN ou.RoleId
-						ELSE NULL
-						END AS '@r'
-					,CASE 
-						WHEN ISNULL(ou.LocationCode, '') <> ISNULL(@LocationCode, '') THEN ou.LocationCode
-						ELSE NULL
-						END AS '@lo'
-					,CASE 
-						WHEN ISNULL(ou.Pickup, '') <> ISNULL(@Pickup, '') THEN ou.Pickup
-						ELSE NULL
-						END AS '@pk'
-					,CASE 
-						WHEN ISNULL(ou.Address, '') <> ISNULL(@Address, '') THEN ou.Address
-						ELSE NULL
-						END AS '@ad'
-					,CASE 
-						WHEN ISNULL(ou.Level, '') <> ISNULL(@Level, '') THEN ou.Level
-						ELSE NULL
-						END AS '@lv'
-				FROM #OldUser AS ou
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-
 		--New data
 		SET @Xml = (
-				SELECT CASE 
-						WHEN ISNULL(ou.FullName, '') <> ISNULL(@FullName, '') THEN ISNULL(@FullName, '')
-						ELSE NULL
-						END AS '@fn'
-					,CASE 
-						WHEN ISNULL(ou.NickName, '') <> ISNULL(@NickName, '') THEN ISNULL(@NickName, '')
-						ELSE NULL
-						END AS '@nn'
-					,CASE 
-						WHEN ISNULL(ou.EmployeeId, '') <> ISNULL(@EmployeeId, '') THEN ISNULL(@EmployeeId, '')
-						ELSE NULL
-						END AS '@eid'
-					,CASE 
-						WHEN ISNULL(ou.CategoryId, 0) <> ISNULL(@CategoryId, 0) THEN ISNULL(@CategoryId, '')
-						ELSE NULL
-						END AS '@ca'
-					,CASE 
-						WHEN ISNULL(ou.Extension, '') <> ISNULL(@Extension, '') THEN ISNULL(@Extension, '')
-						ELSE NULL
-						END AS '@ex'
-					,CASE 
-						WHEN ISNULL(ou.Phone, '') <> ISNULL(@Phone, '') THEN ISNULL(@Phone, '')
-						ELSE NULL
-						END AS '@p'
-					,CASE 
-						WHEN ISNULL(ou.Email, '') <> ISNULL(@Email, '') THEN ISNULL(@Email, '')
-						ELSE NULL
-						END AS '@e'
-					,CASE 
-						WHEN ISNULL(ou.Skype, '') <> ISNULL(@Skype, '') THEN ISNULL(@Skype, '')
-						ELSE NULL
-						END AS '@s'
-					,CASE 
-						WHEN ISNULL(ou.DepartmentId, 0) <> ISNULL(@DepartmentId, 0) THEN ISNULL(@DepartmentId, '')
-						ELSE NULL
-						END AS '@d'
-					,CASE 
-						WHEN ISNULL(ou.SectionId, 0) <> ISNULL(@SectionId, 0) THEN ISNULL(@SectionId, '')
-						ELSE NULL
-						END AS '@sec'
-					,CASE 
-						WHEN ISNULL(ou.RoleId, 0) <> ISNULL(@RoleId, 0) THEN ISNULL(@RoleId, '')
-						ELSE NULL
-						END AS '@r'
-					,CASE 
-						WHEN ISNULL(ou.LocationCode, '') <> ISNULL(@LocationCode, '') THEN ISNULL(@LocationCode, '')
-						ELSE NULL
-						END AS '@lo'
-					,CASE 
-						WHEN ISNULL(ou.Pickup, '') <> ISNULL(@Pickup, '') THEN ou.Pickup
-						ELSE NULL
-						END AS '@pk'
-					,CASE 
-						WHEN ISNULL(ou.Address, '') <> ISNULL(@Address, '') THEN ou.Address
-						ELSE NULL
-						END AS '@ad'
-					,CASE 
-						WHEN ISNULL(ou.Level, '') <> ISNULL(@Level, '') THEN ou.Level
-						ELSE NULL
-						END AS '@lv'
-				FROM #OldUser AS ou
+				SELECT ISNULL(@FullName, '') AS '@fn'
+					,ISNULL(@NickName, '') AS '@nn'
+					,ISNULL(@EmployeeId, '') AS '@eid'
+					,ISNULL(@CategoryId, 0) AS '@ca'
+					,ISNULL(@Extension, '') AS '@ex'
+					,ISNULL(@Phone, '') AS '@p'
+					,ISNULL(@Email, '') AS '@e'
+					,ISNULL(@Skype, '') AS '@s'
+					,ISNULL(@DepartmentId, 0) AS '@d'
+					,ISNULL(@SectionId, 0) AS '@sec'
+					,ISNULL(@RoleId, 0) AS '@r'
+					,ISNULL(@LocationCode, '') AS '@lo'
+					,ISNULL(@Pickup, '') AS '@pk'
+					,ISNULL(@Address, '') AS '@ad'
+					,ISNULL(@Level, '') AS '@lv'
 				FOR XML PATH('z')
 					,ROOT('r')
 				)
