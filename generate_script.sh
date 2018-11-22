@@ -1,1 +1,1 @@
-Get-ChildItem * -Include *.sql -Recurse | Where {$_.Fullname -notlike "*Table_Data*"} | gc | out-file D:\result.sql
+Get-ChildItem -include *.sql -rec | ForEach-Object {Get-Content $_; "GO"} | out-file D:\result.txt
