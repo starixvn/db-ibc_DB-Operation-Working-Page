@@ -27,7 +27,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
-	20181120@Kane.Le: DB - SP Alter schema + alter sp [Redmine: #105043]
+	20181120@Kane.Le: Update Pickup, Address, Level, Refactor SP  [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -67,67 +67,9 @@ BEGIN
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
 
-	CREATE TABLE #OldUser (
-		UserId INT
-		,FullName NVARCHAR(200)
-		,NickName VARCHAR(30)
-		,EmployeeId VARCHAR(30)
-		,CategoryId SMALLINT
-		,Extension VARCHAR(30)
-		,Phone VARCHAR(30)
-		,Email VARCHAR(50)
-		,Skype VARCHAR(50)
-		,DepartmentId SMALLINT
-		,SectionId SMALLINT
-		,RoleId SMALLINT
-		,Pickup BIT
-		,LocationCode VARCHAR(10)
-		,Address NVARCHAR(500)
-		,LEVEL NVARCHAR(10)
-		)
-
+	 
 	BEGIN TRY
-		SET @StartRun = GETDATE()
-
-		--Get Old data
-		INSERT INTO #OldUser (
-			UserId
-			,FullName
-			,NickName
-			,EmployeeId
-			,CategoryId
-			,Extension
-			,Phone
-			,Email
-			,Skype
-			,DepartmentId
-			,SectionId
-			,RoleId
-			,LocationCode
-			,Pickup
-			,Address
-			,LEVEL
-			)
-		SELECT u.UserId
-			,u.FullName
-			,u.Nickname
-			,u.EmployeeId
-			,u.CategoryId
-			,u.Extension
-			,u.Phone
-			,u.Email
-			,u.Skype
-			,u.DepartmentId
-			,u.SectionId
-			,ur.RoleId
-			,u.LocationCode
-			,u.Pickup
-			,u.Address
-			,u.LEVEL
-		FROM [User] u WITH (NOLOCK)
-		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
-		WHERE u.UserId = @UserId
-
+		SET @StartRun = GETDATE()		 
 		--Old Data
 		SET @Xml = (
 				SELECT ISNULL(ou.FullName, '') AS '@fn'
