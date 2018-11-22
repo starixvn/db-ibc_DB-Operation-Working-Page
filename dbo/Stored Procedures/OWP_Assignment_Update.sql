@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_Assignment_Update] @ActorId INT
 	,@SessionId VARCHAR(50)
 	,@AssignmentId INT
@@ -16,6 +17,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 	20181123@Leo.Vo: Fix notify message assignee - [Redmine: #104291]
+	20181121@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -41,7 +43,8 @@ BEGIN
 		,@ToTimeSendMessageSpecialBettype DATETIME
 		,@OWPMatchId INT
 		,@MyAssignmentNotificationSettingId INT = 1
-		,@ChangeOfAssignmentNotificationSettingId INT = 2
+		,@ChangeOfTraderAssignmentNotificationSettingId INT = 2
+		,@ChangeOfLAAssignmentNotificationSettingId INT = 10
 		,@Bettype INT
 		,@Username NVARCHAR(30) = ''
 		,@OldUsername NVARCHAR(30) = ''
@@ -50,6 +53,8 @@ BEGIN
 		,@AwayTeam NVARCHAR(200)
 		,@MinorBetTypeId INT
 		,@ActorName NVARCHAR(30)
+		,@ChangeOfAssignmentNotificationSettingId INT
+		,@BettypeLA INT = - 1002
 
 	SELECT @OWPMatchId = OWPMatchId
 		,@Bettype = Bettype
@@ -281,6 +286,11 @@ BEGIN
 	IF @OldUserId IS NOT NULL
 		SET @OldUsername = '#' + dbo.[fnc_GetUsernameByUserId](@OldUserId)
 
+	SELECT @ChangeOfAssignmentNotificationSettingId = CASE 
+			WHEN @BetType = @BettypeLA THEN @ChangeOfLAAssignmentNotificationSettingId
+			ELSE @ChangeOfTraderAssignmentNotificationSettingId
+			END
+
 	INSERT INTO #tblMessage (
 		UserId
 		,MessageContent
@@ -311,10 +321,6 @@ BEGIN
 		WHERE u.UserId <> ISNULL(@UserId, 0)
 			AND u.UserId <> ISNULL(@OldUserId, 0)
 		) AS d
-		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @MyAssignmentNotificationSettingId
-		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-		AND nsm.UserId = d.UserId
-	WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
 	-- list of minor bettypes Corner & Booking but not 15 mins
 	CREATE TABLE #tblCornerBookingBetTypes (MinorBetTypeId INT NOT NULL)

@@ -16,7 +16,7 @@ CREATE PROCEDURE [dbo].[OWP_UserUpdate] @Editor INT
 	,@LocationCode VARCHAR(10) = NULL
 	,@Pickup BIT = NULL
 	,@Address NVARCHAR(500) = NULL
-	,@LEVEL NVARCHAR(10) = NULL
+	,@Level INT = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -67,9 +67,8 @@ BEGIN
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
 
-	 
 	BEGIN TRY
-		SET @StartRun = GETDATE()		 
+		SET @StartRun = GETDATE()
 		--Old Data
 		SET @Xml = (
 				SELECT ISNULL(ou.FullName, '') AS '@fn'
@@ -85,10 +84,10 @@ BEGIN
 					,ISNULL(ur.RoleId, 0) AS '@r'
 					,ISNULL(ou.LocationCode, '') AS '@lo'
 					,ISNULL(ou.Pickup, '') AS '@pk'
-					,ISNULL(ou.Address, '') AS '@ad'
-					,ISNULL(ou.LEVEL, '') AS '@lv'
+					,ISNULL(ou.[Address], '') AS '@ad'
+					,ISNULL(ou.[Level], '') AS '@lv'
 				FROM [User] ou WITH (NOLOCK)
-				LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
+					LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 				WHERE ou.UserId = @UserId
 				FOR XML PATH('z')
 					,ROOT('r')
@@ -96,12 +95,7 @@ BEGIN
 		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
 		--Update
-		UPDATE dbo.[User]
-		WITH (
-				UPDLOCK
-				,ROWLOCK
-				)
-
+		UPDATE dbo.[User] WITH (UPDLOCK, ROWLOCK)
 		SET FullName = @FullName
 			,Nickname = @NickName
 			,EmployeeId = @EmployeeId
@@ -114,8 +108,8 @@ BEGIN
 			,SectionId = @SectionId
 			,LocationCode = @LocationCode
 			,Pickup = @Pickup
-			,Address = @Address
-			,LEVEL = @Level
+			,[Address] = @Address
+			,[Level] = @Level
 		WHERE UserId = @UserId
 
 		DELETE

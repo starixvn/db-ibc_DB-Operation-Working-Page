@@ -13,8 +13,15 @@
     [LocationCode] VARCHAR (10)   NULL,
     [CategoryId]   SMALLINT       NULL,
     [Username]     VARCHAR (30)   NULL,
+    [Pickup]       BIT            NULL,
+    [Address]      NVARCHAR (500) NULL,
+    [Level]        INT            NULL,
     CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED ([UserId] ASC)
 );
+
+
+
+
 
 
 

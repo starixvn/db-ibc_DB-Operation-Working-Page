@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_NotificationSetting_GetByUserId] @UserId INT
 AS
 /*          
@@ -9,6 +8,7 @@ AS
           
  Revisions:      
 	20181008@Kane.Le Improve selected data - [Redmine: #92868]
+	20181120@Leo.Vo: Ordering - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -20,4 +20,5 @@ BEGIN
 	FROM [dbo].[NotificationSetting] n WITH (NOLOCK)
 		LEFT JOIN dbo.NotificationSettingMapping AS m WITH (NOLOCK) ON m.UserId = @UserId
 		AND n.NotificationSettingId = m.NotificationSettingId
+		ORDER BY n.[Order]
 END
