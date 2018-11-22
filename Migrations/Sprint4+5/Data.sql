@@ -1,3 +1,10 @@
+/*
+	Created: Leo.Vo
+	Date: 2018-11-22
+	Task: Deactive assignment rule
+	DB: bodb_OWP
+*/
+
 USE bodb_OWP
 GO
 

@@ -1,3 +1,10 @@
+/*
+	Created: Leo.Vo
+	Date: 2018-11-22
+	Task: Schema
+	DB: bodb_OWP
+*/
+
 USE bodb_OWP
 GO
 
