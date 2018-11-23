@@ -21,6 +21,7 @@ AS
 	20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181016@Raymond.Le: Notify assignee follow Notification Setting - [Redmine: #102867] 
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
+	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -79,6 +80,7 @@ BEGIN
 		,@Specific15MinsTotalBooking INT = - 8
 		,@FastMarket INT = - 88
 		,@AllInOne INT = - 89
+		,@BettypeLA INT = - 1002
 		-- Match Status
 		,@str_Live NVARCHAR(15) = 'Live'
 		,@str_Cancel NVARCHAR(15) = 'Cancel'
@@ -86,6 +88,12 @@ BEGIN
 		,@str_Suspended NVARCHAR(15) = 'Suspended'
 		,@CurrentDateTimeGMTplus8 DATETIME = DATEADD(HOUR, 12, GETDATE())
 		,@Username VARCHAR(30)
+		-- Notification Setting
+		,@NotifyTraderUpdatedId INT = 2
+		,@NofifyLAUpdatedId INT = 10
+		,@NotifyMyAssignmentUpdatedId INT = 1
+		,@NotifyMatchInfoUpdatedId INT = 5
+		,@NotifyProviderInfoUpdatedId INT = 11
 
 	SELECT @Username = dbo.fnc_GetUsernameByUserId(@UserId)
 
@@ -253,6 +261,7 @@ BEGIN
 		,OldValue NVARCHAR(500)
 		,NewValue NVARCHAR(500)
 		,ParentMatchId INT
+		,NotificationSettingId INT
 		)
 
 	-- store all match (main + minor) in TimeRange
@@ -381,6 +390,7 @@ BEGIN
 		OWPMatchId INT NOT NULL
 		,ParentMatchId INT NOT NULL
 		,UserId INT
+		,Bettype INT
 		,MessageContent NVARCHAR(2000)
 		)
 
@@ -1355,19 +1365,22 @@ BEGIN
 			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
-		--Store list matchs edited in Time Range
+		--Store list matches edited in Time Range
 		INSERT INTO #tblMatchEditedInTimeRange (
 			OWPMatchId
 			,MessageTemplateCode
 			,OldValue
 			,NewValue
 			,ParentMatchId
+			,NotificationSettingId
 			)
 		SELECT match.OWPMatchId
 			,match.MessageTemplateCode
 			,match.OldValue
 			,match.NewValue
 			,mm.ParentMatchId
+			,CASE WHEN match.MessageTemplateCode IN ('EditTV', 'EditChannel', 'EditWB', 'EditProvider', 'EditOtherProvider', 'EditAgent', 'EditPhone') THEN @NotifyProviderInfoUpdatedId
+					ELSE @NotifyMatchInfoUpdatedId END -- attention
 		FROM #tblMatchEditedInfo AS match
 			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON match.OWPMatchId = om.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON match.OWPMatchId = mm.MinorMatchId
@@ -2052,7 +2065,7 @@ BEGIN
 		SELECT [Action]
 			,al.OWPMatchId
 			,mt.ParentMatchId
-			,BetType
+			,al.BetType
 			,AssignmentType
 			,UserId
 			,Username
@@ -2091,7 +2104,7 @@ BEGIN
 				WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignmentId
 				ELSE @MessageDeleteOtherAssignmentId
 				END
-			,1
+			,@NotifyMyAssignmentUpdatedId
 			,1
 		FROM #tblAssignmentInTimeRange a
 		WHERE a.OldUserId IS NOT NULL
@@ -2114,7 +2127,7 @@ BEGIN
 				WHEN a.AssignmentType = 1 THEN @MessageInsertAssignmentId
 				ELSE @MessageInsertOtherAssignmentId
 				END
-			,1
+			,@NotifyMyAssignmentUpdatedId
 			,1
 		FROM #tblAssignmentInTimeRange a
 		WHERE a.UserId IS NOT NULL
@@ -2125,11 +2138,13 @@ BEGIN
 			OWPMatchId
 			,ParentMatchId
 			,UserId
+			,Bettype
 			,MessageContent
 			)
 		SELECT a.OWPMatchId
 			,a.ParentMatchId
 			,ISNULL(a.UserId, a.OldUserId)
+			,a.BetType
 			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
 								WHEN a.[Action] <> 'DELETE' THEN CASE 
 										WHEN a.AssignmentType = 1 THEN '#' + a.Username
@@ -2161,7 +2176,8 @@ BEGIN
 		SELECT a.UserId
 			,m.MessageContent
 			,@MessageChangeOfAssignmentId
-			,2
+			,CASE WHEN m.Bettype = @BettypeLA THEN @NofifyLAUpdatedId
+					ELSE @NotifyTraderUpdatedId END
 			,0
 		FROM #tblChangeOfAssignmentMessage AS m
 			CROSS JOIN (
@@ -2171,7 +2187,7 @@ BEGIN
 				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
 			WHERE a.UserId IS NOT NULL
 			) AS a
-		WHERE m.UserId <> a.UserId
+		WHERE ISNULL(m.UserId, 0) <> a.UserId
 			AND m.ParentMatchId = a.ParentMatchId
 
 		INSERT INTO #tblMessage
@@ -2258,7 +2274,7 @@ BEGIN
 		INSERT INTO #tblUsersReceivedMessageUpdateMatchInfo (
 			OWPMatchId
 			,MessageTemplateCode
-			,UserId
+			,UserId			
 			)
 		SELECT u.OWPMatchId
 			,u.MessageTemplateCode
@@ -2267,6 +2283,7 @@ BEGIN
 			SELECT tr.OWPMatchId
 				,tr.MessageTemplateCode
 				,a.UserId
+				,tr.NotificationSettingId
 			FROM #tblMatchEditedInTimeRange AS tr
 				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = tr.OWPMatchId
 			WHERE tr.ParentMatchId IS NULL
@@ -2276,6 +2293,7 @@ BEGIN
 			SELECT tr.OWPMatchId
 				,tr.MessageTemplateCode
 				,a.UserId
+				,tr.NotificationSettingId
 			FROM #tblMatchEditedInTimeRange AS tr
 				INNER JOIN dbo.MinorMatch AS mm ON mm.ParentMatchId = tr.OWPMatchId
 				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
@@ -2286,6 +2304,7 @@ BEGIN
 			SELECT tr.OWPMatchId
 				,tr.MessageTemplateCode
 				,a.UserId
+				,tr.NotificationSettingId
 			FROM #tblMatchEditedInTimeRange AS tr
 				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = tr.ParentMatchId
 			WHERE tr.ParentMatchId IS NOT NULL
@@ -2295,15 +2314,16 @@ BEGIN
 			SELECT tr.OWPMatchId
 				,tr.MessageTemplateCode
 				,a.UserId
+				,tr.NotificationSettingId
 			FROM #tblMatchEditedInTimeRange AS tr
 				INNER JOIN dbo.MinorMatch AS mm ON mm.ParentMatchId = tr.ParentMatchId
 				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
 			WHERE tr.ParentMatchId IS NOT NULL
 				AND a.UserId IS NOT NULL
 			) AS u
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = 5
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = u.NotificationSettingId
 			LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON u.UserId = nm.UserId
-			AND nm.NotificationSettingId = 5
+			AND nm.NotificationSettingId = u.NotificationSettingId
 		WHERE ISNULL(nm.Value, ns.DefaultValue) = 'True'
 
 		MERGE INTO dbo.[Message] WITH (ROWLOCK)
@@ -2429,6 +2449,8 @@ BEGIN
 	DROP TABLE #tblMatchEditedInfo
 
 	DROP TABLE #tblMatchEditedInTimeRange
+
+	DROP TABLE #tblMatchInTimeRange
 
 	DROP TABLE #tblUsersReceivedMessageUpdateMatchInfo
 
