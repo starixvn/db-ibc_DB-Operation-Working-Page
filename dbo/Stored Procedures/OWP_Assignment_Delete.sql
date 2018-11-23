@@ -187,7 +187,7 @@ BEGIN
 	FROM (
 		SELECT u.UserId
 			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<oldAssignee>', CASE 
-								WHEN s.AssignmentNote IS NULL THEN ISNULL(us.Nickname, us.Username)
+								WHEN s.AssignmentNote IS NULL THEN '#' + ISNULL(us.Nickname, us.Username)
 								ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE 
 													WHEN us.UserId IS NULL THEN ''
 													ELSE '#' + ISNULL(us.Nickname, us.Username)
