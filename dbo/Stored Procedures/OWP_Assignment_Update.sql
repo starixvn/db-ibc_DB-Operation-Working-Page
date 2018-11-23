@@ -297,10 +297,10 @@ BEGIN
 	FROM (
 		SELECT u.UserId
 			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
-								WHEN @AssignmentNote IS NULL THEN ''
+								WHEN @AssignmentNote IS NULL THEN '#' + @Username
 								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
 								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', CASE 
-					WHEN @OldAssignmentNote IS NULL THEN ''
+					WHEN @OldAssignmentNote IS NULL THEN '#' + @OldUsername
 					ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername)))
 					END) AS MessageContent
 			,@MessageChangeOfAssignmentId AS MessageTypeId
