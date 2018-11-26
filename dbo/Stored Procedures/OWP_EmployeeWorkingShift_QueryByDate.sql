@@ -100,7 +100,7 @@ BEGIN
 		,m.MatchNo
 		,STUFF((
 				SELECT ', ' + CAST(dbo.[Provider].ProviderName AS NVARCHAR(30))
-				FROM dbo.[Provider]
+				FROM dbo.[Provider] WITH (NOLOCK)
 				WHERE dbo.[Provider].ProviderId IN (
 						SELECT val
 						FROM dbo.[strSplit](mi.[Provider], ',')
@@ -109,7 +109,7 @@ BEGIN
 				), 1, 1, '') AS 'Provider'
 		,STUFF((
 				SELECT ', ' + CAST(dbo.[Runner].RunnerName AS NVARCHAR(30))
-				FROM dbo.[Runner]
+				FROM dbo.[Runner] WITH (NOLOCK)
 				WHERE dbo.[Runner].RunnerId IN (
 						SELECT val
 						FROM dbo.[strSplit](mi.[Runner], ',')

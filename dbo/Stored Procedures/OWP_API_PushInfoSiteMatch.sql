@@ -112,7 +112,7 @@ BEGIN
 	-- insert new league
 	INSERT INTO dbo.OWPLeague (OWPLeagueName)
 	SELECT im.LeagueName
-	FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
+	FROM #tblInfoSiteMatch AS im
 	WHERE NOT EXISTS (
 			SELECT 1
 			FROM dbo.OWPLeague AS l WITH (NOLOCK)
@@ -129,14 +129,12 @@ BEGIN
 	INSERT INTO dbo.OWPTeam (OWPTeamName)
 	SELECT TeamName
 	FROM (
-		SELECT im.InfoSiteMatchId
-			,im.HomeName AS TeamName
-		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
+		SELECT im.HomeName AS TeamName
+		FROM #tblInfoSiteMatch AS im
 		
 		UNION
-		SELECT im.InfoSiteMatchId
-			,im.AwayName AS TeamName
-		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
+		SELECT im.AwayName AS TeamName
+		FROM #tblInfoSiteMatch AS im
 		) AS im
 	WHERE NOT EXISTS (
 			SELECT 1
