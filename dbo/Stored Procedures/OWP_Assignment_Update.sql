@@ -15,6 +15,7 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+	20181123@Leo.Vo: Fix notify message assignee - [Redmine: #104291]
 */
 BEGIN
 	SET NOCOUNT ON
