@@ -1,10 +1,3 @@
-/*
-	Created: Leo.Vo
-	Date: 2018-11-22
-	Task: Schema
-	DB: bodb_OWP
-*/
-
 USE bodb_OWP
 GO
 
@@ -74,4 +67,44 @@ DROP CONSTRAINT DF_AssignmentUploading_MatchId;
 EXECUTE sys.sp_rename 'dbo.AssignmentUploading.MatchId', 'InfoSiteMatchId', 'COLUMN';
 
 ALTER TABLE dbo.AssignmentUploading ADD  CONSTRAINT DF_AssignmentUploading_InfoSiteMatchId  DEFAULT (N'') FOR InfoSiteMatchId;
+GO
+
+-- Change data type OWPLeagueName
+ALTER TABLE dbo.OWPLeague
+ALTER COLUMN OWPLeagueName NVARCHAR(450) NOT NULL
+
+-- Indexing column OWPTeamName on table OWPTeam
+CREATE UNIQUE NONCLUSTERED INDEX	IX_OWPTeam_OWPTeamName ON dbo.OWPTeam (
+								OWPTeamName ASC
+							) ON OWP_Index;
+GO
+							
+-- Indexing column OWPLeagueName on table OWPLeague
+CREATE UNIQUE NONCLUSTERED INDEX	IX_OWPLeague_OWPLeagueName ON dbo.OWPLeague (
+								OWPLeagueName ASC
+							) ON OWP_Index;
+GO
+							
+-- Indexing column AgentName on table Agent
+CREATE UNIQUE NONCLUSTERED INDEX	IX_Agent_AgentName ON dbo.Agent (
+								AgentName ASC
+							) ON OWP_Index;
+GO
+							
+-- Indexing column ProviderName on table Provider
+CREATE UNIQUE NONCLUSTERED INDEX	IX_Provider_ProviderName ON dbo.Provider (
+								ProviderName ASC
+							) ON OWP_Index;
+
+GO							
+-- Indexing column RunnerName on table Runner
+CREATE UNIQUE NONCLUSTERED INDEX	IX_Runner_RunnerName ON dbo.Runner (
+								RunnerName ASC
+							) ON OWP_Index;
+GO
+
+-- Indexing column TVCode on table Television
+CREATE UNIQUE NONCLUSTERED INDEX	IX_Television_TVCode ON dbo.Television (
+								TVCode ASC
+							) ON OWP_Index;
 GO

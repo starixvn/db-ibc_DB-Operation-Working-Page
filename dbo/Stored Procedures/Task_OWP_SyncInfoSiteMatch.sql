@@ -17,7 +17,7 @@ BEGIN
 		,@NumberDayDeleteOldData INT = 1
 
 	-- remove old data
-	DELETE dbo.InfoSiteMatch WITH (ROWLOCK, UPDLOCK)
+	DELETE dbo.InfoSiteMatch WITH (ROWLOCK)
 	WHERE EventDateTime < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
 
 	-- sync League

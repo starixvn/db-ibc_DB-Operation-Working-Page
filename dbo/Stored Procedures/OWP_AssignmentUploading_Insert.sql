@@ -30,7 +30,7 @@ BEGIN
 
 	-- remove old data
 	DELETE
-	FROM dbo.AssignmentUploading WITH (UPDLOCK)
+	FROM dbo.AssignmentUploading WITH (ROWLOCK)
 	WHERE SessionId IN (
 			SELECT SessionId
 			FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
@@ -38,7 +38,7 @@ BEGIN
 			)
 
 	DELETE
-	FROM dbo.AssignmentUploadingResult WITH (UPDLOCK)
+	FROM dbo.AssignmentUploadingResult WITH (ROWLOCK)
 	WHERE SessionId IN (
 			SELECT SessionId
 			FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
@@ -46,7 +46,7 @@ BEGIN
 			)
 
 	DELETE
-	FROM dbo.AssignmentUploadingLog WITH (UPDLOCK)
+	FROM dbo.AssignmentUploadingLog WITH (ROWLOCK)
 	WHERE CreatedDate < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
 
 

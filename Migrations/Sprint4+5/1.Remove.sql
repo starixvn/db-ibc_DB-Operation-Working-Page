@@ -1,3 +1,6 @@
+USE [bodb_OWP]
+GO
+
 -- remove unused tables
 DROP TABLE dbo.Assignment_Old
 DROP TABLE dbo.AssignmentUploading_Old

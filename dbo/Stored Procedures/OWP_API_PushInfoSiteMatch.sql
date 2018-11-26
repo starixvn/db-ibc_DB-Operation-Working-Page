@@ -123,7 +123,7 @@ BEGIN
 	UPDATE im
 	SET im.OWPLeagueId = l.OWPLeagueId
 	FROM #tblInfoSiteMatch AS im
-		INNER JOIN dbo.OWPLeague AS l ON im.LeagueName = l.OWPLeagueName
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON im.LeagueName = l.OWPLeagueName
 
 	-- insert new team
 	INSERT INTO dbo.OWPTeam (OWPTeamName)

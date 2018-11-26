@@ -15,7 +15,7 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DELETE
-	FROM EmployeeWorkingShift
+	FROM EmployeeWorkingShift WITH (ROWLOCK)
 	WHERE EmployeeId = @EmployeeId
 		AND ShiftDate = @ShiftDate
 END

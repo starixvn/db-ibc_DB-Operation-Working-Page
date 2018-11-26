@@ -64,7 +64,7 @@ BEGIN
 		);
 
 	DELETE
-	FROM dbo.Assignment WITH (UPDLOCK)
+	FROM dbo.Assignment WITH (ROWLOCK)
 	OUTPUT deleted.AssignmentId
 		,deleted.Bettype
 		,deleted.AssignmentType
@@ -77,7 +77,7 @@ BEGIN
 	BEGIN
 		-- remove other assignments
 		DELETE
-		FROM dbo.Assignment WITH (UPDLOCK)
+		FROM dbo.Assignment WITH (ROWLOCK)
 		OUTPUT deleted.AssignmentId
 			,deleted.Bettype
 			,deleted.AssignmentType
