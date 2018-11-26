@@ -15,7 +15,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 	20181123@Leo.Vo: Fix notify message assignee - [Redmine: #104291]
-	20181121@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
+	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
