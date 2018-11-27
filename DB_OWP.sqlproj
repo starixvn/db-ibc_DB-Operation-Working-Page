@@ -224,7 +224,6 @@
     <Build Include="dbo\Stored Procedures\OWP_FilterDefaultInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_FilterDefaultDelete.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EventPicking_Get.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EventMgt_MatchLinking.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EventInsertFromInfoSite.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EventInfo_GetByFilterId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EventInfo_Get.sql" />
