@@ -62,6 +62,8 @@
     <Folder Include="dbo\Functions\" />
     <Folder Include="dbo\Stored Procedures\" />
     <Folder Include="dbo\User Defined Types\" />
+    <Folder Include="Storage\" />
+    <Folder Include="Scripts" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\ValidationRule.sql" />
@@ -159,7 +161,6 @@
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber12.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber11.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber10.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber1.sql" />
     <Build Include="dbo\Stored Procedures\OWP_UserUpdate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_UserListGet.sql" />
     <Build Include="dbo\Stored Procedures\OWP_UserGetBySuggestion.sql" />
@@ -244,7 +245,6 @@
       <AnsiNulls>Off</AnsiNulls>
       <QuotedIdentifier>Off</QuotedIdentifier>
     </Build>
-    <Build Include="grant.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopyWeekly.sql" />
     <Build Include="dbo\Tables\EmployeeWorkingShiftNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateNote.sql" />
@@ -294,6 +294,14 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickInsert_WorkingShiftColor.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickDelete_WorkingShiftColor.sql" />
     <Build Include="dbo\User Defined Types\TVP_INT.sql" />
+    <Build Include="dbo\Tables\InfoSiteMatch.sql" />
+    <Build Include="dbo\Stored Procedures\Task_OWP_SyncInfoSiteMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_PushInfoSiteMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveShiftCode.sql" />
+    <Build Include="Storage\OWP_Index.sql" />
+    <Build Include="Storage\OWP_Data.sql" />
+    <Build Include="Scripts\backup&amp;restore.sql" />
+    <Build Include="Scripts\grant.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

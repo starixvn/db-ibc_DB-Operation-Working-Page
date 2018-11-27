@@ -30,3 +30,12 @@
 
 
 
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_MatchInfo_IsSelected]
+    ON [dbo].[MatchInfo]([IsSelected] DESC)
+    INCLUDE([OWPMatchId])
+    ON [OWP_Index];
+

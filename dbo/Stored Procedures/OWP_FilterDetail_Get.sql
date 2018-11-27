@@ -8,6 +8,7 @@ AS
       
  Revisions:          
 	20180927@Leo: New structure of event assignment - [Redmine: #92868]
+	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -17,7 +18,7 @@ BEGIN
 			,@fieldAssignee INT = 8
 			,@AssigneeIds NVARCHAR(MAX)
 			,@fieldTv INT = 9
-			,@TVCodes NVARCHAR(MAX)
+			,@TVIds NVARCHAR(MAX)
 			,@fieldProvider INT = 13
 			,@ProviderIds NVARCHAR(MAX)
 			,@fieldRunner INT = 14
@@ -50,7 +51,8 @@ BEGIN
 		)
 
 	CREATE TABLE #tblTelevision (
-		TVCode NVARCHAR(100)
+		TVId INT
+		,TVCode NVARCHAR(100)
 		,IsSelected BIT
 	)
 	
@@ -151,21 +153,23 @@ BEGIN
 	END
 
 	--- Get Tv list
-	SET @TVCodes = (SELECT TOP 1 Value 
+	SET @TVIds = (SELECT TOP 1 Value 
 			FROM #tblFilterDetail
 			WHERE FieldId = @fieldTv)
 
-	IF @TVCodes IS NOT NULL 
+	IF @TVIds IS NOT NULL 
 	BEGIN
 		INSERT INTO #tblTelevision (
-			TVCode
+			TVId
+			,TVCode
 			,IsSelected
 		)
-		SELECT	 t.TVCode
+		SELECT	t.TVId 
+				,t.TVCode
 				,CASE WHEN tvc.val IS NOT NULL THEN 1
 					ELSE 0 END
 		FROM dbo.Television AS t WITH (NOLOCK)
-			LEFT JOIN dbo.strSplit(@TVCodes, ',') AS tvc ON t.TVCode = tvc.val
+			LEFT JOIN dbo.strSplit(@TVIds, ',') AS tvc ON t.TVId = tvc.val
 	END
 
 	--- Get Provider list
@@ -287,7 +291,8 @@ BEGIN
 		,Username
 	FROM #tblUsers
 
-	SELECT 	TVCode
+	SELECT 	TVId
+			,TVCode
 			,IsSelected
 	FROM #tblTelevision
 

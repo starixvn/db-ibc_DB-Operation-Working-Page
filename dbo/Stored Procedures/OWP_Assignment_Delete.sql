@@ -14,6 +14,7 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+	20181123@Leo.Vo: Fix notify message assignee - [Redmine: #104291]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -63,7 +64,7 @@ BEGIN
 		);
 
 	DELETE
-	FROM dbo.Assignment WITH (UPDLOCK)
+	FROM dbo.Assignment WITH (ROWLOCK)
 	OUTPUT deleted.AssignmentId
 		,deleted.Bettype
 		,deleted.AssignmentType
@@ -76,7 +77,7 @@ BEGIN
 	BEGIN
 		-- remove other assignments
 		DELETE
-		FROM dbo.Assignment WITH (UPDLOCK)
+		FROM dbo.Assignment WITH (ROWLOCK)
 		OUTPUT deleted.AssignmentId
 			,deleted.Bettype
 			,deleted.AssignmentType
@@ -187,7 +188,7 @@ BEGIN
 	FROM (
 		SELECT u.UserId
 			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<oldAssignee>', CASE 
-								WHEN s.AssignmentNote IS NULL THEN ISNULL(us.Nickname, us.Username)
+								WHEN s.AssignmentNote IS NULL THEN '#' + ISNULL(us.Nickname, us.Username)
 								ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE 
 													WHEN us.UserId IS NULL THEN ''
 													ELSE '#' + ISNULL(us.Nickname, us.Username)

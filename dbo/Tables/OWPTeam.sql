@@ -4,3 +4,11 @@
     CONSTRAINT [PK_OWPTeam] PRIMARY KEY CLUSTERED ([OWPTeamId] ASC)
 );
 
+
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_OWPTeam_OWPTeamName]
+    ON [dbo].[OWPTeam]([OWPTeamName] ASC)
+    ON [OWP_Index];
+

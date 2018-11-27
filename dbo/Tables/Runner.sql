@@ -4,3 +4,11 @@
     CONSTRAINT [PK_Runner] PRIMARY KEY CLUSTERED ([RunnerId] ASC)
 );
 
+
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Runner_RunnerName]
+    ON [dbo].[Runner]([RunnerName] ASC)
+    ON [OWP_Index];
+

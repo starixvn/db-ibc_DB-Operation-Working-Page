@@ -11,7 +11,15 @@
 
 
 
+
+
 GO
 CREATE CLUSTERED INDEX [CIX_MinorMatch]
     ON [dbo].[MinorMatch]([MinorMatchId] ASC);
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_MinorMatch_ParentMatchId]
+    ON [dbo].[MinorMatch]([ParentMatchId] ASC)
+    ON [OWP_Index];
 

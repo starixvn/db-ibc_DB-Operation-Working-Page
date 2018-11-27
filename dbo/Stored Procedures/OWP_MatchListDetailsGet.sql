@@ -12,6 +12,7 @@ AS
     20171012@Tim.Trinh: get OtherTime, Website, Website2, Website3, Website4
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
 	20180618@Leo: New structure of event assignment - [Redmine: #92868]
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -57,6 +58,7 @@ BEGIN
 		,IsMinorMatch BIT
 		,MinorBettypeId INT
 		,ParentMatchId INT
+		,InfoSiteMatchId INT
 		)
 
 	INSERT INTO #owpMatchListByDate (
@@ -89,6 +91,7 @@ BEGIN
 		,IsMinorMatch
 		,MinorBettypeId
 		,ParentMatchId
+		,InfoSiteMatchId
 		)
 	SELECT om.OWPMatchId
 		,om.MatchNo
@@ -125,6 +128,7 @@ BEGIN
 			WHEN minor.ParentMatchId IS NULL THEN om.OWPMatchId
 			ELSE minor.ParentMatchId
 			END AS ParentMatchId
+		,om.InfoSiteMatchId
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
@@ -188,6 +192,7 @@ BEGIN
 		,ml.IsMinorMatch
 		,ml.MinorBettypeId
 		,ml.ParentMatchId
+		,ml.InfoSiteMatchId
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId

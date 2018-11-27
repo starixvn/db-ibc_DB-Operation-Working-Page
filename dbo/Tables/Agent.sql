@@ -4,3 +4,11 @@
     CONSTRAINT [PK_Agent] PRIMARY KEY CLUSTERED ([AgentId] ASC)
 );
 
+
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Agent_AgentName]
+    ON [dbo].[Agent]([AgentName] ASC)
+    ON [OWP_Index];
+

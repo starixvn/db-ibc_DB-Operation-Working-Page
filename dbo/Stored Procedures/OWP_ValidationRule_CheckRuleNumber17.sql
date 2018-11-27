@@ -55,7 +55,6 @@ BEGIN
 
 	CREATE TABLE #tblAssignmentUploading (
 		RowNumber INT
-		,OWPMatchId INT NULL
 		,owpEventDate DATETIME NULL
 		,UserId INT
 		,Trader NVARCHAR(100)
@@ -123,7 +122,6 @@ BEGIN
 	BEGIN
 		INSERT INTO #tblAssignmentUploading (
 			RowNumber
-			,OWPMatchId
 			,owpEventDate
 			,UserId
 			,Trader
@@ -132,7 +130,6 @@ BEGIN
 			,ParentRowNumber
 			)
 		SELECT DISTINCT RowNumber
-			,OWPMatchId
 			,owpEventDate
 			,u.UserId
 			,unpvt.Trader
@@ -141,10 +138,6 @@ BEGIN
 			,ParentRowNumber
 		FROM (
 			SELECT RowNumber
-				,(CASE 
-					WHEN ISNUMERIC(MatchId) = 1 THEN CAST(MatchId AS INT)
-					ELSE NULL END
-					) AS OWPMatchId
 				,(CASE 
 					WHEN ISDATE(KickOffTime) = 1 THEN DATEADD(dd, DATEDIFF(dd, 0, EventDate), CAST(KickOffTime AS DATETIME))
 					ELSE NULL END

@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWeekly] @UserId INT
 	,@Date DATE
 AS
@@ -9,6 +10,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20181126@Kane.Le: Select Column SectionId for check permisson [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -17,6 +19,7 @@ BEGIN
 	DECLARE @PreviousToDate DATE = DATEADD(DAY, - 1, @Date)
 	DECLARE @CurrentFromDate DATE = @Date
 	DECLARE @CurrentToDate DATE = DATEADD(DAY, 6, @Date)
+	DECLARE @SectionId INT = NULL
 	DECLARE @CopyWorkingShift TABLE (
 		EmployeeId INT
 		,ShiftCode VARCHAR(50)
@@ -24,7 +27,6 @@ BEGIN
 		,ShiftStartTime DATETIME
 		,ShiftEndTime DATETIME
 		)
-
 	DECLARE @OutputWorkingShift TABLE (
 		EmployeeId INT
 		,ShiftCode VARCHAR(50)
@@ -46,7 +48,7 @@ BEGIN
 		AND ShiftDate <= @PreviousToDate
 
 	-- delete current working shift
-	DELETE EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
+	DELETE dbo.EmployeeWorkingShift WITH (ROWLOCK)
 	WHERE EmployeeId = @UserId
 		AND ShiftDate >= @CurrentFromDate
 		AND ShiftDate <= @CurrentToDate
@@ -82,11 +84,16 @@ BEGIN
 		,inserted.ShiftEndTime
 	INTO @OutputWorkingShift;
 
+	SELECT @SectionId = u.SectionId
+	FROM dbo.[User] u WITH (NOLOCK)
+	WHERE u.UserId = @UserId
+
 	SELECT ISNULL(s.EmployeeId, 0) AS EmployeeId
 		,s.ShiftCode
 		,s.ShiftDate
 		,c.Background
 		,c.Color
+		,@SectionId AS SectionId
 	FROM @OutputWorkingShift AS s
 		INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON s.ShiftCode = c.NAME
 END

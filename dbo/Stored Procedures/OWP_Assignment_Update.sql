@@ -15,6 +15,7 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+	20181123@Leo.Vo: Fix notify message assignee - [Redmine: #104291]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -275,10 +276,10 @@ BEGIN
 	SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
 	IF @UserId IS NOT NULL
-		SET @Username = dbo.[fnc_GetUsernameByUserId](@UserId)
+		SET @Username = '#' + dbo.[fnc_GetUsernameByUserId](@UserId)
 
 	IF @OldUserId IS NOT NULL
-		SET @OldUsername = dbo.[fnc_GetUsernameByUserId](@OldUserId)
+		SET @OldUsername = '#' + dbo.[fnc_GetUsernameByUserId](@OldUserId)
 
 	INSERT INTO #tblMessage (
 		UserId
@@ -297,10 +298,10 @@ BEGIN
 	FROM (
 		SELECT u.UserId
 			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
-								WHEN @AssignmentNote IS NULL THEN ''
+								WHEN @AssignmentNote IS NULL THEN @Username
 								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
 								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', CASE 
-					WHEN @OldAssignmentNote IS NULL THEN ''
+					WHEN @OldAssignmentNote IS NULL THEN @OldUsername
 					ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername)))
 					END) AS MessageContent
 			,@MessageChangeOfAssignmentId AS MessageTypeId

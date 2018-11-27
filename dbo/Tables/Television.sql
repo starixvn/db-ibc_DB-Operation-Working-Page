@@ -7,3 +7,11 @@
 
 
 
+
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Television_TVCode]
+    ON [dbo].[Television]([TVCode] ASC)
+    ON [OWP_Index];
+

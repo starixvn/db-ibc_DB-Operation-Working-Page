@@ -20,6 +20,7 @@ AS
 	20181002@Raymond.Le: Fix overflow data type in RefResource
 	20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181016@Raymond.Le: Notify assignee follow Notification Setting - [Redmine: #102867] 
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -171,6 +172,7 @@ BEGIN
 		,Website2 NVARCHAR(1000)
 		,Website3 NVARCHAR(1000)
 		,Website4 NVARCHAR(1000)
+		,InfoSiteMatchId INT
 		)
 
 	--list of existed matches
@@ -454,14 +456,12 @@ BEGIN
 			,Website2
 			,Website3
 			,Website4
+			,InfoSiteMatchId
 			)
 		SELECT au.RowNumber
 			,au.ParentRowNumber
 			,au.MinorBettypeId
-			,CASE 
-				WHEN ISNUMERIC(au.MatchId) = 1 THEN CAST(au.MatchId AS INT)
-				ELSE NULL
-				END
+			,NULL
 			,au.EventDate
 			,au.League
 			,au.Home
@@ -562,6 +562,10 @@ BEGIN
 			,au.Website2
 			,au.Website3
 			,au.Website4
+			,CASE 
+				WHEN ISNUMERIC(au.InfoSiteMatchId) = 1 AND CAST(au.InfoSiteMatchId AS BIGINT) <= 2147483647 THEN au.InfoSiteMatchId
+				ELSE NULL
+				END -- Should run VALIDATION InfoSiteMatchId before insert into table OWPMatch
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
 		WHERE SessionId = @SessionId
 
@@ -651,6 +655,7 @@ BEGIN
 			,om.EventDate = m.EventDate
 			,om.KickOffTime = m.KickOffTime
 			,om.EventDateTime = m.EventDateTime
+			,om.InfoSiteMatchId = m.InfoSiteMatchId
 		OUTPUT m.RowNumber
 			,m.OWPMatchId
 		INTO #tblExistedMatch(RowNumber, OWPMatchId)
@@ -670,6 +675,7 @@ BEGIN
 				,m.OWPAwayId
 				,m.OtherTime
 				,m.EventDateTime
+				,m.InfoSiteMatchId
 			FROM #tblMatch AS m
 			WHERE m.OWPMatchId IS NULL
 			) AS mat ON 1 = 0 --https://stackoverflow.com/questions/37692711/tsql-the-multi-part-identifier-b-id-could-not-be-bound-using-insert-output-se
@@ -683,6 +689,7 @@ BEGIN
 					,OWPAwayId
 					,OtherTime
 					,EventDateTime
+					,InfoSiteMatchId
 					)
 				VALUES (
 					mat.MatchNo
@@ -693,6 +700,7 @@ BEGIN
 					,mat.OWPAwayId
 					,mat.OtherTime
 					,mat.EventDateTime
+					,mat.InfoSiteMatchId
 					)
 		OUTPUT mat.RowNumber
 			,inserted.OWPMatchId
@@ -1245,7 +1253,7 @@ BEGIN
 			,'EditPhone'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.Phone <> nmi.Phone
 		
 		UNION
@@ -1255,7 +1263,7 @@ BEGIN
 			,'EditChannel'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.Channel <> nmi.Channel
 		
 		UNION
@@ -1265,7 +1273,7 @@ BEGIN
 			,'EditWB'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.WB <> nmi.WB
 		
 		UNION
@@ -1275,7 +1283,7 @@ BEGIN
 			,'EditOtherTime'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldOWPMatch AS oom ON em.OWPMatchId = oom.OWPMatchId
-			INNER JOIN dbo.OWPMatch AS nom ON em.OWPMatchId = nom.OWPMatchId
+			INNER JOIN dbo.OWPMatch AS nom WITH (NOLOCK) ON em.OWPMatchId = nom.OWPMatchId
 		WHERE (
 				oom.OtherTime IS NOT NULL
 				AND nom.OtherTime IS NOT NULL
@@ -1297,7 +1305,7 @@ BEGIN
 			,'EditMatchOffer'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.KOTimeRemark <> nmi.KOTimeRemark
 		
 		UNION
@@ -1307,7 +1315,7 @@ BEGIN
 			,'EditRound'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.[Round] <> nmi.[Round]
 		
 		UNION
@@ -1317,7 +1325,7 @@ BEGIN
 			,'EditDivision'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.Division <> nmi.Division
 		
 		UNION
@@ -1327,7 +1335,7 @@ BEGIN
 			,'EditRemark'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.Remark <> nmi.Remark
 		
 		UNION
@@ -1337,7 +1345,7 @@ BEGIN
 			,'EditNoOfHDP'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi ON em.OWPMatchId = nmi.OWPMatchId
+			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.NoOfHDP <> nmi.NoOfHDP
 
 		-- send message by condition date
@@ -1641,7 +1649,7 @@ BEGIN
 			,deleted.Maxbet
 			,deleted.Spread
 		INTO #tblMatchSettingLog
-		FROM dbo.MatchSetting AS ms WITH (UPDLOCK)
+		FROM dbo.MatchSetting AS ms WITH (ROWLOCK)
 			INNER JOIN #tblRemoveMatch AS rm WITH (NOLOCK) ON ms.OWPMatchId = rm.OWPMatchId
 
 		-- Delete old MatchSetting of upload matches
@@ -1766,7 +1774,7 @@ BEGIN
 			,deleted.UserId
 			,deleted.AssignmentNote
 		INTO #tblAssignmentLog([Action], OWPMatchId, BetType, AssignmentType, OldUserId, OldAssignmentNote)
-		FROM dbo.Assignment AS a WITH (UPDLOCK)
+		FROM dbo.Assignment AS a WITH (ROWLOCK)
 			INNER JOIN #tblRemoveMatch AS rm WITH (NOLOCK) ON a.OWPMatchId = rm.OWPMatchId
 
 		-- Always to remove other assignment of upload matches (to keep other assignments in order)
@@ -1776,7 +1784,7 @@ BEGIN
 			,deleted.UserId
 			,deleted.AssignmentNote
 		INTO #tblOldOtherAssignment
-		FROM dbo.Assignment AS a WITH (UPDLOCK)
+		FROM dbo.Assignment AS a WITH (ROWLOCK)
 			INNER JOIN #tblMatch AS m ON a.OWPMatchId = m.OWPMatchId
 		WHERE a.AssignmentType = 2
 
@@ -2020,12 +2028,12 @@ BEGIN
 		UPDATE a
 		SET a.Username = ISNULL(u.Nickname, u.Username)
 		FROM #tblAssignmentLog AS a
-			INNER JOIN dbo.[User] AS u ON u.UserId = a.UserId
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = a.UserId
 
 		UPDATE a
 		SET a.OldUsername = ISNULL(u.Nickname, u.Username)
 		FROM #tblAssignmentLog AS a
-			INNER JOIN dbo.[User] AS u ON u.UserId = a.OldUserId
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = a.OldUserId
 
 		INSERT INTO #tblAssignmentInTimeRange (
 			[Action]
@@ -2353,27 +2361,27 @@ BEGIN
 		/*----------------------------------------*/
 		--Remove minor matches not in upload file in OWPMatch
 		DELETE m
-		FROM dbo.OWPMatch AS m WITH (UPDLOCK)
+		FROM dbo.OWPMatch AS m WITH (ROWLOCK)
 			INNER JOIN #tblRemoveMatch AS rm ON rm.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.MinorMatch AS mm ON m.OWPMatchId = mm.MinorMatchId
+			INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
 
 		--Remove minor matches not in upload file in MatchInfo
 		DELETE mi
-		FROM dbo.MatchInfo AS mi WITH (UPDLOCK)
+		FROM dbo.MatchInfo AS mi WITH (ROWLOCK)
 			INNER JOIN #tblRemoveMatch AS rm ON rm.OWPMatchId = mi.OWPMatchId
-			INNER JOIN dbo.MinorMatch AS mm ON mi.OWPMatchId = mm.MinorMatchId
+			INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
 
 		--Remove minor matches not in upload file in MinorMatch
 		DELETE mm
-		FROM dbo.MinorMatch AS mm WITH (UPDLOCK)
-			LEFT JOIN dbo.OWPMatch AS m ON mm.MinorMatchId = m.OWPMatchId
+		FROM dbo.MinorMatch AS mm WITH (ROWLOCK)
+			LEFT JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
 		WHERE m.OWPMatchId IS NULL
 
 		--create data for Trade5MatchPerDay
 		EXEC dbo.OWP_Trade5MatchPerDay_RunAfterInsertAssignment @OWPEventDate = @EventDate
 
 		-- set status of uploading is success
-		UPDATE dbo.AssignmentUploadingLog WITH (UPDLOCK)
+		UPDATE dbo.AssignmentUploadingLog WITH (ROWLOCK)
 		SET [Status] = 5 -- success
 			,EndDate = GETDATE()
 		WHERE SessionId = @SessionId
@@ -2382,7 +2390,7 @@ BEGIN
 	BEGIN CATCH
 		BEGIN
 			-- set status of uploading is failure
-			UPDATE dbo.AssignmentUploadingLog WITH (UPDLOCK)
+			UPDATE dbo.AssignmentUploadingLog WITH (ROWLOCK)
 			SET [Status] = 6 -- failure
 				,EndDate = GETDATE()
 				,LogMessage = ERROR_MESSAGE()
