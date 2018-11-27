@@ -9,6 +9,7 @@ AS
     
  Revisions:
 	20181030@Leo.Vo: Initial SP - [Redmine: #103598]
+	20181127@Leo.Vo: Distinct LeagueName before inserting - [Redmine: #103598]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -111,7 +112,7 @@ BEGIN
 
 	-- insert new league
 	INSERT INTO dbo.OWPLeague (OWPLeagueName)
-	SELECT im.LeagueName
+	SELECT DISTINCT im.LeagueName
 	FROM #tblInfoSiteMatch AS im
 	WHERE NOT EXISTS (
 			SELECT 1
