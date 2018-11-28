@@ -1,6 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_OddsCompiler_UpdateHDP] @UserId INT
+﻿CREATE PROCEDURE [dbo].[OWP_OddsCompiler_UpdateHDP] @UserId INT
 	,@SessionId VARCHAR(50)
 	,@Id INT
 	,@TeamChoice TINYINT = 0
@@ -16,6 +14,7 @@ AS
  Revisions:      
         20181030@Leo: negative Handicap - [Redmine: #92868]
         20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
+		20181128@Kane.Le: Prevent send message if HDP no change - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -102,7 +101,7 @@ BEGIN
 			WHERE Odds IS NULL
 			)
 	BEGIN
-		IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+		IF @OldHandicap  <> @HDP AND (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 		BEGIN
 			SELECT @MessageTemplate = mt.MsgTemplateContent
 				,@MessageType = mt.MsgTemplateId

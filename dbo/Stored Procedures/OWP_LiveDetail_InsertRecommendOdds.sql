@@ -1,5 +1,4 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_InsertRecommendOdds] @UserId INT
 	,@SessionId NVARCHAR(50)
 	,@OWPMatchId INT
@@ -18,7 +17,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]  
-	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
+	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -66,7 +65,10 @@ BEGIN
 		)
 	SELECT DISTINCT data.Choice
 		,data.Odds
-	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Choice VARCHAR(20), Odds MONEY) AS data
+	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
+			Choice VARCHAR(20)
+			,Odds MONEY
+			) AS data
 
 	EXEC sp_xml_removedocument @idoc
 
@@ -111,7 +113,10 @@ BEGIN
 		FROM dbo.MajorBettype WITH (NOLOCK)
 		WHERE BettypeId = @Bettype
 
-		IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
+		IF @Bettype IN (
+				@BettypeHDP
+				,@Bettype1HHDP
+				)
 		BEGIN
 			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
 
@@ -120,7 +125,10 @@ BEGIN
 			ELSE IF @TeamChoice = 2
 				SET @TeamName = 'Away@'
 		END
-		ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
+		ELSE IF @Bettype IN (
+				@BettypeOU
+				,@Bettype1HOU
+				)
 		BEGIN
 			SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
 		END

@@ -9,13 +9,11 @@ DB: bodb_OWP
 Revisions:
 	20181128@Kane.Le: Add column for table User - [Redmine: #105043]
 */
-
-ALTER TABLE [dbo].[NotificationSetting]
-ADD [Order] [int] NULL
+ALTER TABLE [dbo].[NotificationSetting] ADD [Order] [int] NULL
 GO
--- 
 
+-- 
 ALTER TABLE dbo.[User] ADD Pickup BIT NULL
 	,[Address] NVARCHAR(500) NULL
-	,[Level] NVARCHAR(10) NULL
-	GO
+	,[Level] INT NULL
+GO
