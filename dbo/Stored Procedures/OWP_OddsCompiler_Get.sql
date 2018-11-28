@@ -1,5 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
+﻿CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
 	,@League NVARCHAR(500) = ''
 AS
 /*          
@@ -266,6 +265,7 @@ BEGIN
 		,mrd.Choice
 		,mrd.Odds
 	FROM dbo.MatchRecommendOdds AS mr WITH (NOLOCK)
+	INNER JOIN #tblMatch AS tm ON mr.OWPMatchId = tm.OWPMatchId
 	LEFT JOIN dbo.MatchRecommendOddsDetail AS mrd WITH (NOLOCK) ON mr.MatchRecommendOddsId = mrd.MatchRecommendOddsId
 	WHERE mr.Bettype IN (@Handicap, @OverUnder, @1X2)
 	ORDER BY mr.MatchRecommendOddsId
