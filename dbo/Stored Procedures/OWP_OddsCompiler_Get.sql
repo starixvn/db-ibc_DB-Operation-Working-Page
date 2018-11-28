@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
 	,@League NVARCHAR(500) = ''
 AS
 /*          
