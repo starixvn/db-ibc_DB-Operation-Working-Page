@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[Task_OWP_SyncInfoSiteMatch]
 AS
 /*    
@@ -9,6 +8,7 @@ AS
     
  Revisions:
 	20181030@Leo.Vo: Initial SP - [Redmine: #103598]
+	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -55,19 +55,6 @@ BEGIN
 		AND om.OWPAwayId <> im.OWPAwayId THEN
 			UPDATE
 			SET om.OWPAwayId = im.OWPAwayId;
-
-	-- sync AgentIds
-	MERGE INTO dbo.MatchInfo AS om
-	USING (
-		SELECT om.OWPMatchId
-			,im.AgentIds
-		FROM dbo.InfoSiteMatch AS im WITH (NOLOCK)
-			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
-		) AS im ON om.OWPMatchId = im.OWPMatchId
-	WHEN MATCHED
-		AND om.Agent <> im.AgentIds THEN
-			UPDATE
-			SET om.Agent = im.AgentIds;
 
 	-- sync TVIds
 	MERGE INTO dbo.MatchInfo AS om
