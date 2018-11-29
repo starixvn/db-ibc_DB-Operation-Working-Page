@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
 AS
 /*    
@@ -10,13 +9,14 @@ AS
  Revisions:
 	20181030@Leo.Vo: Initial SP - [Redmine: #103598]
 	20181127@Leo.Vo: Distinct LeagueName before inserting - [Redmine: #103598]
+	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @idoc INT
 
-	--list of upload values of TV, Agent
+	--list of upload values of TV
 	CREATE TABLE #tblTextList (
 		InfoSiteMatchId INT NOT NULL
 		,[Text] NVARCHAR(100) NOT NULL
@@ -27,11 +27,6 @@ BEGIN
 		InfoSiteMatchId INT NOT NULL
 		,Id INT
 		,[Text] NVARCHAR(100) NOT NULL
-		)
-
-	CREATE TABLE #tblInfoSiteMatchAgent (
-		OWPMatchId INT NOT NULL
-		,AgentIds VARCHAR(200)
 		)
 
 	CREATE TABLE #tblInfoSiteMatchTV (
@@ -62,7 +57,6 @@ BEGIN
 		,[OWPLeagueId] INT NULL
 		,[OWPHomeId] INT NULL
 		,[OWPAwayId] INT NULL
-		,[AgentIds] VARCHAR(200) NULL
 		,[TVIds] VARCHAR(200) NULL
 		)
 
@@ -155,57 +149,6 @@ BEGIN
 	FROM #tblInfoSiteMatch AS im
 		INNER JOIN dbo.OWPTeam AS t ON im.AwayName = t.OWPTeamName
 
-	-- insert new Agent
-	TRUNCATE TABLE #tblTextList
-
-	INSERT INTO #tblTextList (
-		InfoSiteMatchId
-		,[Text]
-		)
-	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
-	FROM #tblInfoSiteMatch AS im
-		CROSS APPLY dbo.fnc_SplitStrings(im.Agent, ',') AS d
-	WHERE im.Agent <> ''
-		AND RTRIM(LTRIM(d.val)) <> ''
-
-	TRUNCATE TABLE #tblDistinctTextList
-
-	INSERT INTO #tblDistinctTextList (
-		InfoSiteMatchId
-		,[Text]
-		)
-	SELECT InfoSiteMatchId
-		,[Text]
-	FROM #tblTextList
-	GROUP BY InfoSiteMatchId
-		,[Text]
-	ORDER BY MIN(OrderId) ASC
-
-	INSERT INTO dbo.Agent (AgentName)
-	SELECT DISTINCT tl.[Text]
-	FROM #tblDistinctTextList AS tl
-	WHERE NOT EXISTS (
-			SELECT 1
-			FROM dbo.Agent WITH (NOLOCK)
-			WHERE AgentName = tl.[Text]
-			)
-
-	UPDATE tl
-	SET tl.Id = a.AgentId
-	FROM #tblDistinctTextList AS tl
-		INNER JOIN dbo.Agent AS a WITH (NOLOCK) ON tl.[Text] = a.AgentName
-
-	-- update AgentIds
-	UPDATE im
-	SET im.AgentIds = STUFF((
-				SELECT ',' + CAST(Id AS VARCHAR(10))
-				FROM #tblDistinctTextList AS tl
-				WHERE tl.InfoSiteMatchId = im.InfoSiteMatchId
-				FOR XML PATH('')
-				), 1, 1, '')
-	FROM #tblInfoSiteMatch AS im
-
 	-- insert new TV
 	TRUNCATE TABLE #tblTextList
 
@@ -278,7 +221,6 @@ BEGIN
 			,[OWPLeagueId]
 			,[OWPHomeId]
 			,[OWPAwayId]
-			,[AgentIds]
 			,[TVIds]
 		FROM #tblInfoSiteMatch
 		) AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -303,7 +245,6 @@ BEGIN
 				,t.[OWPLeagueId] = s.[OWPLeagueId]
 				,t.[OWPHomeId] = s.[OWPHomeId]
 				,t.[OWPAwayId] = s.[OWPAwayId]
-				,t.[AgentIds] = s.[AgentIds]
 				,t.[TVIds] = s.[TVIds]
 	WHEN NOT MATCHED BY TARGET THEN
 			INSERT (
@@ -326,7 +267,6 @@ BEGIN
 				,[OWPLeagueId]
 				,[OWPHomeId]
 				,[OWPAwayId]
-				,[AgentIds]
 				,[TVIds]
 				)
 			VALUES (
@@ -349,7 +289,6 @@ BEGIN
 				,s.[OWPLeagueId]
 				,s.[OWPHomeId]
 				,s.[OWPAwayId]
-				,s.[AgentIds]
 				,s.[TVIds]
 				);
 
@@ -358,8 +297,6 @@ BEGIN
 	DROP TABLE #tblTextList
 
 	DROP TABLE #tblDistinctTextList
-
-	DROP TABLE #tblInfoSiteMatchAgent
 
 	DROP TABLE #tblInfoSiteMatchTV
 END
