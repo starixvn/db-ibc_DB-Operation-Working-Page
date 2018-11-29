@@ -101,7 +101,7 @@ BEGIN
 			WHERE Odds IS NULL
 			)
 	BEGIN
-		IF @OldHandicap  <> @HDP AND (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+		IF @OldTeamChoice  <> @TeamChoice AND (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 		BEGIN
 			SELECT @MessageTemplate = mt.MsgTemplateContent
 				,@MessageType = mt.MsgTemplateId

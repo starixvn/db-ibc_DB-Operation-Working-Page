@@ -1,18 +1,11 @@
 USE [bodb_OWP]
 GO
 
-/*
-Created: 20181128@Kane.Le
-Task : Schema Sprint 6
-DB: bodb_OWP
-
-Revisions:
-	20181128@Kane.Le: Add column for table User - [Redmine: #105043]
-*/
+-- Add Column Order
 ALTER TABLE [dbo].[NotificationSetting] ADD [Order] [int] NULL
 GO
 
--- 
+-- Add Columns Pickup, Address, Level
 ALTER TABLE dbo.[User] ADD Pickup BIT NULL
 	,[Address] NVARCHAR(500) NULL
 	,[Level] INT NULL
