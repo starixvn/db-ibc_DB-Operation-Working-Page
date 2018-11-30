@@ -301,7 +301,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
