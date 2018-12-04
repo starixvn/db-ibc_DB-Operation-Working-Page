@@ -63,3 +63,8 @@ DROP COLUMN Pickup
 GO
 
 
+/* Rollback table NotificationSettingMapping
+   1. Remove Data NotificationSettingMapping
+*/
+
+DELETE FROM dbo.NotificationSettingMapping WHERE NotificationSettingId IN (10, 11)
