@@ -15,6 +15,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 	20181123@Leo.Vo: Fix notify message assignee - [Redmine: #104291]
+	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -34,12 +35,15 @@ BEGIN
 		,@Bettype INT
 		,@AssignmentType INT
 		,@MyAssignmentNotificationSettingId INT = 1
-		,@ChangeOfAssignmentNotificationSettingId INT = 2
+		,@ChangeOfTraderAssignmentNotificationSettingId INT = 2
+		,@ChangeOfLAAssignmentNotificationSettingId INT = 10
 		,@BettypeName NVARCHAR(200)
 		,@HomeTeam NVARCHAR(200)
 		,@AwayTeam NVARCHAR(200)
 		,@MinorBetTypeId INT
 		,@ActorName NVARCHAR(30)
+		,@ChangeOfAssignmentNotificationSettingId INT
+		,@BettypeLA INT = - 1002
 
 	SELECT @OWPMatchId = OWPMatchId
 		,@Bettype = Bettype
@@ -171,6 +175,11 @@ BEGIN
 	-- send message to traders have match assigned
 	SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
+	SELECT @ChangeOfAssignmentNotificationSettingId = CASE 
+			WHEN @BetType = @BettypeLA THEN @ChangeOfLAAssignmentNotificationSettingId
+			ELSE @ChangeOfTraderAssignmentNotificationSettingId
+			END
+
 	INSERT INTO #tblMessage (
 		UserId
 		,MessageContent
@@ -202,10 +211,6 @@ BEGIN
 			LEFT JOIN dbo.[User] AS us WITH (NOLOCK) ON s.UserId = us.UserId
 		WHERE u.UserId <> ISNULL(s.UserId, 0)
 		) AS d
-		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @MyAssignmentNotificationSettingId
-		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-		AND nsm.UserId = d.UserId
-	WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
 	-- insert message
 	SELECT @FromTimeSendMessage = FromTime

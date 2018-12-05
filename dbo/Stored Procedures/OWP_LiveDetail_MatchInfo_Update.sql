@@ -32,6 +32,9 @@ Revisions:
 	20180814@Raymond.Le: new design Live Detail
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181016@Raymond.Le: Notify assignee follow Notification Setting - [Redmine: #102867] 
+	20181123@Kane.Le: DB - Separate Assignee Notification Setting (Provider Info LiveDetail) [Redmine: #105043]
+	Change @Assignee to @AssigneeMatchInfoMatchInfo
+	Add @AssigneeProviderInfo
 */
 BEGIN
 	SET NOCOUNT ON
@@ -59,7 +62,8 @@ BEGIN
 		,@OldAgentIds NVARCHAR(100)
 		,@OldMarketIds NVARCHAR(100)
 		-- send message by condition date
-		,@Assignee TVP_INT
+		,@AssigneeMatchInfo TVP_INT
+		,@AssigneeProviderInfo TVP_INT
 		,@MessageTemplate NVARCHAR(2000) = ''
 		,@MessageType INT
 		,@ActorName NVARCHAR(30)
@@ -70,6 +74,10 @@ BEGIN
 		,@EventDateTime DATETIME
 		,@NewOtherTime TIME
 		,@CurrentDateTimeGMTplus8 DATETIME = DATEADD(HOUR, 12, GETDATE())
+
+		-- Notification Setting
+		,@NotifyMatchInfoUpdatedId INT = 5
+		,@NotifyProviderInfoUpdatedId INT = 11
 
 	CREATE TABLE #tblOldItem (
 		Id INT
@@ -158,10 +166,16 @@ BEGIN
 
 			SELECT @NewOtherTime = CAST(@OtherTime AS TIME)
 
-			INSERT INTO @Assignee
+			-- Assignee Match Info --
+			INSERT INTO @AssigneeMatchInfo
 			SELECT UserId
-			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, 5)
+			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotifyMatchInfoUpdatedId)
 
+			-- Assignee Provider Info --
+			INSERT INTO @AssigneeProviderInfo
+			SELECT UserId
+			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotifyProviderInfoUpdatedId)
+			
 			-- Edit TV--
 			INSERT INTO #tblOldItem (
 				Id
@@ -220,7 +234,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -287,7 +301,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -354,7 +368,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo =@AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -421,7 +435,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -443,7 +457,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -464,7 +478,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -485,7 +499,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -518,7 +532,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -539,7 +553,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -560,7 +574,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -581,7 +595,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -602,7 +616,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -623,7 +637,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -644,7 +658,7 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -713,201 +727,14 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
+					,@MessageTo = @AssigneeMatchInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
 			END
 
 		END
-		/*------------------------------------------------
-		UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
-		SET Channel = @Channel
-			,WB = @WB
-			,Phone = @Phone
-			,Remark = @Remark
-			,NoOfHDP = @NoOfHDP
-			,IsSoloMatch = @IsSoloMatch
-			,KOTimeRemark = @KOTimeRemark
-			,[Round] = @Round
-			,Division = @Division
-			,Venue = @Venue
-			,Provider = @ProviderIds
-			,Runner = @RunnerIds
-			,TVCode = @TVIds
-			,Agent = @AgentIds
-		WHERE OWPMatchId = @OWPMatchId
-
-		UPDATE dbo.OWPMatch WITH (ROWLOCK, UPDLOCK)
-		SET OtherTime = @OtherTime
-		WHERE OWPMatchId = @OWPMatchId
-
-		DELETE
-		FROM dbo.MatchMarket
-		WHERE OWPMatchId = @OWPMatchId
-
-		IF (ISNULL(@MarketIds, '') != '')
-		BEGIN
-			INSERT INTO dbo.MatchMarket (
-			OWPMatchId
-			,MarketId
-			)
-			SELECT @OWPMatchId
-				,val
-			FROM dbo.strSplit(ISNULL(@MarketIds, ''), ',')
-		END
-		*/
-				-- write log
-				/*SET @Xml = (
-				SELECT CASE 
-						WHEN ISNULL(@OldChannel, '') <> ISNULL(@Channel, '') THEN @OldChannel
-						ELSE NULL
-						END AS '@c'
-					,CASE 
-						WHEN ISNULL(@OldWB, '') <> ISNULL(@WB, '') THEN @OldWB
-						ELSE NULL
-						END AS '@wb'
-					,CASE 
-						WHEN ISNULL(@OldPhone, '') <> ISNULL(@Phone, '') THEN @OldPhone
-						ELSE NULL
-						END AS '@p'
-					,CASE 
-						WHEN ISNULL(@OldRemark, '') <> ISNULL(@Remark, '') THEN @OldRemark
-						ELSE NULL
-						END AS '@r'
-					,CASE 
-						WHEN ISNULL(@OldNoOfHDP, '') <> ISNULL(@NoOfHDP, '') THEN @OldNoOfHDP
-						ELSE NULL
-						END AS '@nhdp'
-					,CASE 
-						WHEN ISNULL(@OldIsSoloMatch, '') <> ISNULL(@IsSoloMatch, '') THEN @OldIsSoloMatch
-						ELSE NULL
-						END AS '@ism'
-					,CASE 
-						WHEN ISNULL(@OldKOTimeRemark, '') <> ISNULL(@KOTimeRemark, '') THEN @OldKOTimeRemark
-						ELSE NULL
-						END AS '@kotr'
-					,CASE 
-						WHEN ISNULL(@OldRound, '') <> ISNULL(@Round, '') THEN @OldRound
-						ELSE NULL
-						END AS '@ro'
-					,CASE 
-						WHEN ISNULL(@OldDivision, '') <> ISNULL(@Division, '') THEN @OldDivision
-						ELSE NULL
-						END AS '@d'
-					,CASE 
-						WHEN ISNULL(@OldVenue, '') <> ISNULL(@Venue, '') THEN @OldVenue
-						ELSE NULL
-						END AS '@v'
-					,CASE 
-						WHEN ISNULL(@OldOtherTime, '') <> ISNULL(CAST(@OtherTime AS TIME), '') THEN @OldOtherTime
-						ELSE NULL
-						END AS '@ot'
-					,CASE 
-						WHEN ISNULL(@OldTVIds, '') <> ISNULL(@TVIds, '') THEN @OldTVIds
-						ELSE NULL
-						END AS '@tvids'
-					,CASE 
-						WHEN ISNULL(@OldProviderIds, '') <> ISNULL(@ProviderIds, '') THEN @OldProviderIds
-						ELSE NULL
-						END AS 'pr'
-					,CASE 
-						WHEN ISNULL(@OldRunnerIds, '') <> ISNULL(@RunnerIds, '') THEN @OldRunnerIds
-						ELSE NULL
-						END AS 'rn'
-					,CASE 
-						WHEN ISNULL(@OldMarketIds, '') <> ISNULL(@MarketIds, '') THEN @OldMarketIds
-						ELSE NULL
-						END AS 'mk'
-					,CASE 
-						WHEN ISNULL(@OldAgentIds, '') <> ISNULL(@AgentIds, '') THEN @OldAgentIds
-						ELSE NULL
-						END AS 'a'
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @OldData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @Xml = (
-				SELECT CASE 
-						WHEN ISNULL(@OldChannel, '') <> ISNULL(@Channel, '') THEN @Channel
-						ELSE NULL
-						END AS '@c'
-					,CASE 
-						WHEN ISNULL(@OldWB, '') <> ISNULL(@WB, '') THEN @WB
-						ELSE NULL
-						END AS '@wb'
-					,CASE 
-						WHEN ISNULL(@OldPhone, '') <> ISNULL(@Phone, '') THEN @Phone
-						ELSE NULL
-						END AS '@p'
-					,CASE 
-						WHEN ISNULL(@OldRemark, '') <> ISNULL(@Remark, '') THEN @Remark
-						ELSE NULL
-						END AS '@r'
-					,CASE 
-						WHEN ISNULL(@OldNoOfHDP, '') <> ISNULL(@NoOfHDP, '') THEN @NoOfHDP
-						ELSE NULL
-						END AS '@nhdp'
-					,CASE 
-						WHEN ISNULL(@OldIsSoloMatch, '') <> ISNULL(@IsSoloMatch, '') THEN @IsSoloMatch
-						ELSE NULL
-						END AS '@ism'
-					,CASE 
-						WHEN ISNULL(@OldKOTimeRemark, '') <> ISNULL(@KOTimeRemark, '') THEN @KOTimeRemark
-						ELSE NULL
-						END AS '@kotr'
-					,CASE 
-						WHEN ISNULL(@OldRound, '') <> ISNULL(@Round, '') THEN @Round
-						ELSE NULL
-						END AS '@ro'
-					,CASE 
-						WHEN ISNULL(@OldDivision, '') <> ISNULL(@Division, '') THEN @Division
-						ELSE NULL
-						END AS '@d'
-					,CASE 
-						WHEN ISNULL(@OldVenue, '') <> ISNULL(@Venue, '') THEN @Venue
-						ELSE NULL
-						END AS '@v'
-					,CASE 
-						WHEN ISNULL(@OldOtherTime, '') <> ISNULL(CAST(@OtherTime AS TIME), '') THEN CAST(@OtherTime AS TIME)
-						ELSE NULL
-						END AS '@ot'
-					,CASE 
-						WHEN ISNULL(@OldTVIds, '') <> ISNULL(@TVIds, '') THEN @TVIds
-						ELSE NULL
-						END AS '@tvids'
-					,CASE 
-						WHEN ISNULL(@OldProviderIds, '') <> ISNULL(@ProviderIds, '') THEN @ProviderIds
-						ELSE NULL
-						END AS 'pr'
-					,CASE 
-						WHEN ISNULL(@OldRunnerIds, '') <> ISNULL(@RunnerIds, '') THEN @RunnerIds
-						ELSE NULL
-						END AS 'rn'
-					,CASE 
-						WHEN ISNULL(@OldMarketIds, '') <> ISNULL(@MarketIds, '') THEN @MarketIds
-						ELSE NULL
-						END AS 'mk'
-					,CASE 
-						WHEN ISNULL(@OldAgentIds, '') <> ISNULL(@AgentIds, '') THEN @AgentIds
-						ELSE NULL
-						END AS 'a'
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @NewData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-			,@SPName = 'OWP_LiveDetail_MatchInfo_Update'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @OWPMatchId
-			,@Data = @NewData
-			,@DataOld = @OldData
-
-		*/
+		 
 	END TRY
 
 	BEGIN CATCH

@@ -18,6 +18,7 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,13 +50,17 @@ BEGIN
 		,@FromTimeSendMessageSpecialBettype DATETIME
 		,@ToTimeSendMessageSpecialBettype DATETIME
 		,@MyAssignmentNotificationSettingId INT = 1
-		,@ChangeOfAssignmentNotificationSettingId INT = 2
+		,@ChangeOfTraderAssignmentNotificationSettingId INT = 2
+		,@ChangeOfLAAssignmentNotificationSettingId INT = 10
 		,@BettypeName NVARCHAR(200)
 		,@HomeTeam NVARCHAR(200)
 		,@AwayTeam NVARCHAR(200)
 		,@Username NVARCHAR(30)
 		,@MinorBetTypeId INT
 		,@ActorName NVARCHAR(30)
+		,@ChangeOfAssignmentNotificationSettingId INT
+		,@BettypeLA INT = - 1002
+		,@MessageChangeOfAssignmentContent NVARCHAR(2000)
 
 	INSERT INTO dbo.Assignment (
 		OWPMatchId
@@ -133,12 +138,12 @@ BEGIN
 	FROM dbo.MessageTemplate mt WITH (NOLOCK)
 	WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
 
-	-- send message to trader assigned
 	IF @UserId IS NOT NULL
 	BEGIN
 		EXEC dbo.OWP_Trade5MatchPerDay_RunAfterInsertAssignment @EventDateTime
 			,@UserId
 
+		-- send message to trader assigned
 		INSERT INTO #tblMessage (
 			UserId
 			,MessageContent
@@ -175,6 +180,16 @@ BEGIN
 	-- send message to traders have match assigned
 	SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
+	SELECT @ChangeOfAssignmentNotificationSettingId = CASE 
+			WHEN @BetType = @BettypeLA THEN @ChangeOfLAAssignmentNotificationSettingId
+			ELSE @ChangeOfTraderAssignmentNotificationSettingId
+			END
+
+	SET @MessageChangeOfAssignmentContent = REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
+							WHEN @AssignmentNote IS NULL THEN @Username
+							ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
+							END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', '')
+
 	INSERT INTO #tblMessage (
 		UserId
 		,MessageContent
@@ -190,21 +205,14 @@ BEGIN
 		,d.EventDateTime
 		,0
 	FROM (
-		SELECT UserId
-			,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
-								WHEN @AssignmentNote IS NULL THEN @Username
-								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
-								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', '') AS MessageContent
+		SELECT u.UserId AS UserId
+			,@MessageChangeOfAssignmentContent AS MessageContent
 			,@MessageChangeOfAssignmentId AS MessageTypeId
 			,@MinorBetTypeId AS MinorBetTypeId
 			,@EventDateTime AS EventDateTime
-		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @ChangeOfAssignmentNotificationSettingId)
-		WHERE UserId <> ISNULL(@UserId, 0)
+		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @ChangeOfAssignmentNotificationSettingId) AS u
+		WHERE u.UserId <> ISNULL(@UserId, 0)
 		) AS d
-		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @MyAssignmentNotificationSettingId
-		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-		AND nsm.UserId = d.UserId
-	WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
 	-- list of minor bettypes Corner & Booking but not 15 mins
 	CREATE TABLE #tblCornerBookingBetTypes (MinorBetTypeId INT NOT NULL)

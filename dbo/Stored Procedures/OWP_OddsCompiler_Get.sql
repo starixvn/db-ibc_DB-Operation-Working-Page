@@ -1,9 +1,6 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
 	,@League NVARCHAR(500) = ''
-	,@PageIndex INT = NULL
-	,@ItemsPerPage INT = NULL
-	,@TotalItem INT = NULL OUT
 AS
 /*          
  Created: 20170317@Alvin.Nguyen
@@ -14,6 +11,7 @@ AS
     20170421@Tim.Trinh: refactor code
 	20180131@Raymone.Le: show match when match status is Live
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20181120@Raymond.Le: Add more info to Odds Compiler - [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -23,13 +21,6 @@ BEGIN
 		,@OverUnder TINYINT = 3
 		,@1X2 TINYINT = 5
 
-	CREATE TABLE #tblMatchId (
-		RowIndex INT
-		,OWPMatchId INT
-		)
-
-	CREATE TABLE #tblFinalMatchId (OWPMatchId INT)
-
 	CREATE TABLE #tblMatch (
 		OWPMatchId INT
 		,MatchNo VARCHAR(50)
@@ -37,15 +28,16 @@ BEGIN
 		,League NVARCHAR(2000)
 		,Home NVARCHAR(200)
 		,Away NVARCHAR(200)
-		)
-
-	CREATE TABLE #tblFinalMatch (
-		OWPMatchId INT
-		,MatchNo VARCHAR(50)
-		,KickOffTime TIME
-		,League NVARCHAR(2000)
-		,Home NVARCHAR(200)
-		,Away NVARCHAR(200)
+		,Remark NVARCHAR(2000)
+		,[Round] NVARCHAR(2000)
+		,Division NVARCHAR(2000)
+		,Runner NVARCHAR(MAX)
+		,WatchBet NVARCHAR(100)
+		,[Provider] NVARCHAR(MAX)
+		,Website1 NVARCHAR(1000)
+		,Website2 NVARCHAR(1000)
+		,Website3 NVARCHAR(1000)
+		,Website4 NVARCHAR(1000)
 		)
 
 	CREATE TABLE #tblMatchSetting (
@@ -65,6 +57,16 @@ BEGIN
 		,League
 		,Home
 		,Away
+		,Remark
+		,[Round]
+		,Division
+		,Runner
+		,WatchBet
+		,[Provider]
+		,Website1
+		,Website2
+		,Website3
+		,Website4
 		)
 	SELECT m.OWPMatchId
 		,m.MatchNo
@@ -72,6 +74,28 @@ BEGIN
 		,League.OWPLeagueName
 		,home.OWPTeamName
 		,away.OWPTeamName
+		,info.Remark
+		,info.[Round]
+		,info.Division
+		,STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.RunnerName AS VARCHAR), '')
+				FROM dbo.Runner rs WITH (NOLOCK)
+					CROSS APPLY dbo.fnc_SplitStrings(info.Runner, ',') f
+				WHERE f.val = rs.RunnerId
+				FOR XML PATH('')
+				), 1, 2, '')
+		,info.WB
+		,STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
+				FROM dbo.[Provider] rs WITH (NOLOCK)
+					CROSS APPLY dbo.fnc_SplitStrings(info.[Provider], ',') f
+				WHERE f.val = rs.ProviderId
+				FOR XML PATH('')
+				), 1, 2, '')
+		,info.Website1
+		,info.Website2
+		,info.Website3
+		,info.Website4
 	FROM dbo.OWPMatch AS m WITH (NOLOCK)
 		INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON m.OWPMatchId = info.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = m.OWPHomeId
@@ -194,64 +218,30 @@ BEGIN
 			) AS tb1
 		) AS tb2
 		LEFT JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON ls.LeagueId = tb2.OWPLeagueId
-		AND ls.OptionsId = tb2.MaxBetOption
-		AND ls.Bettype = tb2.Bettype
+			AND ls.OptionsId = tb2.MaxBetOption
+			AND ls.Bettype = tb2.Bettype
 		LEFT JOIN dbo.LeagueSetting AS ls1 WITH (NOLOCK) ON ls1.LeagueId = tb2.OWPLeagueId
-		AND ls1.OptionsId = tb2.SpreadOption
-		AND ls1.Bettype = tb2.Bettype
-
-	INSERT INTO #tblFinalMatch (
-		OWPMatchId
-		,MatchNo
-		,KickOffTime
-		,League
-		,Home
-		,Away
-		)
-	SELECT DISTINCT m.OWPMatchId
-		,MatchNo
-		,KickOffTime
-		,League
-		,Home
-		,Away
-	FROM #tblMatch AS m WITH (NOLOCK)
-		LEFT JOIN #tblMatchSetting AS ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
-
-	INSERT INTO #tblMatchId (
-		RowIndex
-		,OWPMatchId
-		)
-	SELECT DISTINCT ROW_NUMBER() OVER (
-			ORDER BY KickOffTime
-			)
-		,OWPMatchId
-	FROM #tblFinalMatch WITH (NOLOCK)
-
-	IF @PageIndex IS NOT NULL
-		AND @ItemsPerPage IS NOT NULL
-	BEGIN
-		INSERT INTO #tblFinalMatchId (OWPMatchId)
-		SELECT OWPMatchId
-		FROM #tblMatchId WITH (NOLOCK)
-		WHERE RowIndex BETWEEN ((@PageIndex - 1) * @ItemsPerPage + 1)
-				AND (@PageIndex * @ItemsPerPage)
-	END
-	ELSE
-	BEGIN
-		INSERT INTO #tblFinalMatchId (OWPMatchId)
-		SELECT OWPMatchId
-		FROM #tblMatchId WITH (NOLOCK)
-	END
+			AND ls1.OptionsId = tb2.SpreadOption
+			AND ls1.Bettype = tb2.Bettype
 
 	--get matchs
 	SELECT m.OWPMatchId
-		,MatchNo
-		,KickOffTime
-		,League
-		,Home
-		,Away
-	FROM #tblFinalMatch AS m WITH (NOLOCK)
-		INNER JOIN #tblFinalMatchId AS mid WITH (NOLOCK) ON m.OWPMatchId = mid.OWPMatchId
+		,m.MatchNo
+		,m.KickOffTime
+		,m.League
+		,m.Home
+		,m.Away
+		,m.Remark
+		,m.[Round]
+		,m.Division
+		,m.Runner
+		,m.WatchBet
+		,m.[Provider]
+		,m.Website1
+		,m.Website2
+		,m.Website3
+		,m.Website4
+	FROM #tblMatch AS m WITH (NOLOCK)
 	ORDER BY KickOffTime
 
 	--get match settings
@@ -259,8 +249,7 @@ BEGIN
 		,ms.Bettype
 		,ms.Maxbet
 		,ms.Spread
-	FROM #tblFinalMatch AS m WITH (NOLOCK)
-		INNER JOIN #tblFinalMatchId AS mid WITH (NOLOCK) ON m.OWPMatchId = mid.OWPMatchId
+	FROM #tblMatch AS m WITH (NOLOCK)
 		INNER JOIN #tblMatchSetting AS ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
 	WHERE ms.Bettype IN (@Handicap, @OverUnder)
 		AND (
@@ -276,23 +265,13 @@ BEGIN
 		,mr.TeamChoice
 		,mrd.Choice
 		,mrd.Odds
-	FROM #tblFinalMatchId AS mid WITH (NOLOCK)
-		INNER JOIN dbo.MatchRecommendOdds AS mr WITH (NOLOCK) ON mid.OWPMatchId = mr.OWPMatchId
-		LEFT JOIN dbo.MatchRecommendOddsDetail AS mrd WITH (NOLOCK) ON mr.MatchRecommendOddsId = mrd.MatchRecommendOddsId
+	FROM dbo.MatchRecommendOdds AS mr WITH (NOLOCK)
+	INNER JOIN #tblMatch AS tm ON mr.OWPMatchId = tm.OWPMatchId
+	LEFT JOIN dbo.MatchRecommendOddsDetail AS mrd WITH (NOLOCK) ON mr.MatchRecommendOddsId = mrd.MatchRecommendOddsId
 	WHERE mr.Bettype IN (@Handicap, @OverUnder, @1X2)
 	ORDER BY mr.MatchRecommendOddsId
 
-	-- total item
-	SELECT @TotalItem = COUNT(1)
-	FROM #tblMatchId
 
 	DROP TABLE #tblMatch
-
-	DROP TABLE #tblMatchId
-
-	DROP TABLE #tblFinalMatchId
-
-	DROP TABLE #tblFinalMatch
-
 	DROP TABLE #tblMatchSetting
 END

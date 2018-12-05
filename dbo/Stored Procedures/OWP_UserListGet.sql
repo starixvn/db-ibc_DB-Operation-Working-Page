@@ -13,6 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20181120@Kane.Le: Get Pickup, Address, Level [Redmine: #105043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -86,6 +87,9 @@ BEGIN
 		,ur.RoleId
 		,r.RoleName AS 'RoleName'
 		,u.LocationCode
+		,u.Pickup
+		,u.Address
+		,u.Level
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
 		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId

@@ -1,6 +1,6 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckWhenEdit] 
-	@OWPMatchId INT
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckWhenEdit] @OWPMatchId INT
 	,@Bettype INT = NULL
 	,@AssignmentType INT = NULL
 	,@Username NVARCHAR(30) = ''
@@ -18,6 +18,7 @@ AS
 
  Revisions:
 	20180927@Raymond.Le: New structure of event assignment - [Redmine: #92868]   
+	20181128@Kane.Le: Fix bug single quote XML at Line 151 - [Redmine: #105043]   
  */
 BEGIN
 	SET NOCOUNT ON
@@ -50,23 +51,58 @@ BEGIN
 		,[Message] NVARCHAR(MAX)
 		)
 
-	SET @IsParentMatch = CASE WHEN EXISTS( SELECT 1 
-											FROM dbo.MinorMatch WITH (NOLOCK) WHERE MinorMatchId = @OWPMatchId) THEN 0
-											ELSE 1 END
+	SET @IsParentMatch = CASE 
+			WHEN EXISTS (
+					SELECT 1
+					FROM dbo.MinorMatch WITH (NOLOCK)
+					WHERE MinorMatchId = @OWPMatchId
+					)
+				THEN 0
+			ELSE 1
+			END
 
 	-- Get rules for specific bettype, assignment type or validate match info
 	IF (@IsValidateAssignment = 1)
 	BEGIN
-		SET @FunctionId = 
-		CASE WHEN @AssignmentType = @MainAssignment AND @Bettype IN (@BettypeHDP, @BettypeOU) AND @IsParentMatch = 1 THEN 5
-			WHEN @AssignmentType = @MainAssignment AND @Bettype IN (@Bettype1HHDP, @Bettype1HOU) AND @IsParentMatch = 1 THEN 6
-			WHEN @AssignmentType = @MainAssignment AND @Bettype IN (@Bettype1X2, @Bettype1H1X2) AND @IsParentMatch = 1 THEN 7
-			WHEN @AssignmentType = @MainAssignment AND @Bettype <> @BettypeLA AND @IsParentMatch = 0 THEN 8
-			WHEN @Bettype <> @BettypeLA THEN 4
-			WHEN @AssignmentType = @MainAssignment AND @Bettype = @BettypeLA AND @IsParentMatch = 1 THEN 10
-			WHEN @AssignmentType = @MainAssignment AND @Bettype = @BettypeLA AND @IsParentMatch = 0 THEN 11
-			WHEN @Bettype = @BettypeLA THEN 9
-			END
+		SET @FunctionId = CASE 
+				WHEN @AssignmentType = @MainAssignment
+					AND @Bettype IN (
+						@BettypeHDP
+						,@BettypeOU
+						)
+					AND @IsParentMatch = 1
+					THEN 5
+				WHEN @AssignmentType = @MainAssignment
+					AND @Bettype IN (
+						@Bettype1HHDP
+						,@Bettype1HOU
+						)
+					AND @IsParentMatch = 1
+					THEN 6
+				WHEN @AssignmentType = @MainAssignment
+					AND @Bettype IN (
+						@Bettype1X2
+						,@Bettype1H1X2
+						)
+					AND @IsParentMatch = 1
+					THEN 7
+				WHEN @AssignmentType = @MainAssignment
+					AND @Bettype <> @BettypeLA
+					AND @IsParentMatch = 0
+					THEN 8
+				WHEN @Bettype <> @BettypeLA
+					THEN 4
+				WHEN @AssignmentType = @MainAssignment
+					AND @Bettype = @BettypeLA
+					AND @IsParentMatch = 1
+					THEN 10
+				WHEN @AssignmentType = @MainAssignment
+					AND @Bettype = @BettypeLA
+					AND @IsParentMatch = 0
+					THEN 11
+				WHEN @Bettype = @BettypeLA
+					THEN 9
+				END
 	END
 	ELSE
 	BEGIN
@@ -76,24 +112,25 @@ BEGIN
 	INSERT INTO #tblValidationRule (
 		RuleId
 		,SPName
-		)	
+		)
 	SELECT r.RuleId
 		,r.SPName
 	FROM dbo.[Function] AS f WITH (NOLOCK)
-		INNER JOIN dbo.FunctionRule AS fr WITH (NOLOCK) ON f.FunctionId = fr.FunctionId
-		INNER JOIN dbo.ValidationRule AS r WITH (NOLOCK) ON fr.RuleId = r.RuleId
+	INNER JOIN dbo.FunctionRule AS fr WITH (NOLOCK) ON f.FunctionId = fr.FunctionId
+	INNER JOIN dbo.ValidationRule AS r WITH (NOLOCK) ON fr.RuleId = r.RuleId
 		AND r.IsActive = 1
 	WHERE f.FunctionId = @FunctionId
 
 	-- Convert assignment data to Xml
-	SET @XmlDoc = (SELECT @Bettype AS '@Bettype'
-		,@AssignmentType AS '@AssignmentType'
-		,@Username AS '@Username'
-		,@UserId AS '@UserId'
-		,@Phone AS '@Phone'
-	FOR XML PATH('Row')
-		,ROOT('Root'))
-
+	SET @XmlDoc = (
+			SELECT @Bettype AS '@Bettype'
+				,@AssignmentType AS '@AssignmentType'
+				,@Username AS '@Username'
+				,@UserId AS '@UserId'
+				,@Phone AS '@Phone'
+			FOR XML PATH('Row')
+				,ROOT('Root')
+			)
 	SET @Value = REPLACE(CONVERT(NVARCHAR(MAX), @XmlDoc), '" />', '"/"')
 
 	-- Loop run all rules
@@ -102,17 +139,20 @@ BEGIN
 
 	WHILE @RowIndex <= @TotalRule
 	BEGIN
-		SELECT @sqlstring = SPName + ' @OWPMatchId=' + CAST(@OWPMatchId AS VARCHAR(50)) + ',@Value=''' + @Value + ''''
+		SELECT @sqlstring = SPName + N' @OWPMatchId = @OWPMatchId, @Value = @Value'
 		FROM #tblValidationRule WITH (NOLOCK)
-		WHERE RowIndex = @RowIndex
+		WHERE RowIndex = @RowIndex;
 
 		INSERT INTO #tblValidationResult (
 			ResultType
-			,[Message]
+			,Message
 			)
-		EXEC sp_executesql @sqlstring
+		EXECUTE sys.sp_executesql @sqlstring
+			,N'@OWPMatchId INT, @Value NVARCHAR(MAX)'
+			,@OWPMatchId
+			,@Value;
 
-		SET @RowIndex = @RowIndex + 1
+		SELECT @RowIndex = @RowIndex + 1
 	END
 
 	SELECT ResultType
