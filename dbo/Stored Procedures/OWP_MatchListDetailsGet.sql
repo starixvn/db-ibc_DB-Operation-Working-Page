@@ -13,6 +13,7 @@ AS
     20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
 	20180618@Leo: New structure of event assignment - [Redmine: #92868]
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
+	20181205@Raymond.Le: Implement page Event Assignment - [Redmine: #105667]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -140,7 +141,7 @@ BEGIN
 			OR minor.IsRepresented IS NULL
 			)
 
-	-- matches info
+	-- Return Matches info
 	SELECT ml.OWPMatchId
 		,ml.MatchNo
 		,ml.KickOffTime
@@ -210,7 +211,7 @@ BEGIN
 		,h.OWPTeamName
 		,ml.MatchNo
 
-	-- Get assignment for LIVE assignment uploading
+	-- Return assignment for LIVE assignment uploading
 	SELECT a.OWPMatchId
 		,a.Bettype
 		,ml.MinorBettypeId
@@ -222,11 +223,12 @@ BEGIN
 		,a.AssignmentType
 		,a.AssignmentNote
 		,ml.ParentMatchId
+		,a.AssignmentId
 	FROM dbo.Assignment AS a WITH (NOLOCK)
 		INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON a.OWPMatchId = ml.owpmatchid
 		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
 
-	-- Get notes
+	-- Return notes
 	SELECT mn.OWPMatchId
 		,mn.Note AS Note
 	FROM dbo.MatchNote AS mn WITH (NOLOCK)
@@ -335,6 +337,7 @@ BEGIN
 		INNER JOIN dbo.MinorSettingDetail AS md WITH (NOLOCK) ON m.MinorSettingId = md.MinorSettingId
 		AND md.MinorBettypeId = t.ParentBettypeId
 
+	-- Return Match Setting
 	SELECT mb.OWPMatchId
 		,mb.ParentMatchId
 		,mb.Bettype
@@ -342,6 +345,15 @@ BEGIN
 		,mb.MaxBet
 		,mb.Spread
 	FROM #tblMaxBet AS mb WITH (NOLOCK)
+
+	-- Return TV 
+	SELECT m.OWPMatchId
+		,tv.TVCode
+		,tv.Color
+	FROM #owpMatchListByDate AS m
+		CROSS APPLY dbo.fnc_SplitStrings(m.TVCode, ',') AS f
+		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = f.val
+	ORDER BY tv.TVId
 
 	DROP TABLE #owpMatchListByDate
 
