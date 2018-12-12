@@ -17,3 +17,6 @@ INSERT INTO dbo.RefResource (RefResourceId, RefName, ResourceId, Value) VALUES(1
 INSERT INTO dbo.RefResource (RefResourceId, RefName, ResourceId, Value) VALUES(13, 'UserLevel', 4, 'B')
 INSERT INTO dbo.RefResource (RefResourceId, RefName, ResourceId, Value) VALUES(14, 'UserLevel', 5, 'C')
 GO
+
+INSERT INTO dbo.RefResource (RefResourceId, RefName, ResourceId, Value) VALUES(1121, 'Section', 20, 'OS')
+GO
