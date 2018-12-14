@@ -301,6 +301,7 @@
     <Build Include="Storage\OWP_Data.sql" />
     <Build Include="Scripts\backup&amp;restore.sql" />
     <Build Include="Scripts\grant.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_UserInsert.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
