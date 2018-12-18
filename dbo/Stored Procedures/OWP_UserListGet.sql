@@ -1,10 +1,12 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_UserListGet] @User VARCHAR(30) = NULL
 	,@RoleId SMALLINT = 0
 	,@SectionId SMALLINT = 0
 	,@PageSize INT = NULL
 	,@PageIndex INT = NULL
 	,@TotalRecords INT = 0 OUTPUT
+	,@ExcludeClosedAccount BIT = 1
 AS
 /*
 Created: 20170117@Julien
@@ -14,6 +16,7 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Kane.Le: Get Pickup, Address, Level [Redmine: #105043]
+	20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -27,6 +30,14 @@ BEGIN
 		,UserId INT
 		)
 
+	DECLARE @SiteId INT
+
+	SELECT @SiteId = SiteId
+	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
+	WHERE SiteName = 'Operation Working Page'
+		AND IsActive = 1
+		AND Environment = 'LIVE'
+
 	CREATE TABLE #tblFinalUserId (UserId INT)
 
 	INSERT INTO #tblUserId (
@@ -38,8 +49,20 @@ BEGIN
 			) AS RowNumber
 		,u.UserId
 	FROM dbo.[User] AS u WITH (NOLOCK)
+		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+		INNER JOIN DBCUST.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+		AND us.SiteId = @SiteId
 		LEFT JOIN dbo.UserRole AS r WITH (NOLOCK) ON r.UserId = u.UserId
 	WHERE (
+			@ExcludeClosedAccount = 0
+			OR (
+				ci.closed = 0
+				AND ci.reject = 0
+				AND ci.[Enabled] = 1
+				AND us.IsActive = 1
+				)
+			)
+		AND (
 			ISNULL(u.Username, '') LIKE '%' + ISNULL(@User, '') + '%'
 			OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@User, '') + '%'
 			)
@@ -88,8 +111,8 @@ BEGIN
 		,r.RoleName AS 'RoleName'
 		,u.LocationCode
 		,u.Pickup
-		,u.Address
-		,u.Level
+		,u.[Address]
+		,u.[Level]
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
 		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId

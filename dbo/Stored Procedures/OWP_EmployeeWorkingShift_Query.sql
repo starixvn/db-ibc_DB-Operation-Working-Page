@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
@@ -6,7 +7,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @FromDate DATE
 	,@ShiftCode VARCHAR(2000) = ''
 	,@CategoryId VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
-	,@ExcludeClosedAccount BIT = 0
+	,@ExcludeClosedAccount BIT = 1
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -19,6 +20,7 @@ AS
      20180913@Leo: show WS note
      20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
      20181009@Leo.Vo: Filter WS - [Redmine: #102867]
+     20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -26,6 +28,14 @@ EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/05
 */
 BEGIN
 	SET NOCOUNT ON;
+
+	DECLARE @SiteId INT
+
+	SELECT @SiteId = SiteId
+	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
+	WHERE SiteName = 'Operation Working Page'
+		AND IsActive = 1
+		AND Environment = 'LIVE'
 
 	-- table of sections
 	DECLARE @tblSection TABLE (
@@ -86,11 +96,10 @@ BEGIN
 			LEFT JOIN dbo.RefResource WITH (NOLOCK) ON RefName = 'UserCategory'
 			AND val = ResourceId
 	END;
-	
+
 	-- table of locations
-	DECLARE @tblLocation TABLE (
-		LocationCode VARCHAR(10)
-		);
+	DECLARE @tblLocation TABLE (LocationCode VARCHAR(10));
+
 	INSERT INTO @tblLocation
 	SELECT val
 	FROM dbo.strSplit(@LocationCode, ',')
@@ -115,12 +124,26 @@ BEGIN
 		,ISNULL(u.CategoryId, 0)
 		,ISNULL(u.LocationCode, 'None')
 	FROM dbo.[User] AS u WITH (NOLOCK)
-		LEFT JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+		INNER JOIN DBCUST.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+		AND us.SiteId = @SiteId
 		LEFT JOIN @tblSection AS s ON u.SectionId = s.SectionId
 		LEFT JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId
 		LEFT JOIN @tblLocation AS l ON u.LocationCode = l.LocationCode
-	WHERE (@ExcludeClosedAccount = 0 OR (ci.closed = 0 AND ci.reject = 0 AND ci.[Enabled] = 1))
-		AND (LEN(ISNULL(@User, '')) = 0 OR u.Nickname LIKE '%'+ @User + '%' OR u.Username LIKE '%'+ @User + '%')
+	WHERE (
+			@ExcludeClosedAccount = 0
+			OR (
+				ci.closed = 0
+				AND ci.reject = 0
+				AND ci.[Enabled] = 1
+				AND us.IsActive = 1
+				)
+			)
+		AND (
+			LEN(ISNULL(@User, '')) = 0
+			OR u.Nickname LIKE '%' + @User + '%'
+			OR u.Username LIKE '%' + @User + '%'
+			)
 
 	-- table of shift codes
 	DECLARE @tblShift TABLE (ShiftCode VARCHAR(50));
@@ -137,7 +160,7 @@ BEGIN
 		SELECT val
 		FROM dbo.strSplit(@ShiftCode, ',');
 	END;
-	
+
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
 		,ts.SectionName
@@ -161,6 +184,6 @@ BEGIN
 	FROM @tblUser AS u
 		INNER JOIN dbo.EmployeeWorkingShift AS s WITH (NOLOCK) ON u.UserId = s.EmployeeId
 		AND ShiftDate >= @FromDate
-			AND ShiftDate <= @ToDate
+		AND ShiftDate <= @ToDate
 		LEFT JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON s.ShiftCode = c.[Name]
 END;
