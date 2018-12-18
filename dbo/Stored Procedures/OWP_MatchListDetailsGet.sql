@@ -227,6 +227,27 @@ BEGIN
 	FROM dbo.Assignment AS a WITH (NOLOCK)
 		INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON a.OWPMatchId = ml.owpmatchid
 		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
+	WHERE ml.IsMinorMatch = 0
+
+	UNION 
+	SELECT ml.OWPMatchId
+		,mb.InheritedBettypeId AS Bettype
+		,ml.MinorBettypeId
+		,a.UserId
+		,(CASE 
+			WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
+			ELSE u.Username END
+			) AS Username
+		,a.AssignmentType
+		,a.AssignmentNote
+		,ml.ParentMatchId
+		,a.AssignmentId
+	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
+	INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.IsActive = 1 AND mb.ParentBettypeId = ml.MinorBettypeId
+	LEFT JOIN dbo.Assignment AS a WITH (NOLOCK)	ON a.OWPMatchId = ml.OWPMatchId AND a.Bettype = mb.InheritedBettypeId
+	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
+	WHERE ml.IsMinorMatch = 1
+
 
 	-- Return notes
 	SELECT mn.OWPMatchId
