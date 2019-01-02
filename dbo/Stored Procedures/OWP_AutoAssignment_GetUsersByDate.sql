@@ -15,6 +15,11 @@ BEGIN
 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, 0, @EventDate)
 		,@ToDate DATETIME = DATEADD(DAY, 0, @EventDate)
+		,@LASection INT
+		
+	SELECT @LASection = ResourceId
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'Section' AND Value = 'LA'
 
 	CREATE TABLE #tblUser (
 		UserId INT
@@ -36,6 +41,7 @@ BEGIN
 	FROM dbo.[User] WITH (NOLOCK)
 	WHERE [Level] IS NOT NULL
 		AND LocationCode IS NOT NULL
+		AND SectionId = @LASection
 
 	SELECT UserId
 		,[Level]
