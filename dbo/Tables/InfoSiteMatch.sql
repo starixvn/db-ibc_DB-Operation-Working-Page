@@ -20,8 +20,11 @@
     [OWPAwayId]       INT             NOT NULL,
     [AgentIds]        VARCHAR (200)   NULL,
     [TVIds]           VARCHAR (200)   NULL,
+    [IsDeleted]       BIT             DEFAULT ((0)) NULL,
     CONSTRAINT [PK_InfoSiteMatch] PRIMARY KEY CLUSTERED ([InfoSiteMatchId] ASC)
 );
+
+
 
 
 
