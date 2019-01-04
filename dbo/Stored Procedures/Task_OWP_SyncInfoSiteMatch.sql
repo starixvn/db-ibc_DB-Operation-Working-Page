@@ -24,7 +24,7 @@ BEGIN
 	WHERE EventDateTime < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
 
 	-- create temp table remove IsDeleted
-	CREATE TABLE #tmpInfoSiteMatch (
+	CREATE TABLE #tblInfoSiteMatch (
 		[InfoSiteMatchId] [int] NOT NULL
 		,[EventDateTime] [datetime] NOT NULL
 		,[UpdatedTime] [datetime] NOT NULL
@@ -49,29 +49,29 @@ BEGIN
 		,[IsDeleted] [bit] NULL
 		)
 
-	INSERT INTO #tmpInfoSiteMatch
+	INSERT INTO #tblInfoSiteMatch
 	SELECT [InfoSiteMatchId]
-	,[EventDateTime]
-	,[UpdatedTime]
-	,[LeagueName]
-	,[HomeName]
-	,[AwayName]
-	,[Round]
-	,[Division]
-	,[Agent]
-	,[TV]
-	,[Channel]
-	,[WB]
-	,[Website1]
-	,[Website2]
-	,[Website3]
-	,[Website4]
-	,[OWPLeagueId]
-	,[OWPHomeId]
-	,[OWPAwayId]
-	,[AgentIds]
-	,[TVIds]
-	,[IsDeleted]
+		,[EventDateTime]
+		,[UpdatedTime]
+		,[LeagueName]
+		,[HomeName]
+		,[AwayName]
+		,[Round]
+		,[Division]
+		,[Agent]
+		,[TV]
+		,[Channel]
+		,[WB]
+		,[Website1]
+		,[Website2]
+		,[Website3]
+		,[Website4]
+		,[OWPLeagueId]
+		,[OWPHomeId]
+		,[OWPAwayId]
+		,[AgentIds]
+		,[TVIds]
+		,[IsDeleted]
 	FROM dbo.InfoSiteMatch WITH (NOLOCK)
 	WHERE IsDeleted <> 1
 
@@ -80,7 +80,7 @@ BEGIN
 	USING (
 		SELECT im.InfoSiteMatchId
 			,im.OWPLeagueId
-		FROM dbo.InfoSiteMatch AS im WITH (NOLOCK)
+		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 		) AS im
 		ON om.InfoSiteMatchId = im.InfoSiteMatchId
 	WHEN MATCHED
@@ -94,7 +94,7 @@ BEGIN
 	USING (
 		SELECT im.InfoSiteMatchId
 			,im.OWPHomeId
-		FROM dbo.InfoSiteMatch AS im WITH (NOLOCK)
+		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 		) AS im
 		ON om.InfoSiteMatchId = im.InfoSiteMatchId
 	WHEN MATCHED
@@ -108,7 +108,7 @@ BEGIN
 	USING (
 		SELECT im.InfoSiteMatchId
 			,im.OWPAwayId
-		FROM dbo.InfoSiteMatch AS im WITH (NOLOCK)
+		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 		) AS im
 		ON om.InfoSiteMatchId = im.InfoSiteMatchId
 	WHEN MATCHED
@@ -122,7 +122,7 @@ BEGIN
 	USING (
 		SELECT om.OWPMatchId
 			,im.TVIds
-		FROM dbo.InfoSiteMatch AS im WITH (NOLOCK)
+		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
 		) AS im
 		ON om.OWPMatchId = im.OWPMatchId
@@ -144,7 +144,7 @@ BEGIN
 			,im.Website2
 			,im.Website3
 			,im.Website4
-		FROM dbo.InfoSiteMatch AS im WITH (NOLOCK)
+		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
 		) AS im
 		ON mi.OWPMatchId = im.OWPMatchId
@@ -160,5 +160,5 @@ BEGIN
 				,mi.Website3 = im.Website3
 				,mi.Website4 = im.Website4;
 
-	DROP TABLE #tmpInfoSiteMatch
+	DROP TABLE #tblInfoSiteMatch
 END
