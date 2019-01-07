@@ -311,6 +311,7 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetUsersByDate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetMatchesByDate.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_SyncEventDeletedInfoSiteMatch_1.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
