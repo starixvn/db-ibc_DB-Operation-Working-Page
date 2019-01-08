@@ -14,6 +14,7 @@ Revisions:
   20170725@Tim.Trinh: messages for match cancelled
   20180614@Jacob.Phan: Message - Only display yesterday and today message in message box - Hotfix #96282
   20180813@Leo: default value for parameters - [Redmine: #92868]
+  20190108@Leo: handle with CreatedBy=0 - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -91,7 +92,7 @@ BEGIN
 			,mt.SystemMessageType
 		FROM dbo.MessageUser AS mu WITH (NOLOCK)
 			INNER JOIN dbo.[Message] AS m WITH (NOLOCK) ON mu.MessageId = m.MessageId
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON mu.CreatedBy = u.UserId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON mu.CreatedBy = u.UserId
 			LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON m.MessageType = mt.MsgTemplateId
 		WHERE mu.UserId = @UserId
 		AND mu.CreatedDate >= @MinDate
