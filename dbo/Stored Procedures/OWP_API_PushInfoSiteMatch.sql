@@ -10,6 +10,8 @@ AS
 	20181030@Leo.Vo: Initial SP - [Redmine: #103598]
 	20181127@Leo.Vo: Distinct LeagueName before inserting - [Redmine: #103598]
 	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
+	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
+	20190108@Kane.Le: Update Field IsDeleted - [Redmine: #105574]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -246,6 +248,7 @@ BEGIN
 				,t.[OWPHomeId] = s.[OWPHomeId]
 				,t.[OWPAwayId] = s.[OWPAwayId]
 				,t.[TVIds] = s.[TVIds]
+				,t.[IsDeleted] = 0
 	WHEN NOT MATCHED BY TARGET THEN
 			INSERT (
 				[InfoSiteMatchId]
@@ -268,6 +271,7 @@ BEGIN
 				,[OWPHomeId]
 				,[OWPAwayId]
 				,[TVIds]
+				,[IsDeleted]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -290,6 +294,7 @@ BEGIN
 				,s.[OWPHomeId]
 				,s.[OWPAwayId]
 				,s.[TVIds]
+				,0
 				);
 
 	DROP TABLE #tblInfoSiteMatch
