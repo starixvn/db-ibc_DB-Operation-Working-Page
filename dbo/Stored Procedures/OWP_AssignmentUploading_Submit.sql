@@ -22,6 +22,7 @@ AS
 	20181016@Raymond.Le: Notify assignee follow Notification Setting - [Redmine: #102867] 
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
+	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -65,6 +66,10 @@ BEGIN
 		,@MessageDeleteOtherAssignmentId INT
 		,@MessageChangeOfAssignment NVARCHAR(2000)
 		,@MessageChangeOfAssignmentId INT
+		,@MessageEditMaxbet NVARCHAR(2000)
+		,@MessageEditMaxbetId INT
+		,@MessageEditSpread NVARCHAR(2000)
+		,@MessageEditSpreadId INT
 		-- send message by condition date
 		,@FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
@@ -187,6 +192,7 @@ BEGIN
 	CREATE TABLE #tblExistedMatch (
 		RowNumber INT NOT NULL
 		,OWPMatchId INT NOT NULL
+		,ParentMatchId INT
 		)
 
 	--list of matches will be inserted
@@ -270,15 +276,14 @@ BEGIN
 		,ParentMatchId INT
 		)
 
-	CREATE TABLE #tblUsersReceivedMessageUpdateMatchInfo (
+	CREATE TABLE #tblUsersReceivedMessageUpdate (
 		OWPMatchId INT NOT NULL
-		,MessageTemplateCode NVARCHAR(50)
 		,UserId INT
 		)
 
 	CREATE TABLE #tblInsertedMessageUpdateMatchInfo (
 		OWPMatchId INT NOT NULL
-		,MessageTemplateCode NVARCHAR(50)
+		,NotificationSettingId INT
 		,MessageId INT
 		)
 
@@ -303,6 +308,7 @@ BEGIN
 
 	CREATE TABLE #tblOldOWPMatch (
 		OWPMatchId INT NOT NULL
+		,KickOffTime TIME(7)
 		,OtherTime TIME(7)
 		)
 
@@ -324,6 +330,14 @@ BEGIN
 
 	--list of MatchSetting from upload data
 	CREATE TABLE #tblMatchSetting (
+		OWPMatchId INT NOT NULL
+		,BetType INT NOT NULL
+		,MaxBet MONEY
+		,Spread SMALLMONEY
+		)
+
+	--list of old MatchSetting of existed match 
+	CREATE TABLE #tblOldMatchSetting (
 		OWPMatchId INT NOT NULL
 		,BetType INT NOT NULL
 		,MaxBet MONEY
@@ -401,6 +415,21 @@ BEGIN
 		,MessageTypeId INT NOT NULL
 		,NotificationSettingId INT NOT NULL
 		,IsImportant BIT NOT NULL
+		)
+
+	CREATE TABLE #tblMatchEditedMatchSettingInTimeRange (
+		OWPMatchId INT NOT NULL
+		,ParentMatchId INT
+		,Bettype INT
+		,OldMaxbet NVARCHAR(200)
+		,NewMaxbet NVARCHAR(200)
+		,OldSpread NVARCHAR(200)
+		,NewSpread NVARCHAR(200)
+		)
+
+	CREATE TABLE #tblInsertedMessageUpdateMatchSetting (
+		OWPMatchId INT NOT NULL
+		,MessageId INT
 		)
 
 	CREATE TABLE #tblMessage (
@@ -573,7 +602,8 @@ BEGIN
 			,au.Website3
 			,au.Website4
 			,CASE 
-				WHEN ISNUMERIC(au.InfoSiteMatchId) = 1 AND CAST(au.InfoSiteMatchId AS BIGINT) <= 2147483647 THEN au.InfoSiteMatchId
+				WHEN ISNUMERIC(au.InfoSiteMatchId) = 1
+					AND CAST(au.InfoSiteMatchId AS BIGINT) <= 2147483647 THEN au.InfoSiteMatchId
 				ELSE NULL
 				END -- Should run VALIDATION InfoSiteMatchId before insert into table OWPMatch
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
@@ -650,9 +680,11 @@ BEGIN
 		-- Save old OWPMatch (OtherTime) to send message
 		INSERT INTO #tblOldOWPMatch (
 			OWPMatchId
+			,KickOffTime
 			,OtherTime
 			)
 		SELECT m.OWPMatchId
+			,om.KickOffTime
 			,om.OtherTime
 		FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 			INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
@@ -1358,6 +1390,16 @@ BEGIN
 			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
 		WHERE omi.NoOfHDP <> nmi.NoOfHDP
 
+		UNION
+		SELECT em.OWPMatchId
+			,CONVERT(NVARCHAR(10), oom.KickOffTime, 100)
+			,CONVERT(NVARCHAR(10), nom.KickOffTime, 100)
+			,'EditKOTime'
+		FROM #tblExistedMatch AS em
+			INNER JOIN #tblOldOWPMatch AS oom ON em.OWPMatchId = oom.OWPMatchId
+			INNER JOIN dbo.OWPMatch AS nom WITH (NOLOCK) ON em.OWPMatchId = nom.OWPMatchId
+		WHERE oom.KickOffTime <> nom.KickOffTime
+
 		-- send message by condition date
 		SELECT @FromTimeSendMessage = FromTime
 			,@ToTimeSendMessage = ToTime
@@ -1379,8 +1421,10 @@ BEGIN
 			,match.OldValue
 			,match.NewValue
 			,mm.ParentMatchId
-			,CASE WHEN match.MessageTemplateCode IN ('EditTV', 'EditChannel', 'EditWB', 'EditProvider', 'EditOtherProvider', 'EditAgent', 'EditPhone') THEN @NotifyProviderInfoUpdatedId
-					ELSE @NotifyMatchInfoUpdatedId END -- attention
+			,CASE 
+				WHEN match.MessageTemplateCode IN ('EditTV', 'EditChannel', 'EditWB', 'EditProvider', 'EditOtherProvider', 'EditAgent', 'EditPhone') THEN @NotifyProviderInfoUpdatedId
+				ELSE @NotifyMatchInfoUpdatedId
+				END -- attention
 		FROM #tblMatchEditedInfo AS match
 			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON match.OWPMatchId = om.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON match.OWPMatchId = mm.MinorMatchId
@@ -1653,6 +1697,20 @@ BEGIN
 		FROM #tblMatch
 		WHERE MaxBet1H1X2 IS NOT NULL
 			OR Spread1H1X2 IS NOT NULL
+
+		-- store old match setting of existed match
+		INSERT INTO #tblOldMatchSetting (
+			OWPMatchId
+			,BetType
+			,MaxBet
+			,Spread
+			)
+		SELECT ms.OWPMatchId
+			,ms.Bettype
+			,ms.Maxbet
+			,ms.Spread
+		FROM dbo.MatchSetting AS ms WITH (NOLOCK)
+			INNER JOIN #tblExistedMatch AS em ON ms.OWPMatchId = em.OWPMatchId
 
 		-- Remove MatchSetting of matches not in upload
 		DELETE ms
@@ -2176,8 +2234,10 @@ BEGIN
 		SELECT a.UserId
 			,m.MessageContent
 			,@MessageChangeOfAssignmentId
-			,CASE WHEN m.Bettype = @BettypeLA THEN @NofifyLAUpdatedId
-					ELSE @NotifyTraderUpdatedId END
+			,CASE 
+				WHEN m.Bettype = @BettypeLA THEN @NofifyLAUpdatedId
+				ELSE @NotifyTraderUpdatedId
+				END
 			,0
 		FROM #tblChangeOfAssignmentMessage AS m
 			CROSS JOIN (
@@ -2270,66 +2330,165 @@ BEGIN
 			,@SessionId
 		INTO dbo.MessageUser([MessageId], [UserId], [CreatedBy], [SessionId]);
 
-		/*------Send message edit matchinfo---------*/
-		INSERT INTO #tblUsersReceivedMessageUpdateMatchInfo (
+		/*------Send message edit maxbet, spread-----*/
+		-- update parent match id of table #tblExistedMatch
+		UPDATE em
+		SET em.ParentMatchId = mm.ParentMatchId
+		FROM #tblExistedMatch AS em
+			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON em.OWPMatchId = mm.MinorMatchId
+
+		-- get list user can received message update by match (include assignment in main + minor)
+		INSERT INTO #tblUsersReceivedMessageUpdate (
 			OWPMatchId
-			,MessageTemplateCode
-			,UserId			
+			,UserId
 			)
-		SELECT u.OWPMatchId
-			,u.MessageTemplateCode
-			,u.UserId
+		SELECT em.OWPMatchId
+			,a.UserId
+		FROM #tblExistedMatch AS em
+			LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = em.OWPMatchId
+		WHERE em.ParentMatchId IS NULL
+			AND a.UserId IS NOT NULL
+		
+		UNION
+		SELECT em.OWPMatchId
+			,a.UserId
+		FROM #tblExistedMatch AS em
+			INNER JOIN dbo.MinorMatch AS mm ON mm.ParentMatchId = em.OWPMatchId
+			LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
+		WHERE em.ParentMatchId IS NULL
+			AND a.UserId IS NOT NULL
+		
+		UNION --minor match
+		SELECT em.OWPMatchId
+			,a.UserId
+		FROM #tblExistedMatch AS em
+			LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = em.ParentMatchId
+		WHERE em.ParentMatchId IS NOT NULL
+			AND a.UserId IS NOT NULL
+		
+		UNION
+		SELECT em.OWPMatchId
+			,a.UserId
+		FROM #tblExistedMatch AS em
+			INNER JOIN dbo.MinorMatch AS mm ON mm.ParentMatchId = em.ParentMatchId
+			LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
+		WHERE em.ParentMatchId IS NOT NULL
+			AND a.UserId IS NOT NULL
+
+		SELECT @MessageEditMaxbet = mt.MsgTemplateContent
+			,@MessageEditMaxbetId = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditMaxbet'
+
+		SELECT @MessageEditSpread = mt.MsgTemplateContent
+			,@MessageEditSpreadId = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditSpread'
+
+		-- get List match edited match setting in time range
+		INSERT INTO #tblMatchEditedMatchSettingInTimeRange (
+			OWPMatchId
+			,ParentMatchId
+			,Bettype
+			,OldMaxbet
+			,NewMaxbet
+			,OldSpread
+			,NewSpread
+			)
+		SELECT um.OWPMatchId
+			,mtr.ParentMatchId
+			,um.BetType
+			,ISNULL(CAST(oms.MaxBet AS NVARCHAR(200)), '') AS OldMaxBet
+			,ISNULL(CAST(nms.MaxBet AS NVARCHAR(200)), '')
+			,ISNULL(CAST(oms.Spread AS NVARCHAR(200)), '') AS OldSpread
+			,ISNULL(CAST(nms.Spread AS NVARCHAR(200)), '')
 		FROM (
-			SELECT tr.OWPMatchId
-				,tr.MessageTemplateCode
-				,a.UserId
-				,tr.NotificationSettingId
-			FROM #tblMatchEditedInTimeRange AS tr
-				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = tr.OWPMatchId
-			WHERE tr.ParentMatchId IS NULL
-				AND a.UserId IS NOT NULL
+			SELECT OWPMatchId
+				,BetType
+			FROM #tblMatchSetting
 			
 			UNION
-			SELECT tr.OWPMatchId
-				,tr.MessageTemplateCode
-				,a.UserId
-				,tr.NotificationSettingId
-			FROM #tblMatchEditedInTimeRange AS tr
-				INNER JOIN dbo.MinorMatch AS mm ON mm.ParentMatchId = tr.OWPMatchId
-				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
-			WHERE tr.ParentMatchId IS NULL
-				AND a.UserId IS NOT NULL
-			
-			UNION --minor match
-			SELECT tr.OWPMatchId
-				,tr.MessageTemplateCode
-				,a.UserId
-				,tr.NotificationSettingId
-			FROM #tblMatchEditedInTimeRange AS tr
-				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = tr.ParentMatchId
-			WHERE tr.ParentMatchId IS NOT NULL
-				AND a.UserId IS NOT NULL
-			
-			UNION
-			SELECT tr.OWPMatchId
-				,tr.MessageTemplateCode
-				,a.UserId
-				,tr.NotificationSettingId
-			FROM #tblMatchEditedInTimeRange AS tr
-				INNER JOIN dbo.MinorMatch AS mm ON mm.ParentMatchId = tr.ParentMatchId
-				LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = mm.MinorMatchId
-			WHERE tr.ParentMatchId IS NOT NULL
-				AND a.UserId IS NOT NULL
-			) AS u
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = u.NotificationSettingId
-			LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON u.UserId = nm.UserId
-			AND nm.NotificationSettingId = u.NotificationSettingId
-		WHERE ISNULL(nm.Value, ns.DefaultValue) = 'True'
+			SELECT OWPMatchId
+				,BetType
+			FROM #tblOldMatchSetting
+			) AS um
+			INNER JOIN #tblExistedMatch AS em ON um.OWPMatchId = em.OWPMatchId
+			INNER JOIN #tblMatchInTimeRange AS mtr ON um.OWPMatchId = mtr.OWPMatchId
+			LEFT JOIN #tblMatchSetting AS nms ON nms.OWPMatchId = um.OWPMatchId
+			AND nms.BetType = um.BetType
+			LEFT JOIN #tblOldMatchSetting AS oms ON oms.OWPMatchId = um.OWPMatchId
+			AND oms.BetType = um.BetType
+		WHERE ISNULL(oms.MaxBet, 0) <> ISNULL(nms.MaxBet, 0)
+			OR ISNULL(oms.Spread, 0) <> ISNULL(nms.Spread, 0)
 
 		MERGE INTO dbo.[Message] WITH (ROWLOCK)
 		USING (
+			SELECT m.OWPMatchId
+				,@MessageEditMaxbetId AS MessageTypeId
+				,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditMaxbet, '<user>', @Username), '<home>', pm.Home), '<away>', pm.Away), '<bettype>', CASE 
+									WHEN mb.MinorBettypeName IS NULL THEN ''
+									ELSE ' - bettype: ' + mb.MinorBettypeName
+									END), '<oldvalue>', m.OldMaxbet), '<newvalue>', m.NewMaxbet), '<type>', mjb.ShortName) AS MessageContent
+			FROM #tblMatchEditedMatchSettingInTimeRange AS m
+				LEFT JOIN #tblMatch AS pm ON m.ParentMatchId = pm.OWPMatchId
+				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
+				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.[MinorBettypeId] = mm.MinorBettypeId
+				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON mjb.BettypeId = m.Bettype
+			WHERE m.OldMaxbet <> m.NewMaxbet
+			
+			UNION
+			SELECT m.OWPMatchId
+				,@MessageEditSpreadId AS MessageTypeId
+				,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditSpread, '<user>', @Username), '<home>', pm.Home), '<away>', pm.Away), '<bettype>', CASE 
+									WHEN mb.MinorBettypeName IS NULL THEN ''
+									ELSE ' - bettype: ' + mb.MinorBettypeName
+									END), '<oldvalue>', m.OldSpread), '<newvalue>', m.NewSpread), '<type>', mjb.ShortName) AS MessageContent
+			FROM #tblMatchEditedMatchSettingInTimeRange AS m
+				LEFT JOIN #tblMatch AS pm ON m.ParentMatchId = pm.OWPMatchId
+				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
+				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.[MinorBettypeId] = mm.MinorBettypeId
+				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON mjb.BettypeId = m.Bettype
+			WHERE m.OldSpread <> m.NewSpread
+			) AS im ON 1 = 0
+		WHEN NOT MATCHED THEN
+				INSERT (
+					MessageContent
+					,CreatedBy
+					,IsImportant
+					,MessageType
+					)
+				VALUES (
+					im.MessageContent
+					,@UserId
+					,0
+					,im.MessageTypeId
+					)
+		OUTPUT im.OWPMatchId
+			,inserted.MessageId
+		INTO #tblInsertedMessageUpdateMatchSetting(OWPMatchId, MessageId);
+
+		INSERT INTO dbo.MessageUser (
+			MessageId
+			,UserId
+			,CreatedBy
+			,SessionId
+			)
+		SELECT m.MessageId
+			,u.UserId
+			,@UserId
+			,@SessionId
+		FROM #tblInsertedMessageUpdateMatchSetting AS m
+			LEFT JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyMatchInfoUpdatedId
+			LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON u.UserId = nm.UserId
+			AND nm.NotificationSettingId = @NotifyMatchInfoUpdatedId
+		WHERE ISNULL(nm.Value, ns.DefaultValue) = 'True'
+
+		/*------Send message edit matchinfo---------*/
+		MERGE INTO dbo.[Message] WITH (ROWLOCK)
+		USING (
 			SELECT tr.OWPMatchId
-				,tr.MessageTemplateCode
+				,tr.NotificationSettingId
 				,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mt.MsgTemplateContent, '<user>', @Username), '<home>', home.OWPTeamName), '<away>', away.OWPTeamName), '<bettype>', CASE 
 								WHEN mb.MinorBettypeName IS NULL THEN ''
 								ELSE ' - bettype: ' + mb.MinorBettypeName
@@ -2360,9 +2519,9 @@ BEGIN
 					,im.MessageTemplateId
 					)
 		OUTPUT im.OWPMatchId
-			,im.MessageTemplateCode
+			,im.NotificationSettingId
 			,inserted.MessageId
-		INTO #tblInsertedMessageUpdateMatchInfo(OWPMatchId, MessageTemplateCode, MessageId);
+		INTO #tblInsertedMessageUpdateMatchInfo(OWPMatchId, NotificationSettingId, MessageId);
 
 		INSERT INTO dbo.MessageUser (
 			MessageId
@@ -2374,9 +2533,12 @@ BEGIN
 			,u.UserId
 			,@UserId
 			,@SessionId
-		FROM #tblUsersReceivedMessageUpdateMatchInfo AS u
-			LEFT JOIN #tblInsertedMessageUpdateMatchInfo AS m ON u.OWPMatchId = m.OWPMatchId
-			AND u.MessageTemplateCode = m.MessageTemplateCode
+		FROM #tblInsertedMessageUpdateMatchInfo AS m
+			LEFT JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = m.NotificationSettingId
+			LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON u.UserId = nm.UserId
+			AND nm.NotificationSettingId = m.NotificationSettingId
+		WHERE ISNULL(nm.Value, ns.DefaultValue) = 'True'
 
 		/*----------------------------------------*/
 		--Remove minor matches not in upload file in OWPMatch
@@ -2452,8 +2614,6 @@ BEGIN
 
 	DROP TABLE #tblMatchInTimeRange
 
-	DROP TABLE #tblUsersReceivedMessageUpdateMatchInfo
-
 	DROP TABLE #tblInsertedMessageUpdateMatchInfo
 
 	DROP TABLE #tblOldMatchInfo
@@ -2466,6 +2626,8 @@ BEGIN
 
 	DROP TABLE #tblMatchSetting
 
+	DROP TABLE #tblOldMatchSetting
+
 	DROP TABLE #tblMatchSettingLog
 
 	DROP TABLE #tblAssignment
@@ -2477,8 +2639,14 @@ BEGIN
 	DROP TABLE #tblOldOtherAssignment
 
 	DROP TABLE #tblAssignmentMessage
-	
+
 	DROP TABLE #tblAssignmentInTimeRange
 
 	DROP TABLE #tblMessage
+
+	DROP TABLE #tblMatchEditedMatchSettingInTimeRange
+
+	DROP TABLE #tblInsertedMessageUpdateMatchSetting
+
+	DROP TABLE #tblUsersReceivedMessageUpdate
 END
