@@ -322,7 +322,7 @@ BEGIN
 			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
 			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
 			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPHomeId = a.OWPTeamId
+			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
 			INNER JOIN dbo.OWPLeague AS nl WITH (NOLOCK) ON nl.OWPLeagueId = l.NewOWPLeagueId
 			INNER JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId = l.OldOWPLeagueId
 		) AS m
@@ -374,6 +374,11 @@ BEGIN
 			,m.MessageTypeId
 			,m.IsImportant
 		FROM #tblMessage AS m
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = m.UserId
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotificationSettingId
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			AND nsm.UserId = m.UserId
+		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 		) AS msn ON 1 = 0
 	WHEN NOT MATCHED THEN
 			INSERT (

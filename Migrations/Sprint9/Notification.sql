@@ -1,12 +1,9 @@
 -- create table NotificationQueue
-CREATE TABLE [dbo].[NotificationQueue](
-	[Sessionid] [varchar](50) NOT NULL,
-	[CreatedDate] [datetime] NOT NULL,
- CONSTRAINT [PK_NotificationQueue] PRIMARY KEY CLUSTERED 
-(
-	[Sessionid] ASC
-)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [OWP_Data]
-) ON [OWP_Data]
+CREATE TABLE [dbo].[NotificationQueue] (
+    [Sessionid]   VARCHAR (50) NOT NULL,
+    [CreatedDate] DATETIME     CONSTRAINT [DF_NotificationQueue_CreatedDate] DEFAULT (getdate()) NOT NULL,
+    CONSTRAINT [PK_NotificationQueue] PRIMARY KEY CLUSTERED ([Sessionid] ASC)
+);
 
 -- insert message template
 INSERT [dbo].[MessageTemplate] ([MsgTemplateId], [MsgTemplateCode], [MsgTemplateContent], [IsActive], [SystemMessageType]) VALUES (28, N'EditKOTime', N'<user> edited KO Time of <home> vs <away><bettype>.
