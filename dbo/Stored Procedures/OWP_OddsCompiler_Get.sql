@@ -12,6 +12,7 @@ AS
 	20180131@Raymone.Le: show match when match status is Live
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Raymond.Le: Add more info to Odds Compiler - [Redmine: #105043]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -31,9 +32,9 @@ BEGIN
 		,Remark NVARCHAR(2000)
 		,[Round] NVARCHAR(2000)
 		,Division NVARCHAR(2000)
-		,Runner NVARCHAR(MAX)
-		,WatchBet NVARCHAR(100)
 		,[Provider] NVARCHAR(MAX)
+		,WatchBet NVARCHAR(100)
+		,OtherProvider NVARCHAR(MAX)
 		,Website1 NVARCHAR(1000)
 		,Website2 NVARCHAR(1000)
 		,Website3 NVARCHAR(1000)
@@ -60,9 +61,9 @@ BEGIN
 		,Remark
 		,[Round]
 		,Division
-		,Runner
-		,WatchBet
 		,[Provider]
+		,WatchBet
+		,OtherProvider
 		,Website1
 		,Website2
 		,Website3
@@ -78,18 +79,18 @@ BEGIN
 		,info.[Round]
 		,info.Division
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.RunnerName AS VARCHAR), '')
-				FROM dbo.Runner rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(info.Runner, ',') f
-				WHERE f.val = rs.RunnerId
-				FOR XML PATH('')
-				), 1, 2, '')
-		,info.WB
-		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
 				FROM dbo.[Provider] rs WITH (NOLOCK)
 					CROSS APPLY dbo.fnc_SplitStrings(info.[Provider], ',') f
 				WHERE f.val = rs.ProviderId
+				FOR XML PATH('')
+				), 1, 2, '')
+		,info.WB
+		,STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
+				FROM dbo.OtherProvider rs WITH (NOLOCK)
+					CROSS APPLY dbo.fnc_SplitStrings(info.[OtherProvider], ',') f
+				WHERE f.val = rs.OtherProviderId
 				FOR XML PATH('')
 				), 1, 2, '')
 		,info.Website1
@@ -194,7 +195,7 @@ BEGIN
 						) AS tv
 					,(CASE 
 						WHEN NULLIF(mif.Channel, '') IS NOT NULL
-							OR NULLIF(mif.Provider, '') IS NOT NULL THEN 1
+							OR NULLIF(mif.[OtherProvider], '') IS NOT NULL THEN 1
 						ELSE 0 END
 						) AS ukrb
 				FROM #tblMatch AS mt WITH (NOLOCK)
@@ -213,7 +214,7 @@ BEGIN
 					,m.KickOffTime
 					,mif.TVCode
 					,mif.Channel
-					,mif.Provider
+					,mif.[OtherProvider]
 				) AS tb
 			) AS tb1
 		) AS tb2
@@ -234,9 +235,9 @@ BEGIN
 		,m.Remark
 		,m.[Round]
 		,m.Division
-		,m.Runner
-		,m.WatchBet
 		,m.[Provider]
+		,m.WatchBet
+		,m.OtherProvider
 		,m.Website1
 		,m.Website2
 		,m.Website3

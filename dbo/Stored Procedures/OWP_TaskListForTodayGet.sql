@@ -15,6 +15,7 @@ AS
 	20180614@Leo: Display Round/OutSide/Remark independent
 	20180723@Raymond.Le: Fix show matchStatus for minorBettype
 	20180805@Raymond.Le: Modify follow new structure of event assignment, add params IsGetYesterdayEvent - [Redmine: #92868]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
@@ -402,19 +403,19 @@ BEGIN
 		,inf.WB AS WatchBet
 		,inf.Channel
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
+				FROM dbo.[OtherProvider] rs WITH (NOLOCK)
+					CROSS APPLY dbo.fnc_SplitStrings(inf.[OtherProvider], ',') f
+				WHERE f.val = rs.OtherProviderId
+				FOR XML PATH('')
+				), 1, 2, '') AS OtherProvider
+		,STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.[ProviderName] AS VARCHAR), '')
 				FROM dbo.[Provider] rs WITH (NOLOCK)
 					CROSS APPLY dbo.fnc_SplitStrings(inf.[Provider], ',') f
-				WHERE f.val = rs.ProviderId
+				WHERE f.val = rs.[ProviderId]
 				FOR XML PATH('')
-				), 1, 2, '') AS Provider
-		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.RunnerName AS VARCHAR), '')
-				FROM dbo.Runner rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(inf.Runner, ',') f
-				WHERE f.val = rs.RunnerId
-				FOR XML PATH('')
-				), 1, 2, '') AS Runner
+				), 1, 2, '') AS [Provider]
 		,(CASE 
 			WHEN DATEDIFF(MINUTE, @CurrentDateTime, om.EventDateTime) <= 60 THEN 1
 			WHEN @IsGetYesterdayEvent = 1 THEN 1

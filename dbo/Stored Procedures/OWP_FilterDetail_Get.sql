@@ -9,6 +9,7 @@ AS
  Revisions:          
 	20180927@Leo: New structure of event assignment - [Redmine: #92868]
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -19,10 +20,10 @@ BEGIN
 			,@AssigneeIds NVARCHAR(MAX)
 			,@fieldTv INT = 9
 			,@TVIds NVARCHAR(MAX)
-			,@fieldProvider INT = 13
+			,@fieldOtherProvider INT = 13
+			,@OtherProviderIds NVARCHAR(MAX)
+			,@fieldProvider INT = 14
 			,@ProviderIds NVARCHAR(MAX)
-			,@fieldRunner INT = 14
-			,@RunnerIds NVARCHAR(MAX)
 			,@fieldAgent INT = 12
 			,@AgentIds NVARCHAR(MAX)
 			,@fieldMatchStatus INT = 20
@@ -62,15 +63,15 @@ BEGIN
 		,IsSelected BIT
 	)
 
-	CREATE TABLE #tblRunner (
-		RunnerId INT
-		,RunnerName NVARCHAR(100)
-		,IsSelected BIT
-	)
-	
 	CREATE TABLE #tblProvider (
 		ProviderId INT
 		,ProviderName NVARCHAR(100)
+		,IsSelected BIT
+	)
+	
+	CREATE TABLE #tblOtherProvider (
+		OtherProviderId INT
+		,OtherProviderName NVARCHAR(100)
 		,IsSelected BIT
 	)
 	
@@ -172,6 +173,26 @@ BEGIN
 			LEFT JOIN dbo.strSplit(@TVIds, ',') AS tvc ON t.TVId = tvc.val
 	END
 
+	--- Get Other Provider list
+	SET @OtherProviderIds = (SELECT TOP 1 Value 
+			FROM #tblFilterDetail
+			WHERE FieldId = @fieldOtherProvider)
+
+	IF @OtherProviderIds IS NOT NULL 
+	BEGIN
+		INSERT INTO #tblOtherProvider (
+			OtherProviderId
+			,OtherProviderName
+			,IsSelected
+		)
+		SELECT	r.OtherProviderId
+				,r.OtherProviderName
+				,CASE WHEN pid.val IS NOT NULL THEN 1
+					ELSE 0 END
+		FROM dbo.OtherProvider AS r WITH (NOLOCK)
+			LEFT JOIN dbo.strSplit(@OtherProviderIds, ',') AS pid ON r.OtherProviderId = pid.val
+	END
+
 	--- Get Provider list
 	SET @ProviderIds = (SELECT TOP 1 Value 
 			FROM #tblFilterDetail
@@ -184,32 +205,12 @@ BEGIN
 			,ProviderName
 			,IsSelected
 		)
-		SELECT	r.ProviderId
-				,r.ProviderName
-				,CASE WHEN pid.val IS NOT NULL THEN 1
-					ELSE 0 END
-		FROM dbo.Provider AS r WITH (NOLOCK)
-			LEFT JOIN dbo.strSplit(@ProviderIds, ',') AS pid ON r.ProviderId = pid.val
-	END
-
-	--- Get Runner list
-	SET @RunnerIds = (SELECT TOP 1 Value 
-			FROM #tblFilterDetail
-			WHERE FieldId = @fieldRunner)
-
-	IF @RunnerIds IS NOT NULL 
-	BEGIN
-		INSERT INTO #tblRunner (
-			RunnerId
-			,RunnerName
-			,IsSelected
-		)
-		SELECT 	r.RunnerId
-				,r.RunnerName
+		SELECT 	p.ProviderId
+				,p.ProviderName
 				,CASE WHEN rid.val IS NOT NULL THEN 1
 					ELSE 0 END
-		FROM dbo.Runner AS r WITH (NOLOCK)
-			LEFT JOIN dbo.strSplit(@RunnerIds, ',') AS rid ON r.RunnerId = rid.val
+		FROM dbo.[Provider] AS p WITH (NOLOCK)
+			LEFT JOIN dbo.strSplit(@ProviderIds, ',') AS rid ON p.ProviderId = rid.val
 	END
 
 	--- Get Agent list
@@ -301,15 +302,15 @@ BEGIN
 			,IsSelected
 	FROM #tblAgent
 	
-	SELECT 	RunnerId
-			,RunnerName
-			,IsSelected
-	FROM #tblRunner
-	
 	SELECT 	ProviderId
 			,ProviderName
 			,IsSelected
 	FROM #tblProvider
+	
+	SELECT 	OtherProviderId
+			,OtherProviderName
+			,IsSelected
+	FROM #tblOtherProvider
 	
 	SELECT 	RefResourceId
 			,RefName
@@ -328,9 +329,9 @@ BEGIN
 
 	DROP TABLE #tblAgent
 	
-	DROP TABLE #tblRunner
-	
 	DROP TABLE #tblProvider
+	
+	DROP TABLE #tblOtherProvider
 	
 	DROP TABLE #tblRefResource
 

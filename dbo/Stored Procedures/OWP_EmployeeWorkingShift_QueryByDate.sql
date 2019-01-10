@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryByDate] @Date DATE
 	,@UserId VARCHAR(max) = ''
 AS
@@ -12,6 +11,7 @@ AS
 	20181209@Kane.Le: Add LeagueName
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181209@Kane.Le: Add Runner, Provider, IsMinorMatch - [Redmine: #104291]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 
  -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryByDate @Date = '2017/12/14', @UserId = '8';
@@ -99,23 +99,23 @@ BEGIN
 	SELECT m.OWPMatchId
 		,m.MatchNo
 		,STUFF((
-				SELECT ', ' + CAST(dbo.[Provider].ProviderName AS NVARCHAR(30))
-				FROM dbo.[Provider] WITH (NOLOCK)
-				WHERE dbo.[Provider].ProviderId IN (
+				SELECT ', ' + CAST(op.OtherProviderName AS NVARCHAR(30))
+				FROM dbo.OtherProvider AS op WITH (NOLOCK)
+				WHERE op.OtherProviderId IN (
+						SELECT val
+						FROM dbo.[strSplit](mi.OtherProvider, ',')
+						)
+				FOR XML PATH('')
+				), 1, 1, '') AS 'OtherProvider'
+		,STUFF((
+				SELECT ', ' + CAST(p.ProviderName AS NVARCHAR(30))
+				FROM dbo.[Provider] AS p WITH (NOLOCK)
+				WHERE p.ProviderId IN (
 						SELECT val
 						FROM dbo.[strSplit](mi.[Provider], ',')
 						)
 				FOR XML PATH('')
 				), 1, 1, '') AS 'Provider'
-		,STUFF((
-				SELECT ', ' + CAST(dbo.[Runner].RunnerName AS NVARCHAR(30))
-				FROM dbo.[Runner] WITH (NOLOCK)
-				WHERE dbo.[Runner].RunnerId IN (
-						SELECT val
-						FROM dbo.[strSplit](mi.[Runner], ',')
-						)
-				FOR XML PATH('')
-				), 1, 1, '') AS 'Runner'
 		,m.EventDateTime		
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'

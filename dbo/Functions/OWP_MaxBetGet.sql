@@ -16,6 +16,7 @@ Param's Explanation:
 Revisions:
     20170420@Tim.Trinh: fix bug get max bet for 1X2, 1H 1X2
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	DECLARE @MaxBet MONEY
@@ -65,7 +66,7 @@ BEGIN
 	-- check UK
 	SELECT @ukrb = (CASE 
 			WHEN NULLIF(mi.Channel, '') IS NOT NULL
-				OR NULLIF(mi.Provider, '') IS NOT NULL THEN 1
+				OR NULLIF(mi.OtherProvider, '') IS NOT NULL THEN 1
 			ELSE 0 END
 			)
 	FROM dbo.MatchInfo AS mi WITH (NOLOCK)

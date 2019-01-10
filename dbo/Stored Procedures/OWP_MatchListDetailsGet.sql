@@ -14,6 +14,7 @@ AS
 	20180618@Leo: New structure of event assignment - [Redmine: #92868]
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20181205@Raymond.Le: Implement page Event Assignment - [Redmine: #105667]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -44,8 +45,8 @@ BEGIN
 		,Channel NVARCHAR(200)
 		,WatchBet NVARCHAR(200)
 		,Agent NVARCHAR(200)
+		,OtherProvider NVARCHAR(200)
 		,[Provider] NVARCHAR(200)
-		,Runner NVARCHAR(200)
 		,Phone NVARCHAR(100)
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
@@ -77,8 +78,8 @@ BEGIN
 		,Channel
 		,WatchBet
 		,Agent
+		,OtherProvider
 		,[Provider]
-		,Runner
 		,Phone
 		,[Round]
 		,OutSide
@@ -108,8 +109,8 @@ BEGIN
 		,mi.Channel
 		,mi.WB
 		,mi.Agent
+		,mi.OtherProvider
 		,mi.[Provider]
-		,mi.Runner
 		,mi.Phone
 		,mi.[Round]
 		,mi.Division
@@ -167,19 +168,19 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
+				FROM dbo.OtherProvider rs WITH (NOLOCK)
+					CROSS APPLY dbo.fnc_SplitStrings(ml.OtherProvider, ',') f
+				WHERE f.val = rs.OtherProviderId
+				FOR XML PATH('')
+				), 1, 2, '') AS OtherProvider
+		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
 				FROM dbo.[Provider] rs WITH (NOLOCK)
 					CROSS APPLY dbo.fnc_SplitStrings(ml.[Provider], ',') f
 				WHERE f.val = rs.ProviderId
 				FOR XML PATH('')
-				), 1, 2, '') AS Provider
-		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.RunnerName AS VARCHAR), '')
-				FROM dbo.Runner rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.Runner, ',') f
-				WHERE f.val = rs.RunnerId
-				FOR XML PATH('')
-				), 1, 2, '') AS Runner
+				), 1, 2, '') AS [Provider]
 		,ml.Phone
 		,ml.[Round]
 		,ml.OutSide

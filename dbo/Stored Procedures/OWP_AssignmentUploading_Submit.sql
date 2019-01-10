@@ -22,7 +22,7 @@ AS
 	20181016@Raymond.Le: Notify assignee follow Notification Setting - [Redmine: #102867] 
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
-	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread - [Redmine: #107257]
+	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread and Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -147,8 +147,8 @@ BEGIN
 		,Channel NVARCHAR(100)
 		,WB NVARCHAR(100)
 		,Agent NVARCHAR(2000)
+		,OtherProvider NVARCHAR(2000)
 		,[Provider] NVARCHAR(2000)
-		,Runner NVARCHAR(2000)
 		,Phone NVARCHAR(50)
 		,Note XML
 		,MaxBetHDP MONEY
@@ -234,7 +234,7 @@ BEGIN
 		,OWPLeagueName NVARCHAR(2000) NOT NULL
 		)
 
-	--list of upload values of TV, Runner, Provider or Agent in upload data
+	--list of upload values of TV, Provider, OtherProvider or Agent in upload data
 	CREATE TABLE #tblTextList (
 		OWPMatchId INT NOT NULL
 		,[Text] NVARCHAR(100) NOT NULL
@@ -294,8 +294,8 @@ BEGIN
 		,TVCode NVARCHAR(500)
 		,Channel NVARCHAR(100)
 		,WB NVARCHAR(100)
-		,Provider NVARCHAR(100)
-		,Runner NVARCHAR(100) --OtherProvider
+		,OtherProvider NVARCHAR(100)
+		,[Provider] NVARCHAR(100) 
 		,Phone NVARCHAR(50)
 		,KOTimeRemark NVARCHAR(50) --MatchOffer
 		,[Round] NVARCHAR(2000)
@@ -457,8 +457,8 @@ BEGIN
 			,Channel
 			,WB
 			,Agent
+			,OtherProvider
 			,[Provider]
-			,Runner
 			,Phone
 			,Note
 			,MaxBetHDP
@@ -515,8 +515,8 @@ BEGIN
 			,ISNULL(au.Channel, '')
 			,ISNULL(au.WB, '')
 			,ISNULL(au.Agent, '')
+			,ISNULL(au.OtherProvider, '')
 			,ISNULL(au.[Provider], '')
-			,ISNULL(au.Runner, '')
 			,ISNULL(au.Phone, '')
 			,au.Note
 			,CASE 
@@ -779,8 +779,8 @@ BEGIN
 			,TVCode
 			,Channel
 			,WB
-			,Provider
-			,Runner
+			,OtherProvider
+			,[Provider]
 			,Phone
 			,KOTimeRemark
 			,[Round]
@@ -795,8 +795,8 @@ BEGIN
 			,mi.TVCode
 			,mi.Channel
 			,mi.WB
-			,mi.Provider
-			,mi.Runner
+			,mi.OtherProvider
+			,mi.[Provider]
 			,mi.Phone
 			,mi.KOTimeRemark
 			,mi.[Round]
@@ -1032,118 +1032,6 @@ BEGIN
 				WHERE OWPMatchId = em.OWPMatchId
 				)
 
-		-- Insert new Runner
-		DELETE
-		FROM #tblTextList
-
-		DELETE
-		FROM #tblDistinctTextList
-
-		DELETE
-		FROM #tblOldDistinctTextList
-
-		INSERT INTO #tblTextList (
-			OWPMatchId
-			,[Text]
-			)
-		SELECT m.OWPMatchId
-			,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
-		FROM #tblMatch AS m
-			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.Runner, '/', ','), ',') AS d
-		WHERE m.Runner <> ''
-			AND RTRIM(LTRIM(d.val)) <> ''
-
-		INSERT INTO #tblDistinctTextList (
-			OWPMatchId
-			,[Text]
-			)
-		SELECT OWPMatchId
-			,[Text]
-		FROM #tblTextList
-		GROUP BY OWPMatchId
-			,[Text]
-		ORDER BY MIN(OrderId) ASC
-
-		INSERT INTO dbo.Runner (RunnerName)
-		SELECT DISTINCT tl.[Text]
-		FROM #tblDistinctTextList AS tl
-		WHERE NOT EXISTS (
-				SELECT 1
-				FROM dbo.Runner WITH (NOLOCK)
-				WHERE RunnerName = tl.[Text]
-				)
-
-		UPDATE tl
-		SET tl.Id = tv.RunnerId
-		FROM #tblDistinctTextList AS tl
-			INNER JOIN dbo.Runner AS tv WITH (NOLOCK) ON tl.[Text] = tv.RunnerName
-
-		UPDATE m
-		SET m.Runner = STUFF((
-					SELECT ',' + CAST(Id AS VARCHAR(10))
-					FROM #tblDistinctTextList AS tl
-					WHERE tl.OWPMatchId = m.OWPMatchId
-					FOR XML PATH('')
-					), 1, 1, '')
-		FROM #tblMatch AS m
-		WHERE m.Runner <> ''
-
-		-- get matches edited Runner
-		INSERT INTO #tblOldDistinctTextList (
-			OWPMatchId
-			,Id
-			,[Text]
-			)
-		SELECT em.OWPMatchId
-			,r.RunnerId
-			,r.RunnerName
-		FROM #tblExistedMatch AS em
-			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			CROSS APPLY dbo.fnc_SplitStrings(omi.Runner, ',') AS f
-			INNER JOIN dbo.Runner AS r WITH (NOLOCK) ON f.val = r.RunnerId
-
-		INSERT INTO #tblMatchEditedInfo (
-			OWPMatchId
-			,OldValue
-			,NewValue
-			,MessageTemplateCode
-			)
-		SELECT em.OWPMatchId
-			,ISNULL(STUFF((
-						SELECT ', ' + [Text]
-						FROM #tblOldDistinctTextList AS old
-						WHERE old.OWPMatchId = em.OWPMatchId
-						FOR XML PATH('')
-						), 1, 2, ''), '')
-			,ISNULL(STUFF((
-						SELECT ', ' + [Text]
-						FROM #tblDistinctTextList AS new
-						WHERE new.OWPMatchId = em.OWPMatchId
-						FOR XML PATH('')
-						), 1, 2, ''), '')
-			,'EditOtherProvider' AS MessageTemplateCode
-		FROM #tblExistedMatch AS em
-		WHERE EXISTS (
-				SELECT Id
-				FROM #tblOldDistinctTextList
-				WHERE OWPMatchId = em.OWPMatchId
-				
-				EXCEPT
-				SELECT Id
-				FROM #tblDistinctTextList
-				WHERE OWPMatchId = em.OWPMatchId
-				)
-			OR EXISTS (
-				SELECT Id
-				FROM #tblDistinctTextList
-				WHERE OWPMatchId = em.OWPMatchId
-				
-				EXCEPT
-				SELECT Id
-				FROM #tblOldDistinctTextList
-				WHERE OWPMatchId = em.OWPMatchId
-				)
-
 		-- Insert new Provider
 		DELETE
 		FROM #tblTextList
@@ -1186,9 +1074,9 @@ BEGIN
 				)
 
 		UPDATE tl
-		SET tl.Id = tv.ProviderId
+		SET tl.Id = p.ProviderId
 		FROM #tblDistinctTextList AS tl
-			INNER JOIN dbo.[Provider] AS tv WITH (NOLOCK) ON tl.[Text] = tv.ProviderName
+			INNER JOIN dbo.[Provider] AS p WITH (NOLOCK) ON tl.[Text] = p.ProviderName
 
 		UPDATE m
 		SET m.[Provider] = STUFF((
@@ -1211,8 +1099,8 @@ BEGIN
 			,p.ProviderName
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			CROSS APPLY dbo.fnc_SplitStrings(omi.Provider, ',') AS f
-			INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON f.val = p.ProviderId
+			CROSS APPLY dbo.fnc_SplitStrings(omi.[Provider], ',') AS f
+			INNER JOIN dbo.[Provider] AS p WITH (NOLOCK) ON f.val = p.ProviderId
 
 		INSERT INTO #tblMatchEditedInfo (
 			OWPMatchId
@@ -1256,13 +1144,125 @@ BEGIN
 				WHERE OWPMatchId = em.OWPMatchId
 				)
 
+		-- Insert new OtherProvider
+		DELETE
+		FROM #tblTextList
+
+		DELETE
+		FROM #tblDistinctTextList
+
+		DELETE
+		FROM #tblOldDistinctTextList
+
+		INSERT INTO #tblTextList (
+			OWPMatchId
+			,[Text]
+			)
+		SELECT m.OWPMatchId
+			,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+		FROM #tblMatch AS m
+			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.OtherProvider, '/', ','), ',') AS d
+		WHERE m.OtherProvider <> ''
+			AND RTRIM(LTRIM(d.val)) <> ''
+
+		INSERT INTO #tblDistinctTextList (
+			OWPMatchId
+			,[Text]
+			)
+		SELECT OWPMatchId
+			,[Text]
+		FROM #tblTextList
+		GROUP BY OWPMatchId
+			,[Text]
+		ORDER BY MIN(OrderId) ASC
+
+		INSERT INTO dbo.OtherProvider (OtherProviderName)
+		SELECT DISTINCT tl.[Text]
+		FROM #tblDistinctTextList AS tl
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM dbo.OtherProvider WITH (NOLOCK)
+				WHERE OtherProviderName = tl.[Text]
+				)
+
+		UPDATE tl
+		SET tl.Id = op.OtherProviderId
+		FROM #tblDistinctTextList AS tl
+			INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON tl.[Text] = op.OtherProviderName
+
+		UPDATE m
+		SET m.OtherProvider = STUFF((
+					SELECT ',' + CAST(Id AS VARCHAR(10))
+					FROM #tblDistinctTextList AS tl
+					WHERE tl.OWPMatchId = m.OWPMatchId
+					FOR XML PATH('')
+					), 1, 1, '')
+		FROM #tblMatch AS m
+		WHERE m.OtherProvider <> ''
+
+		-- get matches edited Other Provider
+		INSERT INTO #tblOldDistinctTextList (
+			OWPMatchId
+			,Id
+			,[Text]
+			)
+		SELECT em.OWPMatchId
+			,op.OtherProviderId
+			,op.OtherProviderName
+		FROM #tblExistedMatch AS em
+			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
+			CROSS APPLY dbo.fnc_SplitStrings(omi.OtherProvider, ',') AS f
+			INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON f.val = op.OtherProviderId
+
+		INSERT INTO #tblMatchEditedInfo (
+			OWPMatchId
+			,OldValue
+			,NewValue
+			,MessageTemplateCode
+			)
+		SELECT em.OWPMatchId
+			,ISNULL(STUFF((
+						SELECT ', ' + [Text]
+						FROM #tblOldDistinctTextList AS old
+						WHERE old.OWPMatchId = em.OWPMatchId
+						FOR XML PATH('')
+						), 1, 2, ''), '')
+			,ISNULL(STUFF((
+						SELECT ', ' + [Text]
+						FROM #tblDistinctTextList AS new
+						WHERE new.OWPMatchId = em.OWPMatchId
+						FOR XML PATH('')
+						), 1, 2, ''), '')
+			,'EditOtherProvider' AS MessageTemplateCode
+		FROM #tblExistedMatch AS em
+		WHERE EXISTS (
+				SELECT Id
+				FROM #tblOldDistinctTextList
+				WHERE OWPMatchId = em.OWPMatchId
+				
+				EXCEPT
+				SELECT Id
+				FROM #tblDistinctTextList
+				WHERE OWPMatchId = em.OWPMatchId
+				)
+			OR EXISTS (
+				SELECT Id
+				FROM #tblDistinctTextList
+				WHERE OWPMatchId = em.OWPMatchId
+				
+				EXCEPT
+				SELECT Id
+				FROM #tblOldDistinctTextList
+				WHERE OWPMatchId = em.OWPMatchId
+				)
+
 		--Update MatchInfo of upload matches which exist in table OWPMatch
 		UPDATE mi
 		SET mi.NoOfHDP = m.NoOfHDP
 			,mi.Channel = m.Channel
 			,mi.WB = m.WB
+			,mi.OtherProvider = m.OtherProvider
 			,mi.[Provider] = m.[Provider]
-			,mi.Runner = m.Runner
 			,mi.Phone = m.Phone
 			,mi.KOTimeRemark = m.MatchOffer
 			,mi.TVCode = m.TV
@@ -1422,7 +1422,7 @@ BEGIN
 			,match.NewValue
 			,mm.ParentMatchId
 			,CASE 
-				WHEN match.MessageTemplateCode IN ('EditTV', 'EditChannel', 'EditWB', 'EditProvider', 'EditOtherProvider', 'EditAgent', 'EditPhone') THEN @NotifyProviderInfoUpdatedId
+				WHEN match.MessageTemplateCode IN ('EditTV', 'EditChannel', 'EditWB', 'EditOtherProvider', 'EditProvider', 'EditAgent', 'EditPhone') THEN @NotifyProviderInfoUpdatedId
 				ELSE @NotifyMatchInfoUpdatedId
 				END -- attention
 		FROM #tblMatchEditedInfo AS match
@@ -1468,8 +1468,8 @@ BEGIN
 			,NoOfHDP
 			,Channel
 			,WB
+			,OtherProvider
 			,[Provider]
-			,Runner
 			,Phone
 			,KOTimeRemark
 			,TVCode
@@ -1490,8 +1490,8 @@ BEGIN
 			,m.NoOfHDP
 			,m.Channel
 			,m.WB
+			,m.OtherProvider
 			,m.[Provider]
-			,m.Runner
 			,m.Phone
 			,m.MatchOffer
 			,m.TV

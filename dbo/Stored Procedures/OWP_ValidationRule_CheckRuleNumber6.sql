@@ -10,6 +10,7 @@ AS
  
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -19,7 +20,7 @@ BEGIN
 		,@Passed TINYINT
 		,@Message NVARCHAR(200)
 		,@Phone NVARCHAR(50)
-		,@Runner NVARCHAR(100)
+		,@Provider NVARCHAR(100)
 		,@idoc INT
 
 	SELECT @RuleResultType = RuleResultType
@@ -40,7 +41,7 @@ BEGIN
 			,@RuleId AS RuleId
 			,(
 				CASE 
-					WHEN ISNULL(Runner, '') = ''
+					WHEN ISNULL([Provider], '') = ''
 						AND ISNULL(Phone, '') = ''
 						AND ISNULL(MinorBettypeId, '') = ''
 						THEN @RuleResultType
@@ -49,7 +50,7 @@ BEGIN
 				) AS ResultType
 			,(
 				CASE 
-					WHEN ISNULL(Runner, '') = ''
+					WHEN ISNULL([Provider], '') = ''
 						AND ISNULL(Phone, '') = ''
 						AND ISNULL(MinorBettypeId, '') = ''
 						THEN @Message
@@ -65,15 +66,15 @@ BEGIN
 			,@Value
 
 		SELECT TOP 1 @Phone = data.Phone
-			,@Runner = data.Runner
+			,@Provider = data.[Provider]
 		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 				Phone NVARCHAR(50)
-				,Runner NVARCHAR(100)
+				,[Provider] NVARCHAR(100)
 				) AS data
 
 		EXEC sp_xml_removedocument @idoc
 
-		IF ISNULL(@Runner, '') = ''
+		IF ISNULL(@Provider, '') = ''
 			AND ISNULL(@Phone, '') = ''
 			AND NOT EXISTS (
 				SELECT 1

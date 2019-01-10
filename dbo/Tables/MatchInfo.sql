@@ -3,8 +3,8 @@
     [NoOfHDP]               NVARCHAR (20)   NULL,
     [Channel]               NVARCHAR (100)  NULL,
     [WB]                    NVARCHAR (100)  NULL,
+    [OtherProvider]         NVARCHAR (100)  NULL,
     [Provider]              NVARCHAR (100)  NULL,
-    [Runner]                NVARCHAR (100)  NULL,
     [Phone]                 NVARCHAR (50)   NULL,
     [KOTimeRemark]          NVARCHAR (50)   NULL,
     [ExtraTimeRemark]       NVARCHAR (100)  NULL,
@@ -27,6 +27,8 @@
     [MatchStatus]           VARCHAR (15)    CONSTRAINT [DF_MatchInfo_MatchStatus] DEFAULT ('Live') NOT NULL,
     CONSTRAINT [PK_MatchInfo] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC)
 );
+
+
 
 
 

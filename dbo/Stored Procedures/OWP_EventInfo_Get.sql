@@ -15,8 +15,8 @@ CREATE PROCEDURE [dbo].[OWP_EventInfo_Get] @EventDate DATE
 	,@LeagueIds NVARCHAR(MAX) = NULL
 	,@AssigneeIds NVARCHAR(MAX) = NULL
 	,@AgentIds NVARCHAR(MAX) = NULL
+	,@OtherProviderIds NVARCHAR(MAX) = NULL
 	,@ProviderIds NVARCHAR(MAX) = NULL
-	,@RunnerIds NVARCHAR(MAX) = NULL
 	,@TVIds NVARCHAR(MAX) = NULL
 	,@MatchNumber NVARCHAR(50) = NULL
 	,@Remark NVARCHAR(500) = NULL
@@ -41,6 +41,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 	20181106@Raymond.Le: Remove paging in SP - [Redmine: #104291]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -119,10 +120,10 @@ BEGIN
 		,Channel NVARCHAR(100)
 		,AgentIds NVARCHAR(100)
 		,TVIds NVARCHAR(500)
+		,OtherProviderIds NVARCHAR(100)
+		,OtherProvider NVARCHAR(MAX)
 		,ProviderIds NVARCHAR(100)
 		,[Provider] NVARCHAR(MAX)
-		,RunnerIds NVARCHAR(100)
-		,Runner NVARCHAR(MAX)
 		,MatchStatus NVARCHAR(15)
 		,NoOfHDP NVARCHAR(20)
 		,IsSelected BIT
@@ -180,9 +181,9 @@ BEGIN
 
 	CREATE TABLE #tblAgent (Id INT)
 
-	CREATE TABLE #tblProvider (Id INT)
+	CREATE TABLE #tblOtherProvider (Id INT)
 
-	CREATE TABLE #tblRunner (Id INT)
+	CREATE TABLE #tblProvider (Id INT)
 
 	CREATE TABLE #tblTelevision (Id INT)
 
@@ -550,20 +551,20 @@ BEGIN
 		,tm.Channel = mi.Channel
 		,tm.AgentIds = mi.Agent
 		,tm.TVIds = mi.TVCode
+		,tm.OtherProviderIds = mi.[OtherProvider]
+		,tm.[OtherProvider] = STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
+				FROM dbo.[OtherProvider] rs WITH (NOLOCK)
+					CROSS APPLY dbo.fnc_SplitStrings(mi.[OtherProvider], ',') f
+				WHERE f.val = rs.OtherProviderId
+				FOR XML PATH('')
+				), 1, 2, '')
 		,tm.ProviderIds = mi.[Provider]
 		,tm.[Provider] = STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
 				FROM dbo.[Provider] rs WITH (NOLOCK)
 					CROSS APPLY dbo.fnc_SplitStrings(mi.[Provider], ',') f
 				WHERE f.val = rs.ProviderId
-				FOR XML PATH('')
-				), 1, 2, '')
-		,tm.RunnerIds = mi.Runner
-		,tm.Runner = STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.RunnerName AS VARCHAR), '')
-				FROM dbo.Runner rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(mi.Runner, ',') f
-				WHERE f.val = rs.RunnerId
 				FOR XML PATH('')
 				), 1, 2, '')
 		,tm.IsOneHourToKickOffTime = (CASE 
@@ -635,6 +636,24 @@ BEGIN
 				)
 	END
 
+	IF @OtherProviderIds IS NOT NULL
+	BEGIN
+		INSERT INTO #tblOtherProvider (Id)
+		SELECT [val]
+		FROM dbo.fnc_SplitStrings(@OtherProviderIds, ',')
+
+		UPDATE tm
+		SET tm.IsFiltered = 0
+		FROM #tblMatch AS tm
+		WHERE tm.IsFiltered = 1
+			AND NOT EXISTS (
+				SELECT 1
+				FROM #tblOtherProvider AS p
+					CROSS APPLY dbo.fnc_SplitStrings(tm.OtherProviderIds, ',') f
+				WHERE f.val = p.Id
+				)
+	END
+
 	IF @ProviderIds IS NOT NULL
 	BEGIN
 		INSERT INTO #tblProvider (Id)
@@ -647,26 +666,8 @@ BEGIN
 		WHERE tm.IsFiltered = 1
 			AND NOT EXISTS (
 				SELECT 1
-				FROM #tblProvider AS p
+				FROM #tblProvider AS r
 					CROSS APPLY dbo.fnc_SplitStrings(tm.ProviderIds, ',') f
-				WHERE f.val = p.Id
-				)
-	END
-
-	IF @RunnerIds IS NOT NULL
-	BEGIN
-		INSERT INTO #tblRunner (Id)
-		SELECT [val]
-		FROM dbo.fnc_SplitStrings(@RunnerIds, ',')
-
-		UPDATE tm
-		SET tm.IsFiltered = 0
-		FROM #tblMatch AS tm
-		WHERE tm.IsFiltered = 1
-			AND NOT EXISTS (
-				SELECT 1
-				FROM #tblRunner AS r
-					CROSS APPLY dbo.fnc_SplitStrings(tm.RunnerIds, ',') f
 				WHERE f.val = r.Id
 				)
 	END
@@ -942,8 +943,8 @@ BEGIN
 		,tm.Phone
 		,tm.WatchBet
 		,tm.Channel
+		,tm.OtherProvider
 		,tm.[Provider]
-		,tm.Runner
 		,tm.IsOneHourToKickOffTime
 		,tm.MatchStatus
 		,tm.MinorBettypeId
@@ -1019,9 +1020,9 @@ BEGIN
 
 	DROP TABLE #tblAgent
 
-	DROP TABLE #tblProvider
+	DROP TABLE #tblOtherProvider
 
-	DROP TABLE #tblRunner
+	DROP TABLE #tblProvider
 
 	DROP TABLE #tblTelevision
 

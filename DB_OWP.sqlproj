@@ -248,7 +248,6 @@
     <Build Include="dbo\Tables\EmployeeWorkingShiftNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateShiftCode.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_Runner_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_RecommendOdds_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Provider_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_UpdateOdds.sql" />
@@ -260,7 +259,6 @@
     <Build Include="dbo\Stored Procedures\OWP_Market_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_User_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Television_GetByMatchId.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Runner_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Provider_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchStatus_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchInfo_UpdateMatchStatus.sql" />
@@ -315,6 +313,9 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ExportForBusPickup.sql" />
     <Build Include="dbo\Tables\NotificationQueue.sql" />
     <Build Include="dbo\Stored Procedures\OWP_GetNotificationQueue.sql" />
+    <Build Include="dbo\Tables\OtherProvider.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_OtherProvider_GetAll.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_OtherProvider_GetByMatchId.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
