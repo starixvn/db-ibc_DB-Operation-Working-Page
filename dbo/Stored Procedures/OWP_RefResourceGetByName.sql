@@ -9,13 +9,13 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]  
+	20190110@Leo.Vo: Rename column RefResourceId in table RefResource - [Redmine: #107257]
 */
 
 BEGIN
 	SET NOCOUNT ON
 	
-	SELECT	 r.RefResourceId
-			,r.ResourceId
+	SELECT	 r.ResourceId
 			,r.Value
 	FROM dbo.RefResource r WITH (NOLOCK)
 	WHERE r.RefName = @RefName

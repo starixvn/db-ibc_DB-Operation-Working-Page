@@ -10,6 +10,7 @@ AS
 	20180927@Leo: New structure of event assignment - [Redmine: #92868]
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190110@Leo.Vo: Rename column RefResourceId in table RefResource - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -76,8 +77,7 @@ BEGIN
 	)
 	
 	CREATE TABLE #tblRefResource (
-		RefResourceId INT
-		,RefName NVARCHAR(30)
+		RefName NVARCHAR(30)
 		,ResourceId INT
 		,Value NVARCHAR(200)
 		,IsSelected BIT
@@ -241,14 +241,12 @@ BEGIN
 	IF @MatchStatusIds IS NOT NULL 
 	BEGIN
 		INSERT INTO #tblRefResource (
-			RefResourceId
-			,RefName
+			RefName
 			,ResourceId
 			,Value
 			,IsSelected
 		)
-		SELECT  r.RefResourceId
-				,r.RefName
+		SELECT  r.RefName
 				,r.ResourceId
 				,r.Value
 				,CASE WHEN msi.val IS NOT NULL THEN 1
@@ -312,8 +310,7 @@ BEGIN
 			,IsSelected
 	FROM #tblOtherProvider
 	
-	SELECT 	RefResourceId
-			,RefName
+	SELECT 	RefName
 			,ResourceId
 			,Value
 			,IsSelected

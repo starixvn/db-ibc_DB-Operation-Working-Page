@@ -316,6 +316,7 @@
     <Build Include="dbo\Tables\OtherProvider.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OtherProvider_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_OtherProvider_GetByMatchId.sql" />
+    <Build Include="dbo\Tables\MatchOfferDetail.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
