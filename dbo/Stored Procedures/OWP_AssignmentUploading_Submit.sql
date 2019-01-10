@@ -2398,10 +2398,14 @@ BEGIN
 		SELECT um.OWPMatchId
 			,mtr.ParentMatchId
 			,um.BetType
-			,ISNULL(CAST(oms.MaxBet AS NVARCHAR(200)), '') AS OldMaxBet
-			,ISNULL(CAST(nms.MaxBet AS NVARCHAR(200)), '')
-			,ISNULL(CAST(oms.Spread AS NVARCHAR(200)), '') AS OldSpread
-			,ISNULL(CAST(nms.Spread AS NVARCHAR(200)), '')
+			,CASE WHEN oms.MaxBet IS NOT NULL THEN REPLACE(REPLACE(RTRIM(REPLACE(LTRIM(STR(oms.MaxBet/1000, 100, 3)), '0' ,' ')), ' ','0') + ' ', '. ', '') + 'k'
+				ELSE '' END AS OldMaxBet
+			,CASE WHEN nms.MaxBet IS NOT NULL THEN REPLACE(REPLACE(RTRIM(REPLACE(LTRIM(STR(nms.MaxBet/1000, 100, 3)), '0' ,' ')), ' ','0') + ' ', '. ', '') + 'k'
+				ELSE '' END
+			,CASE WHEN oms.Spread IS NOT NULL THEN CONVERT(varchar, CAST(oms.Spread * 100 AS float)) + '%'
+				ELSE '' END AS OldSpread
+			,CASE WHEN nms.Spread IS NOT NULL THEN CONVERT(varchar, CAST(nms.Spread * 100 AS float)) + '%'
+				ELSE '' END 
 		FROM (
 			SELECT OWPMatchId
 				,BetType
@@ -2426,29 +2430,41 @@ BEGIN
 			SELECT m.OWPMatchId
 				,@MessageEditMaxbetId AS MessageTypeId
 				,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditMaxbet, '<user>', @Username), '<home>', pm.Home), '<away>', pm.Away), '<bettype>', CASE 
-									WHEN mb.MinorBettypeName IS NULL THEN ''
+									WHEN mb.[MinorBettypeId] IS NULL 
+										OR mb.[MinorBettypeId] = @Specific15Mins OR mb.[MinorBettypeId] = @FastMarket THEN ''
 									ELSE ' - bettype: ' + mb.MinorBettypeName
-									END), '<oldvalue>', m.OldMaxbet), '<newvalue>', m.NewMaxbet), '<type>', mjb.ShortName) AS MessageContent
+									END), '<oldvalue>', m.OldMaxbet), '<newvalue>', m.NewMaxbet), 
+									'<type>', CASE WHEN mm.MinorBettypeId = @Specific15Mins THEN 'X MINS' 
+												WHEN mm.MinorBettypeId = @FastMarket THEN mb.MinorBettypeName
+												ELSE  mjb.ShortName END) AS MessageContent
 			FROM #tblMatchEditedMatchSettingInTimeRange AS m
 				LEFT JOIN #tblMatch AS pm ON m.ParentMatchId = pm.OWPMatchId
 				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
 				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.[MinorBettypeId] = mm.MinorBettypeId
 				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON mjb.BettypeId = m.Bettype
 			WHERE m.OldMaxbet <> m.NewMaxbet
+				AND (mm.MinorBettypeId IS NULL
+				OR mm.MinorBettypeId <> @Specific10Mins) -- not show diff maxbet of 10mins match
 			
 			UNION
 			SELECT m.OWPMatchId
 				,@MessageEditSpreadId AS MessageTypeId
 				,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditSpread, '<user>', @Username), '<home>', pm.Home), '<away>', pm.Away), '<bettype>', CASE 
-									WHEN mb.MinorBettypeName IS NULL THEN ''
+									WHEN mb.[MinorBettypeId] IS NULL 
+										OR mb.[MinorBettypeId] = @Specific15Mins OR mb.[MinorBettypeId] = @FastMarket THEN ''
 									ELSE ' - bettype: ' + mb.MinorBettypeName
-									END), '<oldvalue>', m.OldSpread), '<newvalue>', m.NewSpread), '<type>', mjb.ShortName) AS MessageContent
+									END), '<oldvalue>', m.OldSpread), '<newvalue>', m.NewSpread), 
+									'<type>', CASE WHEN mm.MinorBettypeId = @Specific15Mins THEN 'X MINS' 
+												WHEN mm.MinorBettypeId = @FastMarket THEN mb.MinorBettypeName
+												ELSE  mjb.ShortName END) AS MessageContent
 			FROM #tblMatchEditedMatchSettingInTimeRange AS m
 				LEFT JOIN #tblMatch AS pm ON m.ParentMatchId = pm.OWPMatchId
 				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
 				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.[MinorBettypeId] = mm.MinorBettypeId
 				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON mjb.BettypeId = m.Bettype
 			WHERE m.OldSpread <> m.NewSpread
+				AND (mm.MinorBettypeId IS NULL
+				OR mm.MinorBettypeId <> @Specific10Mins)  -- not show diff spread of 10mins match
 			) AS im ON 1 = 0
 		WHEN NOT MATCHED THEN
 				INSERT (
