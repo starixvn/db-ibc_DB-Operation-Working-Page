@@ -20,5 +20,5 @@ BEGIN
 		,ISNULL(u.Nickname, u.Username) AS Creator
 	FROM dbo.AutoAssignmentRequest AS r WITH (NOLOCK)
 	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON r.CreatorId = u.UserId
-	ORDER BY EventDate DESC, CreatedDate DESC
+	ORDER BY CreatedDate DESC
 END

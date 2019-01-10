@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[AutoAssignmentRequest] (
+CREATE TABLE [dbo].[AutoAssignmentRequest] (
     [RequestId]   VARCHAR (50) NOT NULL,
     [EventDate]   DATE         NOT NULL,
     [Status]      INT          NOT NULL,
@@ -8,14 +8,20 @@
 );
 
 
-GO
-CREATE NONCLUSTERED INDEX [IX_AutoAssignmentRequest_CreatorId]
-    ON [dbo].[AutoAssignmentRequest]([CreatorId] ASC)
-    ON [OWP_Index];
+
+
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_AutoAssignmentRequest_Status]
-    ON [dbo].[AutoAssignmentRequest]([Status] ASC)
+
+
+
+GO
+
+
+
+GO
+CREATE NONCLUSTERED INDEX [IX_AutoAssignmentRequest_CreatedDate]
+    ON [dbo].[AutoAssignmentRequest]([CreatedDate] DESC)
     ON [OWP_Index];
 
