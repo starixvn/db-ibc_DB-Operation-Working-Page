@@ -1,5 +1,4 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
@@ -28,7 +27,7 @@ BEGIN
 	DECLARE @SiteId INT
 
 	SELECT @SiteId = SiteId
-	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
+	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites
 	WHERE SiteName = 'Operation Working Page'
 		AND IsActive = 1
 		AND Environment = 'LIVE'
@@ -101,32 +100,32 @@ BEGIN
 	FROM dbo.strSplit(@LocationCode, ',')
 
 	-- table WorkingShift
-	DECLARE @tblEmpWorkingShift TABLE
-	(
+	DECLARE @tblEmpWorkingShift TABLE (
 		EmployeeId INT
 		,ShiftCode NVARCHAR(50)
 		,ShiftDate DATE
-		, ShiftStartTime DATETIME
-		, ShiftEndTime DATETIME
-	)
-INSERT INTO	@tblEmpWorkingShift 
-SELECT emp.EmployeeId
-,emp.ShiftCode
-,emp.ShiftDate
-,emp.ShiftStartTime
-,emp.ShiftEndTime
-  FROM EmployeeWorkingShift emp WITH (NOLOCK)
-  WHERE ShiftDate >= @FromDate
-				AND ShiftDate <= @ToDate
+		,ShiftStartTime DATETIME
+		,ShiftEndTime DATETIME
+		)
+
+	INSERT INTO @tblEmpWorkingShift
+	SELECT emp.EmployeeId
+		,emp.ShiftCode
+		,emp.ShiftDate
+		,emp.ShiftStartTime
+		,emp.ShiftEndTime
+	FROM EmployeeWorkingShift emp WITH (NOLOCK)
+	WHERE ShiftDate >= @FromDate
+		AND ShiftDate <= @ToDate
 
 	-- table of users
 	DECLARE @tblUser TABLE (
 		UserId INT
 		,Address NVARCHAR(500)
-		,Nickname NVARCHAR(30)
-		,UserName NVARCHAR(30)
+		,[Name] NVARCHAR(30)
 		,ProfilePic NVARCHAR(500)
 		,SectionId SMALLINT
+		,SectionName NVARCHAR(30)
 		,CategoryId SMALLINT
 		,LocationCode VARCHAR(10)
 		);
@@ -134,19 +133,19 @@ SELECT emp.EmployeeId
 	INSERT INTO @tblUser
 	SELECT u.UserId
 		,u.Address
-		,u.Nickname
-		,u.Username
+		,ISNULL(u.Nickname, u.Username) AS [Name]
 		,u.ProfilePic
 		,ISNULL(u.SectionId, 0)
+		,ISNULL(s.SectionName, '') AS SectionName
 		,ISNULL(u.CategoryId, 0)
 		,ISNULL(u.LocationCode, 'None')
 	FROM dbo.[User] AS u WITH (NOLOCK)
 	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-	INNER JOIN DBCUST.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+	INNER JOIN DBCUST.NAP_UserControl.dbo.NAP_UserSite AS us ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
-	LEFT JOIN @tblSection AS s ON u.SectionId = s.SectionId
-	LEFT JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId
-	LEFT JOIN @tblLocation AS l ON u.LocationCode = l.LocationCode
+	INNER JOIN @tblSection AS s ON u.SectionId = s.SectionId
+	INNER JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId
+	INNER JOIN @tblLocation AS l ON u.LocationCode = l.LocationCode
 	WHERE (
 			@ExcludeClosedAccount = 0
 			OR (
@@ -164,35 +163,23 @@ SELECT emp.EmployeeId
 		AND u.Pickup = 1
 		AND u.UserId IN (
 			SELECT ep.EmployeeId
-			FROM @tblEmpWorkingShift ep 
-			 
+			FROM @tblEmpWorkingShift ep
 			)
 
 	SELECT u.UserId AS EmployeeId
-		,u.SectionId
-		,u.Address
-		,ts.SectionName
-		,ISNULL(u.Nickname, u.Username) AS [Name]
-		,u.ProfilePic AS Avatar
-		,tc.CategoryName
-	FROM @tblUser AS u
-	INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
-	INNER JOIN @tblCategory AS tc ON tc.CategoryId = u.CategoryId
-	INNER JOIN @tblLocation AS tl ON tl.LocationCode = u.LocationCode
-	LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
-	ORDER BY SectionName
-		,[Name];
+		,[Address]
+		,SectionName
+		,[Name]
+	FROM @tblUser u
 
 	SELECT u.UserId AS EmployeeId
 		,s.ShiftCode
 		,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
-		, s.ShiftStartTime
+		,s.ShiftStartTime
 		,c.Background
 		,c.Color
 	FROM @tblUser AS u
-	INNER JOIN @tblEmpWorkingShift AS s  ON u.UserId = s.EmployeeId
-		
+	INNER JOIN @tblEmpWorkingShift AS s ON u.UserId = s.EmployeeId
 	LEFT JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON s.ShiftCode = c.[Name]
-
-	--SELECT DISTINCT(ShiftCode) FROM @tblEmpWorkingShift
+	ORDER BY s.ShiftStartTime
 END;
