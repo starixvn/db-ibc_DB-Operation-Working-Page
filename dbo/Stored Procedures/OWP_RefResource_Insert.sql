@@ -2,6 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_RefResource_Insert] @RefName VARCHAR(30)
 	,@Value NVARCHAR(50)
+	,@ResourceId INT = NULL OUTPUT
 AS
 /*
 Created: 20190110@Kane.Le
@@ -14,14 +15,24 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON
 
-	INSERT INTO dbo.RefResource (		
+	DECLARE @MaxResourceId INT
+
+	SELECT @MaxResourceId = MAX(ResourceId)
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = @RefName
+
+	SELECT @MaxResourceId = ISNULL((@MaxResourceId + 1), 1)
+
+	INSERT INTO dbo.RefResource (
 		RefName
 		,ResourceId
 		,Value
 		)
 	VALUES (
 		@RefName
-		,1
+		,@MaxResourceId
 		,@Value
 		)
+
+	SET @ResourceId = @MaxResourceId
 END
