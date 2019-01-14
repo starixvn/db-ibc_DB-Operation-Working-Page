@@ -8,6 +8,7 @@ AS
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -26,7 +27,6 @@ BEGIN
 		,mi.NoOfHDP
 		,mi.[Round]
 		,mi.IsSoloMatch
-		,mi.KOTimeRemark
 		,mi.[Round]
 		,mi.Division
 		,mi.Venue

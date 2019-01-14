@@ -53,7 +53,6 @@ BEGIN
 		,@OldRemark NVARCHAR(2000)
 		,@OldNoOfHDP NVARCHAR(20)
 		,@OldIsSoloMatch BIT
-		,@OldKOTimeRemark NVARCHAR(50)
 		,@OldRound NVARCHAR(2000)
 		,@OldDivision NVARCHAR(2000)
 		,@OldVenue NVARCHAR(100)
@@ -108,7 +107,6 @@ BEGIN
 			,@OldRemark = m.Remark
 			,@OldNoOfHDP = m.NoOfHDP
 			,@OldIsSoloMatch = m.IsSoloMatch
-			,@OldKOTimeRemark = m.KOTimeRemark
 			,@OldRound = m.[Round]
 			,@OldDivision = m.Division
 			,@OldVenue = m.Venue
