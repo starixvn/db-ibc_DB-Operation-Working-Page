@@ -41,7 +41,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 	20181106@Raymond.Le: Remove paging in SP - [Redmine: #104291]
-	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider, new structure of MatchOffer - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -111,7 +111,6 @@ BEGIN
 		,Away NVARCHAR(200)
 		,MatchNo NVARCHAR(50)
 		,OtherTime TIME
-		,MatchOffer NVARCHAR(50)
 		,[Round] NVARCHAR(2000)
 		,Division NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
@@ -542,7 +541,6 @@ BEGIN
 		,tm.MatchNo = om.MatchNo
 		,tm.OtherTime = om.OtherTime
 		,tm.NoOfHDP = mi.NoOfHDP
-		,tm.MatchOffer = mi.KOTimeRemark
 		,tm.[Round] = mi.[Round]
 		,tm.Division = mi.Division
 		,tm.Remark = mi.Remark
@@ -936,7 +934,6 @@ BEGIN
 		,tm.MatchNo
 		,tm.OtherTime
 		,tm.NoOfHDP
-		,tm.MatchOffer
 		,tm.[Round]
 		,tm.Division
 		,tm.Remark
@@ -1003,6 +1000,14 @@ BEGIN
 		CROSS APPLY dbo.fnc_SplitStrings(tm.TVIds, ',') AS f
 		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = f.val
 	ORDER BY tv.TVId
+
+	-- Retunr Match Offer
+	SELECT mf.OWPMatchId
+		,rr.[Value] AS MatchOfferValue
+	FROM #tblMatchFiltered AS mf WITH (NOLOCK)
+	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
+	LEFT JOIN dbo.RefResource AS rr WITH (NOLOCK) ON mo.MatchOfferId = rr.ResourceId
+	WHERE rr.RefName = 'MatchOffer'
 
 	DROP TABLE #tblMatch
 

@@ -15,7 +15,7 @@ AS
 	20180614@Leo: Display Round/OutSide/Remark independent
 	20180723@Raymond.Le: Fix show matchStatus for minorBettype
 	20180805@Raymond.Le: Modify follow new structure of event assignment, add params IsGetYesterdayEvent - [Redmine: #92868]
-	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider, new structure of MatchOffer - [Redmine: #107257]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
@@ -395,7 +395,6 @@ BEGIN
 		,om.MatchNo
 		,om.OtherTime
 		,inf.NoOfHDP
-		,inf.KOTimeRemark AS MatchOffer
 		,inf.[Round]
 		,inf.Division
 		,inf.Remark
@@ -618,6 +617,14 @@ BEGIN
 		CROSS APPLY dbo.fnc_SplitStrings(info.TVCode, ',') AS data
 		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON RTRIM(LTRIM(data.val)) = tv.TVId
 	ORDER BY tv.TVId
+
+	-- Retunr Match Offer
+	SELECT tm.OWPMatchId
+		,rr.[Value] AS MatchOfferValue
+	FROM #tblTodayMatch AS tm WITH (NOLOCK)
+	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON tm.OWPMatchId = mo.OWPMatchId
+	LEFT JOIN dbo.RefResource AS rr WITH (NOLOCK) ON mo.MatchOfferId = rr.ResourceId
+	WHERE rr.RefName = 'MatchOffer'
 
 	DROP TABLE #tblTodayMatch
 

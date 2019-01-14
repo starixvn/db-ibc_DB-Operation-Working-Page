@@ -399,6 +399,13 @@ BEGIN
 		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = f.val
 	ORDER BY tv.TVId
 
+	-- Return Match Offer
+	SELECT mf.OWPMatchId
+		,r.[Value] AS MatchOfferValue
+	FROM #owpMatchListByDate AS mf 
+	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
+	LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
+
 	DROP TABLE #owpMatchListByDate
 
 	DROP TABLE #tblMaxBet
