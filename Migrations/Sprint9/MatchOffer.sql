@@ -33,3 +33,8 @@ FROM (
 	WHERE RefName = 'MatchOffer'
 		AND [Value] IN ('KO+15', 'Fast Market')
 	) AS r
+	
+-- change rule
+UPDATE dbo.ValidationRule
+SET MessageFormat = 'Invalid match offer: <content>'
+WHERE RuleId = 29

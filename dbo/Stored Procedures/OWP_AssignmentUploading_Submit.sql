@@ -23,6 +23,7 @@ AS
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
 	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread and Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -126,6 +127,16 @@ BEGIN
 			MinorBettypeName LIKE '%corner%'
 			OR MinorBettypeName LIKE '%booking%'
 			)
+			
+	--list of match offer
+	CREATE TABLE #tblMatchOffer (
+		Id INT
+		,Value NVARCHAR(50)
+	)
+	
+	INSERT INTO #tblMatchOffer (Id, Value)
+	SELECT ResourceId, Value FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'MatchOffer'
 
 	--upload data
 	CREATE TABLE #tblMatch (
@@ -194,13 +205,13 @@ BEGIN
 		,OWPMatchId INT NOT NULL
 		,ParentMatchId INT
 		)
-
+		
 	--list of matches will be inserted
 	CREATE TABLE #tblNewMatch (
 		RowNumber INT NOT NULL
 		,OWPMatchId INT NOT NULL
 		)
-
+		
 	--list of matches will be removed
 	CREATE TABLE #tblRemoveMatch (OWPMatchId INT NOT NULL)
 
@@ -210,6 +221,18 @@ BEGIN
 		,ParentMatchId INT
 		,MinorBetTypeId INT
 		)
+
+	-- list of MatchOffDetail
+	CREATE TABLE #tblMatchOfferDetail (
+		OWPMatchId INT NOT NULL
+		,MatchOffer INT NOT NULL
+	)
+
+	CREATE TABLE #tblMatchOfferLog (
+		[Action] VARCHAR(50)
+		,OWPMatchId INT NOT NULL
+		,MatchOffer INT NOT NULL
+	)
 
 	--log for actions on table MinorMatch
 	CREATE TABLE #tblMinorMatchLog (
@@ -297,13 +320,18 @@ BEGIN
 		,OtherProvider NVARCHAR(100)
 		,[Provider] NVARCHAR(100) 
 		,Phone NVARCHAR(50)
-		,KOTimeRemark NVARCHAR(50) --MatchOffer
+		,MatchOffer NVARCHAR(50)
 		,[Round] NVARCHAR(2000)
 		,Division NVARCHAR(2000)
 		,Venue NVARCHAR(100)
 		,Agent NVARCHAR(100)
 		,Remark NVARCHAR(2000)
 		,NoOfHDP NVARCHAR(20)
+		)
+		
+	CREATE TABLE #tblOldMatchOfferDetail (
+		OWPMatchId INT NOT NULL
+		,MatchOffer INT NOT NULL
 		)
 
 	CREATE TABLE #tblOldOWPMatch (
@@ -753,6 +781,32 @@ BEGIN
 		SET m.OWPMatchId = nm.OWPMatchId
 		FROM #tblMatch AS m
 			INNER JOIN #tblNewMatch AS nm ON nm.RowNumber = m.RowNumber
+		
+		--List of valid MatchOfferDetail
+		INSERT INTO #tblMatchOfferDetail (OWPMatchId, MatchOffer)
+		SELECT tmo.OWPMatchId, mo.Id
+		FROM (SELECT m.OWPMatchId
+			, LTRIM(RTRIM(mo.val)) AS [Value]
+			FROM #tblMatch AS m
+			CROSS APPLY dbo.fnc_SplitStrings(m.MatchOffer, ',') AS mo) AS tmo
+			INNER JOIN #tblMatchOffer AS mo ON tmo.[Value] = mo.[Value]
+			WHERE tmo.[Value] <> ''
+
+		--Insert data to table MatchOfferDetail
+		DELETE t WITH (ROWLOCK)
+		OUTPUT 'DELETE', DELETED.OWPMatchId, DELETED.MatchOffer INTO #tblMatchOfferLog ([Action], OWPMatchId, MatchOffer)
+		FROM dbo.MatchOfferDetail AS t
+		LEFT JOIN #tblMatchOfferDetail AS s ON t.OWPMatchId = s.OWPMatchId
+		WHERE t.MatchOffer <> s.MatchOffer
+			AND EXISTS (SELECT 1
+				FROM dbo.MatchOfferDetail AS t2 WITH (NOLOCK)
+				WHERE s.OWPMatchId = t2.OWPMatchId AND s.MatchOffer = t2.MatchOffer)
+
+		INSERT INTO dbo.MatchOfferDetail (OWPMatchId, MatchOffer)
+		OUTPUT 'INSERT', INSERTED.OWPMatchId, INSERTED.MatchOffer INTO #tblMatchOfferLog ([Action], OWPMatchId, MatchOffer)
+		SELECT s.OWPMatchId, s.MatchOffer FROM #tblMatchOfferDetail AS s
+		WHERE NOT EXISTS (SELECT 1 FROM dbo.MatchOfferDetail AS t WITH (NOLOCK)
+			WHERE s.OWPMatchId=t.OWPMatchId AND s.MatchOffer=t.MatchOffer)
 
 		-- Get list of match same upload time but not in upload file
 		INSERT INTO #tblRemoveMatch (OWPMatchId)
@@ -782,7 +836,6 @@ BEGIN
 			,OtherProvider
 			,[Provider]
 			,Phone
-			,KOTimeRemark
 			,[Round]
 			,Division
 			,Venue
@@ -798,7 +851,6 @@ BEGIN
 			,mi.OtherProvider
 			,mi.[Provider]
 			,mi.Phone
-			,mi.KOTimeRemark
 			,mi.[Round]
 			,mi.Division
 			,mi.Venue
@@ -807,6 +859,13 @@ BEGIN
 			,mi.NoOfHDP
 		FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mi.OWPMatchId
+			
+		--list of old MatchOfferDetail of existed matches
+		INSERT INTO #tblOldMatchOfferDetail (
+			OWPMatchId
+			,MatchOffer)
+		SELECT mo.OWPMatchId, mo.MatchOffer FROM dbo.MatchOfferDetail AS mo WITH (NOLOCK)
+		INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mo.OWPMatchId
 
 		-- Insert new TV
 		DELETE
@@ -1264,7 +1323,6 @@ BEGIN
 			,mi.OtherProvider = m.OtherProvider
 			,mi.[Provider] = m.[Provider]
 			,mi.Phone = m.Phone
-			,mi.KOTimeRemark = m.MatchOffer
 			,mi.TVCode = m.TV
 			,mi.Agent = m.Agent
 			,mi.IsSelectedUpdatedDate = GETDATE()
@@ -1282,7 +1340,7 @@ BEGIN
 			INNER JOIN #tblExistedMatch AS em ON mi.OWPMatchId = em.OWPMatchId
 			INNER JOIN #tblMatch AS m ON m.OWPMatchId = mi.OWPMatchId
 
-		-- Get list matches edited Phone, IPTV/Channel, WB, OtherTime, MatchOffer, Remark
+		-- Get list matches edited Phone, IPTV/Channel, WB, OtherTime, Remark
 		INSERT INTO #tblMatchEditedInfo (
 			OWPMatchId
 			,OldValue
@@ -1339,16 +1397,6 @@ BEGIN
 				oom.OtherTime IS NOT NULL
 				AND nom.OtherTime IS NULL
 				)
-		
-		UNION
-		SELECT em.OWPMatchId
-			,omi.KOTimeRemark
-			,nmi.KOTimeRemark
-			,'EditMatchOffer'
-		FROM #tblExistedMatch AS em
-			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
-		WHERE omi.KOTimeRemark <> nmi.KOTimeRemark
 		
 		UNION
 		SELECT em.OWPMatchId
@@ -1471,7 +1519,6 @@ BEGIN
 			,OtherProvider
 			,[Provider]
 			,Phone
-			,KOTimeRemark
 			,TVCode
 			,Agent
 			,IsSelectedUpdatedDate
@@ -1493,7 +1540,6 @@ BEGIN
 			,m.OtherProvider
 			,m.[Provider]
 			,m.Phone
-			,m.MatchOffer
 			,m.TV
 			,m.Agent
 			,GETDATE()
@@ -2600,6 +2646,8 @@ BEGIN
 	END CATCH
 
 	--drop tables
+	DROP TABLE #tblMatchOffer
+	
 	DROP TABLE #tblCornerBookingBetTypes
 
 	DROP TABLE #tblMatch
@@ -2611,6 +2659,8 @@ BEGIN
 	DROP TABLE #tblRemoveMatch
 
 	DROP TABLE #tblMinorMatch
+
+	DROP TABLE #tblMatchOfferLog
 
 	DROP TABLE #tblMinorMatchLog
 
@@ -2633,8 +2683,12 @@ BEGIN
 	DROP TABLE #tblInsertedMessageUpdateMatchInfo
 
 	DROP TABLE #tblOldMatchInfo
+	
+	DROP TABLE #tblOldMatchOfferDetail
 
 	DROP TABLE #tblOldOWPMatch
+
+	DROP TABLE #tblMatchOfferDetail
 
 	DROP TABLE #tblMatchNote
 

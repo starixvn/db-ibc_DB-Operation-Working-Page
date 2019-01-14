@@ -319,6 +319,7 @@
     <Build Include="dbo\Tables\MatchOfferDetail.sql" />
     <Build Include="dbo\Stored Procedures\OWP_RefResource_Update.sql" />
     <Build Include="dbo\Stored Procedures\OWP_RefResource_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchOffer_GetByMatchId.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
