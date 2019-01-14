@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_MatchListDetailsGet] @EventDate DATE
 AS
 /*
@@ -15,6 +16,7 @@ AS
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20181205@Raymond.Le: Implement page Event Assignment - [Redmine: #105667]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -27,7 +29,21 @@ BEGIN
 		,@Specific15MinsNoOfCorners INT = - 5
 		,@Specific15MinsTotalBooking INT = - 8
 		,@FastMarket INT = - 88
-		,@AllInOne INT = -89
+		,@AllInOne INT = - 89
+
+	CREATE TABLE #tblMatchOfferResource (
+		Id INT NOT NULL
+		,Value NVARCHAR(50) NOT NULL
+		)
+
+	INSERT INTO #tblMatchOfferResource (
+		Id
+		,Value
+		)
+	SELECT ResourceId
+		,Value
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'MatchOffer'
 
 	-- Match ID List by Date
 	CREATE TABLE #owpMatchListByDate (
@@ -84,7 +100,6 @@ BEGIN
 		,[Round]
 		,OutSide
 		,Remark
-		,MatchOffer
 		,Website
 		,Website2
 		,Website3
@@ -115,7 +130,6 @@ BEGIN
 		,mi.[Round]
 		,mi.Division
 		,mi.Remark
-		,mi.KOTimeRemark
 		,mi.Website1
 		,mi.Website2
 		,mi.Website3
@@ -181,6 +195,13 @@ BEGIN
 				WHERE f.val = rs.ProviderId
 				FOR XML PATH('')
 				), 1, 2, '') AS [Provider]
+		,STUFF((
+				SELECT ', ' + r.Value
+				FROM dbo.MatchOfferDetail AS mo
+					INNER JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
+				WHERE mo.OWPMatchId = ml.OWPMatchId
+				FOR XML PATH('')
+				), 1, 2, '') AS MatchOffer
 		,ml.Phone
 		,ml.[Round]
 		,ml.OutSide
@@ -229,8 +250,8 @@ BEGIN
 		INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON a.OWPMatchId = ml.owpmatchid
 		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
 	WHERE ml.IsMinorMatch = 0
-
-	UNION 
+	
+	UNION
 	SELECT ml.OWPMatchId
 		,mb.InheritedBettypeId AS Bettype
 		,ml.MinorBettypeId
@@ -244,11 +265,12 @@ BEGIN
 		,ml.ParentMatchId
 		,a.AssignmentId
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
-	INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.IsActive = 1 AND mb.ParentBettypeId = ml.MinorBettypeId
-	LEFT JOIN dbo.Assignment AS a WITH (NOLOCK)	ON a.OWPMatchId = ml.OWPMatchId AND a.Bettype = mb.InheritedBettypeId
-	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
+		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.IsActive = 1
+		AND mb.ParentBettypeId = ml.MinorBettypeId
+		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = ml.OWPMatchId
+		AND a.Bettype = mb.InheritedBettypeId
+		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
 	WHERE ml.IsMinorMatch = 1
-
 
 	-- Return notes
 	SELECT mn.OWPMatchId
@@ -265,7 +287,7 @@ BEGIN
 		,MaxBet MONEY
 		,Spread MONEY
 		,IsMatchSetting BIT
-		,LeagueId INT	
+		,LeagueId INT
 		)
 
 	INSERT INTO #tblMaxBet (
@@ -299,7 +321,7 @@ BEGIN
 		,ml.ParentMatchId
 		,ml.OWPLeagueId
 		,ls.Bettype
-		,0	
+		,0
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON ml.OWPLeagueId = ls.LeagueId
 	WHERE ml.OWPMatchId NOT IN (
@@ -324,14 +346,14 @@ BEGIN
 		,Bettype
 		,MinorBettypeId
 		,MaxBet
-		,Spread		
+		,Spread
 		)
 	SELECT t.OWPMatchId
 		,t.ParentMatchId
 		,t.InheritedBettypeId
 		,t.MinorBettypeId
 		,md.MaxBet
-		,md.Spread	
+		,md.Spread
 	FROM (
 		SELECT ml.OWPMatchId
 			,ml.ParentMatchId
@@ -380,4 +402,6 @@ BEGIN
 	DROP TABLE #owpMatchListByDate
 
 	DROP TABLE #tblMaxBet
+
+	DROP TABLE #tblMatchOfferResource
 END

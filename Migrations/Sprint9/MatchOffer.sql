@@ -7,10 +7,17 @@ DROP COLUMN RefResourceId
 INSERT INTO dbo.RefResource(RefName, ResourceId, [Value])
 VALUES ('MatchOffer', 1, 'KO+15'), ('MatchOffer', 2, 'Fast Market'), ('MatchOffer', 3, '10s Accept'), ('MatchOffer', 4, '15s Accept'), ('MatchOffer', 5, '20s Accept')
 
+-- new table MatchOfferDetail
+CREATE TABLE [dbo].[MatchOfferDetail] (
+    [OWPMatchId]   INT NOT NULL,
+    [MatchOfferId] INT NOT NULL,
+    CONSTRAINT [PK_MatchOfferDetail] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC, [MatchOfferId] ASC)
+);
+
 -- migrate data for MatchOffer 'KO+15' & 'Fast Market'
 INSERT INTO dbo.MatchOfferDetail (
 	OWPMatchId
-	,MatchOffer
+	,MatchOfferId
 	)
 SELECT mi.OWPMatchId
 	,r.ResourceId
@@ -19,7 +26,7 @@ FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 	AND r.RefName = 'MatchOffer'
 
 -- migrate data for MatchOffer 'KO+15 Fast Market'
-INSERT INTO dbo.MatchOfferDetail (OWPMatchId, MatchOffer)
+INSERT INTO dbo.MatchOfferDetail (OWPMatchId, MatchOfferId)
 SELECT mi.OWPMatchId
 	,r.ResourceId
 FROM (
@@ -38,3 +45,7 @@ FROM (
 UPDATE dbo.ValidationRule
 SET MessageFormat = 'Invalid match offer: <content>'
 WHERE RuleId = 29
+
+-- drop column KOTimeRemark in table MatchInfo
+ALTER TABLE dbo.MatchInfo
+DROP COLUMN KOTimeRemark

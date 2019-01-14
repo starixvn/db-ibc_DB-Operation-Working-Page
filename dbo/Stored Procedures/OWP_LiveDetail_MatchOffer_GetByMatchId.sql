@@ -21,6 +21,6 @@ BEGIN
 			,Value
 		FROM dbo.RefResource WITH (NOLOCK)
 		WHERE RefName = 'MatchOffer'
-		) AS r ON mo.MatchOffer = r.ResourceId
+		) AS r ON mo.MatchOfferId = r.ResourceId
 	WHERE mo.OWPMatchId = @OWPMatchId
 END

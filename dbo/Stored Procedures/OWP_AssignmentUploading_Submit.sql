@@ -225,7 +225,7 @@ BEGIN
 	-- list of MatchOffDetail
 	CREATE TABLE #tblMatchOfferDetail (
 		OWPMatchId INT NOT NULL
-		,MatchOffer INT NOT NULL
+		,MatchOfferId INT NOT NULL
 	)
 
 	CREATE TABLE #tblMatchOfferLog (
@@ -331,7 +331,7 @@ BEGIN
 		
 	CREATE TABLE #tblOldMatchOfferDetail (
 		OWPMatchId INT NOT NULL
-		,MatchOffer INT NOT NULL
+		,MatchOfferId INT NOT NULL
 		)
 
 	CREATE TABLE #tblOldOWPMatch (
@@ -732,6 +732,14 @@ BEGIN
 		FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 			INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
 		WHERE m.OWPMatchId IS NOT NULL
+		
+		--list of old MatchOfferDetail of existed matches
+		INSERT INTO #tblOldMatchOfferDetail (
+			OWPMatchId
+			,MatchOfferId)
+		SELECT mo.OWPMatchId, mo.MatchOfferId
+		FROM dbo.MatchOfferDetail AS mo WITH (NOLOCK)
+		INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mo.OWPMatchId
 
 		-- Insert new matches
 		MERGE INTO dbo.OWPMatch WITH (ROWLOCK) AS om
@@ -783,7 +791,7 @@ BEGIN
 			INNER JOIN #tblNewMatch AS nm ON nm.RowNumber = m.RowNumber
 		
 		--List of valid MatchOfferDetail
-		INSERT INTO #tblMatchOfferDetail (OWPMatchId, MatchOffer)
+		INSERT INTO #tblMatchOfferDetail (OWPMatchId, MatchOfferId)
 		SELECT tmo.OWPMatchId, mo.Id
 		FROM (SELECT m.OWPMatchId
 			, LTRIM(RTRIM(mo.val)) AS [Value]
@@ -791,23 +799,20 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(m.MatchOffer, ',') AS mo) AS tmo
 			INNER JOIN #tblMatchOffer AS mo ON tmo.[Value] = mo.[Value]
 			WHERE tmo.[Value] <> ''
-
+			
 		--Insert data to table MatchOfferDetail
 		DELETE t WITH (ROWLOCK)
-		OUTPUT 'DELETE', DELETED.OWPMatchId, DELETED.MatchOffer INTO #tblMatchOfferLog ([Action], OWPMatchId, MatchOffer)
+		OUTPUT 'DELETE', DELETED.OWPMatchId, DELETED.MatchOfferId INTO #tblMatchOfferLog ([Action], OWPMatchId, MatchOffer)
 		FROM dbo.MatchOfferDetail AS t
-		LEFT JOIN #tblMatchOfferDetail AS s ON t.OWPMatchId = s.OWPMatchId
-		WHERE t.MatchOffer <> s.MatchOffer
-			AND EXISTS (SELECT 1
-				FROM dbo.MatchOfferDetail AS t2 WITH (NOLOCK)
-				WHERE s.OWPMatchId = t2.OWPMatchId AND s.MatchOffer = t2.MatchOffer)
+		WHERE EXISTS (SELECT 1 FROM #tblMatchOfferDetail AS s WHERE t.OWPMatchId = s.OWPMatchId)
+			AND NOT EXISTS (SELECT 1 FROM #tblMatchOfferDetail AS s WHERE t.OWPMatchId = s.OWPMatchId AND t.MatchOfferId = s.MatchOfferId)
 
-		INSERT INTO dbo.MatchOfferDetail (OWPMatchId, MatchOffer)
-		OUTPUT 'INSERT', INSERTED.OWPMatchId, INSERTED.MatchOffer INTO #tblMatchOfferLog ([Action], OWPMatchId, MatchOffer)
-		SELECT s.OWPMatchId, s.MatchOffer FROM #tblMatchOfferDetail AS s
+		INSERT INTO dbo.MatchOfferDetail (OWPMatchId, MatchOfferId)
+		OUTPUT 'INSERT', INSERTED.OWPMatchId, INSERTED.MatchOfferId INTO #tblMatchOfferLog ([Action], OWPMatchId, MatchOffer)
+		SELECT s.OWPMatchId, s.MatchOfferId FROM #tblMatchOfferDetail AS s
 		WHERE NOT EXISTS (SELECT 1 FROM dbo.MatchOfferDetail AS t WITH (NOLOCK)
-			WHERE s.OWPMatchId=t.OWPMatchId AND s.MatchOffer=t.MatchOffer)
-
+			WHERE s.OWPMatchId=t.OWPMatchId AND s.MatchOfferId=t.MatchOfferId)
+			
 		-- Get list of match same upload time but not in upload file
 		INSERT INTO #tblRemoveMatch (OWPMatchId)
 		SELECT mat.OWPMatchId
@@ -860,13 +865,6 @@ BEGIN
 		FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mi.OWPMatchId
 			
-		--list of old MatchOfferDetail of existed matches
-		INSERT INTO #tblOldMatchOfferDetail (
-			OWPMatchId
-			,MatchOffer)
-		SELECT mo.OWPMatchId, mo.MatchOffer FROM dbo.MatchOfferDetail AS mo WITH (NOLOCK)
-		INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mo.OWPMatchId
-
 		-- Insert new TV
 		DELETE
 		FROM #tblTextList
@@ -1272,7 +1270,7 @@ BEGIN
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
 			CROSS APPLY dbo.fnc_SplitStrings(omi.OtherProvider, ',') AS f
 			INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON f.val = op.OtherProviderId
-
+			
 		INSERT INTO #tblMatchEditedInfo (
 			OWPMatchId
 			,OldValue
@@ -1397,6 +1395,28 @@ BEGIN
 				oom.OtherTime IS NOT NULL
 				AND nom.OtherTime IS NULL
 				)
+		
+		UNION
+		SELECT em.OWPMatchId
+			,ISNULL(STUFF((
+				SELECT ', ' + r.Value
+				FROM #tblOldMatchOfferDetail AS mo
+					INNER JOIN #tblMatchOffer AS r WITH (NOLOCK) ON r.Id = mo.MatchOfferId
+				WHERE mo.OWPMatchId = em.OWPMatchId
+				FOR XML PATH('')
+				), 1, 2, ''), '')
+			,ISNULL(STUFF((
+				SELECT ', ' + r.Value
+				FROM dbo.MatchOfferDetail AS mo WITH (NOLOCK)
+					INNER JOIN #tblMatchOffer AS r WITH (NOLOCK) ON r.Id = mo.MatchOfferId
+				WHERE mo.OWPMatchId = em.OWPMatchId
+				FOR XML PATH('')
+				), 1, 2, ''), '')
+			,'EditMatchOffer'
+		FROM (
+			SELECT DISTINCT OWPMatchId
+			FROM #tblMatchOfferLog
+			) AS em
 		
 		UNION
 		SELECT em.OWPMatchId

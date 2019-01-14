@@ -96,7 +96,7 @@ BEGIN
 		FROM dbo.MatchMarket WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
 		
-		SELECT @OldMatchOfferIds = COALESCE(@OldMatchOfferIds + ', ', '') + CAST(MatchOffer AS NVARCHAR)
+		SELECT @OldMatchOfferIds = COALESCE(@OldMatchOfferIds + ', ', '') + CAST(MatchOfferId AS NVARCHAR)
 		FROM dbo.MatchOfferDetail WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
 
@@ -165,7 +165,7 @@ BEGIN
 		BEGIN
 			INSERT INTO dbo.MatchOfferDetail (
 			OWPMatchId
-			,MatchOffer
+			,MatchOfferId
 			)
 			SELECT @OWPMatchId
 				,val
