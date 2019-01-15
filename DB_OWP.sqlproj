@@ -302,6 +302,15 @@
     <Build Include="Scripts\backup&amp;restore.sql" />
     <Build Include="Scripts\grant.sql" />
     <Build Include="dbo\Stored Procedures\OWP_UserInsert.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EventAssignment_GetUser.sql" />
+    <Build Include="dbo\Tables\AutoAssignmentResult.sql" />
+    <Build Include="dbo\Tables\AutoAssignmentRequest.sql" />
+    <Build Include="dbo\Tables\AutoAssignmentBettype.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentResult_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_GetAll.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetUsersByDate.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetMatchesByDate.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

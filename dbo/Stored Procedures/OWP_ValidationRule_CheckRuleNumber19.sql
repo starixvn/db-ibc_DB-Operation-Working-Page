@@ -11,6 +11,7 @@ AS
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20181213@Raymond.Le: Fix missing update new assignee - [Redmine: #105667]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -254,26 +255,18 @@ BEGIN
 			)
 		SELECT OWPMatchId
 			,MAX((CASE 
-					WHEN Bettype = @BettypeHDP
-						AND Bettype = @Bettype THEN @UserId
 					WHEN Bettype = @BettypeHDP THEN UserId
 					ELSE NULL END
 					)) AS TraderHDP
 			,MAX((CASE 
-					WHEN Bettype = @BettypeOU
-						AND Bettype = @Bettype THEN @UserId
 					WHEN Bettype = @BettypeOU THEN UserId
 					ELSE NULL END
 					)) AS TraderOU
 			,MAX((CASE 
-					WHEN Bettype = @Bettype1HHDP
-						AND Bettype = @Bettype THEN @UserId
 					WHEN Bettype = @Bettype1HHDP THEN UserId
 					ELSE NULL END
 					)) AS Trader1HHDP
 			,MAX((CASE 
-					WHEN Bettype = @Bettype1HOU
-						AND Bettype = @Bettype THEN @UserId
 					WHEN Bettype = @Bettype1HOU THEN UserId
 					ELSE NULL END
 					)) AS Trader1HOU
@@ -282,6 +275,16 @@ BEGIN
 			AND AssignmentType = @MainAssignment
 			AND Bettype IN (@BettypeHDP, @BettypeOU, @Bettype1HHDP, @Bettype1HOU)
 		GROUP BY OWPMatchId
+
+		UPDATE #tblAssignment
+		SET TraderHDP = (CASE WHEN @Bettype = @BettypeHDP THEN @UserId 
+							ELSE TraderHDP END)
+			,TraderOU = (CASE WHEN @Bettype = @BettypeOU THEN @UserId 
+							ELSE TraderOU END)
+			,Trader1HHDP = (CASE WHEN @Bettype = @Bettype1HHDP THEN @UserId 
+							ELSE Trader1HHDP END)
+			,Trader1HOU = (CASE WHEN @Bettype = @Bettype1HOU THEN @UserId 
+							ELSE Trader1HOU END)
 
 		-- Get MaxBet HDP of current match (This match must be main match)
 		SELECT @MaxBet = ms.Maxbet
