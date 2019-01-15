@@ -66,20 +66,22 @@ BEGIN
 		,OldOWPLeagueId INT NOT NULL
 		)
 
+	CREATE TABLE #tblHomeTeamLog (
+		OWPMatchId INT NOT NULL
+		,OldOWPHomeId INT NOT NULL
+		,OldOWPAwayId INT NOT NULL
+		)
+		
+	CREATE TABLE #tblAwayTeamLog (
+		OWPMatchId INT NOT NULL
+		,OldOWPHomeId INT NOT NULL
+		,OldOWPAwayId INT NOT NULL
+		)
+
 	CREATE TABLE #tblTeamLog (
 		OWPMatchId INT NOT NULL
 		,OldOWPHomeId INT NOT NULL
 		,OldOWPAwayId INT NOT NULL
-		,NewOWPHomeId INT NOT NULL
-		,NewOWPAwayId INT NOT NULL
-		)
-
-	CREATE TABLE #tblDistinctTeamLog (
-		OWPMatchId INT NOT NULL
-		,OldOWPHomeId INT NOT NULL
-		,OldOWPAwayId INT NOT NULL
-		,NewOWPHomeId INT NOT NULL
-		,NewOWPAwayId INT NOT NULL
 		)
 
 	-- list of minor bettypes Corner & Booking but not 15 mins
@@ -181,9 +183,7 @@ BEGIN
 	OUTPUT INSERTED.OWPMatchId
 		,DELETED.OWPHomeId
 		,INSERTED.OWPAwayId
-		,INSERTED.OWPHomeId
-		,INSERTED.OWPAwayId
-	INTO #tblTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId, NewOWPHomeId, NewOWPAwayId);
+	INTO #tblHomeTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId);
 
 	-- sync Away
 	MERGE INTO dbo.OWPMatch AS om
@@ -199,24 +199,20 @@ BEGIN
 	OUTPUT INSERTED.OWPMatchId
 		,INSERTED.OWPHomeId
 		,DELETED.OWPAwayId
-		,INSERTED.OWPHomeId
-		,INSERTED.OWPAwayId
-	INTO #tblTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId, NewOWPHomeId, NewOWPAwayId);
+	INTO #tblAwayTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId);
 
-	-- distinct table TeamLog
-	INSERT #tblDistinctTeamLog (
+	-- insert data to table TeamLog
+	INSERT #tblTeamLog (
 		OWPMatchId
 		,OldOWPHomeId
 		,OldOWPAwayId
-		,NewOWPHomeId
-		,NewOWPAwayId
 		)
-	SELECT DISTINCT OWPMatchId
-		,OldOWPHomeId
-		,OldOWPAwayId
-		,NewOWPHomeId
-		,NewOWPAwayId
-	FROM #tblTeamLog
+	SELECT h.OWPMatchId
+		,h.OldOWPHomeId
+		,ISNULL(a.OldOWPAwayId, h.OldOWPAwayId)
+	FROM #tblHomeTeamLog AS h
+	LEFT JOIN #tblAwayTeamLog AS a
+	ON h.OWPMatchId = a.OWPMatchId
 
 	-- sync TVIds
 	MERGE INTO dbo.MatchInfo AS om
@@ -273,7 +269,7 @@ BEGIN
 		
 		UNION
 		SELECT OWPMatchId
-		FROM #tblDistinctTeamLog
+		FROM #tblTeamLog
 		) AS l
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON l.OWPMatchId = om.OWPMatchId
 		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON l.OWPMatchId = mm.MinorMatchId
@@ -304,6 +300,37 @@ BEGIN
 				)
 			)
 
+	-- message for team
+	INSERT INTO #tblMessage (
+		UserId
+		,MessageContent
+		,MessageTypeId
+		,IsImportant
+		)
+	SELECT ass.UserId
+		,m.MessageContent
+		,@EditTeamMessageTemplateId
+		,1
+	FROM (
+		SELECT l.OWPMatchId
+			,REPLACE(REPLACE(@EditTeamMessageTemplate, '<oldevent>', oh.OWPTeamName + ' vs ' + oa.OWPTeamName), '<newevent>', nh.OWPTeamName + ' vs ' + na.OWPTeamName) AS MessageContent
+		FROM #tblTeamLog AS l
+			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
+			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
+			INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = l.OldOWPHomeId
+			INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = l.OldOWPAwayId
+			INNER JOIN dbo.OWPTeam AS nh WITH (NOLOCK) ON nh.OWPTeamId = m.OWPHomeId
+			INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
+		) AS m
+		INNER JOIN (
+		SELECT DISTINCT ass.UserId
+			,ass.OWPMatchId
+		FROM dbo.Assignment AS ass WITH (NOLOCK)
+			INNER JOIN #tblTeamLog AS l ON ass.OWPMatchId = l.OWPMatchId
+			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
+		WHERE ass.UserId IS NOT NULL
+		) AS ass ON m.OWPMatchId = ass.OWPMatchId
+		
 	-- message for league
 	INSERT INTO #tblMessage (
 		UserId
@@ -331,37 +358,6 @@ BEGIN
 			,ass.OWPMatchId
 		FROM dbo.Assignment AS ass WITH (NOLOCK)
 			INNER JOIN #tblLeagueLog AS l ON ass.OWPMatchId = l.OWPMatchId
-			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
-		WHERE ass.UserId IS NOT NULL
-		) AS ass ON m.OWPMatchId = ass.OWPMatchId
-
-	-- message for team
-	INSERT INTO #tblMessage (
-		UserId
-		,MessageContent
-		,MessageTypeId
-		,IsImportant
-		)
-	SELECT ass.UserId
-		,m.MessageContent
-		,@EditTeamMessageTemplateId
-		,1
-	FROM (
-		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(@EditTeamMessageTemplate, '<oldevent>', oh.OWPTeamName + ' vs ' + oa.OWPTeamName), '<newevent>', nh.OWPTeamName + ' vs ' + na.OWPTeamName) AS MessageContent
-		FROM #tblDistinctTeamLog AS l
-			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
-			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = l.OldOWPHomeId
-			INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = l.OldOWPAwayId
-			INNER JOIN dbo.OWPTeam AS nh WITH (NOLOCK) ON nh.OWPTeamId = l.NewOWPHomeId
-			INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = l.NewOWPAwayId
-		) AS m
-		INNER JOIN (
-		SELECT DISTINCT ass.UserId
-			,ass.OWPMatchId
-		FROM dbo.Assignment AS ass WITH (NOLOCK)
-			INNER JOIN #tblDistinctTeamLog AS l ON ass.OWPMatchId = l.OWPMatchId
 			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
 		WHERE ass.UserId IS NOT NULL
 		) AS ass ON m.OWPMatchId = ass.OWPMatchId
@@ -418,9 +414,11 @@ BEGIN
 
 	DROP TABLE #tblLeagueLog
 
-	DROP TABLE #tblTeamLog
+	DROP TABLE #tblHomeTeamLog
+	
+	DROP TABLE #tblAwayTeamLog
 
-	DROP TABLE #tblDistinctTeamLog
+	DROP TABLE #tblTeamLog
 
 	DROP TABLE #tblMatchInTimeRange
 END
