@@ -1414,8 +1414,10 @@ BEGIN
 				), 1, 2, ''), '')
 			,'EditMatchOffer'
 		FROM (
-			SELECT DISTINCT OWPMatchId
-			FROM #tblMatchOfferLog
+			SELECT DISTINCT l.OWPMatchId
+			FROM #tblMatchOfferLog AS l
+			INNER JOIN #tblExistedMatch AS m
+			ON l.OWPMatchId = m.OWPMatchId
 			) AS em
 		
 		UNION
@@ -2657,7 +2659,9 @@ BEGIN
 			UPDATE dbo.AssignmentUploadingLog WITH (ROWLOCK)
 			SET [Status] = 6 -- failure
 				,EndDate = GETDATE()
-				,LogMessage = ERROR_MESSAGE()
+				,LogMessage = 'ENumber: ' + CAST(ERROR_NUMBER() AS VARCHAR(50)) 
+					+ ' --ELine: ' + CAST(ERROR_LINE() AS VARCHAR(50))  
+					+ ' --EMessage: ' + ERROR_MESSAGE()
 			WHERE SessionId = @SessionId
 
 			SELECT @ErrCode = 1
