@@ -2588,6 +2588,8 @@ BEGIN
 				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = tr.OWPMatchId
 				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.[MinorBettypeId] = mm.MinorBettypeId
 				LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON tr.MessageTemplateCode = mt.MsgTemplateCode
+			WHERE mm.MinorBettypeId IS NULL
+				OR mm.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			) AS im ON 1 = 0
 		WHEN NOT MATCHED THEN
 				INSERT (
