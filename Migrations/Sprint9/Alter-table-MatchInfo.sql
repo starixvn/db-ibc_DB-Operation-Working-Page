@@ -1,0 +1,1 @@
+ALTER TABLE dbo.MatchInfo ADD NoOfHDPId INT DEFAULT(0)

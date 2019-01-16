@@ -7,7 +7,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@WB NVARCHAR(100) = ''
 	,@Phone NVARCHAR(50) = ''
 	,@Remark NVARCHAR(2000) = ''
-	,@NoOfHDP NVARCHAR(20) = ''
+	,@NoOfHDPId INT = 0
 	,@IsSoloMatch BIT = 0
 	,@MatchOfferIds NVARCHAR(100) = ''
 	,@Round NVARCHAR(2000) = ''
@@ -37,6 +37,7 @@ Revisions:
 	Add @AssigneeProviderInfo
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
+	20190116@Kane.Le: Update Column NoOfHDPId - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -51,7 +52,7 @@ BEGIN
 		,@OldWB NVARCHAR(100)
 		,@OldPhone NVARCHAR(50)
 		,@OldRemark NVARCHAR(2000)
-		,@OldNoOfHDP NVARCHAR(20)
+		,@OldNoOfHDPId INT
 		,@OldIsSoloMatch BIT
 		,@OldRound NVARCHAR(2000)
 		,@OldDivision NVARCHAR(2000)
@@ -105,7 +106,7 @@ BEGIN
 			,@OldWB = m.WB
 			,@OldPhone = m.Phone
 			,@OldRemark = m.Remark
-			,@OldNoOfHDP = m.NoOfHDP
+			,@OldNoOfHDPID = m.NoOfHDPId
 			,@OldIsSoloMatch = m.IsSoloMatch
 			,@OldRound = m.[Round]
 			,@OldDivision = m.Division
@@ -125,7 +126,7 @@ BEGIN
 			,WB = @WB
 			,Phone = @Phone
 			,Remark = @Remark
-			,NoOfHDP = @NoOfHDP
+			,NoOfHDPId = @NoOfHDPId
 			,IsSoloMatch = @IsSoloMatch
 			,[Round] = @Round
 			,Division = @Division
@@ -623,10 +624,10 @@ BEGIN
 			END
 
 			-- Edit No Of HDP
-			IF @OldNoOfHDP <> @NoOfHDP
+			IF @OldNoOfHDPId <> @NoOfHDPId
 			BEGIN
-				SELECT @OldValue = @OldNoOfHDP
-					,@NewValue = @NoOfHDP
+				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId)
+					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId)
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageType = mt.MsgTemplateId
