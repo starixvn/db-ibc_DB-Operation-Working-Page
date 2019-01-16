@@ -53,6 +53,13 @@ BEGIN
 	FROM dbo.MessageTemplate WITH (NOLOCK)
 	WHERE MsgTemplateCode = 'EditTeam'
 
+	CREATE TABLE #tblMinorMatch (
+		MinorMatchId INT NOT NULL
+		,OWPLeagueName NVARCHAR(200)
+		,OWPHomeName NVARCHAR(200)
+		,OWPAwayName NVARCHAR(200)
+		)
+
 	CREATE TABLE #tblMessage (
 		UserId INT NOT NULL
 		,MessageContent NVARCHAR(MAX) NOT NULL
@@ -71,7 +78,7 @@ BEGIN
 		,OldOWPHomeId INT NOT NULL
 		,OldOWPAwayId INT NOT NULL
 		)
-		
+
 	CREATE TABLE #tblAwayTeamLog (
 		OWPMatchId INT NOT NULL
 		,OldOWPHomeId INT NOT NULL
@@ -211,8 +218,7 @@ BEGIN
 		,h.OldOWPHomeId
 		,ISNULL(a.OldOWPAwayId, h.OldOWPAwayId)
 	FROM #tblHomeTeamLog AS h
-	LEFT JOIN #tblAwayTeamLog AS a
-	ON h.OWPMatchId = a.OWPMatchId
+		LEFT JOIN #tblAwayTeamLog AS a ON h.OWPMatchId = a.OWPMatchId
 
 	-- sync TVIds
 	MERGE INTO dbo.MatchInfo AS om
@@ -330,7 +336,7 @@ BEGIN
 			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
 		WHERE ass.UserId IS NOT NULL
 		) AS ass ON m.OWPMatchId = ass.OWPMatchId
-		
+
 	-- message for league
 	INSERT INTO #tblMessage (
 		UserId
@@ -406,6 +412,67 @@ BEGIN
 		SELECT @SessionId
 	END
 
+	-- sync league name, home name & away name for minor matches
+	INSERT INTO #tblMinorMatch (
+		MinorMatchId
+		,OWPLeagueName
+		,OWPHomeName
+		,OWPAwayName
+		)
+	SELECT mm.MinorMatchId
+		,REPLACE(t.League, '<name>', l.OWPLeagueName)
+		,REPLACE(t.Home, '<name>', h.OWPTeamName)
+		,REPLACE(t.Away, '<name>', a.OWPTeamName)
+	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
+		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mm.ParentMatchId = m.OWPMatchId
+		INNER JOIN (
+		SELECT OWPMatchId
+		FROM #tblLeagueLog
+		
+		UNION
+		SELECT OWPMatchId
+		FROM #tblTeamLog
+		) AS changed ON mm.ParentMatchId = changed.OWPMatchId
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+		INNER JOIN dbo.MinorMatchTemplateSetting AS t WITH (NOLOCK) ON t.MinorBettypeId = mm.MinorBettypeId
+
+	INSERT INTO dbo.OWPLeague (OWPLeagueName)
+	SELECT DISTINCT mm.OWPLeagueName
+	FROM #tblMinorMatch AS mm
+	WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.OWPLeague AS l WITH (NOLOCK)
+			WHERE l.OWPLeagueName = mm.OWPLeagueName
+			)
+
+	INSERT INTO dbo.OWPTeam (OWPTeamName)
+	SELECT mm.OWPTeamName
+	FROM (
+		SELECT mm.OWPHomeName AS OWPTeamName
+		FROM #tblMinorMatch AS mm
+		
+		UNION
+		SELECT mm.OWPAwayName AS OWPTeamName
+		FROM #tblMinorMatch AS mm
+		) AS mm
+	WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.OWPTeam AS t WITH (NOLOCK)
+			WHERE t.OWPTeamName = mm.OWPTeamName
+			)
+
+	UPDATE m
+	SET m.OWPLeagueId = l.OWPLeagueId
+		,m.OWPHomeId = h.OWPTeamId
+		,m.OWPAwayId = a.OWPTeamId
+	FROM dbo.OWPMatch AS m WITH (ROWLOCK)
+		INNER JOIN #tblMinorMatch AS mm ON m.OWPMatchId = mm.MinorMatchId
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON l.OWPLeagueName = mm.OWPLeagueName
+		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamName = mm.OWPHomeName
+		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamName = mm.OWPAwayName
+
 	DROP TABLE #tblCornerBookingBetTypes
 
 	DROP TABLE #tblInfoSiteMatch
@@ -415,10 +482,12 @@ BEGIN
 	DROP TABLE #tblLeagueLog
 
 	DROP TABLE #tblHomeTeamLog
-	
+
 	DROP TABLE #tblAwayTeamLog
 
 	DROP TABLE #tblTeamLog
 
 	DROP TABLE #tblMatchInTimeRange
+
+	DROP TABLE #tblMinorMatch
 END

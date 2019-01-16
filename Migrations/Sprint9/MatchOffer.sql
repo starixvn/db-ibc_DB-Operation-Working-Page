@@ -7,6 +7,10 @@ DROP COLUMN RefResourceId
 INSERT INTO dbo.RefResource(RefName, ResourceId, [Value])
 VALUES ('MatchOffer', 1, 'KO+15'), ('MatchOffer', 2, 'Fast Market'), ('MatchOffer', 3, '10s Accept'), ('MatchOffer', 4, '15s Accept'), ('MatchOffer', 5, '20s Accept')
 
+-- increase size of column MatchOffer
+ALTER TABLE dbo.AssignmentUploading
+ALTER COLUMN MatchOffer NVARCHAR(2000)
+
 -- new table MatchOfferDetail
 CREATE TABLE [dbo].[MatchOfferDetail] (
     [OWPMatchId]   INT NOT NULL,
