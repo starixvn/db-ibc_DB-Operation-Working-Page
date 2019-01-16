@@ -17,6 +17,7 @@ AS
 	20181205@Raymond.Le: Implement page Event Assignment - [Redmine: #105667]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
+	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -45,6 +46,20 @@ BEGIN
 	FROM dbo.RefResource WITH (NOLOCK)
 	WHERE RefName = 'MatchOffer'
 
+	CREATE TABLE #tblNoOfHDPResource (
+		Id INT NOT NULL
+		,Value NVARCHAR(50) NOT NULL
+		)
+
+	INSERT INTO #tblNoOfHDPResource (
+		Id
+		,Value
+		)
+	SELECT ResourceId
+		,Value
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'NoOfHDP'
+
 	-- Match ID List by Date
 	CREATE TABLE #owpMatchListByDate (
 		OWPMatchId INT
@@ -57,6 +72,7 @@ BEGIN
 		,OWPAwayId INT
 		,MatchId INT
 		,NoOfHDP NVARCHAR(20)
+		,NoOfHDPId INT
 		,TVCode NVARCHAR(MAX)
 		,Channel NVARCHAR(200)
 		,WatchBet NVARCHAR(200)
@@ -90,6 +106,7 @@ BEGIN
 		,OWPAwayId
 		,MatchId
 		,NoOfHDP
+		,NoOfHDPId
 		,TVCode
 		,Channel
 		,WatchBet
@@ -120,6 +137,7 @@ BEGIN
 		,om.OWPAwayId
 		,om.MatchId
 		,mi.NoOfHDP
+		,mi.NoOfHDPId
 		,mi.TVCode
 		,mi.Channel
 		,mi.WB
@@ -147,7 +165,7 @@ BEGIN
 		,om.InfoSiteMatchId
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
+		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId		
 	WHERE om.EventDateTime BETWEEN @FromDate
 			AND @ToDate
 		AND mi.IsSelected = 1
@@ -164,7 +182,8 @@ BEGIN
 		,l.OWPLeagueName AS League
 		,h.OWPTeamName AS Home
 		,a.OWPTeamName AS Away
-		,ml.NoOfHDP
+		,ref.[Value] AS NoOfHDP
+		,ml.NoOfHDPId
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.TVCode AS VARCHAR), '')
 				FROM dbo.Television rs WITH (NOLOCK)
@@ -221,6 +240,7 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
 		INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
+		LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
 	WHERE (
 			ml.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			OR ml.MinorBettypeId IS NULL
@@ -411,4 +431,6 @@ BEGIN
 	DROP TABLE #tblMaxBet
 
 	DROP TABLE #tblMatchOfferResource
+
+	DROP TABLE #tblNoOfHDPResource
 END

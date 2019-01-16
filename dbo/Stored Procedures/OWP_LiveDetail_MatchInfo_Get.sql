@@ -24,8 +24,7 @@ BEGIN
 		,mi.WB
 		,mi.Phone
 		,mi.Remark
-		,mi.IsSelected
-		,mi.NoOfHDP
+		,mi.IsSelected		
 		,mi.NoOfHDPId
 		,mi.[Round]
 		,mi.IsSoloMatch

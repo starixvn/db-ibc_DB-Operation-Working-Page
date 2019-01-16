@@ -106,7 +106,7 @@ BEGIN
 			,@OldWB = m.WB
 			,@OldPhone = m.Phone
 			,@OldRemark = m.Remark
-			,@OldNoOfHDPID = m.NoOfHDPId
+			,@OldNoOfHDPId = m.NoOfHDPId
 			,@OldIsSoloMatch = m.IsSoloMatch
 			,@OldRound = m.[Round]
 			,@OldDivision = m.Division
@@ -626,8 +626,8 @@ BEGIN
 			-- Edit No Of HDP
 			IF @OldNoOfHDPId <> @NoOfHDPId
 			BEGIN
-				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId)
-					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId)
+				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP')
+					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageType = mt.MsgTemplateId
