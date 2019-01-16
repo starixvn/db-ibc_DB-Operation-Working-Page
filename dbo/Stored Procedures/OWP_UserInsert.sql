@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet,bodbAdminNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_UserInsert] @UserId INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
@@ -17,7 +17,7 @@ Revisions:
 			> 0: Specific Error.
 		• @ErrMsg: Error description.
 	20181214@Leo: restore SP
-
+	20190116@Leo: grant permission to bodbAdminNet
 */
 BEGIN
 	SET NOCOUNT ON
