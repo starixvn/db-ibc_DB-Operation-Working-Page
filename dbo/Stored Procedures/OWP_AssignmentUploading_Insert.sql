@@ -18,6 +18,7 @@ AS
 	20181015@Raymond.Le: Allow input LA trader of Next Corners, Next Booking - [Redmine: #103202]
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257] 
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -201,7 +202,7 @@ BEGIN
 		,[InfoSiteMatchId] [nvarchar](200)
 		,[KickOffTime] [nvarchar](200)
 		,[OtherTime] [nvarchar](200)
-		,[MatchOffer] [nvarchar](50)
+		,[MatchOffer] [nvarchar](2000)
 		,[LeagueName] [nvarchar](2000)
 		,[HomeName] [nvarchar](2000)
 		,[AwayName] [nvarchar](2000)

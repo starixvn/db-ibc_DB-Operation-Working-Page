@@ -83,7 +83,6 @@ BEGIN
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
-		,MatchOffer NVARCHAR(50)
 		,Website NVARCHAR(1000)
 		,Website2 NVARCHAR(1000)
 		,Website3 NVARCHAR(1000)
@@ -225,7 +224,6 @@ BEGIN
 		,ml.[Round]
 		,ml.OutSide
 		,ml.Remark
-		,ml.MatchOffer
 		,ml.Website
 		,ml.Website2
 		,ml.Website3
