@@ -42,6 +42,7 @@ Revisions:
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 	20181106@Raymond.Le: Remove paging in SP - [Redmine: #104291]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider, new structure of MatchOffer - [Redmine: #107257]
+	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -95,6 +96,20 @@ BEGIN
 		SET @ShowAll = 1
 	END
 
+	CREATE TABLE #tblNoOfHDPResource (
+		Id INT NOT NULL
+		,Value NVARCHAR(50) NOT NULL
+		)
+
+	INSERT INTO #tblNoOfHDPResource (
+		Id
+		,Value
+		)
+	SELECT ResourceId
+		,Value
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'NoOfHDP'
+
 	-----------------------------------
 	CREATE TABLE #tblMatch (
 		OWPMatchId INT
@@ -125,6 +140,7 @@ BEGIN
 		,[Provider] NVARCHAR(MAX)
 		,MatchStatus NVARCHAR(15)
 		,NoOfHDP NVARCHAR(20)
+		,NoOfHDPId INT
 		,IsSelected BIT
 		,IsOneHourToKickOffTime BIT
 		,IsFiltered BIT
@@ -541,6 +557,7 @@ BEGIN
 		,tm.MatchNo = om.MatchNo
 		,tm.OtherTime = om.OtherTime
 		,tm.NoOfHDP = mi.NoOfHDP
+		,tm.NoOfHDPId = mi.NoOfHDPId
 		,tm.[Round] = mi.[Round]
 		,tm.Division = mi.Division
 		,tm.Remark = mi.Remark
@@ -933,7 +950,8 @@ BEGIN
 		,tm.Away
 		,tm.MatchNo
 		,tm.OtherTime
-		,tm.NoOfHDP
+		,ref.[Value] AS NoOfHDP
+		,tm.NoOfHDPId
 		,tm.[Round]
 		,tm.Division
 		,tm.Remark
@@ -948,6 +966,7 @@ BEGIN
 		,tm.IsAllowedToViewDetail
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS tm ON mf.OWPMatchId = tm.OWPMatchId
+		LEFT JOIN #tblNoOfHDPResource AS ref on ref.Id = tm.NoOfHDPId
 		WHERE mf.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			OR mf.MinorBettypeId IS NULL
 	ORDER BY tm.EventDate
@@ -1034,4 +1053,6 @@ BEGIN
 	DROP TABLE #tblLocationCode
 
 	DROP TABLE #tblMatchStatus
+
+	DROP TABLE #tblNoOfHDPResource
 END
