@@ -135,7 +135,7 @@ BEGIN
 		,om.OWPHomeId
 		,om.OWPAwayId
 		,om.MatchId
-		,mi.NoOfHDP
+		,r.Value
 		,mi.NoOfHDPId
 		,mi.TVCode
 		,mi.Channel
@@ -164,7 +164,8 @@ BEGIN
 		,om.InfoSiteMatchId
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId		
+		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
+		LEFT JOIN #tblNoOfHDPResource AS r ON mi.NoOfHDPId = r.Id
 	WHERE om.EventDateTime BETWEEN @FromDate
 			AND @ToDate
 		AND mi.IsSelected = 1

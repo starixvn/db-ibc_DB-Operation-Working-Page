@@ -556,7 +556,7 @@ BEGIN
 		,tm.Away = away.OWPTeamName
 		,tm.MatchNo = om.MatchNo
 		,tm.OtherTime = om.OtherTime
-		,tm.NoOfHDP = mi.NoOfHDP
+		,tm.NoOfHDP = ref.[Value]
 		,tm.NoOfHDPId = mi.NoOfHDPId
 		,tm.[Round] = mi.[Round]
 		,tm.Division = mi.Division
@@ -594,6 +594,7 @@ BEGIN
 		INNER JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId = om.OWPLeagueId
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON away.OWPTeamId = om.OWPAwayId
+		LEFT JOIN #tblNoOfHDPResource AS ref WITH (NOLOCK) ON mi.NoOfHDPId = ref.Id
 
 	-- insert field filter to table
 	IF @LeagueIds IS NOT NULL
