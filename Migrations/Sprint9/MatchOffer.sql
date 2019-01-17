@@ -1,15 +1,17 @@
 -- remove column RefResourceId
 ALTER TABLE dbo.RefResource
 DROP COLUMN RefResourceId
-
+GO
 
 -- init data MatchOffer in table RefResource
 INSERT INTO dbo.RefResource(RefName, ResourceId, [Value])
 VALUES ('MatchOffer', 1, 'KO+15'), ('MatchOffer', 2, 'Fast Market'), ('MatchOffer', 3, '10s Accept'), ('MatchOffer', 4, '15s Accept'), ('MatchOffer', 5, '20s Accept')
+GO
 
 -- increase size of column MatchOffer
 ALTER TABLE dbo.AssignmentUploading
 ALTER COLUMN MatchOffer NVARCHAR(2000)
+GO
 
 -- new table MatchOfferDetail
 CREATE TABLE [dbo].[MatchOfferDetail] (
@@ -17,6 +19,7 @@ CREATE TABLE [dbo].[MatchOfferDetail] (
     [MatchOfferId] INT NOT NULL,
     CONSTRAINT [PK_MatchOfferDetail] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC, [MatchOfferId] ASC)
 );
+GO
 
 -- migrate data for MatchOffer 'KO+15' & 'Fast Market'
 INSERT INTO dbo.MatchOfferDetail (
@@ -28,6 +31,7 @@ SELECT mi.OWPMatchId
 FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 	INNER JOIN dbo.RefResource AS r WITH (NOLOCK) ON mi.KOTimeRemark = r.[Value]
 	AND r.RefName = 'MatchOffer'
+GO
 
 -- migrate data for MatchOffer 'KO+15 Fast Market'
 INSERT INTO dbo.MatchOfferDetail (OWPMatchId, MatchOfferId)
@@ -44,12 +48,15 @@ FROM (
 	WHERE RefName = 'MatchOffer'
 		AND [Value] IN ('KO+15', 'Fast Market')
 	) AS r
-	
+GO
+
 -- change rule
 UPDATE dbo.ValidationRule
 SET MessageFormat = 'Invalid match offer: <content>'
 WHERE RuleId = 29
+GO
 
 -- drop column KOTimeRemark in table MatchInfo
 ALTER TABLE dbo.MatchInfo
 DROP COLUMN KOTimeRemark
+GO

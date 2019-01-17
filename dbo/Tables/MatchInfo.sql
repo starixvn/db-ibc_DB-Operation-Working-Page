@@ -1,6 +1,5 @@
 ﻿CREATE TABLE [dbo].[MatchInfo] (
     [OWPMatchId]            INT             NOT NULL,
-    [NoOfHDP]               NVARCHAR (20)   NULL,
     [Channel]               NVARCHAR (100)  NULL,
     [WB]                    NVARCHAR (100)  NULL,
     [OtherProvider]         NVARCHAR (100)  NULL,
@@ -27,6 +26,8 @@
     [NoOfHDPId]             INT             NULL,
     CONSTRAINT [PK_MatchInfo] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC)
 );
+
+
 
 
 
