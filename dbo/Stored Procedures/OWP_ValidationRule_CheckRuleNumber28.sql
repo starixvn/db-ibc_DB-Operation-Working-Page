@@ -11,6 +11,7 @@ AS
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20190116@Raymond.Le: Add option 4HDP - [Redmine: #108043]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -29,6 +30,7 @@ BEGIN
 		,('2HDP')
 		,('2+1H')
 		,('1HDP')
+		,('4HDP')
 
 	SELECT @RuleResultType = RuleResultType
 		,@Message = MessageFormat
