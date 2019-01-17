@@ -23,7 +23,7 @@ AS
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
 	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread and Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
-	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
+	20190110@Leo.Vo: New structure of Match offer & NoOfHDP - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -128,8 +128,14 @@ BEGIN
 			OR MinorBettypeName LIKE '%booking%'
 			)
 			
-	--list of match offer
+	--list of MatchOffer
 	CREATE TABLE #tblMatchOffer (
+		Id INT
+		,Value NVARCHAR(50)
+	)
+	
+	--list of NoOfHDP
+	CREATE TABLE #tblNoOfHDP (
 		Id INT
 		,Value NVARCHAR(50)
 	)
@@ -137,6 +143,10 @@ BEGIN
 	INSERT INTO #tblMatchOffer (Id, Value)
 	SELECT ResourceId, Value FROM dbo.RefResource WITH (NOLOCK)
 	WHERE RefName = 'MatchOffer'
+	
+	INSERT INTO #tblNoOfHDP (Id, Value)
+	SELECT ResourceId, Value FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'NoOfHDP'
 
 	--upload data
 	CREATE TABLE #tblMatch (
@@ -190,7 +200,7 @@ BEGIN
 		,[Round] NVARCHAR(2000)
 		,Division NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
-		,NoOfHDP NVARCHAR(20)
+		,NoOfHDPId INT
 		,MatchOffer NVARCHAR(2000)
 		,Website1 NVARCHAR(1000)
 		,Website2 NVARCHAR(1000)
@@ -325,7 +335,7 @@ BEGIN
 		,Venue NVARCHAR(100)
 		,Agent NVARCHAR(100)
 		,Remark NVARCHAR(2000)
-		,NoOfHDP NVARCHAR(20)
+		,NoOfHDPId INT
 		)
 		
 	CREATE TABLE #tblOldMatchOfferDetail (
@@ -516,7 +526,7 @@ BEGIN
 			,[Round]
 			,Division
 			,Remark
-			,NoOfHDP
+			,NoOfHDPId
 			,MatchOffer
 			,Website1
 			,Website2
@@ -622,7 +632,7 @@ BEGIN
 			,au.[Round]
 			,au.Division
 			,au.Remark
-			,au.NoHDP
+			,nohdp.Id AS NoOfHDPId
 			,au.MatchOffer
 			,au.Website1
 			,au.Website2
@@ -634,6 +644,8 @@ BEGIN
 				ELSE NULL
 				END -- Should run VALIDATION InfoSiteMatchId before insert into table OWPMatch
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
+		LEFT JOIN #tblNoOfHDP AS nohdp
+		ON au.NoHDP = nohdp.Value
 		WHERE SessionId = @SessionId
 
 		-- Insert Home & Away Team
@@ -845,7 +857,7 @@ BEGIN
 			,Venue
 			,Agent
 			,Remark
-			,NoOfHDP
+			,NoOfHDPId
 			)
 		SELECT mi.OWPMatchId
 			,mi.MatchStatus
@@ -860,7 +872,7 @@ BEGIN
 			,mi.Venue
 			,mi.Agent
 			,mi.Remark
-			,mi.NoOfHDP
+			,mi.NoOfHDPId
 		FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mi.OWPMatchId
 			
@@ -1314,7 +1326,7 @@ BEGIN
 
 		--Update MatchInfo of upload matches which exist in table OWPMatch
 		UPDATE mi
-		SET mi.NoOfHDP = m.NoOfHDP
+		SET mi.NoOfHDPId = m.NoOfHDPId
 			,mi.Channel = m.Channel
 			,mi.WB = m.WB
 			,mi.OtherProvider = m.OtherProvider
@@ -1451,13 +1463,15 @@ BEGIN
 		
 		UNION
 		SELECT em.OWPMatchId
-			,omi.NoOfHDP
-			,nmi.NoOfHDP
+			,ISNULL(ohdp.Value, '')
+			,ISNULL(nhdp.Value, '')
 			,'EditNoOfHDP'
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
 			INNER JOIN dbo.MatchInfo AS nmi WITH (NOLOCK) ON em.OWPMatchId = nmi.OWPMatchId
-		WHERE omi.NoOfHDP <> nmi.NoOfHDP
+			LEFT JOIN #tblNoOfHDP AS ohdp ON omi.NoOfHDPId = ohdp.Id
+			LEFT JOIN #tblNoOfHDP AS nhdp ON nmi.NoOfHDPId = nhdp.Id
+		WHERE ISNULL(omi.NoOfHDPId, -1) <> ISNULL(nmi.NoOfHDPId, -1)
 
 		UNION
 		SELECT em.OWPMatchId
@@ -1534,7 +1548,7 @@ BEGIN
 		--Insert MatchInfo of new matches
 		INSERT INTO dbo.MatchInfo (
 			OWPMatchId
-			,NoOfHDP
+			,NoOfHDPId
 			,Channel
 			,WB
 			,OtherProvider
@@ -1555,7 +1569,7 @@ BEGIN
 			,MatchStatus
 			)
 		SELECT m.OWPMatchId
-			,m.NoOfHDP
+			,m.NoOfHDPId
 			,m.Channel
 			,m.WB
 			,m.OtherProvider
@@ -2672,6 +2686,8 @@ BEGIN
 
 	--drop tables
 	DROP TABLE #tblMatchOffer
+	
+	DROP TABLE #tblNoOfHDP
 	
 	DROP TABLE #tblCornerBookingBetTypes
 
