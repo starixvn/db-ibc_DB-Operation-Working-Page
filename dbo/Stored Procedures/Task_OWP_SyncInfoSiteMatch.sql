@@ -413,6 +413,13 @@ BEGIN
 	END
 
 	-- sync league name, home name & away name for minor matches
+	DECLARE @HomeSingleTeamOU INT = - 92
+		  ,@AwaySingleTeamOU INT = - 93
+		  ,@HomeSingleTeamOUOfCorners INT = - 94
+		  ,@AwaySingleTeamOUOfCorners INT = - 95
+		  ,@HomePenShootOut INT = - 98
+		  ,@AwayPenShootOut INT = - 99
+  
 	INSERT INTO #tblMinorMatch (
 		MinorMatchId
 		,OWPLeagueName
@@ -421,8 +428,8 @@ BEGIN
 		)
 	SELECT mm.MinorMatchId
 		,REPLACE(t.League, '<name>', l.OWPLeagueName)
-		,REPLACE(t.Home, '<name>', h.OWPTeamName)
-		,REPLACE(t.Away, '<name>', a.OWPTeamName)
+		,REPLACE(t.Home, '<name>', CASE WHEN mm.MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN a.OWPTeamName ELSE h.OWPTeamName END)
+		,REPLACE(t.Away, '<name>', CASE WHEN mm.MinorBettypeId IN (@HomeSingleTeamOU, @HomeSingleTeamOUOfCorners, @HomePenShootOut) THEN h.OWPTeamName ELSE a.OWPTeamName END)
 	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mm.ParentMatchId = m.OWPMatchId
 		INNER JOIN (
