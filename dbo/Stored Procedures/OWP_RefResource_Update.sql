@@ -11,14 +11,21 @@ DB: bodb_OWP
 
 Revisions:	 
 	20190110@Kane.Le: Init SP  [Redmine: #107257]
+	20190122@Kane.Le: Check duplicate value  [Redmine: #108206]
 */
 BEGIN
 	SET NOCOUNT ON
-
+	IF NOT EXISTS (
+			SELECT TOP 1 ref.ResourceId
+			FROM dbo.RefResource ref WITH (NOLOCK)
+			WHERE LOWER(LTRIM(RTRIM(ref.[Value]))) = LOWER(LTRIM(RTRIM(@Value)))
+			)
+	BEGIN
 	UPDATE dbo.RefResource
 	WITH (ROWLOCK)
 
 	SET [Value] = @Value
-	WHERE RefName = @RefName
+	WHERE RefName =@RefName
 		AND ResourceId = @ResourceId
+		END
 END
