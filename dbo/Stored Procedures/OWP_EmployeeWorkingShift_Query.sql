@@ -1,10 +1,10 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @FromDate DATE
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @UserId INT = 0
+	,@FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
 	,@SectionId VARCHAR(2000) = ''
-	,@ShiftCode VARCHAR(2000) = ''
 	,@CategoryId VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
@@ -21,15 +21,17 @@ AS
      20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
      20181009@Leo.Vo: Filter WS - [Redmine: #102867]
      20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
+     20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
-EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/05/13', @UserId=NULL, @SectionId = N'1,2,3,4,9,0', @ShiftCode = N'';
+EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/05/13', @UserId=NULL, @SectionId = N'1,2,3,4,9,0', @ShiftId = N'1';
 */
 BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SiteId INT
+	DECLARE @TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
 
 	SELECT @SiteId = SiteId
 	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
@@ -145,22 +147,6 @@ BEGIN
 			OR u.Username LIKE '%' + @User + '%'
 			)
 
-	-- table of shift codes
-	DECLARE @tblShift TABLE (ShiftCode VARCHAR(50));
-
-	IF LEN(ISNULL(@ShiftCode, '')) = 0
-	BEGIN
-		INSERT INTO @tblShift
-		SELECT DISTINCT ShiftCode
-		FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
-	END;
-	ELSE
-	BEGIN
-		INSERT INTO @tblShift
-		SELECT val
-		FROM dbo.strSplit(@ShiftCode, ',');
-	END;
-
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
 		,ts.SectionName
@@ -177,13 +163,19 @@ BEGIN
 		,[Name];
 
 	SELECT u.UserId AS EmployeeId
-		,s.ShiftCode
 		,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
-		,c.Background
-		,c.Color
+		,s.ShiftId
 	FROM @tblUser AS u
 		INNER JOIN dbo.EmployeeWorkingShift AS s WITH (NOLOCK) ON u.UserId = s.EmployeeId
 		AND ShiftDate >= @FromDate
 		AND ShiftDate <= @ToDate
-		LEFT JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON s.ShiftCode = c.[Name]
+
+	SELECT c.ShiftId
+		,c.ShiftCode
+		,c.Background
+		,c.Color
+		,DATEADD(MINUTE, @TimezoneOffset, StartTime) AS StartTime
+		,DATEADD(MINUTE, @TimezoneOffset, EndTime) AS EndTime
+		,IsTimeShift
+	FROM dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK)
 END;

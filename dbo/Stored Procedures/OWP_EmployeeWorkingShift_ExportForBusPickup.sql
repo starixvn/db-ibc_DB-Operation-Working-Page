@@ -2,6 +2,7 @@
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
+	,@UserId INT
 	,@Section VARCHAR(2000) = ''
 	,@Category VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
@@ -13,6 +14,7 @@ AS
  
  Revisions:
      20190107@Kane.Le: Init SP     
+	 20190121@Kane.Le: Change shift code to shiftId
 
 -- @Note:    
 EXEC [OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -20,12 +22,14 @@ EXEC [OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate = '2018/03/12', @To
 BEGIN
 	SET NOCOUNT ON;
 
+	DECLARE @TimeZoneOffsetOfUser INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
 	DECLARE @ExcludeClosedAccount INT
+	DECLARE @SiteId INT
 
 	SET @ExcludeClosedAccount = 1
 
-	DECLARE @SiteId INT
-
+	--SET @FromDate = CAST(DATEADD(MINUTE, @TimeZoneOffsetOfUser, @FromDate) AS DATETIME)
+	--SET @ToDate = CAST(DATEADD(MINUTE, @TimeZoneOffsetOfUser, @ToDate) AS DATETIME)
 	SELECT @SiteId = SiteId
 	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
 	WHERE SiteName = 'Operation Working Page'
@@ -99,9 +103,49 @@ BEGIN
 	SELECT val
 	FROM dbo.strSplit(@LocationCode, ',')
 
+	-- convert to GMT by setting table WorkingShiftColor 
+	DECLARE @tblEmployeeWorkingShiftColor TABLE (
+		ShiftId INT
+		,ShiftCode NVARCHAR(50)
+		,Background NVARCHAR(50)
+		,Color NVARCHAR(50)
+		,StartTime TIME
+		,EndTime TIME
+		,StartTimeText NVARCHAR(5)
+		,EndTimeText NVARCHAR(5)
+		,IsTimeShift BIT
+		)
+
+	INSERT INTO @tblEmployeeWorkingShiftColor
+	SELECT wsc.ShiftId
+		,wsc.ShiftCode
+		,wsc.Background
+		,wsc.Color
+		,wsc.StartTime
+		,wsc.EndTime
+		,CASE 
+			WHEN (
+					(ISNULL(wsc.IsTimeShift, 0) = 1)
+					AND (RIGHT(CONVERT(VARCHAR(5), DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.StartTime), 108), 2) = '00')
+					)
+				THEN CONVERT(VARCHAR(2), DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.StartTime), 108)
+			ELSE CONVERT(VARCHAR(5), DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.StartTime), 108)
+			END AS StartTimeText
+		,CASE 
+			WHEN (
+					(ISNULL(wsc.IsTimeShift, 0) = 1)
+					AND (RIGHT(CONVERT(VARCHAR(5), DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.EndTime), 108), 2) = '00')
+					)
+				THEN CONVERT(VARCHAR(2), DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.EndTime), 108)
+			ELSE CONVERT(VARCHAR(5), DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.EndTime), 108)
+			END AS StartTimeText
+		,wsc.IsTimeShift
+	FROM dbo.EmployeeWorkingShiftColor wsc WITH (NOLOCK)
+
 	-- table WorkingShift
 	DECLARE @tblEmpWorkingShift TABLE (
 		EmployeeId INT
+		,ShiftId INT
 		,ShiftCode NVARCHAR(50)
 		,ShiftDate DATE
 		,ShiftStartTime DATETIME
@@ -110,11 +154,17 @@ BEGIN
 
 	INSERT INTO @tblEmpWorkingShift
 	SELECT emp.EmployeeId
-		,emp.ShiftCode
+		,wsc.ShiftId
+		,CASE 
+			WHEN (wsc.IsTimeShift = 1)
+				THEN wsc.StartTimeText + ' > ' + wsc.EndTimeText
+			ELSE wsc.ShiftCode
+			END AS ShiftCode
 		,emp.ShiftDate
-		,emp.ShiftStartTime
-		,emp.ShiftEndTime
-	FROM EmployeeWorkingShift emp WITH (NOLOCK)
+		,DATEADD(MINUTE, @TimeZoneOffsetOfUser, emp.ShiftStartTime)
+		,DATEADD(MINUTE, @TimeZoneOffsetOfUser, emp.ShiftEndTime)
+	FROM dbo.EmployeeWorkingShift emp WITH (NOLOCK)
+	JOIN @tblEmployeeWorkingShiftColor wsc ON emp.ShiftId = wsc.ShiftId
 	WHERE ShiftDate >= @FromDate
 		AND ShiftDate <= @ToDate
 
@@ -204,8 +254,32 @@ BEGIN
 		,s.ShiftStartTime
 		,c.Background
 		,c.Color
+		,s.ShiftId
 	FROM @tblUserOutput AS u
 	INNER JOIN @tblEmpWorkingShift AS s ON u.UserId = s.EmployeeId
-	LEFT JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON s.ShiftCode = c.[Name]
-	ORDER BY s.ShiftStartTime
+	LEFT JOIN @tblEmployeeWorkingShiftColor c ON s.ShiftId = c.ShiftId
+	ORDER BY s.ShiftCode
+
+	SELECT wsc.ShiftId
+		,CASE 
+			WHEN (wsc.IsTimeShift = 1)
+				THEN wsc.StartTimeText + ' > ' + wsc.EndTimeText
+			ELSE wsc.ShiftCode
+			END AS ShiftCode
+		,wsc.Background
+		,wsc.Color
+		,CASE 
+			WHEN (wsc.IsTimeShift = 1)
+				THEN DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.StartTime)
+			ELSE wsc.StartTime
+			END AS StartTime
+		,CASE 
+			WHEN (wsc.IsTimeShift = 1)
+				THEN DATEADD(MINUTE, @TimeZoneOffsetOfUser, wsc.EndTime)
+			ELSE wsc.EndTime
+			END AS EndTime
+		,wsc.IsTimeShift
+	FROM @tblEmployeeWorkingShiftColor wsc
+	JOIN @tblEmpWorkingShift ws ON wsc.ShiftId = ws.ShiftId
+	ORDER BY ShiftCode
 END;

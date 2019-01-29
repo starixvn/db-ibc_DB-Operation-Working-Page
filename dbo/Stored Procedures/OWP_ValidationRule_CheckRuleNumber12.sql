@@ -10,6 +10,7 @@ AS
 
  Revisions:
 	20180727@Raymond.Le: Validate exceed trader working shift - [Redmine: #92868]
+	20190124@Raymond.Le: Change ShiftCode to ShiftId - [Redmine: #108206]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -27,8 +28,6 @@ BEGIN
 		,@Bettype INT
 		,@EventDateTime DATETIME
 		,@idoc INT
-		,@IsTraderHasValidShift BIT
-		,@IsTraderNotHasUploadedShift BIT
 
 	SELECT @RuleResultType = RuleResultType
 		,@Message = MessageFormat
@@ -199,19 +198,15 @@ BEGIN
 				AND au.SessionId = @SessionId
 			WHERE ISDATE(au.KickOffTime) = 1
 			) AS au
-			LEFT JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON au.UserId = ws.EmployeeId
-		WHERE (
-				ws.ShiftStartTime <= au.EventDateTime
-				AND ws.ShiftEndTime >= DATEADD(MINUTE, 120, au.EventDateTime)
-				)
-			OR ws.ShiftCode IS NULL
-			OR (
-				ws.ShiftCode IN ('AL', 'OFF')
-				AND ws.ShiftDate = @EventDate
-				AND NOT (
-					DATEADD(dd, DATEDIFF(dd, 0, ws.ShiftDate), '12:00:00') <= au.EventDateTime
-					AND DATEADD(dd, DATEDIFF(dd, 0, ws.ShiftDate) + 1, '11:59:59') >= DATEADD(MINUTE, 120, au.EventDateTime)
-					)
+		WHERE EXISTS (
+				SELECT 1
+				FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
+				WHERE ws.EmployeeId = au.UserId
+					AND ws.ShiftDate IN (@EventDate, DATEADD(DAY, - 1, @EventDate), DATEADD(DAY, 1, @EventDate))
+					AND (
+						ws.ShiftStartTime <= au.EventDateTime
+						AND ws.ShiftEndTime >= DATEADD(MINUTE, 120, au.EventDateTime)
+						)
 				)
 
 		-- Update status isValid
@@ -360,55 +355,17 @@ BEGIN
 		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		WHERE om.OWPMatchId = @OWPMatchId
 
-		-- IF Exist => trader has valid working shift
-		SELECT @IsTraderHasValidShift = CASE 
-				WHEN EXISTS (
-						SELECT 1
-						FROM (
-							SELECT @UserId AS UserId
-								,@EventDate AS EventDate
-								,@EventDateTime AS EventDateTime
-							) AS ai
-							LEFT JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON ai.UserId = ws.EmployeeId
-						WHERE (
-								ws.ShiftStartTime <= @EventDateTime
-								AND ws.ShiftEndTime >= DATEADD(MINUTE, 120, @EventDateTime)
-								)
-							OR (
-								ws.ShiftCode IN ('AL', 'OFF')
-								AND ws.ShiftDate = @EventDate
-								AND NOT (
-									DATEADD(dd, DATEDIFF(dd, 0, ws.ShiftDate), '12:00:00') <= @EventDateTime
-									AND DATEADD(dd, DATEDIFF(dd, 0, ws.ShiftDate) + 1, '11:59:59') >= DATEADD(MINUTE, 120, @EventDateTime)
-									)
-								)
-						) THEN 1
-				ELSE 0
-				END
-
-		-- Case employee not upload working shift on current EventDate -- If exist => has shift overlap on current EventDate
-		SELECT @IsTraderNotHasUploadedShift = CASE 
-				WHEN NOT EXISTS (
-						SELECT 1
-						FROM (
-							SELECT @UserId AS UserId
-								,@EventDate AS EventDate
-								,@EventDateTime AS EventDateTime
-							) AS ai
-							LEFT JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON ai.UserId = ws.EmployeeId
-						WHERE ws.ShiftDate IN (@EventDate, DATEADD(DAY, - 1, @EventDate), DATEADD(DAY, 1, @EventDate))
-							AND (
-								ws.ShiftStartTime <= DATEADD(dd, DATEDIFF(dd, 0, @EventDate) + 1, '11:59:59')
-								AND DATEADD(dd, DATEDIFF(dd, 0, @EventDate), '12:00:00') <= ws.ShiftEndTime
-								)
-						) THEN 1
-				ELSE 0
-				END
-
 		-- Check valid assignee
-		IF (
-				@IsTraderHasValidShift = 1
-				OR @IsTraderNotHasUploadedShift = 1
+		IF @UserId IS NULL
+		OR EXISTS (
+				SELECT 1
+				FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
+				WHERE ws.EmployeeId = @UserId
+					AND ws.ShiftDate IN (@EventDate, DATEADD(DAY, - 1, @EventDate), DATEADD(DAY, 1, @EventDate))
+					AND (
+						ws.ShiftStartTime <= @EventDateTime
+						AND ws.ShiftEndTime >= DATEADD(MINUTE, 120, @EventDateTime)
+						)
 				)
 		BEGIN
 			SELECT @Passed AS ResultType
