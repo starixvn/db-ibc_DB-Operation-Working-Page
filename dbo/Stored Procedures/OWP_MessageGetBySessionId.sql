@@ -33,14 +33,12 @@ BEGIN
 	FROM (
 		SELECT MessageId
 			,UserId
-			,IsViewed
-			,CreatedDate
-			,CreatedBy
+			,IsViewed			
 		FROM dbo.MessageUser WITH (NOLOCK)
 		WHERE SessionId = @SessionId
 		) AS mu
 		LEFT JOIN dbo.[Message] AS m WITH (NOLOCK) ON mu.MessageId = m.MessageId
-	ORDER BY mu.CreatedDate DESC
+	ORDER BY m.CreatedDate DESC
 
 	SELECT DISTINCT u.UserId
 		,u.Username

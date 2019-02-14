@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_UpdateMatchStatus] @UserId INT
 	,@SessionId NVARCHAR(100)
 	,@OWPMatchId INT
@@ -15,6 +14,7 @@ DB: bodb_OWP
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -310,10 +310,9 @@ BEGIN
 						,msn.MessageTypeId
 						)
 			OUTPUT inserted.MessageId
-				,msn.UserId
-				,@UserId
+				,msn.UserId				
 				,@SessionId
-			INTO dbo.MessageUser(MessageId, UserId, CreatedBy, SessionId);
+			INTO dbo.MessageUser(MessageId, UserId, SessionId);
 		END
 	END TRY
 

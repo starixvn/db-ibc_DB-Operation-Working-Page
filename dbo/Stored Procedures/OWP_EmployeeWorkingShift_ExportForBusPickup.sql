@@ -255,6 +255,7 @@ BEGIN
 		,c.Background
 		,c.Color
 		,s.ShiftId
+		,c.IsTimeShift
 	FROM @tblUserOutput AS u
 	INNER JOIN @tblEmpWorkingShift AS s ON u.UserId = s.EmployeeId
 	LEFT JOIN @tblEmployeeWorkingShiftColor c ON s.ShiftId = c.ShiftId
