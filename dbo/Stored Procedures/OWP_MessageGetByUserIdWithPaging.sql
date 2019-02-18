@@ -1,4 +1,4 @@
-﻿
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROC [dbo].[OWP_MessageGetByUserIdWithPaging] @UserId INT
 	,@PageSize INT = 25
 	,@PageNumber INT = 1

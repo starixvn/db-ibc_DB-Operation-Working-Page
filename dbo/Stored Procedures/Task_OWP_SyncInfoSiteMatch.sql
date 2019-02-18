@@ -12,6 +12,7 @@ AS
 	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
 	20190104@Kane.Le: Not sync IsDeleted events - [Redmine: #107257]
 	20190107@Leo.Vo: Notification - [Redmine: #107257]
+	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -396,10 +397,9 @@ BEGIN
 				,msn.MessageTypeId
 				)
 	OUTPUT inserted.MessageId
-		,msn.UserId
-		,@CreatedBy
+		,msn.UserId		
 		,@SessionId
-	INTO dbo.MessageUser([MessageId], [UserId], [CreatedBy], [SessionId]);
+	INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 
 	IF (
 			EXISTS (

@@ -24,6 +24,7 @@ AS
 	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
 	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread and Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer & NoOfHDP - [Redmine: #107257]
+	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -2406,10 +2407,9 @@ BEGIN
 					,msn.MessageTypeId
 					)
 		OUTPUT inserted.MessageId
-			,msn.UserId
-			,@UserId
+			,msn.UserId			 
 			,@SessionId
-		INTO dbo.MessageUser([MessageId], [UserId], [CreatedBy], [SessionId]);
+		INTO dbo.MessageUser([MessageId], [UserId],  [SessionId]);
 
 		/*------Send message edit maxbet, spread-----*/
 		-- update parent match id of table #tblExistedMatch
@@ -2566,13 +2566,11 @@ BEGIN
 
 		INSERT INTO dbo.MessageUser (
 			MessageId
-			,UserId
-			,CreatedBy
+			,UserId			
 			,SessionId
 			)
 		SELECT m.MessageId
-			,u.UserId
-			,@UserId
+			,u.UserId			 
 			,@SessionId
 		FROM #tblInsertedMessageUpdateMatchSetting AS m
 			LEFT JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId
@@ -2624,13 +2622,11 @@ BEGIN
 
 		INSERT INTO dbo.MessageUser (
 			MessageId
-			,UserId
-			,CreatedBy
+			,UserId			 
 			,SessionId
 			)
 		SELECT m.MessageId
-			,u.UserId
-			,@UserId
+			,u.UserId			
 			,@SessionId
 		FROM #tblInsertedMessageUpdateMatchInfo AS m
 			LEFT JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId

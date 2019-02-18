@@ -15,6 +15,8 @@ Revisions:
   20180614@Jacob.Phan: Message - Only display yesterday and today message in message box - Hotfix #96282
   20180813@Leo: default value for parameters - [Redmine: #92868]
   20190108@Leo: handle with CreatedBy=0 - [Redmine: #107257]
+  20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
+  
 */
 BEGIN
 	SET NOCOUNT ON
@@ -29,7 +31,7 @@ BEGIN
 		INNER JOIN dbo.MessageUser AS mu WITH (NOLOCK) ON mu.MessageId = m.MessageId
 	WHERE mu.UserId = @UserId
 		AND mu.IsViewed = 0
-		AND mu.CreatedDate >= @MinDate
+		AND m.CreatedDate >= @MinDate
 
 	--create ordered table message
 	CREATE TABLE #OrderedMessage (
@@ -76,13 +78,13 @@ BEGIN
 			,SystemMessageType
 			)
 		SELECT ROW_NUMBER() OVER (
-				ORDER BY mu.CreatedDate DESC
+				ORDER BY m.CreatedDate DESC
 				) AS RowNumber
 			,mu.MessageId
 			,mu.IsViewed
 			,m.MessageContent
-			,mu.CreatedBy
-			,mu.CreatedDate
+			,m.CreatedBy
+			,m.CreatedDate
 			,m.IsImportant
 			,(CASE 
 				WHEN mt.SystemMessageType = @Message THEN u.ProfilePic
@@ -92,10 +94,10 @@ BEGIN
 			,mt.SystemMessageType
 		FROM dbo.MessageUser AS mu WITH (NOLOCK)
 			INNER JOIN dbo.[Message] AS m WITH (NOLOCK) ON mu.MessageId = m.MessageId
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON mu.CreatedBy = u.UserId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON m.CreatedBy = u.UserId
 			LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON m.MessageType = mt.MsgTemplateId
 		WHERE mu.UserId = @UserId
-		AND mu.CreatedDate >= @MinDate
+		AND m.CreatedDate >= @MinDate
 	
 		SELECT @CurrentRow = RowNumber
 		FROM #OrderedMessage WITH (NOLOCK)
