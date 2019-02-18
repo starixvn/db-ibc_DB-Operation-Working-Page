@@ -8,6 +8,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @UserId INT = 0
 	,@CategoryId VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
+	,@IsGetDefaultShift BIT = 0
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -22,6 +23,7 @@ AS
      20181009@Leo.Vo: Filter WS - [Redmine: #102867]
      20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
      20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
+     20190215@Leo.Vo: Default shift - [Redmine: #108723]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -170,12 +172,11 @@ BEGIN
 		AND ShiftDate >= @FromDate
 		AND ShiftDate <= @ToDate
 
-	SELECT c.ShiftId
-		,c.ShiftCode
-		,c.Background
-		,c.Color
-		,DATEADD(MINUTE, @TimezoneOffset, StartTime) AS StartTime
-		,DATEADD(MINUTE, @TimezoneOffset, EndTime) AS EndTime
-		,IsTimeShift
-	FROM dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK)
+	IF @IsGetDefaultShift = 1
+	BEGIN
+		SELECT s.UserId, s.DayOfTheWeek, s.ShiftId
+		FROM dbo.EmployeeWorkingShiftDefault AS s WITH (NOLOCK)
+		INNER JOIN @tblUser AS u
+		ON s.UserId = u.UserId
+	END
 END;

@@ -326,6 +326,11 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftTimeZone_GetByUser.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MessageUpdateReadStatus.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MessageGetByUserIdWithPaging.sql" />
+    <Build Include="dbo\Tables\NotificationSettingMessageTemplate.sql" />
+    <Build Include="dbo\Tables\EmployeeWorkingShiftDefault.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateDefaultShift.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveDefaultShift.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_SyncDefaultWorkingShiftToNextWeek.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

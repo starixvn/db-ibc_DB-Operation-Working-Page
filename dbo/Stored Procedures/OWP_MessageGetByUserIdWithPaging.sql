@@ -1,7 +1,9 @@
-﻿CREATE PROC [dbo].[OWP_MessageGetByUserIdWithPaging] @UserId INT
+﻿
+CREATE PROC [dbo].[OWP_MessageGetByUserIdWithPaging] @UserId INT
 	,@PageSize INT = 25
 	,@PageNumber INT = 1
 	,@Keyword NVARCHAR(250) = NULL
+	,@IsWatcher BIT = NULL
 	,@TotalRecords INT = 0 OUTPUT
 AS
 /*    
@@ -14,6 +16,22 @@ Revisions:
   
 */
 BEGIN
+	CREATE TABLE #FilterdMessageIds (MessageId INT)
+
+	IF @IsWatcher IS NOT NULL
+	BEGIN
+		INSERT INTO #FilterdMessageIds
+		SELECT mm.MessageId
+		FROM dbo.[Message] mm WITH (NOLOCK)
+		WHERE mm.IsWatcher = @IsWatcher
+	END
+	ELSE
+	BEGIN
+		INSERT INTO #FilterdMessageIds
+		SELECT mm.MessageId
+		FROM dbo.[Message] mm WITH (NOLOCK)
+	END
+
 	CREATE TABLE #FilterdMessage (
 		MessageId INT
 		,UserId INT
@@ -41,7 +59,11 @@ BEGIN
 		FROM dbo.MessageUser um WITH (NOLOCK)
 		JOIN dbo.[Message] mm WITH (NOLOCK) ON um.MessageId = mm.MessageId
 		LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON mm.MessageType = mt.MsgTemplateId
-		WHERE um.UserId = @UserId
+		WHERE mm.MessageId IN (
+				SELECT MessageId
+				FROM #FilterdMessageIds
+				)
+			AND um.UserId = @UserId
 			AND mm.MessageContent LIKE '%' + @Keyword + '%'
 	END
 	ELSE
@@ -59,7 +81,11 @@ BEGIN
 		FROM dbo.MessageUser um WITH (NOLOCK)
 		JOIN dbo.[Message] mm WITH (NOLOCK) ON um.MessageId = mm.MessageId
 		LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON mm.MessageType = mt.MsgTemplateId
-		WHERE um.UserId = @UserId
+		WHERE mm.MessageId IN (
+				SELECT MessageId
+				FROM #FilterdMessageIds
+				)
+			AND um.UserId = @UserId
 	END
 
 	SELECT *
@@ -67,15 +93,15 @@ BEGIN
 		SELECT ROW_NUMBER() OVER (
 				ORDER BY MessageId DESC
 				) AS RowNumber
-			,fm.MessageId,
-			fm.MessageContent,
-			fm.IsViewed,
-			fm.UserId,
-			fm.CreatedBy,
-			fm.CreatedDate,
-			fm.IsImportant,
-			fm.MessageType,
-			fm.SystemMessageType
+			,fm.MessageId
+			,fm.MessageContent
+			,fm.IsViewed
+			,fm.UserId
+			,fm.CreatedBy
+			,fm.CreatedDate
+			,fm.IsImportant
+			,fm.MessageType
+			,fm.SystemMessageType
 		FROM #FilterdMessage fm
 		) AS x
 	WHERE RowNumber BETWEEN ((@PageNumber - 1) * @PageSize + 1)
@@ -85,4 +111,6 @@ BEGIN
 	FROM #FilterdMessage
 
 	DROP TABLE #FilterdMessage
+
+	DROP TABLE #FilterdMessageIds
 END
