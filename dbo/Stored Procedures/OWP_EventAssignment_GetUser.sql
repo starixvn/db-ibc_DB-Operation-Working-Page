@@ -20,7 +20,7 @@ BEGIN
 		,u.Phone
 		,u.Skype
 		,r.Value AS [Level]
-		,ws.ShiftCode
+		,wsc.ShiftCode
 		,wsc.Background AS ShiftBackground
 		,wsc.Color AS ShiftColor
 	FROM dbo.[User] AS u WITH (NOLOCK)
@@ -28,5 +28,5 @@ BEGIN
 		AND r.RefName = 'UserLevel'
 		LEFT JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON u.UserId = ws.EmployeeId
 		AND ShiftDate = @EventDate
-		LEFT JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON ws.ShiftCode = wsc.[Name]
+		LEFT JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON ws.ShiftId = wsc.ShiftId
 END

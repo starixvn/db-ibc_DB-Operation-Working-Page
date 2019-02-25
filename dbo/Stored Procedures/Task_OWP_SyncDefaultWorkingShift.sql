@@ -1,11 +1,10 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_API_SyncDefaultWorkingShiftToNextWeek]
-	@CurrentDate DATETIME
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift]
+	@CurrentDate DATETIME = NULL
 AS
 /*
 Created: 20190213@Raymond.Le
-Task : Auto insert default shift data to EmployeeWorkingShift
+Task : Auto insert default shift data to table EmployeeWorkingShift
 DB: bodb_OWP
 
 Revisions:
@@ -14,9 +13,11 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @CurrentDateGMTplus8 DATETIME = DATEADD(HOUR,12, @CurrentDate)
+	DECLARE @CurrentDateGMTplus8 DATETIME
 			,@NextWeekStartDate DATE
 
+	SET @CurrentDate = ISNULL(@CurrentDate, GETDATE())
+	SET @CurrentDateGMTplus8 = DATEADD(HOUR,12, @CurrentDate)
 	SET @NextWeekStartDate = DATEADD(DAY, 7 + 2 - DATEPART(WEEKDAY, @CurrentDateGMTplus8), CAST(@CurrentDateGMTplus8 AS DATE))	 
 
 	CREATE TABLE #tblEmployeeInsertedShift (

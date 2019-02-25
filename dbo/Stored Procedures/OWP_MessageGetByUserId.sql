@@ -1,7 +1,8 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_MessageGetByUserId] @UserId INT = 0
-	,@SelectTop INT = NULL
-	,@LastMessageId INT = NULL
+CREATE PROCEDURE [dbo].[OWP_MessageGetByUserId] @UserId INT
+	,@IsWatcher BIT = 0
+	,@SelectTop INT = 10
+	,@LastMessageId INT = 0
 	,@TotalNotViewMessage INT = 0 OUTPUT
 AS
 /*    
@@ -16,7 +17,7 @@ Revisions:
   20180813@Leo: default value for parameters - [Redmine: #92868]
   20190108@Leo: handle with CreatedBy=0 - [Redmine: #107257]
   20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
-  
+  20190222@Leo.Vo: support watcher - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -24,12 +25,13 @@ BEGIN
 	DECLARE @AnnouncementMessage TINYINT = 2
 		,@Message TINYINT = 3
 		,@CurrentRow INT = NULL
-		,@MinDate DATE = DATEADD(day,-2, CAST(GETDATE() AS DATE))
+		,@MinDate DATE = DATEADD(day, - 2, CAST(GETDATE() AS DATE))
 
 	SELECT @TotalNotViewMessage = COUNT(m.MessageId)
 	FROM dbo.[Message] AS m WITH (NOLOCK)
 		INNER JOIN dbo.MessageUser AS mu WITH (NOLOCK) ON mu.MessageId = m.MessageId
 	WHERE mu.UserId = @UserId
+		AND m.IsWatcher = @IsWatcher
 		AND mu.IsViewed = 0
 		AND m.CreatedDate >= @MinDate
 
@@ -47,79 +49,60 @@ BEGIN
 		,SystemMessageType TINYINT
 		)
 
-	SET @SelectTop = ISNULL(@SelectTop, 0)
-
-	IF (@SelectTop = 0)
-	BEGIN
-		SELECT RowNumber
-			,MessageId
-			,IsViewed
-			,MessageContent
-			,CreatedBy
-			,CreatedDate
-			,IsImportant
-			,ProfilePic
-			,MessageType
-			,SystemMessageType
-		FROM #OrderedMessage WITH (NOLOCK)
-	END
-	ELSE
-	BEGIN
-		INSERT INTO #OrderedMessage (
-			RowNumber
-			,MessageId
-			,IsViewed
-			,MessageContent
-			,CreatedBy
-			,CreatedDate
-			,IsImportant
-			,ProfilePic
-			,MessageType
-			,SystemMessageType
-			)
-		SELECT ROW_NUMBER() OVER (
-				ORDER BY m.CreatedDate DESC
-				) AS RowNumber
-			,mu.MessageId
-			,mu.IsViewed
-			,m.MessageContent
-			,m.CreatedBy
-			,m.CreatedDate
-			,m.IsImportant
-			,(CASE 
-				WHEN mt.SystemMessageType = @Message THEN u.ProfilePic
-				ELSE NULL END
-				) AS ProfilePic
-			,m.MessageType
-			,mt.SystemMessageType
-		FROM dbo.MessageUser AS mu WITH (NOLOCK)
-			INNER JOIN dbo.[Message] AS m WITH (NOLOCK) ON mu.MessageId = m.MessageId
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON m.CreatedBy = u.UserId
-			LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON m.MessageType = mt.MsgTemplateId
-		WHERE mu.UserId = @UserId
+	INSERT INTO #OrderedMessage (
+		RowNumber
+		,MessageId
+		,IsViewed
+		,MessageContent
+		,CreatedBy
+		,CreatedDate
+		,IsImportant
+		,ProfilePic
+		,MessageType
+		,SystemMessageType
+		)
+	SELECT ROW_NUMBER() OVER (
+			ORDER BY m.MessageId DESC
+			) AS RowNumber
+		,mu.MessageId
+		,mu.IsViewed
+		,m.MessageContent
+		,m.CreatedBy
+		,m.CreatedDate
+		,m.IsImportant
+		,(CASE 
+			WHEN mt.SystemMessageType = @Message THEN u.ProfilePic
+			ELSE NULL END
+			) AS ProfilePic
+		,m.MessageType
+		,mt.SystemMessageType
+	FROM dbo.MessageUser AS mu WITH (NOLOCK)
+		INNER JOIN dbo.[Message] AS m WITH (NOLOCK) ON mu.MessageId = m.MessageId
+		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON m.CreatedBy = u.UserId
+		LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON m.MessageType = mt.MsgTemplateId
+	WHERE mu.UserId = @UserId
+		AND m.IsWatcher = @IsWatcher
 		AND m.CreatedDate >= @MinDate
-	
-		SELECT @CurrentRow = RowNumber
-		FROM #OrderedMessage WITH (NOLOCK)
-		WHERE MessageId = @LastMessageId
 
-		SET @CurrentRow = ISNULL(@CurrentRow, 0)
+	SELECT @CurrentRow = RowNumber
+	FROM #OrderedMessage WITH (NOLOCK)
+	WHERE MessageId = @LastMessageId
 
-		SELECT om.RowNumber
-			,om.MessageId
-			,om.IsViewed
-			,MessageContent
-			,om.CreatedBy
-			,om.CreatedDate
-			,om.IsImportant
-			,om.ProfilePic
-			,om.MessageType
-			,om.SystemMessageType
-		FROM #OrderedMessage AS om WITH (NOLOCK)
-			LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON om.MessageType = mt.MsgTemplateId
-		WHERE om.RowNumber >= (1 + @CurrentRow)
-			AND om.RowNumber <= (@SelectTop + @CurrentRow)
-	END
+	SET @CurrentRow = ISNULL(@CurrentRow, 0)
+
+	SELECT om.RowNumber
+		,om.MessageId
+		,om.IsViewed
+		,MessageContent
+		,om.CreatedBy
+		,om.CreatedDate
+		,om.IsImportant
+		,om.ProfilePic
+		,om.MessageType
+		,om.SystemMessageType
+	FROM #OrderedMessage AS om WITH (NOLOCK)
+	WHERE om.RowNumber >= (1 + @CurrentRow)
+		AND om.RowNumber <= (@SelectTop + @CurrentRow)
 
 	DROP TABLE #OrderedMessage
 END

@@ -1,4 +1,7 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Upload] 
+    @Data xml
+AS
 /*      
  Created: 20180312@Leo.Vo     
  Task : Working Shift Management
@@ -18,10 +21,6 @@
 </Data>
 '
 */
-
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Upload] 
-    @Data xml
-AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @tempTable TABLE

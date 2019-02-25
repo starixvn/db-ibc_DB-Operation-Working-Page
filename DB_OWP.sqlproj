@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -330,7 +330,8 @@
     <Build Include="dbo\Tables\EmployeeWorkingShiftDefault.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateDefaultShift.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveDefaultShift.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_API_SyncDefaultWorkingShiftToNextWeek.sql" />
+    <Build Include="dbo\Stored Procedures\Task_OWP_SyncDefaultWorkingShift.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_SyncNotificationSettingWatcher.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />
