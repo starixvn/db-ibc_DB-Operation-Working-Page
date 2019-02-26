@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT = 0
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -24,6 +23,7 @@ AS
 	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
 	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread and Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer & NoOfHDP - [Redmine: #107257]
+	20190225@Raymond.Le: Remove InfoSiteMatchId of un-selected matches - [Redmine: #108723]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 */
 BEGIN
@@ -1593,12 +1593,18 @@ BEGIN
 			INNER JOIN #tblNewMatch AS nm ON m.OWPMatchId = nm.OWPMatchId
 
 		--Deselect matches same upload time but not uploaded
-		UPDATE mi
+		UPDATE mi WITH (ROWLOCK, UPDLOCK)
 		SET mi.IsSelected = 0
 			,mi.SelectedBy = @UserId
-			,mi.IsSelectedUpdatedDate = GETDATE()
-		FROM dbo.MatchInfo AS mi WITH (ROWLOCK)
-			INNER JOIN #tblRemoveMatch AS rm ON mi.OWPMatchId = rm.OWPMatchId
+			,mi.IsSelectedUpdatedDate = GETDATE()						
+		FROM dbo.MatchInfo AS mi 
+		INNER JOIN #tblRemoveMatch AS rm ON mi.OWPMatchId = rm.OWPMatchId
+		
+		--Remove InfoSiteMatchId of un-selected matches
+		UPDATE om WITH (ROWLOCK, UPDLOCK)
+		SET om.InfoSiteMatchId = NULL
+		FROM dbo.OWPMatch AS om 
+		INNER JOIN #tblRemoveMatch AS rm ON om.OWPMatchId = rm.OWPMatchId
 
 		--List of minor matches from upload matches
 		INSERT INTO #tblMinorMatch (
