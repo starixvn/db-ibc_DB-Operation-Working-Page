@@ -1,53 +1,16 @@
 ﻿/*
 	Created: Raymond.Le
 	Date: 2019-01-28
-	Task: [Redmine: #108206]
+	Task: Script Sprint 10 - [Redmine: #108206]
 	DB: bodb_OWP
 */
--- Add column ShiftId to table [EmployeeWorkingShift]
-ALTER TABLE [dbo].[EmployeeWorkingShift] ADD ShiftId INT NULL;
-EXECUTE sys.sp_rename 'dbo.EmployeeWorkingShift.ShiftCode', '_ShiftCode', 'COLUMN';
 
--- Rename table EmployeeWorkingShiftColor to EmployeeWorkingShiftColor_Old
-EXECUTE sys.sp_rename 'dbo.EmployeeWorkingShiftColor', 'EmployeeWorkingShiftColor_Old';
-EXECUTE sys.sp_rename 'PK_EmployeeWorkingShiftColor', 'PK_EmployeeWorkingShiftColor_Old';
-EXECUTE sys.sp_rename 'DF_EmployeeWorkingShiftColor_Background', 'DF_EmployeeWorkingShiftColor_Background_Old';
-EXECUTE sys.sp_rename 'DF_EmployeeWorkingShiftColor_Color', 'DF_EmployeeWorkingShiftColor_Color_Old';
+--------------------------------
+-- 2. Migrate ShiftCode to ShiftId
+--------------------------------
+USE [bodb_OWP]
+GO
 
--- Create new table [EmployeeWorkingShiftColor]
-CREATE TABLE [dbo].[EmployeeWorkingShiftColor] (
-	[ShiftId] [int] IDENTITY(1, 1) NOT NULL
-	,[ShiftCode] [nvarchar](50) NOT NULL
-	,[Background] [varchar](50) NOT NULL CONSTRAINT [DF_EmployeeWorkingShiftColor_Background] DEFAULT('')
-	,[Color] [varchar](50) NOT NULL CONSTRAINT [DF_EmployeeWorkingShiftColor_Color] DEFAULT('')
-	,[StartTime] [time](7) NULL
-	,[EndTime] [time](7) NULL
-	,[IsTimeShift] [bit] NOT NULL
-	,CONSTRAINT [PK_EmployeeWorkingShiftColor] PRIMARY KEY CLUSTERED ([ShiftId] ASC)
-	) ON [OWP_Data];
-
--- create table EmployeeWorkingShiftTimeZoneSetting
-CREATE TABLE [dbo].[EmployeeWorkingShiftTimeZoneSetting] (
-	[SettingId] [smallint] NOT NULL
-	,[Name] [nvarchar](20) NOT NULL
-	,[IsDefault] [bit] NOT NULL
-	,[Offset] [smallint] NOT NULL
-	,CONSTRAINT [PK_EmployeeWorkingShiftTimeZoneSetting] PRIMARY KEY CLUSTERED ([SettingId] ASC)
-	) ON [OWP_Data];
-
-INSERT INTO [dbo].[EmployeeWorkingShiftTimeZoneSetting] (
-	SettingId
-	,NAME
-	,IsDefault
-	,Offset
-	)
-VALUES (1, 'GMT+8', 1, 0)
-	,(2, 'GMT+7', 0, - 60);
-
--- Add column to table [User]
-ALTER TABLE dbo.[User] ADD TimeZoneSettingId SMALLINT NULL;
-
-----------------------------------------------------
 -- Migrate old data EmployeeWorkingShift
 CREATE TABLE #tblWorkingShift (
 	ShiftCode NVARCHAR(50)
@@ -399,23 +362,4 @@ DROP TABLE #tblInsertedShift;
 
 DROP TABLE #tblTempEmployeeWorkingShift;
 
--------------------------------------
--- Remove column _ShiftCode
-DROP INDEX dbo.[EmployeeWorkingShift].IX_EmployeeWorkingShift_ShiftCode;
-
-ALTER TABLE dbo.[EmployeeWorkingShift]
-DROP COLUMN _ShiftCode;
-
--- Alter column ShiftId
-DELETE 
-FROM dbo.[EmployeeWorkingShift]
-WHERE ShiftId IS NULL;
-
-ALTER TABLE dbo.[EmployeeWorkingShift]
-ALTER COLUMN ShiftId INT NOT NULL;
-
-CREATE NONCLUSTERED INDEX IX_EmployeeWorkingShift_ShiftId ON dbo.[EmployeeWorkingShift] (ShiftId ASC) ON OWP_Index;
-
--- Drop table EmployeeWorkingShiftColor_Old
-DROP TABLE EmployeeWorkingShiftColor_Old
-
+GO
