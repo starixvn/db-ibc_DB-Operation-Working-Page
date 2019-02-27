@@ -1,4 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 CREATE PROCEDURE [dbo].[OWP_API_SyncNotificationSettingWatcher]
 	/*    
  Created: 20190221@Kane.Le
