@@ -14,14 +14,6 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @EmployeeWorkingShift TABLE (
-		[EmployeeId] [int] NOT NULL
-		,[ShiftId] [int] NOT NULL
-		,[ShiftDate] [date] NOT NULL
-		,[ShiftStartTime] [datetime] NULL
-		,[ShiftEndTime] [datetime] NULL
-		)
-
 	UPDATE dbo.EmployeeWorkingShiftDefault WITH (ROWLOCK)
 	SET ShiftId = @ShiftId
 	WHERE UserId = @EmployeeId

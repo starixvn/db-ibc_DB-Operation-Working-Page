@@ -153,7 +153,6 @@
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber20.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber2.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber19.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber18.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber17.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber16.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber14.sql" />
@@ -175,7 +174,6 @@
     <Build Include="dbo\Stored Procedures\OWP_QuickSearchMatchGet.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPTeamInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPMatch_UpdateFromInfoSite.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OWPMatch_InsertFromInfoSite.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeagueInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsBlackList.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsActive.sql" />
@@ -332,6 +330,8 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveDefaultShift.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_SyncDefaultWorkingShift.sql" />
     <Build Include="dbo\Stored Procedures\OWP_API_SyncNotificationSettingWatcher.sql" />
+    <Build Include="dbo\Functions\fnc_CheckToInitDefaultShiftWeekly.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_InitDefaultShiftForWeek.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

@@ -12,6 +12,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181126@Kane.Le: Select Column SectionId for check permisson [Redmine: #105043]
 	20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
+	20190215@Leo.Vo: Change output result - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -91,16 +92,11 @@ BEGIN
 		,inserted.ShiftEndTime
 	INTO @OutputWorkingShift;
 
-	SELECT @SectionId = u.SectionId
-	FROM dbo.[User] u WITH (NOLOCK)
-	WHERE u.UserId = @UserId
-
-	SELECT ISNULL(s.EmployeeId, 0) AS EmployeeId
-		,s.ShiftId
-		,s.ShiftDate
-		,c.Background
-		,c.Color
-		,@SectionId AS SectionId
-	FROM @OutputWorkingShift AS s
-		INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON s.ShiftId = c.ShiftId
+	SELECT EmployeeId
+		,ShiftId
+		,ShiftDate
+	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
+	WHERE EmployeeId = @UserId
+		AND ShiftDate BETWEEN @CurrentFromDate
+			AND @CurrentToDate
 END

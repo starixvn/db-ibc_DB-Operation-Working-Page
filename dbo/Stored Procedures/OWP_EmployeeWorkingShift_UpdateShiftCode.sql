@@ -13,6 +13,7 @@ AS
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
+	20190215@Leo.Vo: Init default shift - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -22,6 +23,16 @@ BEGIN
 		,@IsTimeShift BIT
 		,@ShiftStartTime DATETIME = NULL
 		,@ShiftEndTime DATETIME = NULL
+		,@StartDate DATE
+		,@EndDate DATE
+		,@IsInit BIT
+		,@DayOfTheWeek INT
+
+	-- check condition to init default shift weekly
+	SELECT @StartDate = StartDate
+		,@EndDate = EndDate
+		,@IsInit = IsInit
+	FROM dbo.fnc_CheckToInitDefaultShiftWeekly(@EmployeeId, @ShiftDate)
 
 	SELECT @StartTime = StartTime
 		,@EndTime = EndTime
@@ -41,21 +52,16 @@ BEGIN
 		END
 	END
 
-	IF EXISTS (
-			SELECT 1
-			FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
-			WHERE EmployeeId = @EmployeeId
-				AND ShiftDate = @ShiftDate
-			)
-	BEGIN
-		UPDATE dbo.EmployeeWorkingShift WITH (ROWLOCK)
-		SET ShiftId = @ShiftId
-			,ShiftStartTime = @ShiftStartTime
-			,ShiftEndTime = @ShiftEndTime
-		WHERE EmployeeId = @EmployeeId
-			AND ShiftDate = @ShiftDate
-	END
-	ELSE
+	-- try to update
+	UPDATE dbo.EmployeeWorkingShift WITH (ROWLOCK)
+	SET ShiftId = @ShiftId
+		,ShiftStartTime = @ShiftStartTime
+		,ShiftEndTime = @ShiftEndTime
+	WHERE EmployeeId = @EmployeeId
+		AND ShiftDate = @ShiftDate
+
+	-- no working shift updated then should insert
+	IF @@ROWCOUNT = 0
 	BEGIN
 		INSERT INTO dbo.EmployeeWorkingShift (
 			EmployeeId
@@ -72,4 +78,20 @@ BEGIN
 			,@ShiftEndTime
 			);
 	END
+
+	-- init default shift weekly
+	IF @IsInit = 1
+	BEGIN
+		EXECUTE dbo.[OWP_EmployeeWorkingShift_InitDefaultShiftForWeek] @EmployeeId = @EmployeeId
+			,@StartDate = @StartDate
+			,@EndDate = @EndDate
+	END
+	
+	SELECT EmployeeId
+		,ShiftId
+		,ShiftDate
+	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
+	WHERE EmployeeId = @EmployeeId
+		AND ShiftDate BETWEEN @StartDate
+			AND @EndDate
 END
