@@ -1,39 +1,16 @@
 /*
 	Created: Raymond.Le
-	Date: 2019-02-15
+	Date: 2019-02-25
 	Task: [Redmine: #108723]
 	DB: bodb_OWP
 */
 
--- Remove 2 columns in table MessageUser
-ALTER TABLE dbo.MessageUser
-DROP CONSTRAINT [DF_MessageUser_CreatedDate];
+--------------------------------
+-- 2. Update data
+--------------------------------
+USE bodb_OWP
 
-ALTER TABLE dbo.MessageUser
-DROP COLUMN [CreatedDate];
-
-ALTER TABLE dbo.MessageUser
-DROP COLUMN [CreatedBy];
-
--- Create table EmployeeWorkingShiftDefault
-CREATE TABLE [dbo].[EmployeeWorkingShiftDefault](
-	[UserId] [int] NOT NULL,
-	[DayOfTheWeek] [smallint] NOT NULL,
-	[ShiftId] [int] NOT NULL,
- CONSTRAINT [PK_EmployeeWorkingShiftDefault] PRIMARY KEY CLUSTERED 
-(
-	[UserId] ASC,
-	[DayOfTheWeek] ASC
-)
-) ON [OWP_Data];
-
--- Add column IsWatcher into table
-ALTER TABLE dbo.[Message]
-ADD IsWatcher BIT NULL;
-
-ALTER TABLE dbo.[Message] 
-ADD CONSTRAINT [DF_Message_IsWatcher] DEFAULT ((0)) FOR IsWatcher
-
+-- Update data table [Message]
 UPDATE [dbo].[Message] WITH (ROWLOCK, UPDLOCK)
 SET IsWatcher = 0;
 
@@ -65,16 +42,6 @@ VALUES
 (12, 'LA assignment of a match is updated', 1, 'False', 2),
 (13, 'The provider info of a match is updated', 1, 'False', 6);
 
--- create table NotificationSettingMessageTemplate
-CREATE TABLE [dbo].[NotificationSettingMessageTemplate](
-	[NotificationSettingId] [smallint] NOT NULL,
-	[MessageTemplateId] [smallint] NOT NULL,
- CONSTRAINT [PK_NotificationSettingMessageTemplate] PRIMARY KEY CLUSTERED 
-(
-	[NotificationSettingId] ASC,
-	[MessageTemplateId] ASC
-)
-) ON [OWP_Data];
 
 -- insert data into NotificationSettingMessageTemplate
 INSERT [dbo].[NotificationSettingMessageTemplate] ([NotificationSettingId], [MessageTemplateId]) VALUES (1, 1)
