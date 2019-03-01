@@ -23,8 +23,8 @@ AS
 	20181121@Raymond.Le: Separate Assignee Notification Setting - [Redmine: #105043]
 	20190104@Raymond.Le: Notification when change KO Time, Maxbet, Spread and Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer & NoOfHDP - [Redmine: #107257]
-	20190225@Raymond.Le: Remove InfoSiteMatchId of un-selected matches - [Redmine: #108723]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
+	20190225@Raymond.Le: Remove InfoSiteMatchId of un-selected matches - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON

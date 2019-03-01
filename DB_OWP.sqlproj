@@ -332,6 +332,8 @@
     <Build Include="dbo\Stored Procedures\OWP_API_SyncNotificationSettingWatcher.sql" />
     <Build Include="dbo\Functions\fnc_CheckToInitDefaultShiftWeekly.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_InitDefaultShiftForWeek.sql" />
+    <Build Include="dbo\Tables\InfoSiteSyncLogDetail.sql" />
+    <Build Include="dbo\Tables\InfoSiteSyncLog.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232 to GIT.scmp" />

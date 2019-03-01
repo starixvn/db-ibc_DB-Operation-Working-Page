@@ -13,13 +13,12 @@ AS
 	20190104@Kane.Le: Not sync IsDeleted events - [Redmine: #107257]
 	20190107@Leo.Vo: Notification - [Redmine: #107257]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
+	20190221@Leo.Vo: Fix to sync minor match - [Redmine: #109216]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @Today DATE = CONVERT(DATE, GETDATE())
-		,@NumberDayDeleteOldData INT = 1
-		,@NotificationSettingId INT = 5
+	DECLARE @NotificationSettingId INT = 5
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
 		,@Specific15MinsNoOfCorners INT = - 5
@@ -35,14 +34,217 @@ BEGIN
 		,@EditLeagueMessageTemplateId INT
 		,@EditTeamMessageTemplate NVARCHAR(1000)
 		,@EditTeamMessageTemplateId INT
-		,@SessionId VARCHAR(50)
+		,@SessionId VARCHAR(50) = CAST(NEWID() AS VARCHAR(50))
 		,@CreatedBy INT = 0
+		,@Total INT
+		,@Index INT
+		,@LogId INT
+		,@StartTime DATETIME = GETDATE()
+		,@LastUploadTime DATETIME
+
+	CREATE TABLE #tblRemoveSession (LogId INT NOT NULL)
 
 	-- remove old data
 	DELETE dbo.InfoSiteMatch WITH (ROWLOCK)
-	WHERE EventDateTime < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
+	WHERE EventDateTime < DATEADD(DAY, - 3, GETDATE())
 
-	SET @SessionId = CAST(NEWID() AS VARCHAR(50))
+	DELETE dbo.InfoSiteSyncLog WITH (ROWLOCK)
+	OUTPUT deleted.LogId
+	INTO #tblRemoveSession(LogId)
+	WHERE StartTime < DATEADD(DAY, - 3, GETDATE())
+
+	DELETE ld
+	FROM dbo.InfoSiteSyncLogDetail AS ld WITH (ROWLOCK)
+		INNER JOIN #tblRemoveSession AS s ON ld.LogId = s.LogId
+
+	INSERT INTO dbo.InfoSiteSyncLog (StartTime)
+	VALUES (@StartTime)
+
+	SET @LogId = @@IDENTITY
+
+	--matches need to be checked before sync
+	CREATE TABLE #tblMatch (
+		OWPMatchId INT NOT NULL
+		,EventDate DATE NOT NULL
+		,OWPLeagueId INT NOT NULL
+		,OWPHomeId INT NOT NULL
+		,OWPAwayId INT NOT NULL
+		,IsSync BIT NOT NULL
+		)
+
+	CREATE TABLE #tblSimilarMatchInfo (
+		EventDate DATE NOT NULL
+		,OWPLeagueId INT NOT NULL
+		,OWPHomeId INT NOT NULL
+		,OWPAwayId INT NOT NULL
+		)
+
+	--temp list of matches planned to sync
+	INSERT INTO #tblMatch (
+		OWPMatchId
+		,EventDate
+		,OWPLeagueId
+		,OWPHomeId
+		,OWPAwayId
+		,IsSync
+		)
+	SELECT m.OWPMatchId
+		,CAST(DATEADD(HOUR, - 8, m.EventDateTime) AS DATE) AS EventDate
+		,ISNULL(im.OWPLeagueId, m.OWPLeagueId) AS OWPLeagueId
+		,ISNULL(im.OWPHomeId, m.OWPHomeId) AS OWPHomeId
+		,ISNULL(im.OWPAwayId, m.OWPAwayId) AS OWPAwayId
+		,1
+	FROM (
+		SELECT m.OWPMatchId
+			,m.EventDateTime
+			,m.OWPLeagueId
+			,m.OWPHomeId
+			,m.OWPAwayId
+			,m.InfoSiteMatchId
+		FROM dbo.OWPMatch AS m WITH (NOLOCK)
+		WHERE m.EventDateTime >= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND NOT EXISTS (
+				SELECT 1
+				FROM dbo.MinorMatch AS mm
+				WHERE m.OWPMatchId = mm.MinorMatchId
+				)
+		) AS m
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+		LEFT JOIN dbo.InfoSiteMatch AS im WITH (NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
+
+	SELECT @Index = 0
+		,@Total = COUNT(1)
+	FROM #tblMatch
+
+	WHILE @Index < @Total
+	BEGIN
+		DELETE #tblSimilarMatchInfo
+
+		INSERT INTO #tblSimilarMatchInfo (
+			EventDate
+			,OWPLeagueId
+			,OWPHomeId
+			,OWPAwayId
+			)
+		SELECT EventDate
+			,OWPLeagueId
+			,OWPHomeId
+			,OWPAwayId
+		FROM #tblMatch
+		GROUP BY EventDate
+			,OWPLeagueId
+			,OWPHomeId
+			,OWPAwayId
+		HAVING COUNT(1) > 1
+
+		UPDATE m
+		SET m.OWPLeagueId = om.OWPLeagueId
+			,m.OWPHomeId = om.OWPHomeId
+			,m.OWPAwayId = om.OWPAwayId
+			,m.IsSync = 0
+		FROM #tblMatch AS m
+			INNER JOIN #tblSimilarMatchInfo AS mi ON m.EventDate = mi.EventDate
+			AND m.OWPLeagueId = mi.OWPLeagueId
+			AND m.OWPHomeId = mi.OWPHomeId
+			AND m.OWPAwayId = mi.OWPAwayId
+			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
+		WHERE m.IsSync = 1
+
+		IF @@ROWCOUNT = 0
+		BEGIN
+			BREAK
+		END
+
+		SET @Index = @Index + 1
+	END
+
+	UPDATE dbo.InfoSiteSyncLog WITH (ROWLOCK)
+	SET EndTime = GETDATE()
+	WHERE LogId = @LogId
+
+	SELECT @LastUploadTime = MAX(CreatedDate)
+	FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
+
+	-- check to write log for matched not to be synced
+	IF NOT EXISTS (
+			SELECT 1
+			FROM dbo.InfoSiteSyncLog AS il WITH (NOLOCK)
+			WHERE il.LogId = (
+					SELECT MAX(d.LogId)
+					FROM dbo.InfoSiteSyncLogDetail AS d WITH (NOLOCK)
+					)
+				AND il.StartTime >= @LastUploadTime
+			)
+	BEGIN
+		INSERT INTO dbo.InfoSiteSyncLogDetail (
+			LogId
+			,OWPMatchId
+			,InfoSiteMatchId
+			)
+		SELECT @LogId
+			,m.OWPMatchId
+			,om.InfoSiteMatchId
+		FROM #tblMatch AS m
+			INNER JOIN dbo.OWPMatch AS om ON m.OWPMatchId = om.OWPMatchId
+		WHERE m.IsSync = 0
+			AND om.InfoSiteMatchId IS NOT NULL
+	END
+
+	--remove matches not to be synced
+	DELETE #tblMatch
+	WHERE IsSync = 0
+
+	-- create temp table remove IsDeleted
+	CREATE TABLE #tblInfoSiteMatch (
+		[InfoSiteMatchId] [int] NOT NULL
+		,[EventDateTime] [datetime] NOT NULL
+		,[UpdatedTime] [datetime] NOT NULL
+		,[LeagueName] [nvarchar](2000) NOT NULL
+		,[HomeName] [nvarchar](2000) NOT NULL
+		,[AwayName] [nvarchar](2000) NOT NULL
+		,[Round] [nvarchar](2000) NULL
+		,[Division] [nvarchar](2000) NULL
+		,[Agent] [nvarchar](2000) NULL
+		,[TV] [nvarchar](2000) NULL
+		,[Channel] [nvarchar](2000) NULL
+		,[WB] [nvarchar](2000) NULL
+		,[Website1] [nvarchar](2000) NULL
+		,[Website2] [nvarchar](2000) NULL
+		,[Website3] [nvarchar](2000) NULL
+		,[Website4] [nvarchar](2000) NULL
+		,[OWPLeagueId] [int] NOT NULL
+		,[OWPHomeId] [int] NOT NULL
+		,[OWPAwayId] [int] NOT NULL
+		,[AgentIds] [varchar](200) NULL
+		,[TVIds] [varchar](200) NULL
+		,[IsDeleted] [bit] NULL
+		)
+
+	INSERT INTO #tblInfoSiteMatch
+	SELECT [InfoSiteMatchId]
+		,[EventDateTime]
+		,[UpdatedTime]
+		,[LeagueName]
+		,[HomeName]
+		,[AwayName]
+		,[Round]
+		,[Division]
+		,[Agent]
+		,[TV]
+		,[Channel]
+		,[WB]
+		,[Website1]
+		,[Website2]
+		,[Website3]
+		,[Website4]
+		,[OWPLeagueId]
+		,[OWPHomeId]
+		,[OWPAwayId]
+		,[AgentIds]
+		,[TVIds]
+		,[IsDeleted]
+	FROM dbo.InfoSiteMatch WITH (NOLOCK)
+	WHERE IsDeleted <> 1
 
 	SELECT @EditLeagueMessageTemplateId = MsgTemplateId
 		,@EditLeagueMessageTemplate = MsgTemplateContent
@@ -109,105 +311,38 @@ BEGIN
 	-- create table to contain matches in time range
 	CREATE TABLE #tblMatchInTimeRange (OWPMatchId INT NOT NULL)
 
-	-- create temp table remove IsDeleted
-	CREATE TABLE #tblInfoSiteMatch (
-		[InfoSiteMatchId] [int] NOT NULL
-		,[EventDateTime] [datetime] NOT NULL
-		,[UpdatedTime] [datetime] NOT NULL
-		,[LeagueName] [nvarchar](2000) NOT NULL
-		,[HomeName] [nvarchar](2000) NOT NULL
-		,[AwayName] [nvarchar](2000) NOT NULL
-		,[Round] [nvarchar](2000) NULL
-		,[Division] [nvarchar](2000) NULL
-		,[Agent] [nvarchar](2000) NULL
-		,[TV] [nvarchar](2000) NULL
-		,[Channel] [nvarchar](2000) NULL
-		,[WB] [nvarchar](2000) NULL
-		,[Website1] [nvarchar](2000) NULL
-		,[Website2] [nvarchar](2000) NULL
-		,[Website3] [nvarchar](2000) NULL
-		,[Website4] [nvarchar](2000) NULL
-		,[OWPLeagueId] [int] NOT NULL
-		,[OWPHomeId] [int] NOT NULL
-		,[OWPAwayId] [int] NOT NULL
-		,[AgentIds] [varchar](200) NULL
-		,[TVIds] [varchar](200) NULL
-		,[IsDeleted] [bit] NULL
-		)
-
-	INSERT INTO #tblInfoSiteMatch
-	SELECT [InfoSiteMatchId]
-		,[EventDateTime]
-		,[UpdatedTime]
-		,[LeagueName]
-		,[HomeName]
-		,[AwayName]
-		,[Round]
-		,[Division]
-		,[Agent]
-		,[TV]
-		,[Channel]
-		,[WB]
-		,[Website1]
-		,[Website2]
-		,[Website3]
-		,[Website4]
-		,[OWPLeagueId]
-		,[OWPHomeId]
-		,[OWPAwayId]
-		,[AgentIds]
-		,[TVIds]
-		,[IsDeleted]
-	FROM dbo.InfoSiteMatch WITH (NOLOCK)
-	WHERE IsDeleted <> 1
-
 	-- sync League
-	MERGE INTO dbo.OWPMatch AS om
-	USING (
-		SELECT im.InfoSiteMatchId
-			,im.OWPLeagueId
-		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
-		) AS im ON om.InfoSiteMatchId = im.InfoSiteMatchId
-	WHEN MATCHED
-		AND om.OWPLeagueId <> im.OWPLeagueId THEN
-			UPDATE
-			SET om.OWPLeagueId = im.OWPLeagueId
+	UPDATE om
+	SET om.OWPLeagueId = tm.OWPLeagueId
 	OUTPUT INSERTED.OWPMatchId
 		,INSERTED.OWPLeagueId
 		,DELETED.OWPLeagueId
-	INTO #tblLeagueLog(OWPMatchId, NewOWPLeagueId, OldOWPLeagueId);
+	INTO #tblLeagueLog(OWPMatchId, NewOWPLeagueId, OldOWPLeagueId)
+	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
+		INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
+	WHERE om.OWPLeagueId <> tm.OWPLeagueId
 
 	-- sync Home
-	MERGE INTO dbo.OWPMatch AS om
-	USING (
-		SELECT im.InfoSiteMatchId
-			,im.OWPHomeId
-		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
-		) AS im ON om.InfoSiteMatchId = im.InfoSiteMatchId
-	WHEN MATCHED
-		AND om.OWPHomeId <> im.OWPHomeId THEN
-			UPDATE
-			SET om.OWPHomeId = im.OWPHomeId
+	UPDATE om
+	SET om.OWPHomeId = tm.OWPHomeId
 	OUTPUT INSERTED.OWPMatchId
 		,DELETED.OWPHomeId
 		,INSERTED.OWPAwayId
-	INTO #tblHomeTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId);
+	INTO #tblHomeTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId)
+	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
+		INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
+	WHERE om.OWPHomeId <> tm.OWPHomeId
 
 	-- sync Away
-	MERGE INTO dbo.OWPMatch AS om
-	USING (
-		SELECT im.InfoSiteMatchId
-			,im.OWPAwayId
-		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
-		) AS im ON om.InfoSiteMatchId = im.InfoSiteMatchId
-	WHEN MATCHED
-		AND om.OWPAwayId <> im.OWPAwayId THEN
-			UPDATE
-			SET om.OWPAwayId = im.OWPAwayId
+	UPDATE om
+	SET om.OWPAwayId = tm.OWPAwayId
 	OUTPUT INSERTED.OWPMatchId
 		,INSERTED.OWPHomeId
 		,DELETED.OWPAwayId
-	INTO #tblAwayTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId);
+	INTO #tblAwayTeamLog(OWPMatchId, OldOWPHomeId, OldOWPAwayId)
+	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
+		INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
+	WHERE om.OWPAwayId <> tm.OWPAwayId
 
 	-- insert data to table TeamLog
 	INSERT #tblTeamLog (
@@ -228,6 +363,7 @@ BEGIN
 			,im.TVIds
 		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
+			INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
 		) AS im ON om.OWPMatchId = im.OWPMatchId
 	WHEN MATCHED
 		AND om.TVCode <> im.TVIds THEN
@@ -248,6 +384,7 @@ BEGIN
 			,im.Website4
 		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
+			INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
 		) AS im ON mi.OWPMatchId = im.OWPMatchId
 	WHEN MATCHED THEN
 			UPDATE
@@ -397,7 +534,7 @@ BEGIN
 				,msn.MessageTypeId
 				)
 	OUTPUT inserted.MessageId
-		,msn.UserId		
+		,msn.UserId
 		,@SessionId
 	INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 
@@ -414,12 +551,12 @@ BEGIN
 
 	-- sync league name, home name & away name for minor matches
 	DECLARE @HomeSingleTeamOU INT = - 92
-		  ,@AwaySingleTeamOU INT = - 93
-		  ,@HomeSingleTeamOUOfCorners INT = - 94
-		  ,@AwaySingleTeamOUOfCorners INT = - 95
-		  ,@HomePenShootOut INT = - 98
-		  ,@AwayPenShootOut INT = - 99
-  
+		,@AwaySingleTeamOU INT = - 93
+		,@HomeSingleTeamOUOfCorners INT = - 94
+		,@AwaySingleTeamOUOfCorners INT = - 95
+		,@HomePenShootOut INT = - 98
+		,@AwayPenShootOut INT = - 99
+
 	INSERT INTO #tblMinorMatch (
 		MinorMatchId
 		,OWPLeagueName
@@ -428,8 +565,14 @@ BEGIN
 		)
 	SELECT mm.MinorMatchId
 		,REPLACE(t.League, '<name>', l.OWPLeagueName)
-		,REPLACE(t.Home, '<name>', CASE WHEN mm.MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN a.OWPTeamName ELSE h.OWPTeamName END)
-		,REPLACE(t.Away, '<name>', CASE WHEN mm.MinorBettypeId IN (@HomeSingleTeamOU, @HomeSingleTeamOUOfCorners, @HomePenShootOut) THEN h.OWPTeamName ELSE a.OWPTeamName END)
+		,REPLACE(t.Home, '<name>', CASE 
+				WHEN mm.MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN a.OWPTeamName
+				ELSE h.OWPTeamName
+				END)
+		,REPLACE(t.Away, '<name>', CASE 
+				WHEN mm.MinorBettypeId IN (@HomeSingleTeamOU, @HomeSingleTeamOUOfCorners, @HomePenShootOut) THEN h.OWPTeamName
+				ELSE a.OWPTeamName
+				END)
 	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mm.ParentMatchId = m.OWPMatchId
 		INNER JOIN (
@@ -497,4 +640,10 @@ BEGIN
 	DROP TABLE #tblMatchInTimeRange
 
 	DROP TABLE #tblMinorMatch
+
+	DROP TABLE #tblRemoveSession
+
+	DROP TABLE #tblMatch
+
+	DROP TABLE #tblSimilarMatchInfo
 END
