@@ -336,6 +336,7 @@
     <Build Include="dbo\Tables\InfoSiteSyncLog.sql" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="232 to GIT.scmp" />
+    <None Include="232-bodb_OWP_DEV to GIT.scmp" />
+    <None Include="232-bodb_OWP to GIT.scmp" />
   </ItemGroup>
 </Project>

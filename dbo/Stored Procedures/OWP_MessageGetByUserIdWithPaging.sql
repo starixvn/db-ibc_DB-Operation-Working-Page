@@ -57,8 +57,8 @@ BEGIN
 			,mm.MessageType
 			,mt.SystemMessageType
 		FROM dbo.MessageUser um WITH (NOLOCK)
-		JOIN dbo.[Message] mm WITH (NOLOCK) ON um.MessageId = mm.MessageId
-		LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON mm.MessageType = mt.MsgTemplateId
+			JOIN dbo.[Message] mm WITH (NOLOCK) ON um.MessageId = mm.MessageId
+			LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON mm.MessageType = mt.MsgTemplateId
 		WHERE mm.MessageId IN (
 				SELECT MessageId
 				FROM #FilterdMessageIds
@@ -79,16 +79,22 @@ BEGIN
 			,mm.MessageType
 			,mt.SystemMessageType
 		FROM dbo.MessageUser um WITH (NOLOCK)
-		JOIN dbo.[Message] mm WITH (NOLOCK) ON um.MessageId = mm.MessageId
-		LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON mm.MessageType = mt.MsgTemplateId
-		WHERE mm.MessageId IN (
-				SELECT MessageId
-				FROM #FilterdMessageIds
-				)
+			JOIN dbo.[Message] mm WITH (NOLOCK) ON um.MessageId = mm.MessageId
+			INNER JOIN #FilterdMessageIds AS f ON mm.MessageId = f.MessageId
+			INNER JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON mm.MessageType = mt.MsgTemplateId
 			AND um.UserId = @UserId
 	END
 
-	SELECT *
+	SELECT RowNumber
+		,MessageId
+		,MessageContent
+		,IsViewed
+		,UserId
+		,CreatedBy
+		,CreatedDate
+		,IsImportant
+		,MessageType
+		,SystemMessageType
 	FROM (
 		SELECT ROW_NUMBER() OVER (
 				ORDER BY MessageId DESC
