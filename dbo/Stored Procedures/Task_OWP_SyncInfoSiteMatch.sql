@@ -258,6 +258,7 @@ BEGIN
 
 	CREATE TABLE #tblMinorMatch (
 		MinorMatchId INT NOT NULL
+		,ParentMatchId INT NOT NULL
 		,OWPLeagueName NVARCHAR(200)
 		,OWPHomeName NVARCHAR(200)
 		,OWPAwayName NVARCHAR(200)
@@ -350,11 +351,11 @@ BEGIN
 		,OldOWPHomeId
 		,OldOWPAwayId
 		)
-	SELECT h.OWPMatchId
-		,h.OldOWPHomeId
+	SELECT ISNULL(h.OWPMatchId, a.OWPMatchId)
+		,ISNULL(h.OldOWPHomeId, a.OldOWPHomeId)
 		,ISNULL(a.OldOWPAwayId, h.OldOWPAwayId)
 	FROM #tblHomeTeamLog AS h
-		LEFT JOIN #tblAwayTeamLog AS a ON h.OWPMatchId = a.OWPMatchId
+		FULL JOIN #tblAwayTeamLog AS a ON h.OWPMatchId = a.OWPMatchId
 
 	-- sync TVIds
 	MERGE INTO dbo.MatchInfo AS om
@@ -559,11 +560,13 @@ BEGIN
 
 	INSERT INTO #tblMinorMatch (
 		MinorMatchId
+		,ParentMatchId
 		,OWPLeagueName
 		,OWPHomeName
 		,OWPAwayName
 		)
 	SELECT mm.MinorMatchId
+		,mm.ParentMatchId
 		,REPLACE(t.League, '<name>', l.OWPLeagueName)
 		,REPLACE(t.Home, '<name>', CASE 
 				WHEN mm.MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN a.OWPTeamName
