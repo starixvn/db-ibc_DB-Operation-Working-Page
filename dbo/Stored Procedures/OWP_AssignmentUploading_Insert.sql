@@ -16,7 +16,10 @@ AS
 	20180614@Leo: change datatype of column Round & OutSide to nvarchar(2000)
 	20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181015@Raymond.Le: Allow input LA trader of Next Corners, Next Booking - [Redmine: #103202]
-	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052] 
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257] 
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
+	20190227@Raymond.Le: Extend number days delete old data - [Redmine: #108723] 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -24,7 +27,7 @@ BEGIN
 	DECLARE @idoc INT
 		,@totalRule INT
 		,@totalRow INT
-		,@NumberDayDeleteOldData INT = 1
+		,@NumberDayDeleteOldData INT = 3
 		,@Today DATETIME = GETDATE()
 
 
@@ -114,8 +117,8 @@ BEGIN
 		,TV
 		,Channel
 		,WB
+		,OtherProvider
 		,[Provider]
-		,Runner
 		,Phone
 		,Website1
 		,Website2
@@ -183,8 +186,8 @@ BEGIN
 		,TV
 		,Channel
 		,WatchBet
+		,OtherProvider
 		,[Provider]
-		,Runner
 		,Phone
 		,Website1
 		,Website2
@@ -200,7 +203,7 @@ BEGIN
 		,[InfoSiteMatchId] [nvarchar](200)
 		,[KickOffTime] [nvarchar](200)
 		,[OtherTime] [nvarchar](200)
-		,[MatchOffer] [nvarchar](50)
+		,[MatchOffer] [nvarchar](2000)
 		,[LeagueName] [nvarchar](2000)
 		,[HomeName] [nvarchar](2000)
 		,[AwayName] [nvarchar](2000)
@@ -251,8 +254,8 @@ BEGIN
 		,[TV] [nvarchar](2000)
 		,[Channel] [nvarchar](100)
 		,[WatchBet] [nvarchar](100)
+		,[OtherProvider] [nvarchar](2000)
 		,[Provider] [nvarchar](2000)
-		,[Runner] [nvarchar](2000)
 		,[Phone] [nvarchar](50)
 		,[Website1] [nvarchar](1000)
 		,[Website2] [nvarchar](1000)

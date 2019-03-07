@@ -19,6 +19,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
+	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -281,8 +282,7 @@ BEGIN
 				,msn.MessageTypeId
 				)
 	OUTPUT inserted.MessageId
-		,msn.UserId
-		,@ActorId
+		,msn.UserId		 
 		,@SessionId
-	INTO dbo.MessageUser([MessageId], [UserId], [CreatedBy], [SessionId]);
+	INTO dbo.MessageUser([MessageId], [UserId],   [SessionId]);
 END

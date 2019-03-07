@@ -1,5 +1,6 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_MessageStatusUpdateAll] @UserId INT = 0
+CREATE PROCEDURE [dbo].[OWP_MessageStatusUpdateAll] @UserId INT
+	,@IsWatcher BIT = 0
 	,@IsViewed BIT = 1
 AS
 /*  
@@ -13,7 +14,10 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON
 
-	UPDATE dbo.MessageUser WITH (UPDLOCK, ROWLOCK)
+	UPDATE mu
 	SET IsViewed = @IsViewed
-	WHERE UserId = @UserId
+	FROM dbo.MessageUser AS mu WITH (ROWLOCK)
+		INNER JOIN dbo.[Message] AS m WITH (NOLOCK) ON mu.MessageId = m.MessageId
+	WHERE mu.UserId = @UserId
+		AND m.IsWatcher = @IsWatcher
 END

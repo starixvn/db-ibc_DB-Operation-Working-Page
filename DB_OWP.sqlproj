@@ -153,7 +153,6 @@
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber20.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber2.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber19.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber18.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber17.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber16.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber14.sql" />
@@ -175,7 +174,6 @@
     <Build Include="dbo\Stored Procedures\OWP_QuickSearchMatchGet.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPTeamInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPMatch_UpdateFromInfoSite.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OWPMatch_InsertFromInfoSite.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeagueInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsBlackList.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsActive.sql" />
@@ -248,7 +246,6 @@
     <Build Include="dbo\Tables\EmployeeWorkingShiftNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateShiftCode.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_Runner_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_RecommendOdds_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Provider_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_UpdateOdds.sql" />
@@ -260,7 +257,6 @@
     <Build Include="dbo\Stored Procedures\OWP_Market_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_User_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Television_GetByMatchId.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Runner_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Provider_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchStatus_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchInfo_UpdateMatchStatus.sql" />
@@ -311,8 +307,36 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetUsersByDate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetMatchesByDate.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_SyncEventDeletedInfoSiteMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ExportForBusPickup.sql" />
+    <Build Include="dbo\Tables\NotificationQueue.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_GetNotificationQueue.sql" />
+    <Build Include="dbo\Tables\OtherProvider.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_OtherProvider_GetAll.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_OtherProvider_GetByMatchId.sql" />
+    <Build Include="dbo\Tables\MatchOfferDetail.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_RefResource_Update.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_RefResource_Insert.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchOffer_GetByMatchId.sql" />
+    <Build Include="dbo\Tables\EmployeeWorkingShiftTimeZoneSetting.sql" />
+    <Build Include="dbo\Functions\fnc_GetWorkingShiftTimezoneOffset.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftTimeZone_UpdateUserSetting.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftTimeZone_GetByUser.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_MessageUpdateReadStatus.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_MessageGetByUserIdWithPaging.sql" />
+    <Build Include="dbo\Tables\NotificationSettingMessageTemplate.sql" />
+    <Build Include="dbo\Tables\EmployeeWorkingShiftDefault.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateDefaultShift.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveDefaultShift.sql" />
+    <Build Include="dbo\Stored Procedures\Task_OWP_SyncDefaultWorkingShift.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_SyncNotificationSettingWatcher.sql" />
+    <Build Include="dbo\Functions\fnc_CheckToInitDefaultShiftWeekly.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_InitDefaultShiftForWeek.sql" />
+    <Build Include="dbo\Tables\InfoSiteSyncLogDetail.sql" />
+    <Build Include="dbo\Tables\InfoSiteSyncLog.sql" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="232 to GIT.scmp" />
+    <None Include="232-bodb_OWP_DEV to GIT.scmp" />
+    <None Include="232-bodb_OWP to GIT.scmp" />
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber29] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
 	,@Value NVARCHAR(2000) = NULL
@@ -11,6 +12,7 @@ AS
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -19,15 +21,30 @@ BEGIN
 		,@RuleResultType TINYINT
 		,@Passed TINYINT
 		,@Message NVARCHAR(200)
-		,@MatchOffer NVARCHAR(50)
+		,@MatchOffer NVARCHAR(2000)
 		,@idoc INT
 
 	CREATE TABLE #tblMatchOffer (Value NVARCHAR(50))
 
+	CREATE TABLE #tblRowMatchOffer (
+		RowNumber INT
+		,Value NVARCHAR(50)
+		)
+
+	CREATE TABLE #tblInvalidRowMatchOffer (
+		RowNumber INT
+		,Value NVARCHAR(50)
+		)
+
+	CREATE TABLE #tblInvalidRow (
+		RowNumber INT
+		,MatchOffer NVARCHAR(2000)
+		)
+
 	INSERT INTO #tblMatchOffer (Value)
-	VALUES ('KO+15')
-		,('Fast Market')
-		,('KO+15 Fast Market')
+	SELECT [Value]
+	FROM dbo.RefResource
+	WHERE RefName = 'MatchOffer'
 
 	SELECT @RuleResultType = RuleResultType
 		,@Message = MessageFormat
@@ -42,34 +59,51 @@ BEGIN
 	-- upload
 	IF LEN(@SessionId) > 0
 	BEGIN
+		INSERT INTO #tblRowMatchOffer (
+			RowNumber
+			,Value
+			)
+		SELECT au.RowNumber
+			,LTRIM(RTRIM(mo.val)) AS Value
+		FROM AssignmentUploading AS au
+			CROSS APPLY dbo.fnc_SplitStrings(au.MatchOffer, ',') AS mo
+		WHERE au.MatchOffer <> ''
+			AND SessionId = @SessionId
+
+		INSERT INTO #tblInvalidRowMatchOffer
+		SELECT r.RowNumber
+			,r.Value
+		FROM #tblRowMatchOffer AS r
+			LEFT JOIN #tblMatchOffer AS mo ON mo.Value = r.Value
+		WHERE r.Value <> ''
+			AND mo.Value IS NULL
+
+		INSERT INTO #tblInvalidRow (
+			RowNumber
+			,MatchOffer
+			)
+		SELECT DISTINCT t1.RowNumber
+			,STUFF((
+					SELECT ',' + t2.Value
+					FROM #tblInvalidRowMatchOffer AS t2
+					WHERE t1.RowNumber = t2.RowNumber
+					FOR XML PATH('')
+					), 1, 1, '')
+		FROM #tblInvalidRowMatchOffer AS t1
+
 		SELECT @SessionId
-			,RowNumber
+			,au.RowNumber
 			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN ISNULL(MatchOffer, '') <> ''
-						AND NOT EXISTS (
-							SELECT 1
-							FROM #tblMatchOffer WITH (NOLOCK)
-							WHERE MatchOffer = Value
-							)
-						THEN @RuleResultType
-					ELSE @Passed
-					END
+			,(CASE 
+				WHEN r.MatchOffer IS NULL THEN @Passed
+				ELSE @RuleResultType END
 				) AS ResultType
-			,(
-				CASE 
-					WHEN ISNULL(MatchOffer, '') <> ''
-						AND NOT EXISTS (
-							SELECT 1
-							FROM #tblMatchOffer WITH (NOLOCK)
-							WHERE MatchOffer = Value
-							)
-						THEN @Message
-					ELSE ''
-					END
+			,(CASE 
+				WHEN r.MatchOffer IS NULL THEN ''
+				ELSE REPLACE(@Message, '<content>', r.MatchOffer) END
 				) AS [Message]
-		FROM dbo.AssignmentUploading WITH (NOLOCK)
+		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
+			LEFT JOIN #tblInvalidRow AS r ON au.RowNumber = r.RowNumber
 		WHERE SessionId = @SessionId
 	END
 	ELSE -- edit
@@ -99,4 +133,10 @@ BEGIN
 	END
 
 	DROP TABLE #tblMatchOffer
+
+	DROP TABLE #tblRowMatchOffer
+
+	DROP TABLE #tblInvalidRowMatchOffer
+
+	DROP TABLE #tblInvalidRow
 END

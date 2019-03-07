@@ -7,16 +7,16 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@WB NVARCHAR(100) = ''
 	,@Phone NVARCHAR(50) = ''
 	,@Remark NVARCHAR(2000) = ''
-	,@NoOfHDP NVARCHAR(20) = ''
+	,@NoOfHDPId INT = 0
 	,@IsSoloMatch BIT = 0
-	,@KOTimeRemark NVARCHAR(50) = ''
+	,@MatchOfferIds NVARCHAR(100) = ''
 	,@Round NVARCHAR(2000) = ''
 	,@Division NVARCHAR(2000) = ''
 	,@Venue NVARCHAR(100) = ''
 	,@OtherTime DATETIME = NULL
 	,@TVIds NVARCHAR(500) = ''
+	,@OtherProviderIds NVARCHAR(100) = ''
 	,@ProviderIds NVARCHAR(100) = ''
-	,@RunnerIds NVARCHAR(100) = ''
 	,@AgentIds NVARCHAR(100) = ''
 	,@MarketIds NVARCHAR(100) = ''
 	,@ErrCode INT = 0 OUTPUT
@@ -35,6 +35,9 @@ Revisions:
 	20181123@Kane.Le: DB - Separate Assignee Notification Setting (Provider Info LiveDetail) [Redmine: #105043]
 	Change @Assignee to @AssigneeMatchInfoMatchInfo
 	Add @AssigneeProviderInfo
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
+	20190116@Kane.Le: Update Column NoOfHDPId - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,18 +52,18 @@ BEGIN
 		,@OldWB NVARCHAR(100)
 		,@OldPhone NVARCHAR(50)
 		,@OldRemark NVARCHAR(2000)
-		,@OldNoOfHDP NVARCHAR(20)
+		,@OldNoOfHDPId INT
 		,@OldIsSoloMatch BIT
-		,@OldKOTimeRemark NVARCHAR(50)
 		,@OldRound NVARCHAR(2000)
 		,@OldDivision NVARCHAR(2000)
 		,@OldVenue NVARCHAR(100)
 		,@OldOtherTime TIME
 		,@OldTVIds NVARCHAR(500)
+		,@OldOtherProviderIds NVARCHAR(100)
 		,@OldProviderIds NVARCHAR(100)
-		,@OldRunnerIds NVARCHAR(100)
 		,@OldAgentIds NVARCHAR(100)
 		,@OldMarketIds NVARCHAR(100)
+		,@OldMatchOfferIds NVARCHAR(100)
 		-- send message by condition date
 		,@AssigneeMatchInfo TVP_INT
 		,@AssigneeProviderInfo TVP_INT
@@ -93,22 +96,25 @@ BEGIN
 		SELECT @OldMarketIds = COALESCE(@OldMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
 		FROM dbo.MatchMarket WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
+		
+		SELECT @OldMatchOfferIds = COALESCE(@OldMatchOfferIds + ', ', '') + CAST(MatchOfferId AS NVARCHAR)
+		FROM dbo.MatchOfferDetail WITH (NOLOCK)
+		WHERE OWPMatchId = @OWPMatchId
 
 		-- save old value 
 		SELECT @OldChannel = m.Channel
 			,@OldWB = m.WB
 			,@OldPhone = m.Phone
 			,@OldRemark = m.Remark
-			,@OldNoOfHDP = m.NoOfHDP
+			,@OldNoOfHDPId = m.NoOfHDPId
 			,@OldIsSoloMatch = m.IsSoloMatch
-			,@OldKOTimeRemark = m.KOTimeRemark
 			,@OldRound = m.[Round]
 			,@OldDivision = m.Division
 			,@OldVenue = m.Venue
 			,@OldOtherTime = om.OtherTime
 			,@OldTVIds = m.TVCode
-			,@OldProviderIds = m.Provider
-			,@OldRunnerIds = m.Runner
+			,@OldOtherProviderIds = m.OtherProvider
+			,@OldProviderIds = m.[Provider]
 			,@OldAgentIds = m.Agent
 		FROM dbo.MatchInfo m WITH (NOLOCK)
 			LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
@@ -120,14 +126,13 @@ BEGIN
 			,WB = @WB
 			,Phone = @Phone
 			,Remark = @Remark
-			,NoOfHDP = @NoOfHDP
+			,NoOfHDPId = @NoOfHDPId
 			,IsSoloMatch = @IsSoloMatch
-			,KOTimeRemark = @KOTimeRemark
 			,[Round] = @Round
 			,Division = @Division
 			,Venue = @Venue
-			,Provider = @ProviderIds
-			,Runner = @RunnerIds
+			,OtherProvider = @OtherProviderIds
+			,[Provider] = @ProviderIds
 			,TVCode = @TVIds
 			,Agent = @AgentIds
 		WHERE OWPMatchId = @OWPMatchId
@@ -136,6 +141,7 @@ BEGIN
 		SET OtherTime = @OtherTime
 		WHERE OWPMatchId = @OWPMatchId
 
+		-- handle changes of Match Market
 		DELETE
 		FROM dbo.MatchMarket
 		WHERE OWPMatchId = @OWPMatchId
@@ -149,6 +155,22 @@ BEGIN
 			SELECT @OWPMatchId
 				,val
 			FROM dbo.strSplit(ISNULL(@MarketIds, ''), ',')
+		END
+		
+		-- handle changes of Match Offer
+		DELETE
+		FROM dbo.MatchOfferDetail
+		WHERE OWPMatchId = @OWPMatchId
+		
+		IF (ISNULL(@MatchOfferIds, '') != '')
+		BEGIN
+			INSERT INTO dbo.MatchOfferDetail (
+			OWPMatchId
+			,MatchOfferId
+			)
+			SELECT @OWPMatchId
+				,val
+			FROM dbo.strSplit(ISNULL(@MatchOfferIds, ''), ',')
 		END
 
 		-- send message edit if in time range
@@ -240,73 +262,6 @@ BEGIN
 					,@SessionId = @SessionId
 			END
 
-			-- Edit Provider
-			TRUNCATE TABLE #tblOldItem
-			TRUNCATE TABLE #tblNewItem
-
-			INSERT INTO #tblOldItem (
-				Id
-				,[Text]
-				)
-			SELECT p.ProviderId
-				,p.ProviderName
-			FROM dbo.Provider AS p WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldProviderIds, ',') AS f
-			WHERE p.ProviderId = f.val
-
-			INSERT INTO #tblNewItem (
-				Id
-				,[Text]
-				)
-			SELECT p.ProviderId
-				,p.ProviderName
-			FROM dbo.Provider AS p WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@ProviderIds, ',') AS f
-			WHERE p.ProviderId = f.val
-
-			IF EXISTS (
-					SELECT Id
-					FROM #tblOldItem
-					
-					EXCEPT
-					SELECT Id
-					FROM #tblNewItem
-					)
-				OR EXISTS (
-					SELECT Id
-					FROM #tblNewItem
-					
-					EXCEPT
-					SELECT Id
-					FROM #tblOldItem
-					)
-			BEGIN
-				SELECT @OldValue = ISNULL(STUFF((
-								SELECT ', ' + [Text]
-								FROM #tblOldItem WITH (NOLOCK)
-								FOR XML PATH('')
-								), 1, 2, ''), '')
-					,@NewValue = ISNULL(STUFF((
-								SELECT ', ' + [Text]
-								FROM #tblNewItem WITH (NOLOCK)
-								FOR XML PATH('')
-								), 1, 2, ''), '')
-
-				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
-				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-				WHERE mt.MsgTemplateCode = 'EditProvider'
-
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
-
-				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
-					,@IsImportant = 0
-					,@MessageType = @MessageType
-					,@SessionId = @SessionId
-			END
-
 			-- Edit Other Provider
 			TRUNCATE TABLE #tblOldItem
 			TRUNCATE TABLE #tblNewItem
@@ -315,21 +270,21 @@ BEGIN
 				Id
 				,[Text]
 				)
-			SELECT r.RunnerId
-				,r.RunnerName
-			FROM dbo.Runner AS r WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldRunnerIds, ',') AS f
-			WHERE r.RunnerId = f.val
+			SELECT op.OtherProviderId
+				,op.OtherProviderName
+			FROM dbo.OtherProvider AS op WITH (NOLOCK)
+				CROSS APPLY dbo.fnc_SplitStrings(@OldOtherProviderIds, ',') AS f
+			WHERE op.OtherProviderId = f.val
 
 			INSERT INTO #tblNewItem (
 				Id
 				,[Text]
 				)
-			SELECT r.RunnerId
-				,r.RunnerName
-			FROM dbo.Runner AS r WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@RunnerIds, ',') AS f
-			WHERE r.RunnerId = f.val
+			SELECT op.OtherProviderId
+				,op.OtherProviderName
+			FROM dbo.OtherProvider AS op WITH (NOLOCK)
+				CROSS APPLY dbo.fnc_SplitStrings(@OtherProviderIds, ',') AS f
+			WHERE op.OtherProviderId = f.val
 
 			IF EXISTS (
 					SELECT Id
@@ -368,7 +323,74 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo =@AssigneeProviderInfo
+					,@MessageTo = @AssigneeProviderInfo
+					,@IsImportant = 0
+					,@MessageType = @MessageType
+					,@SessionId = @SessionId
+			END
+
+			-- Edit Provider
+			TRUNCATE TABLE #tblOldItem
+			TRUNCATE TABLE #tblNewItem
+
+			INSERT INTO #tblOldItem (
+				Id
+				,[Text]
+				)
+			SELECT p.ProviderId
+				,p.ProviderName
+			FROM dbo.[Provider] AS p WITH (NOLOCK)
+				CROSS APPLY dbo.fnc_SplitStrings(@OldProviderIds, ',') AS f
+			WHERE p.ProviderId = f.val
+
+			INSERT INTO #tblNewItem (
+				Id
+				,[Text]
+				)
+			SELECT p.ProviderId
+				,p.ProviderName
+			FROM dbo.[Provider] AS p WITH (NOLOCK)
+				CROSS APPLY dbo.fnc_SplitStrings(@ProviderIds, ',') AS f
+			WHERE p.ProviderId = f.val
+
+			IF EXISTS (
+					SELECT Id
+					FROM #tblOldItem
+					
+					EXCEPT
+					SELECT Id
+					FROM #tblNewItem
+					)
+				OR EXISTS (
+					SELECT Id
+					FROM #tblNewItem
+					
+					EXCEPT
+					SELECT Id
+					FROM #tblOldItem
+					)
+			BEGIN
+				SELECT @OldValue = ISNULL(STUFF((
+								SELECT ', ' + [Text]
+								FROM #tblOldItem WITH (NOLOCK)
+								FOR XML PATH('')
+								), 1, 2, ''), '')
+					,@NewValue = ISNULL(STUFF((
+								SELECT ', ' + [Text]
+								FROM #tblNewItem WITH (NOLOCK)
+								FOR XML PATH('')
+								), 1, 2, ''), '')
+
+				SELECT @MessageTemplate = mt.MsgTemplateContent
+					,@MessageType = mt.MsgTemplateId
+				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+				WHERE mt.MsgTemplateCode = 'EditProvider' 
+
+				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageTo = @AssigneeProviderInfo
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
@@ -538,27 +560,6 @@ BEGIN
 					,@SessionId = @SessionId
 			END
 
-			-- Edit Match Offer
-			IF @OldKOTimeRemark <> @KOTimeRemark
-			BEGIN
-				SELECT @OldValue = @OldKOTimeRemark
-					,@NewValue = @KOTimeRemark
-
-				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
-				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-				WHERE mt.MsgTemplateCode = 'EditMatchOffer'
-
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
-
-				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
-					,@IsImportant = 0
-					,@MessageType = @MessageType
-					,@SessionId = @SessionId
-			END
-
 			-- Edit Round
 			IF @OldRound <> @Round
 			BEGIN
@@ -623,10 +624,10 @@ BEGIN
 			END
 
 			-- Edit No Of HDP
-			IF @OldNoOfHDP <> @NoOfHDP
+			IF @OldNoOfHDPId <> @NoOfHDPId
 			BEGIN
-				SELECT @OldValue = @OldNoOfHDP
-					,@NewValue = @NoOfHDP
+				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP')
+					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageType = mt.MsgTemplateId
@@ -722,6 +723,75 @@ BEGIN
 					,@MessageType = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditMarket'
+
+				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageTo = @AssigneeMatchInfo
+					,@IsImportant = 0
+					,@MessageType = @MessageType
+					,@SessionId = @SessionId
+			END
+			
+			-- Edit MatchOffer
+			TRUNCATE TABLE #tblOldItem
+			TRUNCATE TABLE #tblNewItem
+
+			INSERT INTO #tblOldItem (
+				Id
+				,[Text]
+				)
+			SELECT rr.ResourceId
+				,rr.Value
+			FROM dbo.RefResource AS rr WITH (NOLOCK)
+				CROSS APPLY dbo.fnc_SplitStrings(@OldMatchOfferIds, ',') AS f
+			WHERE rr.RefName = 'MatchOffer'
+				AND rr.ResourceId = f.val
+
+			INSERT INTO #tblNewItem (
+				Id
+				,[Text]
+				)
+			SELECT rr.ResourceId
+				,rr.Value
+			FROM dbo.RefResource AS rr WITH (NOLOCK)
+				CROSS APPLY dbo.fnc_SplitStrings(@MatchOfferIds, ',') AS f
+			WHERE rr.RefName = 'MatchOffer'
+				AND rr.ResourceId = f.val
+
+			IF EXISTS (
+					SELECT Id
+					FROM #tblOldItem
+					
+					EXCEPT
+					SELECT Id
+					FROM #tblNewItem
+					)
+				OR EXISTS (
+					SELECT Id
+					FROM #tblNewItem
+					
+					EXCEPT
+					SELECT Id
+					FROM #tblOldItem
+					)
+			BEGIN
+				SELECT @OldValue = ISNULL(STUFF((
+								SELECT ', ' + [Text]
+								FROM #tblOldItem WITH (NOLOCK)
+								FOR XML PATH('')
+								), 1, 2, ''), '')
+					,@NewValue = ISNULL(STUFF((
+								SELECT ', ' + [Text]
+								FROM #tblNewItem WITH (NOLOCK)
+								FOR XML PATH('')
+								), 1, 2, ''), '')
+
+				SELECT @MessageTemplate = mt.MsgTemplateContent
+					,@MessageType = mt.MsgTemplateId
+				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+				WHERE mt.MsgTemplateCode = 'EditMatchOffer'
 
 				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
 

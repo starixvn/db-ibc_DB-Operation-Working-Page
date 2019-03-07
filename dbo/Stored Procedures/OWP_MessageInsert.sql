@@ -18,6 +18,7 @@ Revisions:
   20170116@Tim.Trinh: add MessageType   
   20180927@Leo: remove unused columns - [Redmine: #92868]
   20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+  20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -54,14 +55,12 @@ BEGIN
 	INSERT INTO dbo.MessageUser (
 		MessageId
 		,UserId
-		,CreatedBy
-		,CreatedDate
+		 
 		,SessionId
 		)
 	SELECT @MessageId
 		,Id
-		,@UserId
-		,GETDATE()
+		 
 		,@SessionId
 	FROM @MessageTo
 END

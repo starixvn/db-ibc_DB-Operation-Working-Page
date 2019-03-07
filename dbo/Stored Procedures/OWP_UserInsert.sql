@@ -17,7 +17,7 @@ Revisions:
 			> 0: Specific Error.
 		• @ErrMsg: Error description.
 	20181214@Leo: restore SP
-	20190116@Leo: grant permission to bodbAdminNet
+	20190116@Leo: grant permission to bodbAdminNet - [Redmine: #108034]
 */
 BEGIN
 	SET NOCOUNT ON

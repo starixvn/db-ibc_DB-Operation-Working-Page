@@ -10,10 +10,11 @@ Param's Explanation:
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20190125@Kane.Le: Change Name to ShiftCode - [Redmine: #108206]
 */
 BEGIN
     SET NOCOUNT ON;
-    SELECT [Name], 
+    SELECT [ShiftCode], 
            Background, 
            Color
     FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK);

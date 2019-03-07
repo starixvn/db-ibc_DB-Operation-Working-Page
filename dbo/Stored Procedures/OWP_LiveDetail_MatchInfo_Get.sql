@@ -8,6 +8,8 @@ AS
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
+	20190116@Kane.Le: Get Column NoOfHDPId - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -22,11 +24,10 @@ BEGIN
 		,mi.WB
 		,mi.Phone
 		,mi.Remark
-		,mi.IsSelected
-		,mi.NoOfHDP
+		,mi.IsSelected		
+		,mi.NoOfHDPId
 		,mi.[Round]
 		,mi.IsSoloMatch
-		,mi.KOTimeRemark
 		,mi.[Round]
 		,mi.Division
 		,mi.Venue

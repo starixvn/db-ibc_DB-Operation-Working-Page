@@ -12,6 +12,7 @@ AS
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 	20190116@Raymond.Le: Add option 4HDP - [Redmine: #108043]
+	20190117@Leo.Vo: New structure of NoHDP - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -26,11 +27,8 @@ BEGIN
 	CREATE TABLE #tblNoOfHandicap (Value NVARCHAR(20))
 
 	INSERT INTO #tblNoOfHandicap (Value)
-	VALUES ('3HDP')
-		,('2HDP')
-		,('2+1H')
-		,('1HDP')
-		,('4HDP')
+	SELECT [Value] FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'NoOfHDP'
 
 	SELECT @RuleResultType = RuleResultType
 		,@Message = MessageFormat
@@ -63,7 +61,7 @@ BEGIN
 						SELECT 1
 						FROM #tblNoOfHandicap WITH (NOLOCK)
 						WHERE UPPER(REPLACE(NoHDP, ' ', '')) = Value
-						) THEN @Message
+						) THEN REPLACE(@Message, '<content>', NoHDP)
 				ELSE '' END
 				) AS [Message]
 		FROM dbo.AssignmentUploading WITH (NOLOCK)

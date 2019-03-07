@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_Assignment_Delete] @ActorId INT
 	,@SessionId NVARCHAR(50)
 	,@AssignmentId INT
@@ -16,6 +15,7 @@ Revisions:
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 	20181123@Leo.Vo: Fix notify message assignee - [Redmine: #104291]
 	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
+	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -279,10 +279,9 @@ BEGIN
 				,msn.MessageTypeId
 				)
 	OUTPUT inserted.MessageId
-		,msn.UserId
-		,@ActorId
+		,msn.UserId		
 		,@SessionId
-	INTO dbo.MessageUser([MessageId], [UserId], [CreatedBy], [SessionId]);
+	INTO dbo.MessageUser([MessageId], [UserId],  [SessionId]);
 
 	DROP TABLE #RemoveAssignment;
 END

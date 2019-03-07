@@ -1,4 +1,7 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Upload] 
+    @Data xml
+AS
 /*      
  Created: 20180312@Leo.Vo     
  Task : Working Shift Management
@@ -18,16 +21,12 @@
 </Data>
 '
 */
-
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Upload] 
-    @Data xml
-AS
 BEGIN
     SET NOCOUNT ON;
     DECLARE @tempTable TABLE
     ( 
         EmployeeId int, 
-        ShiftCode  varchar(50), 
+        ShiftId  int, 
         ShiftDate  date,
 		ShiftStartTime datetime,
 		ShiftEndTime datetime
@@ -35,7 +34,7 @@ BEGIN
 
     INSERT INTO @tempTable
            SELECT M.C.value('@EmployeeId', 'INT'), 
-                  UPPER(M.C.value('@ShiftCode', 'varchar(50)')), 
+                  M.C.value('@ShiftId', 'INT'), 
                   M.C.value('@ShiftDate', 'DATE'),
 				  M.C.value('@ShiftStartTime', 'DATETIME'),
 				  M.C.value('@ShiftEndTime', 'DATETIME')
@@ -44,7 +43,7 @@ BEGIN
     MERGE dbo.EmployeeWorkingShift AS t1
     USING(
              SELECT EmployeeId, 
-                    ShiftCode, 
+                    ShiftId, 
                     ShiftDate,
 					ShiftStartTime,
 					ShiftEndTime
@@ -53,15 +52,15 @@ BEGIN
     ON t1.EmployeeId = t2.EmployeeId AND 
        t1.ShiftDate = t2.ShiftDate
     WHEN MATCHED
-          THEN UPDATE SET t1.ShiftCode = t2.ShiftCode
+          THEN UPDATE SET t1.ShiftId = t2.ShiftId
 						,t1.ShiftStartTime = t2.ShiftStartTime
 						,t1.ShiftEndTime = t2.ShiftEndTime
     WHEN NOT MATCHED
           THEN
           INSERT(EmployeeId, 
-                 ShiftCode, 
+                 ShiftId, 
                  ShiftDate,
 				 ShiftStartTime,
 				 ShiftEndTime)
-          VALUES(t2.EmployeeId, t2.ShiftCode, t2.ShiftDate, t2.ShiftStartTime, t2.ShiftEndTime);
+          VALUES(t2.EmployeeId, t2.ShiftId, t2.ShiftDate, t2.ShiftStartTime, t2.ShiftEndTime);
 END;

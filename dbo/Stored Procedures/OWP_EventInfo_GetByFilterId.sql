@@ -13,6 +13,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 	20181106@Raymond.Le: Remove paging in SP - [Redmine: #104291]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -33,8 +34,8 @@ BEGIN
 		,@LeagueIds NVARCHAR(MAX)
 		,@AssigneeIds NVARCHAR(MAX)
 		,@AgentIds NVARCHAR(MAX)
+		,@OtherProviderIds NVARCHAR(MAX)
 		,@ProviderIds NVARCHAR(MAX)
-		,@RunnerIds NVARCHAR(MAX)
 		,@TVIds NVARCHAR(MAX)
 		,@MatchNumber NVARCHAR(50)
 		,@Remark NVARCHAR(500) 
@@ -51,8 +52,8 @@ BEGIN
 	SET @LeagueIds = dbo.fnc_GetValueFilter(@FilterId, 'League')
 	SET @AssigneeIds = dbo.fnc_GetValueFilter(@FilterId, 'Assignee')
 	SET @AgentIds = dbo.fnc_GetValueFilter(@FilterId, 'Agent')
+	SET @OtherProviderIds = dbo.fnc_GetValueFilter(@FilterId, 'OtherProvider')
 	SET @ProviderIds = dbo.fnc_GetValueFilter(@FilterId, 'Provider')
-	SET @RunnerIds = dbo.fnc_GetValueFilter(@FilterId, 'Runner')
 	SET @TVIds = dbo.fnc_GetValueFilter(@FilterId, 'TV')
 	SET @MatchNumber = dbo.fnc_GetValueFilter(@FilterId, 'MatchNumber')
 	SET @Remark = dbo.fnc_GetValueFilter(@FilterId, 'Remark')
@@ -86,8 +87,8 @@ BEGIN
 		,@LeagueIds = @LeagueIds
 		,@AssigneeIds = @AssigneeIds
 		,@AgentIds = @AgentIds
+		,@OtherProviderIds = @OtherProviderIds
 		,@ProviderIds = @ProviderIds
-		,@RunnerIds = @RunnerIds
 		,@TVIds = @TVIds
 		,@MatchNumber = @MatchNumber
 		,@Remark = @Remark

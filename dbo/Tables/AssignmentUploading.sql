@@ -7,7 +7,7 @@
     [InfoSiteMatchId]    NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_InfoSiteMatchId] DEFAULT (N'') NOT NULL,
     [KickOffTime]        NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_KickOffTime] DEFAULT (N'') NOT NULL,
     [OtherTime]          NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_OtherTime] DEFAULT (N'') NOT NULL,
-    [MatchOffer]         NVARCHAR (50)   CONSTRAINT [DF_AssignmentUploading_MatchOffer] DEFAULT (N'') NOT NULL,
+    [MatchOffer]         NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_MatchOffer] DEFAULT (N'') NOT NULL,
     [League]             NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_League] DEFAULT (N'') NOT NULL,
     [Home]               NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Home] DEFAULT (N'') NOT NULL,
     [Away]               NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Away] DEFAULT (N'') NOT NULL,
@@ -58,8 +58,8 @@
     [TV]                 NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_TV] DEFAULT (N'') NOT NULL,
     [Channel]            NVARCHAR (100)  CONSTRAINT [DF_AssignmentUploading_Channel] DEFAULT (N'') NOT NULL,
     [WB]                 NVARCHAR (100)  CONSTRAINT [DF_AssignmentUploading_WB] DEFAULT (N'') NOT NULL,
+    [OtherProvider]      NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_OtherProvider] DEFAULT (N'') NOT NULL,
     [Provider]           NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Provider] DEFAULT (N'') NOT NULL,
-    [Runner]             NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Runner] DEFAULT (N'') NOT NULL,
     [Phone]              NVARCHAR (50)   CONSTRAINT [DF_AssignmentUploading_Phone] DEFAULT (N'') NOT NULL,
     [Website1]           NVARCHAR (1000) CONSTRAINT [DF_AssignmentUploading_Website1] DEFAULT (N'') NOT NULL,
     [Website2]           NVARCHAR (1000) CONSTRAINT [DF_AssignmentUploading_Website2] DEFAULT (N'') NOT NULL,
@@ -69,6 +69,10 @@
     [ParentRowNumber]    INT             NULL,
     CONSTRAINT [PK_AssignmentUploading] PRIMARY KEY CLUSTERED ([SessionId] ASC, [RowNumber] ASC)
 );
+
+
+
+
 
 
 
