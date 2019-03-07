@@ -36,7 +36,7 @@ BEGIN
 	DECLARE @TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
 
 	SELECT @SiteId = SiteId
-	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
+	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
 	WHERE SiteName = 'Operation Working Page'
 		AND IsActive = 1
 		AND Environment = 'LIVE'
@@ -129,7 +129,7 @@ BEGIN
 		,ISNULL(u.LocationCode, 'None')
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-		INNER JOIN DBCUST.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
 		LEFT JOIN @tblSection AS s ON u.SectionId = s.SectionId
 		LEFT JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId
