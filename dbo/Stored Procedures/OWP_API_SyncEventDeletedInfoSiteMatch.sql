@@ -1,4 +1,4 @@
-﻿
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_API_SyncEventDeletedInfoSiteMatch]
 	/*    
  Created: 20190104@Kane.Le
