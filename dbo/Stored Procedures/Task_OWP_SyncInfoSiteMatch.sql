@@ -14,11 +14,13 @@ AS
 	20190107@Leo.Vo: Notification - [Redmine: #107257]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190221@Leo.Vo: Fix to sync minor match - [Redmine: #109216]
+	20190304@Leo.Vo: Message for watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @NotificationSettingId INT = 5
+	DECLARE @AssigneeMatchInfoNotificationSettingId INT = 5
+		,@WatcherMatchInfoNotificationSettingId INT = 9
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
 		,@Specific15MinsNoOfCorners INT = - 5
@@ -77,6 +79,16 @@ BEGIN
 		,OWPLeagueId INT NOT NULL
 		,OWPHomeId INT NOT NULL
 		,OWPAwayId INT NOT NULL
+		)
+
+	CREATE TABLE #tblAssignee (
+		UserId INT NOT NULL
+		,OWPMatchId INT NOT NULL
+		)
+
+	CREATE TABLE #tblUserInSectionOfAssignee (
+		UserId INT NOT NULL
+		,OWPMatchId INT NOT NULL
 		)
 
 	--temp list of matches planned to sync
@@ -264,11 +276,17 @@ BEGIN
 		,OWPAwayName NVARCHAR(200)
 		)
 
-	CREATE TABLE #tblMessage (
-		UserId INT NOT NULL
+	CREATE TABLE #tblMessageTemplate (
+		OWPMatchId INT NOT NULL
 		,MessageContent NVARCHAR(MAX) NOT NULL
 		,MessageTypeId INT NOT NULL
 		,IsImportant BIT NOT NULL
+		)
+
+	CREATE TABLE #tblMessage (
+		OWPMatchId INT NOT NULL
+		,MessageId INT NOT NULL
+		,MessageTypeId INT NOT NULL
 		)
 
 	CREATE TABLE #tblLeagueLog (
@@ -445,105 +463,144 @@ BEGIN
 				)
 			)
 
-	-- message for team
-	INSERT INTO #tblMessage (
-		UserId
+	-- message template
+	INSERT INTO #tblMessageTemplate (
+		OWPMatchId
 		,MessageContent
 		,MessageTypeId
 		,IsImportant
 		)
-	SELECT ass.UserId
-		,m.MessageContent
+	SELECT l.OWPMatchId
+		,REPLACE(REPLACE(@EditTeamMessageTemplate, '<oldevent>', oh.OWPTeamName + ' vs ' + oa.OWPTeamName), '<newevent>', nh.OWPTeamName + ' vs ' + na.OWPTeamName) AS MessageContent
 		,@EditTeamMessageTemplateId
 		,1
-	FROM (
-		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(@EditTeamMessageTemplate, '<oldevent>', oh.OWPTeamName + ' vs ' + oa.OWPTeamName), '<newevent>', nh.OWPTeamName + ' vs ' + na.OWPTeamName) AS MessageContent
-		FROM #tblTeamLog AS l
-			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
-			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = l.OldOWPHomeId
-			INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = l.OldOWPAwayId
-			INNER JOIN dbo.OWPTeam AS nh WITH (NOLOCK) ON nh.OWPTeamId = m.OWPHomeId
-			INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
-		) AS m
-		INNER JOIN (
-		SELECT DISTINCT ass.UserId
-			,ass.OWPMatchId
-		FROM dbo.Assignment AS ass WITH (NOLOCK)
-			INNER JOIN #tblTeamLog AS l ON ass.OWPMatchId = l.OWPMatchId
-			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
-		WHERE ass.UserId IS NOT NULL
-		) AS ass ON m.OWPMatchId = ass.OWPMatchId
-
-	-- message for league
-	INSERT INTO #tblMessage (
-		UserId
-		,MessageContent
-		,MessageTypeId
-		,IsImportant
-		)
-	SELECT ass.UserId
-		,m.MessageContent
+	FROM #tblTeamLog AS l
+		INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = l.OldOWPHomeId
+		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = l.OldOWPAwayId
+		INNER JOIN dbo.OWPTeam AS nh WITH (NOLOCK) ON nh.OWPTeamId = m.OWPHomeId
+		INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
+	
+	UNION
+	SELECT l.OWPMatchId
+		,REPLACE(REPLACE(REPLACE(REPLACE(@EditLeagueMessageTemplate, '<home>', h.OWPTeamName), '<away>', a.OWPTeamName), '<oldvalue>', ol.OWPLeagueName), '<newvalue>', nl.OWPLeagueName) AS MessageContent
 		,@EditLeagueMessageTemplateId
 		,1
-	FROM (
-		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(REPLACE(REPLACE(@EditLeagueMessageTemplate, '<home>', h.OWPTeamName), '<away>', a.OWPTeamName), '<oldvalue>', ol.OWPLeagueName), '<newvalue>', nl.OWPLeagueName) AS MessageContent
-		FROM #tblLeagueLog AS l
-			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
-			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-			INNER JOIN dbo.OWPLeague AS nl WITH (NOLOCK) ON nl.OWPLeagueId = l.NewOWPLeagueId
-			INNER JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId = l.OldOWPLeagueId
-		) AS m
-		INNER JOIN (
-		SELECT DISTINCT ass.UserId
-			,ass.OWPMatchId
-		FROM dbo.Assignment AS ass WITH (NOLOCK)
-			INNER JOIN #tblLeagueLog AS l ON ass.OWPMatchId = l.OWPMatchId
-			INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
-		WHERE ass.UserId IS NOT NULL
-		) AS ass ON m.OWPMatchId = ass.OWPMatchId
+	FROM #tblLeagueLog AS l
+		INNER JOIN #tblMatchInTimeRange AS mt ON l.OWPMatchId = mt.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+		INNER JOIN dbo.OWPLeague AS nl WITH (NOLOCK) ON nl.OWPLeagueId = l.NewOWPLeagueId
+		INNER JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId = l.OldOWPLeagueId
 
-	-- insert message
+	-- insert Message assignee
 	MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-	USING (
-		SELECT m.UserId
-			,m.MessageContent
-			,m.MessageTypeId
-			,m.IsImportant
-		FROM #tblMessage AS m
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = m.UserId
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotificationSettingId
-			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = m.UserId
-		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-		) AS msn ON 1 = 0
+	USING #tblMessageTemplate AS m ON 1 = 0
 	WHEN NOT MATCHED THEN
 			INSERT (
 				MessageContent
 				,CreatedBy
 				,IsImportant
 				,MessageType
+				,IsWatcher
 				)
 			VALUES (
-				msn.MessageContent
+				m.MessageContent
 				,@CreatedBy
-				,msn.IsImportant
-				,msn.MessageTypeId
+				,m.IsImportant
+				,m.MessageTypeId
+				,0
 				)
-	OUTPUT inserted.MessageId
-		,msn.UserId
-		,@SessionId
-	INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
+	OUTPUT m.OWPMatchId
+		,inserted.MessageId
+		,inserted.MessageType
+	INTO #tblMessage(OWPMatchId, [MessageId], MessageTypeId);
+	
+	INSERT INTO #tblAssignee (
+		UserId
+		,OWPMatchId
+		)
+	SELECT DISTINCT ass.UserId
+		,ass.OWPMatchId
+	FROM dbo.Assignment AS ass WITH (NOLOCK)
+		INNER JOIN #tblMatchInTimeRange AS m ON ass.OWPMatchId = m.OWPMatchId
+	WHERE ass.UserId IS NOT NULL
 
-	IF (
-			EXISTS (
-				SELECT 1
-				FROM #tblMessage
+	-- insert MessageUser assignee
+	INSERT INTO dbo.MessageUser (
+		MessageId
+		,UserId
+		,SessionId
+		)
+	SELECT m.MessageId
+		,ass.UserId
+		,@SessionId
+	FROM #tblMessage AS m
+		INNER JOIN #tblAssignee AS ass ON m.OWPMatchId = ass.OWPMatchId
+		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @AssigneeMatchInfoNotificationSettingId
+		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+		AND nsm.UserId = ass.UserId
+	WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+
+	-- insert Message watcher
+	DELETE #tblMessage
+
+	MERGE dbo.[Message] WITH (ROWLOCK) AS ms
+	USING #tblMessageTemplate AS m ON 1 = 0
+	WHEN NOT MATCHED THEN
+			INSERT (
+				MessageContent
+				,CreatedBy
+				,IsImportant
+				,MessageType
+				,IsWatcher
 				)
+			VALUES (
+				m.MessageContent
+				,@CreatedBy
+				,0
+				,m.MessageTypeId
+				,1
+				)
+	OUTPUT m.OWPMatchId
+		,inserted.MessageId
+		,inserted.MessageType
+	INTO #tblMessage(OWPMatchId, [MessageId], MessageTypeId);
+
+	INSERT INTO #tblUserInSectionOfAssignee (
+		UserId
+		,OWPMatchId
+		)
+	SELECT u2.UserId
+		,ass1.OWPMatchId
+	FROM #tblAssignee AS ass1
+		INNER JOIN dbo.[User] AS u1 WITH (NOLOCK) ON ass1.UserId = u1.UserId
+		INNER JOIN dbo.[User] AS u2 WITH (NOLOCK) ON u1.SectionId = u2.SectionId
+	WHERE NOT EXISTS (
+			SELECT 1
+			FROM #tblAssignee AS ass2
+			WHERE u2.UserId = ass2.UserId
+				AND ass1.OWPMatchId = ass2.OWPMatchId
+			)
+
+	-- insert MessageUser watcher
+	INSERT INTO dbo.MessageUser (
+		MessageId
+		,UserId
+		,SessionId
+		)
+	SELECT m.MessageId
+		,ns.UserId
+		,@SessionId
+	FROM #tblMessage AS m
+		INNER JOIN #tblUserInSectionOfAssignee AS u ON m.OWPMatchId = u.OWPMatchId
+		INNER JOIN dbo.fnc_GetWatcherToSendMessage(@WatcherMatchInfoNotificationSettingId) AS ns ON u.UserId = ns.UserId
+
+	IF EXISTS (
+			SELECT 1
+			FROM #tblMessage
 			)
 	BEGIN
 		INSERT INTO dbo.NotificationQueue (SessionId)
@@ -630,6 +687,8 @@ BEGIN
 
 	DROP TABLE #tblInfoSiteMatch
 
+	DROP TABLE #tblMessageTemplate
+
 	DROP TABLE #tblMessage
 
 	DROP TABLE #tblLeagueLog
@@ -649,4 +708,8 @@ BEGIN
 	DROP TABLE #tblMatch
 
 	DROP TABLE #tblSimilarMatchInfo
+
+	DROP TABLE #tblAssignee
+
+	DROP TABLE #tblUserInSectionOfAssignee
 END
