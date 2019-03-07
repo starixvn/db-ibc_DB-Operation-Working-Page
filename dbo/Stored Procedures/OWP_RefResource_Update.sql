@@ -15,17 +15,19 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
+
 	IF NOT EXISTS (
 			SELECT TOP 1 ref.ResourceId
 			FROM dbo.RefResource ref WITH (NOLOCK)
-			WHERE LOWER(LTRIM(RTRIM(ref.[Value]))) = LOWER(LTRIM(RTRIM(@Value)))
+			WHERE RefName = @RefName
+				AND LOWER(LTRIM(RTRIM(ref.[Value]))) = LOWER(LTRIM(RTRIM(@Value)))
 			)
 	BEGIN
-	UPDATE dbo.RefResource
-	WITH (ROWLOCK)
+		UPDATE dbo.RefResource
+		WITH (ROWLOCK)
 
-	SET [Value] = @Value
-	WHERE RefName =@RefName
-		AND ResourceId = @ResourceId
-		END
+		SET [Value] = @Value
+		WHERE RefName = @RefName
+			AND ResourceId = @ResourceId
+	END
 END
