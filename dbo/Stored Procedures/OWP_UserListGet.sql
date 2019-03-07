@@ -33,7 +33,7 @@ BEGIN
 	DECLARE @SiteId INT
 
 	SELECT @SiteId = SiteId
-	FROM DBCUST.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
+	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
 	WHERE SiteName = 'Operation Working Page'
 		AND IsActive = 1
 		AND Environment = 'LIVE'
@@ -50,7 +50,7 @@ BEGIN
 		,u.UserId
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-		INNER JOIN DBCUST.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
 		LEFT JOIN dbo.UserRole AS r WITH (NOLOCK) ON r.UserId = u.UserId
 	WHERE (
