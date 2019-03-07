@@ -15,7 +15,8 @@ BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @LASection INT
-		,@NextDate DATE = DATEADD(DAY, 1, @EventDate)
+		,@FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 
 	SELECT @LASection = ResourceId
 	FROM dbo.RefResource WITH (NOLOCK)
@@ -51,11 +52,11 @@ BEGIN
 
 	SELECT u.UserId
 		,(CASE 
-			WHEN ws.ShiftStartTime < @EventDate THEN @EventDate
+			WHEN ws.ShiftStartTime < @FromDate THEN @FromDate
 			ELSE ws.ShiftStartTime END
 			) AS ShiftStartTime
 		,(CASE 
-			WHEN ws.ShiftEndTime > @NextDate THEN @NextDate
+			WHEN ws.ShiftEndTime > @ToDate THEN @ToDate
 			ELSE ws.ShiftEndTime END
 			) AS ShiftEndTime
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
@@ -63,12 +64,12 @@ BEGIN
 		AND c.IsTimeShift = 1
 		INNER JOIN #tblUser AS u ON ws.EmployeeId = u.UserId
 	WHERE (
-			ws.ShiftStartTime >= @EventDate
-			AND ws.ShiftStartTime <= @NextDate
+			ws.ShiftStartTime > @FromDate
+			AND ws.ShiftStartTime <= @ToDate
 			)
 		OR (
-			ws.ShiftEndTime >= @EventDate
-			AND ws.ShiftEndTime <= @NextDate
+			ws.ShiftEndTime > @FromDate
+			AND ws.ShiftEndTime <= @ToDate
 			)
 
 	DROP TABLE #tblUser
