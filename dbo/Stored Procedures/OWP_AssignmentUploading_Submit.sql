@@ -25,6 +25,7 @@ AS
 	20190110@Leo.Vo: New structure of Match offer & NoOfHDP - [Redmine: #107257]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190225@Raymond.Le: Remove InfoSiteMatchId of un-selected matches - [Redmine: #108723]
+	20190308@Leo.Vo: Avoid to send message to UserId NULL - [Redmine: #110010]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -2579,7 +2580,7 @@ BEGIN
 			,u.UserId			 
 			,@SessionId
 		FROM #tblInsertedMessageUpdateMatchSetting AS m
-			LEFT JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId
+			INNER JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId
 			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyMatchInfoUpdatedId
 			LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON u.UserId = nm.UserId
 			AND nm.NotificationSettingId = @NotifyMatchInfoUpdatedId
@@ -2635,7 +2636,7 @@ BEGIN
 			,u.UserId			
 			,@SessionId
 		FROM #tblInsertedMessageUpdateMatchInfo AS m
-			LEFT JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId
+			INNER JOIN #tblUsersReceivedMessageUpdate AS u ON m.OWPMatchId = u.OWPMatchId
 			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = m.NotificationSettingId
 			LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON u.UserId = nm.UserId
 			AND nm.NotificationSettingId = m.NotificationSettingId
