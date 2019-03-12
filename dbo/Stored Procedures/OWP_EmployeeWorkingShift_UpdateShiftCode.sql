@@ -4,6 +4,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateShiftCode] @ActorId INT
 	,@EmployeeId INT
 	,@ShiftId INT
 	,@ShiftDate DATE
+	,@IsOvertime BIT = 0
 AS
 /*    
  Created: 20180914@Kane.Le
@@ -14,6 +15,7 @@ Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	20190215@Leo.Vo: Init default shift - [Redmine: #108723]
+	20190312@Leo.Vo: Add overtime - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -54,7 +56,14 @@ BEGIN
 
 	-- try to update
 	UPDATE dbo.EmployeeWorkingShift WITH (ROWLOCK)
-	SET ShiftId = @ShiftId
+	SET RefShiftId = (CASE 
+			WHEN @IsOvertime = 1 THEN CASE 
+					WHEN RefShiftId IS NULL THEN ShiftId
+					ELSE RefShiftId
+					END
+			ELSE NULL END
+			)
+		,ShiftId = @ShiftId
 		,ShiftStartTime = @ShiftStartTime
 		,ShiftEndTime = @ShiftEndTime
 	WHERE EmployeeId = @EmployeeId
@@ -86,10 +95,11 @@ BEGIN
 			,@StartDate = @StartDate
 			,@EndDate = @EndDate
 	END
-	
+
 	SELECT EmployeeId
 		,ShiftId
 		,ShiftDate
+		,RefShiftId
 	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
 	WHERE EmployeeId = @EmployeeId
 		AND ShiftDate BETWEEN @StartDate
