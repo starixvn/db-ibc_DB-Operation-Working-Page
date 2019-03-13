@@ -14,6 +14,7 @@ AS
  Revisions:      
 	20181004@Kane.Le: delete odds compiler - [Redmine: #92868]
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
+	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -31,6 +32,7 @@ BEGIN
 		,@MessageType INT
 		,@Assignee TVP_INT
 		,@NotificationSettingId INT = 4
+		,@NotificationSettingIdWatcher INT = 8
 		,@Id INT = 1
 		,@Total INT
 		,@MatchRecommendOddId INT
@@ -67,8 +69,11 @@ BEGIN
 	INSERT INTO #ValidMatchRecommendOddsIds (MatchRecommendOddsId)
 	SELECT m.MatchRecommendOddsId
 	FROM #MatchRecommendOddsIds AS i
-		INNER JOIN dbo.MatchRecommendOdds AS m WITH (NOLOCK) ON m.MatchRecommendOddsId = i.MatchRecommendOddsId
-	WHERE Bettype IN (5, 15)
+	INNER JOIN dbo.MatchRecommendOdds AS m WITH (NOLOCK) ON m.MatchRecommendOddsId = i.MatchRecommendOddsId
+	WHERE Bettype IN (
+			5
+			,15
+			)
 		OR HDP IS NOT NULL
 
 	DELETE id
@@ -93,7 +98,7 @@ BEGIN
 		,TeamChoice
 		,HDP
 	FROM #ValidMatchRecommendOddsIds AS i
-		INNER JOIN dbo.MatchRecommendOdds AS m WITH (NOLOCK) ON i.MatchRecommendOddsId = m.MatchRecommendOddsId
+	INNER JOIN dbo.MatchRecommendOdds AS m WITH (NOLOCK) ON i.MatchRecommendOddsId = m.MatchRecommendOddsId
 
 	INSERT INTO #ValidMatchRecommendOddsDetail (
 		MatchRecommendOddsId
@@ -104,7 +109,7 @@ BEGIN
 		,Choice
 		,Odds
 	FROM #ValidMatchRecommendOddsIds AS i
-		INNER JOIN dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK) ON i.MatchRecommendOddsId = d.MatchRecommendOddsId
+	INNER JOIN dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK) ON i.MatchRecommendOddsId = d.MatchRecommendOddsId
 	WHERE Odds IS NOT NULL
 
 	-- remove main records
@@ -170,7 +175,10 @@ BEGIN
 			SELECT @OldTeamName = ''
 				,@OldHandicapText = ''
 
-			IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
+			IF @Bettype IN (
+					@BettypeHDP
+					,@Bettype1HHDP
+					)
 			BEGIN
 				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
 
@@ -179,7 +187,10 @@ BEGIN
 				ELSE IF @OldTeamChoice = 2
 					SET @OldTeamName = 'Away@'
 			END
-			ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
+			ELSE IF @Bettype IN (
+					@BettypeOU
+					,@Bettype1HOU
+					)
 			BEGIN
 				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
 			END
@@ -209,6 +220,92 @@ BEGIN
 
 			SET @Id = @Id + 1
 		END
+
+		-------------- WATCHER --------------------
+		-- 20190304@Kane.Le send message to watcher
+		CREATE TABLE #tblUserAssignees (
+			UserId INT NOT NULL
+			,SectionId INT
+			)
+
+		INSERT INTO #tblUserAssignees (
+			UserId
+			,SectionId
+			)
+		SELECT u.UserId
+			,u.SectionId
+		FROM dbo.[fnc_GetAllAssigneeOfMatch](@OWPMatchId) AS u
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblUserAssignees AS ass2
+				WHERE u.UserId = ass2.UserId
+				)
+
+		CREATE TABLE #tblUserIdReciveWatchers (
+			UserId INT NOT NULL
+			,SectionId INT
+			)
+
+		INSERT INTO #tblUserIdReciveWatchers (
+			UserId
+			,SectionId
+			)
+		SELECT nsm.UserId
+			,u.SectionId
+		FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nsm.UserId = u.UserId
+		WHERE ns.NotificationSettingId = @NotificationSettingIdWatcher
+			AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+			AND u.SectionId IN (
+				SELECT SectionId
+				FROM #tblUserAssignees
+				)
+			AND u.UserId <> @UserId
+
+		DECLARE @RowCount INT = 0
+		DECLARE @MessageId INT
+
+		SELECT @RowCount = COUNT(1)
+		FROM #tblUserIdReciveWatchers
+
+		IF @RowCount > 0
+		BEGIN
+			INSERT INTO dbo.[Message] (
+				MessageContent
+				,MessageType
+				,CreatedBy
+				,IsImportant
+				,IsWatcher
+				)
+			VALUES (
+				@MessageTemplate
+				,@MessageType
+				,@UserId
+				,0
+				,1
+				)
+
+			SET @MessageId = @@IDENTITY
+
+			IF @MessageId IS NOT NULL
+				INSERT INTO dbo.MessageUser (
+					MessageId
+					,UserId
+					,IsViewed
+					,SessionId
+					)
+				SELECT @MessageId
+					,wc.UserId
+					,0
+					,@SessionId
+				FROM #tblUserIdReciveWatchers AS wc
+		END
+
+		DROP TABLE #tblUserAssignees
+
+		DROP TABLE #tblUserIdReciveWatchers
+			------------- END Watcher -----------------------
 	END
 
 	DROP TABLE #MatchRecommendOddsIds

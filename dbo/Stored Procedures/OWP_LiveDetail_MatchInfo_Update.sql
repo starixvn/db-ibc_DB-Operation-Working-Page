@@ -38,6 +38,7 @@ Revisions:
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Update Column NoOfHDPId - [Redmine: #107257]
+	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -77,10 +78,11 @@ BEGIN
 		,@EventDateTime DATETIME
 		,@NewOtherTime TIME
 		,@CurrentDateTimeGMTplus8 DATETIME = DATEADD(HOUR, 12, GETDATE())
-
 		-- Notification Setting
 		,@NotifyMatchInfoUpdatedId INT = 5
 		,@NotifyProviderInfoUpdatedId INT = 11
+		,@NotifyMatchInfoUpdatedIdWatcher SMALLINT = 9
+		,@NotifyProviderUpdatedIdWatcher SMALLINT = 9
 
 	CREATE TABLE #tblOldItem (
 		Id INT
@@ -96,7 +98,7 @@ BEGIN
 		SELECT @OldMarketIds = COALESCE(@OldMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
 		FROM dbo.MatchMarket WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
-		
+
 		SELECT @OldMatchOfferIds = COALESCE(@OldMatchOfferIds + ', ', '') + CAST(MatchOfferId AS NVARCHAR)
 		FROM dbo.MatchOfferDetail WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
@@ -117,11 +119,16 @@ BEGIN
 			,@OldProviderIds = m.[Provider]
 			,@OldAgentIds = m.Agent
 		FROM dbo.MatchInfo m WITH (NOLOCK)
-			LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
+		LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 		WHERE m.OWPMatchId = @OWPMatchId
 
 		-- update new value
-		UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
+		UPDATE dbo.MatchInfo
+		WITH (
+				ROWLOCK
+				,UPDLOCK
+				)
+
 		SET Channel = @Channel
 			,WB = @WB
 			,Phone = @Phone
@@ -137,7 +144,12 @@ BEGIN
 			,Agent = @AgentIds
 		WHERE OWPMatchId = @OWPMatchId
 
-		UPDATE dbo.OWPMatch WITH (ROWLOCK, UPDLOCK)
+		UPDATE dbo.OWPMatch
+		WITH (
+				ROWLOCK
+				,UPDLOCK
+				)
+
 		SET OtherTime = @OtherTime
 		WHERE OWPMatchId = @OWPMatchId
 
@@ -149,25 +161,25 @@ BEGIN
 		IF (ISNULL(@MarketIds, '') != '')
 		BEGIN
 			INSERT INTO dbo.MatchMarket (
-			OWPMatchId
-			,MarketId
-			)
+				OWPMatchId
+				,MarketId
+				)
 			SELECT @OWPMatchId
 				,val
 			FROM dbo.strSplit(ISNULL(@MarketIds, ''), ',')
 		END
-		
+
 		-- handle changes of Match Offer
 		DELETE
 		FROM dbo.MatchOfferDetail
 		WHERE OWPMatchId = @OWPMatchId
-		
+
 		IF (ISNULL(@MatchOfferIds, '') != '')
 		BEGIN
 			INSERT INTO dbo.MatchOfferDetail (
-			OWPMatchId
-			,MatchOfferId
-			)
+				OWPMatchId
+				,MatchOfferId
+				)
 			SELECT @OWPMatchId
 				,val
 			FROM dbo.strSplit(ISNULL(@MatchOfferIds, ''), ',')
@@ -176,14 +188,78 @@ BEGIN
 		-- send message edit if in time range
 		IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 		BEGIN
+			CREATE TABLE #tblUserAssignees (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserAssignees (
+				UserId
+				,SectionId
+				)
+			SELECT u.UserId
+				,u.SectionId
+			FROM dbo.[fnc_GetAllAssigneeOfMatch](@OWPMatchId) AS u
+			WHERE NOT EXISTS (
+					SELECT 1
+					FROM #tblUserAssignees AS ass2
+					WHERE u.UserId = ass2.UserId
+					)
+
+			---- Push user Id watcher MathInfo
+			CREATE TABLE #tblUserIdReciveWatcherMathInfo (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserIdReciveWatcherMathInfo (
+				UserId
+				,SectionId
+				)
+			SELECT nsm.UserId
+				,u.SectionId
+			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nsm.UserId = u.UserId
+			WHERE ns.NotificationSettingId = @NotifyMatchInfoUpdatedIdWatcher
+				AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+				AND u.SectionId IN (
+					SELECT SectionId
+					FROM #tblUserAssignees
+					)
+				AND u.UserId <> @ActorId
+
+			---- Push user Id watcher Provider Info
+			CREATE TABLE #tblUserIdReciveWatcherProviderInfo (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserIdReciveWatcherProviderInfo (
+				UserId
+				,SectionId
+				)
+			SELECT nsm.UserId
+				,u.SectionId
+			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nsm.UserId = u.UserId
+			WHERE ns.NotificationSettingId = @NotifyProviderUpdatedIdWatcher
+				AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+				AND u.SectionId IN (
+					SELECT SectionId
+					FROM #tblUserAssignees
+					)
+				AND u.UserId <> @ActorId
+
 			SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
 			SELECT @HomeTeamName = home.OWPTeamName
 				,@AwayTeamName = away.OWPTeamName
 				,@EventDateTime = om.EventDateTime
 			FROM dbo.OWPMatch AS om WITH (NOLOCK)
-				LEFT JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
-				LEFT JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
+			LEFT JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
+			LEFT JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
 			WHERE om.OWPMatchId = @OWPMatchId
 
 			SELECT @NewOtherTime = CAST(@OtherTime AS TIME)
@@ -197,7 +273,7 @@ BEGIN
 			INSERT INTO @AssigneeProviderInfo
 			SELECT UserId
 			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotifyProviderInfoUpdatedId)
-			
+
 			-- Edit TV--
 			INSERT INTO #tblOldItem (
 				Id
@@ -206,7 +282,7 @@ BEGIN
 			SELECT tv.TVId
 				,tv.TVCode
 			FROM dbo.Television AS tv WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldTVIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@OldTVIds, ',') AS f
 			WHERE tv.TVId = f.val
 
 			INSERT INTO #tblNewItem (
@@ -216,7 +292,7 @@ BEGIN
 			SELECT tv.TVId
 				,tv.TVCode
 			FROM dbo.Television AS tv WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@TVIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@TVIds, ',') AS f
 			WHERE tv.TVId = f.val
 
 			IF EXISTS (
@@ -224,6 +300,7 @@ BEGIN
 					FROM #tblOldItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblNewItem
 					)
@@ -232,6 +309,7 @@ BEGIN
 					FROM #tblNewItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblOldItem
 					)
@@ -260,10 +338,53 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+				DECLARE @RowCount INT = 0
+				DECLARE @MessageId INT
+
+				SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherProviderInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherProviderInfo AS wc
+				END
+
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Other Provider
 			TRUNCATE TABLE #tblOldItem
+
 			TRUNCATE TABLE #tblNewItem
 
 			INSERT INTO #tblOldItem (
@@ -273,7 +394,7 @@ BEGIN
 			SELECT op.OtherProviderId
 				,op.OtherProviderName
 			FROM dbo.OtherProvider AS op WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldOtherProviderIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@OldOtherProviderIds, ',') AS f
 			WHERE op.OtherProviderId = f.val
 
 			INSERT INTO #tblNewItem (
@@ -283,7 +404,7 @@ BEGIN
 			SELECT op.OtherProviderId
 				,op.OtherProviderName
 			FROM dbo.OtherProvider AS op WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OtherProviderIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@OtherProviderIds, ',') AS f
 			WHERE op.OtherProviderId = f.val
 
 			IF EXISTS (
@@ -291,6 +412,7 @@ BEGIN
 					FROM #tblOldItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblNewItem
 					)
@@ -299,6 +421,7 @@ BEGIN
 					FROM #tblNewItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblOldItem
 					)
@@ -327,10 +450,50 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+				SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherProviderInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherProviderInfo AS wc
+				END
+
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Provider
 			TRUNCATE TABLE #tblOldItem
+
 			TRUNCATE TABLE #tblNewItem
 
 			INSERT INTO #tblOldItem (
@@ -340,7 +503,7 @@ BEGIN
 			SELECT p.ProviderId
 				,p.ProviderName
 			FROM dbo.[Provider] AS p WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldProviderIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@OldProviderIds, ',') AS f
 			WHERE p.ProviderId = f.val
 
 			INSERT INTO #tblNewItem (
@@ -350,7 +513,7 @@ BEGIN
 			SELECT p.ProviderId
 				,p.ProviderName
 			FROM dbo.[Provider] AS p WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@ProviderIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@ProviderIds, ',') AS f
 			WHERE p.ProviderId = f.val
 
 			IF EXISTS (
@@ -358,6 +521,7 @@ BEGIN
 					FROM #tblOldItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblNewItem
 					)
@@ -366,6 +530,7 @@ BEGIN
 					FROM #tblNewItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblOldItem
 					)
@@ -384,7 +549,7 @@ BEGIN
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageType = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-				WHERE mt.MsgTemplateCode = 'EditProvider' 
+				WHERE mt.MsgTemplateCode = 'EditProvider'
 
 				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
 
@@ -394,10 +559,50 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+				SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherProviderInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherProviderInfo AS wc
+				END
+
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Agent
 			TRUNCATE TABLE #tblOldItem
+
 			TRUNCATE TABLE #tblNewItem
 
 			INSERT INTO #tblOldItem (
@@ -407,7 +612,7 @@ BEGIN
 			SELECT a.AgentId
 				,a.AgentName
 			FROM dbo.Agent AS a WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldAgentIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@OldAgentIds, ',') AS f
 			WHERE a.AgentId = f.val
 
 			INSERT INTO #tblNewItem (
@@ -417,7 +622,7 @@ BEGIN
 			SELECT a.AgentId
 				,a.AgentName
 			FROM dbo.Agent AS a WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@AgentIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@AgentIds, ',') AS f
 			WHERE a.AgentId = f.val
 
 			IF EXISTS (
@@ -425,6 +630,7 @@ BEGIN
 					FROM #tblOldItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblNewItem
 					)
@@ -433,6 +639,7 @@ BEGIN
 					FROM #tblNewItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblOldItem
 					)
@@ -461,11 +668,50 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+				SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherProviderInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherProviderInfo AS wc
+				END
+
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Phone
 			IF @OldPhone <> @Phone
-			  AND DATEDIFF(MINUTE, @CurrentDateTimeGMTplus8, @EventDateTime) <= 60
+				AND DATEDIFF(MINUTE, @CurrentDateTimeGMTplus8, @EventDateTime) <= 60
 			BEGIN
 				SELECT @OldValue = @OldPhone
 					,@NewValue = @Phone
@@ -483,6 +729,45 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+				SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherProviderInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherProviderInfo AS wc
+				END
+
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Channel
@@ -504,6 +789,44 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+					SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherProviderInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherProviderInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit WB
@@ -525,22 +848,60 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+					SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherProviderInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherProviderInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Other time
 			IF (
-				@OldOtherTime IS NOT NULL
-				AND @NewOtherTime IS NOT NULL
-				AND @OldOtherTime <> @NewOtherTime
-				)
-			OR (
-				@OldOtherTime IS NULL
-				AND @NewOtherTime IS NOT NULL
-				)
-			OR (
-				@OldOtherTime IS NOT NULL
-				AND @NewOtherTime IS NULL
-				)
+					@OldOtherTime IS NOT NULL
+					AND @NewOtherTime IS NOT NULL
+					AND @OldOtherTime <> @NewOtherTime
+					)
+				OR (
+					@OldOtherTime IS NULL
+					AND @NewOtherTime IS NOT NULL
+					)
+				OR (
+					@OldOtherTime IS NOT NULL
+					AND @NewOtherTime IS NULL
+					)
 			BEGIN
 				SELECT @OldValue = ISNULL(CONVERT(NVARCHAR(10), @OldOtherTime, 100), '')
 					,@NewValue = ISNULL(CONVERT(NVARCHAR(10), @NewOtherTime, 100), '')
@@ -558,6 +919,44 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+					SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Round
@@ -579,6 +978,44 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+						SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Division
@@ -600,6 +1037,44 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+						SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Remark
@@ -621,13 +1096,61 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+						SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit No Of HDP
 			IF @OldNoOfHDPId <> @NoOfHDPId
 			BEGIN
-				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP')
-					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP')
+				SELECT @OldValue = (
+						SELECT [Value]
+						FROM dbo.RefResource WITH (NOLOCK)
+						WHERE ResourceId = @OldNoOfHDPId
+							AND RefName = 'NoOfHDP'
+						)
+					,@NewValue = (
+						SELECT [Value]
+						FROM dbo.RefResource WITH (NOLOCK)
+						WHERE ResourceId = @NoOfHDPId
+							AND RefName = 'NoOfHDP'
+						)
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageType = mt.MsgTemplateId
@@ -642,6 +1165,44 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+						SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Venue
@@ -663,10 +1224,49 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+						SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
 
 			-- Edit Market
 			TRUNCATE TABLE #tblOldItem
+
 			TRUNCATE TABLE #tblNewItem
 
 			INSERT INTO #tblOldItem (
@@ -676,7 +1276,7 @@ BEGIN
 			SELECT rr.ResourceId
 				,rr.Value
 			FROM dbo.RefResource AS rr WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldMarketIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@OldMarketIds, ',') AS f
 			WHERE rr.RefName = 'Market'
 				AND rr.ResourceId = f.val
 
@@ -687,7 +1287,7 @@ BEGIN
 			SELECT rr.ResourceId
 				,rr.Value
 			FROM dbo.RefResource AS rr WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@MarketIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@MarketIds, ',') AS f
 			WHERE rr.RefName = 'Market'
 				AND rr.ResourceId = f.val
 
@@ -696,6 +1296,7 @@ BEGIN
 					FROM #tblOldItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblNewItem
 					)
@@ -704,6 +1305,7 @@ BEGIN
 					FROM #tblNewItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblOldItem
 					)
@@ -732,10 +1334,49 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
+
+						SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
 			END
-			
+
 			-- Edit MatchOffer
 			TRUNCATE TABLE #tblOldItem
+
 			TRUNCATE TABLE #tblNewItem
 
 			INSERT INTO #tblOldItem (
@@ -745,7 +1386,7 @@ BEGIN
 			SELECT rr.ResourceId
 				,rr.Value
 			FROM dbo.RefResource AS rr WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@OldMatchOfferIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@OldMatchOfferIds, ',') AS f
 			WHERE rr.RefName = 'MatchOffer'
 				AND rr.ResourceId = f.val
 
@@ -756,7 +1397,7 @@ BEGIN
 			SELECT rr.ResourceId
 				,rr.Value
 			FROM dbo.RefResource AS rr WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(@MatchOfferIds, ',') AS f
+			CROSS APPLY dbo.fnc_SplitStrings(@MatchOfferIds, ',') AS f
 			WHERE rr.RefName = 'MatchOffer'
 				AND rr.ResourceId = f.val
 
@@ -765,6 +1406,7 @@ BEGIN
 					FROM #tblOldItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblNewItem
 					)
@@ -773,6 +1415,7 @@ BEGIN
 					FROM #tblNewItem
 					
 					EXCEPT
+					
 					SELECT Id
 					FROM #tblOldItem
 					)
@@ -801,10 +1444,46 @@ BEGIN
 					,@IsImportant = 0
 					,@MessageType = @MessageType
 					,@SessionId = @SessionId
-			END
 
+						SELECT @RowCount = COUNT(1)
+				FROM #tblUserIdReciveWatcherMathInfo
+
+				IF @RowCount > 0
+				BEGIN
+					INSERT INTO dbo.[Message] (
+						MessageContent
+						,MessageType
+						,CreatedBy
+						,IsImportant
+						,IsWatcher
+						)
+					VALUES (
+						@MessageTemplate
+						,@MessageType
+						,@ActorId
+						,0
+						,1
+						)
+
+					SET @MessageId = @@IDENTITY
+
+					IF @MessageId IS NOT NULL
+						INSERT INTO dbo.MessageUser (
+							MessageId
+							,UserId
+							,IsViewed
+							,SessionId
+							)
+						SELECT @MessageId
+							,wc.UserId
+							,0
+							,@SessionId
+						FROM #tblUserIdReciveWatcherMathInfo AS wc
+				END
+				SET @MessageId = NULL
+				SET @RowCount = 0
+			END
 		END
-		 
 	END TRY
 
 	BEGIN CATCH

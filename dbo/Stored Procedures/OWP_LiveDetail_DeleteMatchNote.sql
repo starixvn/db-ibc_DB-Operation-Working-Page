@@ -15,6 +15,7 @@ Revisions:
    20170420@Tim.Trinh: modify time to send message
    20180927@Leo.Vo: New structure of event assignment - [Redmine: #92868]
    20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+   20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -28,9 +29,9 @@ BEGIN
 		,@Xml XML
 		,@MessageTemplate NVARCHAR(MAX) = ''
 		,@MessageType INT
-		,@Assignee TVP_INT
+		,@Assignee TVP_INT		
 		,@NotificationSettingId INT = 3
-		
+		,@NotificationSettingIdWatcher INT = 7
 	DECLARE @HomeVsAway TABLE (
 		Home NVARCHAR(200)
 		,Away NVARCHAR(200)
@@ -59,7 +60,10 @@ BEGIN
 
 		-- delete
 		DELETE
-		FROM dbo.MatchNote WITH (ROWLOCK, UPDLOCK)
+		FROM dbo.MatchNote WITH (
+				ROWLOCK
+				,UPDLOCK
+				)
 		WHERE MatchNoteId = @MatchNoteId
 
 		-- insert message
@@ -85,19 +89,93 @@ BEGIN
 				,@SessionId = @SessionId
 				,@ErrCode = @ErrCode OUTPUT
 				,@ErrMsg = @ErrMsg OUTPUT
+
+			-------------- WATCHER --------------------
+			-- 20190304@Kane.Le send message to watcher
+			CREATE TABLE #tblUserAssignees (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserAssignees (
+				UserId
+				,SectionId
+				)
+			SELECT u.UserId
+				,u.SectionId
+			FROM dbo.[fnc_GetAllAssigneeOfMatch](@OWPMatchId) AS u
+			WHERE NOT EXISTS (
+					SELECT 1
+					FROM #tblUserAssignees AS ass2
+					WHERE u.UserId = ass2.UserId
+					)
+
+			CREATE TABLE #tblUserIdReciveWatchers (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserIdReciveWatchers (
+				UserId
+				,SectionId
+				)
+			SELECT nsm.UserId
+				,u.SectionId
+			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nsm.UserId = u.UserId
+			WHERE ns.NotificationSettingId = @NotificationSettingIdWatcher
+				AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+				AND u.SectionId IN (
+					SELECT SectionId
+					FROM #tblUserAssignees
+					)
+				AND u.UserId <> @UserId
+
+			DECLARE @RowCount INT = 0
+			DECLARE @MessageId INT
+
+			SELECT @RowCount = COUNT(1)
+			FROM #tblUserIdReciveWatchers
+
+			IF @RowCount > 0
+			BEGIN
+				INSERT INTO dbo.[Message] (
+					MessageContent
+					,MessageType
+					,CreatedBy
+					,IsImportant
+					,IsWatcher
+					)
+				VALUES (
+					@MessageTemplate
+					,@MessageType
+					,@UserId
+					,0
+					,1
+					)
+
+				SET @MessageId = @@IDENTITY
+
+				IF @MessageId IS NOT NULL
+					INSERT INTO dbo.MessageUser (
+						MessageId
+						,UserId
+						,IsViewed
+						,SessionId
+						)
+					SELECT @MessageId
+						,wc.UserId
+						,0
+						,@SessionId
+					FROM #tblUserIdReciveWatchers AS wc
+			END
 		END
 
-		-- Write Log: Continue		
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+		DROP TABLE #tblUserAssignees
 
-		EXECUTE dbo.OWP_WriteLog @CreatorId = @UserId
-			,@SPName = 'OWP_LiveDetail_DeleteMatchNote'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @MatchNoteId
-			,@Data = NULL
-			,@DataOld = @MessageTemplateData
+		DROP TABLE #tblUserIdReciveWatchers
+		------------- END Watcher -----------------------
 	END TRY
 
 	BEGIN CATCH

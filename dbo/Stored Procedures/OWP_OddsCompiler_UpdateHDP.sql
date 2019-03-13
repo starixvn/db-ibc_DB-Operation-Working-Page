@@ -1,4 +1,5 @@
-﻿CREATE PROCEDURE [dbo].[OWP_OddsCompiler_UpdateHDP] @UserId INT
+﻿
+CREATE PROCEDURE [dbo].[OWP_OddsCompiler_UpdateHDP] @UserId INT
 	,@SessionId VARCHAR(50)
 	,@Id INT
 	,@TeamChoice TINYINT = 0
@@ -15,6 +16,7 @@ AS
         20181030@Leo: negative Handicap - [Redmine: #92868]
         20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 		20181128@Kane.Le: Prevent send message if HDP no change - [Redmine: #105043]
+		20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -35,6 +37,7 @@ BEGIN
 		,@OldHandicapText NVARCHAR(50) = ''
 		,@HandicapText NVARCHAR(50) = ''
 		,@NotificationSettingId INT = 4
+		,@NotificationSettingIdWatcher INT = 8
 		,@BettypeHDP INT = 1
 		,@Bettype1HHDP INT = 7
 		,@BettypeOU INT = 3
@@ -71,14 +74,25 @@ BEGIN
 		RETURN
 	END
 
-	UPDATE dbo.MatchRecommendOdds WITH (ROWLOCK, UPDLOCK)
+	UPDATE dbo.MatchRecommendOdds
+	WITH (
+			ROWLOCK
+			,UPDLOCK
+			)
+
 	SET TeamChoice = @TeamChoice
 		,HDP = @HDP
 	WHERE MatchRecommendOddsId = @Id
 
-	IF @Bettype IN (@BettypeHDP, @Bettype1HHDP, @BettypeOU, @Bettype1HOU)
+	IF @Bettype IN (
+			@BettypeHDP
+			,@Bettype1HHDP
+			,@BettypeOU
+			,@Bettype1HOU
+			)
 		AND @HDP IS NULL
-		AND @OldHandicap IS NULL RETURN
+		AND @OldHandicap IS NULL
+		RETURN
 
 	CREATE TABLE #RecommendOdds (
 		Choice TINYINT
@@ -95,24 +109,28 @@ BEGIN
 	WHERE MatchRecommendOddsId = @Id
 
 	-- insert message
-	IF NOT EXISTS (
-			SELECT 1
-			FROM #RecommendOdds
-			WHERE Odds IS NULL
-			)
+	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
-		IF @OldTeamChoice  <> @TeamChoice AND (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+		IF NOT EXISTS (
+				SELECT 1
+				FROM #RecommendOdds
+				WHERE Odds IS NULL
+				)
 		BEGIN
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageType = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
+			IF @OldTeamChoice <> @TeamChoice
+				SELECT @MessageTemplate = mt.MsgTemplateContent
+					,@MessageType = mt.MsgTemplateId
+				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+				WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
 
 			SELECT @BettypeName = ShortName
 			FROM dbo.MajorBettype WITH (NOLOCK)
 			WHERE BettypeId = @Bettype
 
-			IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
+			IF @Bettype IN (
+					@BettypeHDP
+					,@Bettype1HHDP
+					)
 			BEGIN
 				SET @HandicapText = CAST(@HDP AS NVARCHAR(50)) + ' '
 				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
@@ -127,7 +145,10 @@ BEGIN
 				ELSE IF @OldTeamChoice = 2
 					SET @OldTeamName = 'Away@'
 			END
-			ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
+			ELSE IF @Bettype IN (
+					@BettypeOU
+					,@Bettype1HOU
+					)
 			BEGIN
 				SET @HandicapText = CAST(@HDP AS NVARCHAR(50)) + ' '
 				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
@@ -162,6 +183,92 @@ BEGIN
 				,@SessionId = @SessionId
 				,@ErrCode = @ErrCode OUTPUT
 				,@ErrMsg = @ErrMsg OUTPUT
+
+			-------------- WATCHER --------------------
+			-- 20190304@Kane.Le send message to watcher
+			CREATE TABLE #tblUserAssignees (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserAssignees (
+				UserId
+				,SectionId
+				)
+			SELECT u.UserId
+				,u.SectionId
+			FROM dbo.[fnc_GetAllAssigneeOfMatch](@OWPMatchId) AS u
+			WHERE NOT EXISTS (
+					SELECT 1
+					FROM #tblUserAssignees AS ass2
+					WHERE u.UserId = ass2.UserId
+					)
+
+			CREATE TABLE #tblUserIdReciveWatchers (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserIdReciveWatchers (
+				UserId
+				,SectionId
+				)
+			SELECT nsm.UserId
+				,u.SectionId
+			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nsm.UserId = u.UserId
+			WHERE ns.NotificationSettingId = @NotificationSettingIdWatcher
+				AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+				AND u.SectionId IN (
+					SELECT SectionId
+					FROM #tblUserAssignees
+					)
+				AND u.UserId <> @UserId
+
+			DECLARE @RowCount INT = 0
+			DECLARE @MessageId INT
+
+			SELECT @RowCount = COUNT(1)
+			FROM #tblUserIdReciveWatchers
+
+			IF @RowCount > 0
+			BEGIN
+				INSERT INTO dbo.[Message] (
+					MessageContent
+					,MessageType
+					,CreatedBy
+					,IsImportant
+					,IsWatcher
+					)
+				VALUES (
+					@MessageTemplate
+					,@MessageType
+					,@UserId
+					,0
+					,1
+					)
+
+				SET @MessageId = @@IDENTITY
+
+				IF @MessageId IS NOT NULL
+					INSERT INTO dbo.MessageUser (
+						MessageId
+						,UserId
+						,IsViewed
+						,SessionId
+						)
+					SELECT @MessageId
+						,wc.UserId
+						,0
+						,@SessionId
+					FROM #tblUserIdReciveWatchers AS wc
+			END
+
+			DROP TABLE #tblUserAssignees
+
+			DROP TABLE #tblUserIdReciveWatchers
+				------------- END Watcher -----------------------
 		END
 	END
 

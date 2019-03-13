@@ -2,6 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShiftColorIns] @WorkingShift XML = NULL
 	,@ShiftIds VARCHAR(MAX) = NULL OUTPUT
+	,@ShiftCodes VARCHAR(MAX) = NULL OUTPUT
 AS
 /*
 Created: 20180213@Jacob
@@ -12,6 +13,7 @@ DB: bodb_OWP
 	20180920@Leo: upper working shift
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20190125@Kane.Le: Change Name to ShiftCode, Add StartTime, EndTime, IsTimeShift - [Redmine: #108206]
+	20190314@Kane.Le: Distinct shiftId, shiftCode - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -64,10 +66,27 @@ BEGIN
 
 	DECLARE @val VARCHAR(MAX)
 
-	SELECT @val = COALESCE(@val + ', ' + CAST(wsc.ShiftId AS NVARCHAR(5)), CAST(wsc.ShiftId AS NVARCHAR(5)))
-	FROM dbo.[EmployeeWorkingShiftColor] wsc WITH (NOLOCK)
-	JOIN @TempTable t ON wsc.ShiftCode = t.ShiftCode
+	SELECT @val = COALESCE(@val + ',' + CAST(wsc.ShiftId AS NVARCHAR(5)), CAST(wsc.ShiftId AS NVARCHAR(5)))
+	FROM (
+		SELECT DISTINCT wsc.ShiftCode
+			,wsc.ShiftId
+		FROM dbo.[EmployeeWorkingShiftColor] wsc WITH (NOLOCK)
+		JOIN @TempTable t ON wsc.ShiftCode = t.ShiftCode
+		) AS wsc
 	ORDER BY wsc.ShiftCode
 
 	SET @ShiftIds = @val
+
+	DECLARE @val2 VARCHAR(MAX)
+
+	SELECT @val2 = COALESCE(@val2 + ',' + wsc.ShiftCode, wsc.ShiftCode)
+	FROM (
+		SELECT DISTINCT wsc.ShiftCode
+			,wsc.ShiftId
+		FROM dbo.[EmployeeWorkingShiftColor] wsc WITH (NOLOCK)
+		JOIN @TempTable t ON wsc.ShiftCode = t.ShiftCode
+		) AS wsc
+	ORDER BY wsc.ShiftCode
+
+	SET @ShiftCodes = @val2
 END;

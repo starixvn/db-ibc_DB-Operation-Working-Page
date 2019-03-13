@@ -15,6 +15,7 @@ Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
+	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,7 +50,8 @@ BEGIN
 		,@str_Cancel NVARCHAR(15) = 'Cancel'
 		,@str_Postponed NVARCHAR(15) = 'Postponed'
 		,@str_Suspended NVARCHAR(15) = 'Suspended'
-		,@NotificationSettingId SMALLINT = 5
+		,@NotificationSettingId SMALLINT = 5	
+		,@NotificationSettingIdWatcher SMALLINT = 9	
 
 	CREATE TABLE #tblMessage (
 		UserId INT
@@ -313,6 +315,101 @@ BEGIN
 				,msn.UserId				
 				,@SessionId
 			INTO dbo.MessageUser(MessageId, UserId, SessionId);
+
+						-------------- WATCHER --------------------
+			-- 20190304@Kane.Le send message to watcher
+				IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+		BEGIN
+			CREATE TABLE #tblUserAssignees (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserAssignees (
+				UserId
+				,SectionId
+				)
+			SELECT u.UserId
+				,u.SectionId
+			FROM dbo.[fnc_GetAllAssigneeOfMatch](@OWPMatchId) AS u
+			WHERE NOT EXISTS (
+					SELECT 1
+					FROM #tblUserAssignees AS ass2
+					WHERE u.UserId = ass2.UserId
+					)
+
+			CREATE TABLE #tblUserIdReciveWatchers (
+				UserId INT NOT NULL
+				,SectionId INT
+				)
+
+			INSERT INTO #tblUserIdReciveWatchers (
+				UserId
+				,SectionId
+				)
+			SELECT nsm.UserId
+				,u.SectionId
+			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nsm.UserId = u.UserId
+			WHERE ns.NotificationSettingId = @NotificationSettingIdWatcher
+				AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+				AND u.SectionId IN (
+					SELECT SectionId
+					FROM #tblUserAssignees
+					)
+				AND u.UserId <> @UserId
+
+			DECLARE @RowCount INT = 0
+			DECLARE @MessageId INT
+			DECLARE @MessageTemplate NVARCHAR(MAX)
+			DECLARE @MessageType INT
+			SELECT @RowCount = COUNT(1)
+			FROM #tblUserIdReciveWatchers
+
+			IF @RowCount > 0
+			BEGIN
+				SELECT @MessageTemplate = (SELECT TOP 1 MessageContent FROM #tblMessage)
+				SELECT @MessageType = (SELECT TOP 1 MessageTypeId FROM #tblMessage)
+				INSERT INTO dbo.[Message] (
+					MessageContent
+					,MessageType
+					,CreatedBy
+					,IsImportant
+					,IsWatcher
+					)
+				VALUES (
+					@MessageTemplate
+					,@MessageType
+					,@UserId
+					,0
+					,1
+					)
+
+				SET @MessageId = @@IDENTITY
+
+				IF @MessageId IS NOT NULL
+					INSERT INTO dbo.MessageUser (
+						MessageId
+						,UserId
+						,IsViewed
+						,SessionId
+						)
+					SELECT @MessageId
+						,wc.UserId
+						,0
+						,@SessionId
+					FROM #tblUserIdReciveWatchers AS wc
+			END
+		
+
+		DROP TABLE #tblUserAssignees
+
+		DROP TABLE #tblUserIdReciveWatchers
+		END
+		------------- END Watcher -----------------------
+
+
 		END
 	END TRY
 
