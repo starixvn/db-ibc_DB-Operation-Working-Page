@@ -84,7 +84,6 @@ BEGIN
 	CREATE TABLE #tblAssignee (
 		UserId INT NOT NULL
 		,OWPMatchId INT NOT NULL
-		,ParentMatchId INT NOT NULL
 		)
 
 	CREATE TABLE #tblUserInSectionOfAssignee (
@@ -527,10 +526,8 @@ BEGIN
 	INSERT INTO #tblAssignee (
 		UserId
 		,OWPMatchId
-		,ParentMatchId
 		)
 	SELECT DISTINCT ass.UserId
-		,ass.OWPMatchId
 		,m.ParentMatchId
 	FROM (
 		SELECT OWPMatchId
@@ -553,7 +550,7 @@ BEGIN
 			,m.OWPMatchId
 			,ass.UserId
 		FROM #tblMessage AS m
-			INNER JOIN #tblAssignee AS ass ON m.OWPMatchId = ass.ParentMatchId
+			INNER JOIN #tblAssignee AS ass ON m.OWPMatchId = ass.OWPMatchId
 			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @AssigneeMatchInfoNotificationSettingId
 			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
 			AND nsm.UserId = ass.UserId
