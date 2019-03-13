@@ -100,12 +100,12 @@ BEGIN
 		,@Username VARCHAR(30)
 		-- Notification Setting
 		,@NotifyAssigneeTraderUpdatedId INT = 2 -- assignee
-		,@NofifyAssigneeLAUpdatedId INT = 10
+		,@NotifyAssigneeLAUpdatedId INT = 10
 		,@NotifyMyAssignmentUpdatedId INT = 1
 		,@NotifyAssigneeMatchInfoUpdatedId INT = 5
 		,@NotifyAssigneeProviderInfoUpdatedId INT = 11
 		,@NotifyWatcherTraderUpdatedId INT = 6 -- watcher
-		,@NofifyWatcherLAUpdatedId INT = 12
+		,@NotifyWatcherLAUpdatedId INT = 12
 		,@NotifyWatcherMatchInfoUpdatedId INT = 9
 		,@NotifyWatcherProviderInfoUpdatedId INT = 13
 		-- MessageTemplateId
@@ -1651,10 +1651,6 @@ BEGIN
 			,match.OldValue
 			,match.NewValue
 			,mm.ParentMatchId
-			--,CASE 
-			--	WHEN match.MessageTemplateCode IN ('EditTV', 'EditChannel', 'EditWB', 'EditOtherProvider', 'EditProvider', 'EditAgent', 'EditPhone') THEN @NotifyProviderInfoUpdatedId
-			--	ELSE @NotifyMatchInfoUpdatedId
-			--	END -- attention
 		FROM #tblMatchEditedInfo AS match
 			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON match.OWPMatchId = om.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON match.OWPMatchId = mm.MinorMatchId
@@ -2606,7 +2602,7 @@ BEGIN
 				,m.MessageContent 
 				,@MessageChangeOfAssignmentId AS MessageTypeId
 				,CASE 
-					WHEN m.Bettype = @BettypeLA THEN @NofifyAssigneeLAUpdatedId -- assginee setting Id
+					WHEN m.Bettype = @BettypeLA THEN @NotifyAssigneeLAUpdatedId -- assginee setting Id
 					ELSE @NotifyAssigneeTraderUpdatedId
 					END  AS NotificationSettingId
 				,m.Bettype
@@ -2692,7 +2688,7 @@ BEGIN
 				,m.MessageContent 
 				,@MessageChangeOfAssignmentId AS MessageTypeId
 				,CASE 
-					WHEN m.Bettype = @BettypeLA THEN @NofifyWatcherLAUpdatedId -- watcher setting Id
+					WHEN m.Bettype = @BettypeLA THEN @NotifyWatcherLAUpdatedId -- watcher setting Id
 					ELSE @NotifyWatcherTraderUpdatedId
 					END  AS NotificationSettingId
 				,m.Bettype
