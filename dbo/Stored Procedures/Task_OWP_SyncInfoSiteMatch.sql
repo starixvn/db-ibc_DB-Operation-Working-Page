@@ -84,6 +84,7 @@ BEGIN
 	CREATE TABLE #tblAssignee (
 		UserId INT NOT NULL
 		,OWPMatchId INT NOT NULL
+		,ParentMatchId INT NOT NULL
 		)
 
 	CREATE TABLE #tblUserInSectionOfAssignee (
@@ -313,6 +314,11 @@ BEGIN
 		,OldOWPAwayId INT NOT NULL
 		)
 
+	CREATE TABLE #tblAssigneeReceiver (
+		UserId INT NOT NULL
+		,OWPMatchId INT NOT NULL
+		)
+
 	-- list of minor bettypes Corner & Booking but not 15 mins
 	CREATE TABLE #tblCornerBookingBetTypes (MinorBetTypeId INT NOT NULL)
 
@@ -517,32 +523,56 @@ BEGIN
 		,inserted.MessageId
 		,inserted.MessageType
 	INTO #tblMessage(OWPMatchId, [MessageId], MessageTypeId);
-	
+
 	INSERT INTO #tblAssignee (
 		UserId
 		,OWPMatchId
+		,ParentMatchId
 		)
 	SELECT DISTINCT ass.UserId
 		,ass.OWPMatchId
-	FROM dbo.Assignment AS ass WITH (NOLOCK)
-		INNER JOIN #tblMatchInTimeRange AS m ON ass.OWPMatchId = m.OWPMatchId
+		,m.ParentMatchId
+	FROM (
+		SELECT OWPMatchId
+			,OWPMatchId AS ParentMatchId
+		FROM #tblMatchInTimeRange
+		
+		UNION
+		SELECT mm.MinorMatchId AS OWPMatchId
+			,ParentMatchId
+		FROM #tblMatchInTimeRange AS m
+			INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.ParentMatchId
+		) AS m
+		INNER JOIN dbo.Assignment AS ass WITH (NOLOCK) ON ass.OWPMatchId = m.OWPMatchId
 	WHERE ass.UserId IS NOT NULL
 
 	-- insert MessageUser assignee
-	INSERT INTO dbo.MessageUser (
-		MessageId
-		,UserId
-		,SessionId
-		)
-	SELECT m.MessageId
-		,ass.UserId
-		,@SessionId
-	FROM #tblMessage AS m
-		INNER JOIN #tblAssignee AS ass ON m.OWPMatchId = ass.OWPMatchId
-		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @AssigneeMatchInfoNotificationSettingId
-		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-		AND nsm.UserId = ass.UserId
-	WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+	MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
+	USING (
+		SELECT m.MessageId
+			,m.OWPMatchId
+			,ass.UserId
+		FROM #tblMessage AS m
+			INNER JOIN #tblAssignee AS ass ON m.OWPMatchId = ass.ParentMatchId
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @AssigneeMatchInfoNotificationSettingId
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			AND nsm.UserId = ass.UserId
+		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+		) AS m ON 1 = 0
+	WHEN NOT MATCHED THEN
+			INSERT (
+				MessageId
+				,UserId
+				,SessionId
+				)
+			VALUES (
+				m.MessageId
+				,m.UserId
+				,@SessionId
+				)
+	OUTPUT m.UserId
+		,m.OWPMatchId
+	INTO #tblAssigneeReceiver(UserId, OWPMatchId);
 
 	-- insert Message watcher
 	DELETE #tblMessage
@@ -580,7 +610,7 @@ BEGIN
 		INNER JOIN dbo.[User] AS u2 WITH (NOLOCK) ON u1.SectionId = u2.SectionId
 	WHERE NOT EXISTS (
 			SELECT 1
-			FROM #tblAssignee AS ass2
+			FROM #tblAssigneeReceiver AS ass2
 			WHERE u2.UserId = ass2.UserId
 				AND ass1.OWPMatchId = ass2.OWPMatchId
 			)
@@ -712,4 +742,6 @@ BEGIN
 	DROP TABLE #tblAssignee
 
 	DROP TABLE #tblUserInSectionOfAssignee
+
+	DROP TABLE #tblAssigneeReceiver
 END
