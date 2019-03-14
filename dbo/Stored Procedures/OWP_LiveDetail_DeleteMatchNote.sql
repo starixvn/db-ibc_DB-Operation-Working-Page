@@ -22,37 +22,21 @@ BEGIN
 
 	DECLARE @OldNote NVARCHAR(MAX)
 		,@OWPMatchId INT
-		,@StartRun DATETIME
-		,@EndRun DATETIME
-		,@Duration INT
-		,@MessageTemplateData NVARCHAR(MAX)
-		,@Xml XML
 		,@MessageTemplate NVARCHAR(MAX) = ''
 		,@MessageType INT
-		,@Assignee TVP_INT		
-		,@NotificationSettingId INT = 3
-		,@NotificationSettingIdWatcher INT = 7
-	DECLARE @HomeVsAway TABLE (
-		Home NVARCHAR(200)
-		,Away NVARCHAR(200)
+		,@NotifyAssigneeNoteUpdatedId INT = 3
+		,@NotifyWatcherNoteUpdatedId INT = 7
+		,@UserReceivedAssigneeMessageNote TVP_INT
+		,@UserReceivedWatcherMessageNote TVP_INT
+
+	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
+
+	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
+		MemberId INT
+		,UserReceivedWatcherId INT
 		)
 
-	BEGIN TRY
-		-- Log
-		SET @StartRun = GETDATE()
-		SET @Xml = (
-				SELECT OWPMatchId AS '@mt'
-					,Note AS '@nt'
-					,CreatedBy AS '@cb'
-					,CreatedDate AS '@cd'
-				FROM dbo.MatchNote WITH (NOLOCK)
-				WHERE MatchNoteId = @MatchNoteId
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @MessageTemplateData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-
-		--
+	BEGIN TRY --
 		SELECT @OWPMatchId = OWPMatchId
 			,@OldNote = Note
 		FROM dbo.MatchNote WITH (NOLOCK)
@@ -60,10 +44,7 @@ BEGIN
 
 		-- delete
 		DELETE
-		FROM dbo.MatchNote WITH (
-				ROWLOCK
-				,UPDLOCK
-				)
+		FROM dbo.MatchNote WITH (ROWLOCK, UPDLOCK)
 		WHERE MatchNoteId = @MatchNoteId
 
 		-- insert message
@@ -77,111 +58,78 @@ BEGIN
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldnote>', @OldNote)
 			SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
-			INSERT INTO @Assignee
-			SELECT UserId
-			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
+			-------------- ASSIGNEE --------------------
+			-- get all assignee in match (include main + minor)
+			INSERT INTO #tblAllAssigneeOfMatch (UserId)
+			SELECT a.UserId
+			FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
+
+			-- get list users received ASSIGNEE message update match Note
+			INSERT INTO @UserReceivedAssigneeMessageNote (Id)
+			SELECT a.UserId
+			FROM #tblAllAssigneeOfMatch AS a
+				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeNoteUpdatedId
+				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+				AND nsm.UserId = a.UserId
+			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
 			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 				,@MessageContent = @MessageTemplate
-				,@MessageTo = @Assignee
-				,@IsImportant = 0
 				,@MessageType = @MessageType
+				,@MessageTo = @UserReceivedAssigneeMessageNote
+				,@IsImportant = 0
+				,@IsWatcher = 0
 				,@SessionId = @SessionId
 				,@ErrCode = @ErrCode OUTPUT
 				,@ErrMsg = @ErrMsg OUTPUT
 
 			-------------- WATCHER --------------------
-			-- 20190304@Kane.Le send message to watcher
-			CREATE TABLE #tblUserAssignees (
-				UserId INT NOT NULL
-				,SectionId INT
+			-- get all SectionMemberOfUserReceivedWatcher
+			INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
+				MemberId
+				,UserReceivedWatcherId
 				)
+			SELECT ISNULL(mem.UserId, r.UserId)
+				,r.UserId
+			FROM (
+				SELECT w.UserId
+					,u.SectionId
+				FROM dbo.fnc_GetWatcherToSendMessage(@NotifyWatcherNoteUpdatedId) AS w
+					LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
+				) AS r
+				LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId
+				AND mem.SectionId IS NOT NULL
 
-			INSERT INTO #tblUserAssignees (
-				UserId
-				,SectionId
-				)
-			SELECT u.UserId
-				,u.SectionId
-			FROM dbo.[fnc_GetAllAssigneeOfMatch](@OWPMatchId) AS u
+			-- get list users received Watcher message update Note
+			INSERT INTO @UserReceivedWatcherMessageNote (Id)
+			SELECT DISTINCT sm.UserReceivedWatcherId
+			FROM #tblAllAssigneeOfMatch AS a
+				INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
 			WHERE NOT EXISTS (
+					-- ignore user received Assignee message
 					SELECT 1
-					FROM #tblUserAssignees AS ass2
-					WHERE u.UserId = ass2.UserId
+					FROM @UserReceivedAssigneeMessageNote AS ur
+					WHERE ur.Id = sm.UserReceivedWatcherId
 					)
 
-			CREATE TABLE #tblUserIdReciveWatchers (
-				UserId INT NOT NULL
-				,SectionId INT
-				)
-
-			INSERT INTO #tblUserIdReciveWatchers (
-				UserId
-				,SectionId
-				)
-			SELECT nsm.UserId
-				,u.SectionId
-			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
-			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nsm.UserId = u.UserId
-			WHERE ns.NotificationSettingId = @NotificationSettingIdWatcher
-				AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-				AND u.SectionId IN (
-					SELECT SectionId
-					FROM #tblUserAssignees
-					)
-				AND u.UserId <> @UserId
-
-			DECLARE @RowCount INT = 0
-			DECLARE @MessageId INT
-
-			SELECT @RowCount = COUNT(1)
-			FROM #tblUserIdReciveWatchers
-
-			IF @RowCount > 0
-			BEGIN
-				INSERT INTO dbo.[Message] (
-					MessageContent
-					,MessageType
-					,CreatedBy
-					,IsImportant
-					,IsWatcher
-					)
-				VALUES (
-					@MessageTemplate
-					,@MessageType
-					,@UserId
-					,0
-					,1
-					)
-
-				SET @MessageId = @@IDENTITY
-
-				IF @MessageId IS NOT NULL
-					INSERT INTO dbo.MessageUser (
-						MessageId
-						,UserId
-						,IsViewed
-						,SessionId
-						)
-					SELECT @MessageId
-						,wc.UserId
-						,0
-						,@SessionId
-					FROM #tblUserIdReciveWatchers AS wc
-			END
+			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+				,@MessageContent = @MessageTemplate
+				,@MessageType = @MessageType
+				,@MessageTo = @UserReceivedWatcherMessageNote
+				,@IsImportant = 0
+				,@IsWatcher = 1
+				,@SessionId = @SessionId
+				,@ErrCode = @ErrCode OUTPUT
+				,@ErrMsg = @ErrMsg OUTPUT
 		END
-
-		DROP TABLE #tblUserAssignees
-
-		DROP TABLE #tblUserIdReciveWatchers
-		------------- END Watcher -----------------------
 	END TRY
 
 	BEGIN CATCH
 		SELECT @ErrMsg = 'Delete note failed. Please try again.'
 			,@ErrCode = 4201
-
-		RETURN
 	END CATCH
+
+	DROP TABLE #tblAllAssigneeOfMatch
+
+	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 END

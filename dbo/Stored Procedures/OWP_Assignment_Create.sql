@@ -242,7 +242,7 @@ BEGIN
 		FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
 
 		-- get list users received assignee message change assignment
-		INSERT INTO @UserReceivedAssigneeMessageChangeAssignment
+		INSERT INTO @UserReceivedAssigneeMessageChangeAssignment (Id)
 		SELECT a.UserId
 		FROM #tblAllAssigneeOfMatch AS a
 			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @ChangeOfAssignmentNotificationSettingId
@@ -282,7 +282,7 @@ BEGIN
 			AND mem.SectionId IS NOT NULL
 
 		-- get list users received watcher message change assignment
-		INSERT INTO @UserReceivedWatcherMessageChangeAssignment
+		INSERT INTO @UserReceivedWatcherMessageChangeAssignment (Id)
 		SELECT DISTINCT sm.UserReceivedWatcherId
 		FROM #tblAllAssigneeOfMatch AS a
 			INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId

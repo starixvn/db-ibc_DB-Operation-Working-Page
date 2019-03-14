@@ -55,6 +55,4 @@ BEGIN
 		,Id		 
 		,@SessionId
 	FROM @MessageTo
-
-	RETURN @MessageId
 END
