@@ -300,11 +300,6 @@ BEGIN
 		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
 			AND nsm.UserId = a.UserId
 		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-			AND NOT EXISTS (-- ignore user received 'MyAssignmentMessage'	
-				SELECT 1 
-				FROM #tblRemoveAssignment AS r
-				WHERE r.UserId = a.UserId
-				)
 
 		INSERT INTO dbo.MessageUser(
 			MessageId
@@ -375,12 +370,7 @@ BEGIN
 		FROM #tblInsertedWatcherMessageChangeAssignment AS im
 		CROSS JOIN	#tblAllAssigneeOfMatch AS a
 		INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
-		WHERE NOT EXISTS (-- ignore user received 'MyAssignmentMessage'	
-				SELECT 1 
-				FROM #tblRemoveAssignment AS r
-				WHERE r.UserId = sm.UserReceivedWatcherId
-				)			
-			AND NOT EXISTS ( -- ignore user received Assignee message
+		WHERE NOT EXISTS ( -- ignore user received Assignee message
 				SELECT 1
 				FROM #tblUserReceivedAssigneeMessageChangeAssignment AS ur
 				WHERE ur.UserId = sm.UserReceivedWatcherId

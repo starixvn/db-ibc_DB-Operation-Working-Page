@@ -249,7 +249,6 @@ BEGIN
 			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
 			AND nsm.UserId = a.UserId
 		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-			AND a.UserId <> ISNULL(@UserId, 0) -- ignore user received 'MyAssignmentMessage'	
 
 		EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 			,@MessageContent = @MessageChangeOfAssignmentContent
@@ -286,8 +285,7 @@ BEGIN
 		SELECT DISTINCT sm.UserReceivedWatcherId
 		FROM #tblAllAssigneeOfMatch AS a
 			INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
-		WHERE sm.UserReceivedWatcherId <> ISNULL(@UserId, 0) -- ignore user received 'MyAssignmentMessage'
-			AND NOT EXISTS (
+		WHERE NOT EXISTS (
 				-- ignore user received Assignee message
 				SELECT 1
 				FROM @UserReceivedAssigneeMessageChangeAssignment AS ur
