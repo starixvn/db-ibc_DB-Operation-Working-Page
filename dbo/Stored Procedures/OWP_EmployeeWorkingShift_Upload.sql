@@ -38,10 +38,13 @@ BEGIN
 				WHEN DATEPART(HOUR, sc.StartTime) < 6 THEN 1
 				ELSE 0
 				END, ws.ShiftDate + CAST(sc.StartTime AS DATETIME))
-		,ws.ShiftEndTime = DATEADD(DAY, CASE 
+		,ws.ShiftEndTime = DATEADD(DAY, (CASE 
+				WHEN sc.StartTime > sc.EndTime THEN 1
+				ELSE 0 END
+				) + (CASE 
 				WHEN DATEPART(HOUR, sc.StartTime) < 6 THEN 1
-				ELSE 0
-				END, ws.ShiftDate + CAST(sc.EndTime AS DATETIME))
+				ELSE 0 END
+				), ws.ShiftDate + CAST(sc.EndTime AS DATETIME))
 	FROM @tblWorkingShift AS ws
 		INNER JOIN dbo.EmployeeWorkingShiftColor AS sc ON ws.ShiftId = sc.ShiftId
 		AND sc.IsTimeShift = 1

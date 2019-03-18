@@ -66,7 +66,10 @@ BEGIN
 			,IsTimeShift
 			)
 		VALUES (
-			UPPER(LTRIM(RTRIM(@ShiftCode)))
+			CASE 
+				WHEN @StartTime IS NULL THEN UPPER(LTRIM(RTRIM(@ShiftCode)))
+				ELSE ''
+				END
 			,@Background
 			,@Color
 			,@StartTime

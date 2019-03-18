@@ -12,6 +12,7 @@ DB: bodb_OWP
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20190125@Kane.Le: Change Name to ShiftCode, Add StartTime, EndTime, IsTimeShift - [Redmine: #108206]
 	20190314@Kane.Le: Distinct shiftId, shiftCode - [Redmine: #109560]
+	20190318@Kane.Le: Fix bug GMT, ShiftCode = '' - [Redmine: #108206]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -85,14 +86,17 @@ BEGIN
 				,IsTimeShift
 				)
 			VALUES (
-				s.ShiftCode
+				CASE 
+				WHEN s.IsTimeShift = 0 THEN s.ShiftCode  
+				ELSE ''
+				END
 				,s.Background
 				,s.Color
 				,s.StartTime
 				,s.EndTime
 				,s.IsTimeShift
 				)
-	OUTPUT inserted.ShiftCode
+	OUTPUT s.ShiftCode
 		,inserted.ShiftId
 	INTO @tblNewEmployeeWorkingShiftColor(ShiftCode, ShiftId);
 

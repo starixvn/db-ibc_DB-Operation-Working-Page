@@ -51,6 +51,11 @@ BEGIN
 					SELECT @ShiftStartTime = DATEADD(DAY, 1, @ShiftStartTime)
 						,@ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)
 				END
+
+				IF @StartTime > @EndTime
+				BEGIN
+					SET @ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)
+				END
 			END
 
 			-- only insert if there is no shift
