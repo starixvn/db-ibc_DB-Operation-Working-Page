@@ -14,14 +14,12 @@
 
 
 
-GO
-CREATE UNIQUE NONCLUSTERED INDEX [IX_EmployeeWorkingShiftColor_TimeShift]
-    ON [dbo].[EmployeeWorkingShiftColor]([StartTime] ASC, [EndTime] ASC) WHERE ([IsTimeShift]=(1))
-    ON [OWP_Index];
 
 
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [IX_EmployeeWorkingShiftColor_NonTimeShift]
-    ON [dbo].[EmployeeWorkingShiftColor]([ShiftCode] ASC) WHERE ([IsTimeShift]=(0))
-    ON [OWP_Index];
+
+
+
+GO
+
 
