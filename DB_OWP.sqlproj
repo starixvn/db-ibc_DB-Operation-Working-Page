@@ -336,6 +336,7 @@
     <Build Include="dbo\Tables\InfoSiteSyncLog.sql" />
     <Build Include="dbo\Functions\fnc_GetAllAssigneeOfMatch.sql" />
     <Build Include="dbo\Tables\EmployeeWorkingShiftOrder.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_GetUserInfoById.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
