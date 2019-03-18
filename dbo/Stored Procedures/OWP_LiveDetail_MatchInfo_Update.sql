@@ -7,7 +7,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@WB NVARCHAR(100) = ''
 	,@Phone NVARCHAR(50) = ''
 	,@Remark NVARCHAR(2000) = ''
-	,@NoOfHDPId INT = 0
+	,@NoOfHDPId INT = NULL
 	,@IsSoloMatch BIT = 0
 	,@MatchOfferIds NVARCHAR(100) = ''
 	,@Round NVARCHAR(2000) = ''
@@ -132,6 +132,8 @@ BEGIN
 		FROM dbo.MatchInfo m WITH (NOLOCK)
 			LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 		WHERE m.OWPMatchId = @OWPMatchId
+
+		SELECT @NoOfHDPId = CASE WHEN @NoOfHDPId = 0 THEN NULL ELSE @NoOfHDPId END
 
 		-- update new value
 		UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
@@ -797,7 +799,7 @@ BEGIN
 			END
 
 			-- Edit No Of HDP
-			IF @OldNoOfHDPId <> @NoOfHDPId
+			IF ISNULL(@OldNoOfHDPId, 0) <> ISNULL(@NoOfHDPId, 0)
 			BEGIN
 				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP')
 					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP')
@@ -807,7 +809,7 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditNoOfHDP'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', ISNULL(@OldValue, '')), '<newvalue>', ISNULL(@NewValue, ''))
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
