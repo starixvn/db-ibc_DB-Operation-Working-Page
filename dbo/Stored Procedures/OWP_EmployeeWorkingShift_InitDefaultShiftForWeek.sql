@@ -11,6 +11,7 @@ AS
  
 Revisions:
 	20190215@Leo.Vo: Initial SP - [Redmine: #108723]
+	20190312@Leo.Vo: Fix to update ShiftEndTime - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON;
