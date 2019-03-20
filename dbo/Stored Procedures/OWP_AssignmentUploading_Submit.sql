@@ -26,6 +26,7 @@ AS
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190225@Raymond.Le: Remove InfoSiteMatchId of un-selected matches - [Redmine: #108723]
 	20190308@Leo.Vo: Avoid to send message to UserId NULL - [Redmine: #110010]
+	20190320@Raymond.Le: Remove invalid data if has error from previous upload - [Redmine: #110575]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -102,6 +103,7 @@ BEGIN
 		,@NotifyMyAssignmentUpdatedId INT = 1
 		,@NotifyMatchInfoUpdatedId INT = 5
 		,@NotifyProviderInfoUpdatedId INT = 11
+		,@TempEventDate DATETIME
 
 	SELECT @Username = dbo.fnc_GetUsernameByUserId(@UserId)
 
@@ -291,16 +293,16 @@ BEGIN
 	CREATE TABLE #tblMatchEditedInfo (
 		OWPMatchId INT NOT NULL
 		,MessageTemplateCode NVARCHAR(50)
-		,OldValue NVARCHAR(500)
-		,NewValue NVARCHAR(500)
+		,OldValue NVARCHAR(2000)
+		,NewValue NVARCHAR(2000)
 		)
 
 	-- store all match (main + minor) edited match info in TimeRange
 	CREATE TABLE #tblMatchEditedInTimeRange (
 		OWPMatchId INT NOT NULL
 		,MessageTemplateCode NVARCHAR(50)
-		,OldValue NVARCHAR(500)
-		,NewValue NVARCHAR(500)
+		,OldValue NVARCHAR(2000)
+		,NewValue NVARCHAR(2000)
 		,ParentMatchId INT
 		,NotificationSettingId INT
 		)
@@ -478,7 +480,47 @@ BEGIN
 		,IsImportant BIT NOT NULL
 		)
 
+	CREATE TABLE #tblInvalidMatch (
+		OWPMatchId INT
+	)
+
 	BEGIN TRY
+		/*------Remove invalid data if has error from previous upload-----*/
+		SELECT TOP 1 @TempEventDate = au.EventDate
+		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
+		WHERE au.SessionId = @SessionId
+		
+		-- delete from OWPMatch
+		DELETE om
+		OUTPUT deleted.OWPMatchId
+		INTO #tblInvalidMatch (OWPMatchId)
+		FROM dbo.OWPMatch AS om WITH (ROWLOCK)
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.MatchInfo AS mi WITH (NOLOCK)
+			WHERE mi.OWPMatchId = om.OWPMatchId
+		)
+		AND om.EventDate BETWEEN DATEADD(DAY, -1, @TempEventDate) AND DATEADD(DAY, 1, @TempEventDate)
+
+		-- delete from assignment
+		DELETE a
+		FROM dbo.Assignment AS a WITH (ROWLOCK)
+		WHERE EXISTS (
+			SELECT 1
+			FROM #tblInvalidMatch AS im WITH (NOLOCK)
+			WHERE im.OWPMatchId = a.OWPMatchId
+		)
+
+		-- delete from Match setting
+		DELETE ms
+		FROM dbo.MatchSetting AS ms WITH (ROWLOCK)
+		WHERE EXISTS (
+			SELECT 1
+			FROM #tblInvalidMatch AS im WITH (NOLOCK)
+			WHERE im.OWPMatchId = ms.OWPMatchId
+		)
+		/*-----------*/
+
 		-- fill AssignmentUploading data to temp table with right datatype
 		INSERT INTO #tblMatch (
 			RowNumber
@@ -2763,4 +2805,6 @@ BEGIN
 	DROP TABLE #tblInsertedMessageUpdateMatchSetting
 
 	DROP TABLE #tblUsersReceivedMessageUpdate
+
+	DROP TABLE #tblInvalidMatch
 END
