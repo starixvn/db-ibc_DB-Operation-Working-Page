@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
@@ -6,6 +7,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate D
 	,@Section VARCHAR(2000) = ''
 	,@Category VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
+	,@IsReadWeeklySection BIT = 0
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -15,6 +17,7 @@ AS
  Revisions:
      20190107@Kane.Le: Init SP     
 	 20190121@Kane.Le: Change shift code to shiftId
+	 20190319@Kane.Le: Customize employee order of weekly WS - [Redmine: #110322]
 
 -- @Note:    
 EXEC [OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -24,9 +27,21 @@ BEGIN
 
 	DECLARE @TimeZoneOffsetOfUser INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
 	DECLARE @ExcludeClosedAccount INT
-	DECLARE @SiteId INT
+		,@OrderBySectionId INT
+		,@SiteId INT
 
 	SET @ExcludeClosedAccount = 1
+
+	IF (@IsReadWeeklySection = 1)
+	BEGIN
+		SELECT @OrderBySectionId = 0
+	END
+	ELSE
+	BEGIN
+		SELECT @OrderBySectionId = u.SectionId
+		FROM dbo.[User] AS u WITH (NOLOCK)
+		WHERE u.UserId = @UserId
+	END
 
 	--SET @FromDate = CAST(DATEADD(MINUTE, @TimeZoneOffsetOfUser, @FromDate) AS DATETIME)
 	--SET @ToDate = CAST(DATEADD(MINUTE, @TimeZoneOffsetOfUser, @ToDate) AS DATETIME)
@@ -246,7 +261,12 @@ BEGIN
 		,[Address]
 		,SectionName
 		,[Name]
+		,od.SectionId
+		,od.OrderId
 	FROM @tblUserOutput u
+	LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON u.UserId = od.EmployeeId AND od.SectionId = @OrderBySectionId
+	ORDER BY od.OrderId
+		,SectionName
 
 	SELECT u.UserId AS EmployeeId
 		,s.ShiftCode
