@@ -8,6 +8,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @UserId INT = 0
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
 	,@IsGetDefaultShift BIT = 0
+	,@IsReadWeeklySection BIT = 0
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -24,6 +25,7 @@ AS
      20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
      20190215@Leo.Vo: Default shift - [Redmine: #108723]
 	 20190311@Kane.Le: Get RefShiftId output - [Redmine: #109560]
+	 20190319@Raymond.Le: Customize employee order of weekly WS - [Redmine: #110322]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -33,7 +35,21 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SiteId INT
+			,@OrderBySectionId INT
 	DECLARE @TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
+
+	-- get Order Section of current User querying
+
+	IF (@IsReadWeeklySection = 1)
+	BEGIN
+		SELECT @OrderBySectionId = 0
+	END
+	ELSE
+	BEGIN
+		SELECT @OrderBySectionId = u.SectionId
+		FROM dbo.[User] AS u WITH (NOLOCK)
+		WHERE u.UserId = @UserId
+	END
 
 	SELECT @SiteId = SiteId
 	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
@@ -161,7 +177,9 @@ BEGIN
 		INNER JOIN @tblCategory AS tc ON tc.CategoryId = u.CategoryId
 		INNER JOIN @tblLocation AS tl ON tl.LocationCode = u.LocationCode
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
-	ORDER BY SectionName
+		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON u.UserId = od.EmployeeId AND od.SectionId = @OrderBySectionId
+	ORDER BY od.OrderId
+		,ts.SectionName
 		,[Name];
 
 	SELECT u.UserId AS EmployeeId
