@@ -16,6 +16,7 @@ AS
  Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]      
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
+	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -31,16 +32,18 @@ BEGIN
 		,@BettypeName NVARCHAR(50) = ''
 		,@MessageTemplate NVARCHAR(MAX) = ''
 		,@MessageType INT
-		,@Assignee TVP_INT
 		,@IsOldDetailValid BIT = 0
 		,@IsNewDetailValid BIT = 0
-		,@NotificationSettingId INT = 4
 		,@BettypeHDP INT = 1
 		,@Bettype1HHDP INT = 7
 		,@BettypeOU INT = 3
 		,@Bettype1HOU INT = 8
 		,@Bettype1X2 INT = 5
 		,@Bettype1H1X2 INT = 15
+		,@NotifyAssigneeRecommendOddsUpdatedId INT = 4
+		,@NotifyWatcherRecommendOddsUpdatedId INT = 8
+		,@UserReceivedAssigneeMessageRecommendOdds TVP_INT
+		,@UserReceivedWatcherMessageRecommendOdds TVP_INT
 
 	SELECT @OWPMatchId = OWPMatchId
 		,@Bettype = Bettype
@@ -67,6 +70,13 @@ BEGIN
 		,Odds MONEY
 		)
 
+	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
+
+	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
+		MemberId INT
+		,UserReceivedWatcherId INT
+		)
+
 	INSERT INTO #OldRecommendOdds (
 		Choice
 		,Odds
@@ -91,27 +101,27 @@ BEGIN
 	WHERE MatchRecommendOddsId = @Id
 
 	-- insert message
-	IF @Bettype IN (@Bettype1X2, @Bettype1H1X2)
-		OR @Handicap IS NOT NULL
+	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
-		IF NOT EXISTS (
-				SELECT 1
-				FROM #OldRecommendOdds
-				WHERE Odds IS NULL
-				)
-			SET @IsOldDetailValid = 1
-
-		IF NOT EXISTS (
-				SELECT 1
-				FROM #RecommendOdds
-				WHERE Odds IS NULL
-				)
-			SET @IsNewDetailValid = 1
-
-		IF @IsOldDetailValid = 1
-			OR @IsNewDetailValid = 1
+		IF @Bettype IN (@Bettype1X2, @Bettype1H1X2)
+			OR @Handicap IS NOT NULL
 		BEGIN
-			IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+			IF NOT EXISTS (
+					SELECT 1
+					FROM #OldRecommendOdds
+					WHERE Odds IS NULL
+					)
+				SET @IsOldDetailValid = 1
+
+			IF NOT EXISTS (
+					SELECT 1
+					FROM #RecommendOdds
+					WHERE Odds IS NULL
+					)
+				SET @IsNewDetailValid = 1
+
+			IF @IsOldDetailValid = 1
+				OR @IsNewDetailValid = 1
 			BEGIN
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageType = mt.MsgTemplateId
@@ -165,15 +175,66 @@ BEGIN
 				SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
 				SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
-				INSERT INTO @Assignee
-				SELECT UserId
-				FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
+				-------------- ASSIGNEE --------------------
+				-- get all assignee in match (include main + minor)
+				INSERT INTO #tblAllAssigneeOfMatch (UserId)
+				SELECT a.UserId
+				FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
+
+				-- get list users received ASSIGNEE message update Recommend Odds
+				INSERT INTO @UserReceivedAssigneeMessageRecommendOdds (Id)
+				SELECT a.UserId
+				FROM #tblAllAssigneeOfMatch AS a
+					LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeRecommendOddsUpdatedId
+					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+					AND nsm.UserId = a.UserId
+				WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
 				EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @Assignee
-					,@IsImportant = 0
 					,@MessageType = @MessageType
+					,@MessageTo = @UserReceivedAssigneeMessageRecommendOdds
+					,@IsImportant = 0
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+					,@ErrCode = @ErrCode OUTPUT
+					,@ErrMsg = @ErrMsg OUTPUT
+
+				-------------- WATCHER --------------------
+				-- get all SectionMemberOfUserReceivedWatcher
+				INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
+					MemberId
+					,UserReceivedWatcherId
+					)
+				SELECT ISNULL(mem.UserId, r.UserId)
+					,r.UserId
+				FROM (
+					SELECT w.UserId
+						,u.SectionId
+					FROM dbo.fnc_GetWatcherToSendMessage(@NotifyWatcherRecommendOddsUpdatedId) AS w
+						LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
+					) AS r
+					LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId
+					AND mem.SectionId IS NOT NULL
+
+				-- get list users received Watcher message update Recommend Odds
+				INSERT INTO @UserReceivedWatcherMessageRecommendOdds (Id)
+				SELECT DISTINCT sm.UserReceivedWatcherId
+				FROM #tblAllAssigneeOfMatch AS a
+					INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
+				WHERE NOT EXISTS (
+						-- ignore user received Assignee message
+						SELECT 1
+						FROM @UserReceivedAssigneeMessageRecommendOdds AS ur
+						WHERE ur.Id = sm.UserReceivedWatcherId
+						)
+
+				EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageType
+					,@MessageTo = @UserReceivedWatcherMessageRecommendOdds
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 					,@ErrCode = @ErrCode OUTPUT
 					,@ErrMsg = @ErrMsg OUTPUT
@@ -184,4 +245,8 @@ BEGIN
 	DROP TABLE #OldRecommendOdds
 
 	DROP TABLE #RecommendOdds
+
+	DROP TABLE #tblAllAssigneeOfMatch
+
+	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 END

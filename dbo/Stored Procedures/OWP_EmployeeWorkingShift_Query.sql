@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @UserId INT = 0
 	,@FromDate DATE
 	,@ToDate DATE
@@ -24,6 +23,7 @@ AS
      20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
      20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
      20190215@Leo.Vo: Default shift - [Redmine: #108723]
+	 20190311@Kane.Le: Get RefShiftId output - [Redmine: #109560]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -167,6 +167,7 @@ BEGIN
 	SELECT u.UserId AS EmployeeId
 		,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
 		,s.ShiftId
+		,s.RefShiftId
 	FROM @tblUser AS u
 		INNER JOIN dbo.EmployeeWorkingShift AS s WITH (NOLOCK) ON u.UserId = s.EmployeeId
 		AND ShiftDate >= @FromDate

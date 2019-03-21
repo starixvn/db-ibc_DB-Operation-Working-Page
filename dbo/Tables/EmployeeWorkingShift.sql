@@ -1,11 +1,14 @@
-CREATE TABLE [dbo].[EmployeeWorkingShift] (
+﻿CREATE TABLE [dbo].[EmployeeWorkingShift] (
     [EmployeeId]     INT      NOT NULL,
-    [ShiftId]        INT      NOT NULL,
     [ShiftDate]      DATE     NOT NULL,
     [ShiftStartTime] DATETIME NULL,
     [ShiftEndTime]   DATETIME NULL,
+    [ShiftId]        INT      NOT NULL,
+    [RefShiftId]     INT      NULL,
     CONSTRAINT [PK_EmployeeWorkingShift] PRIMARY KEY CLUSTERED ([EmployeeId] ASC, [ShiftDate] ASC)
 );
+
+
 
 
 

@@ -7,7 +7,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@WB NVARCHAR(100) = ''
 	,@Phone NVARCHAR(50) = ''
 	,@Remark NVARCHAR(2000) = ''
-	,@NoOfHDPId INT = 0
+	,@NoOfHDPId INT = NULL
 	,@IsSoloMatch BIT = 0
 	,@MatchOfferIds NVARCHAR(100) = ''
 	,@Round NVARCHAR(2000) = ''
@@ -38,6 +38,7 @@ Revisions:
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Update Column NoOfHDPId - [Redmine: #107257]
+	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -65,10 +66,12 @@ BEGIN
 		,@OldMarketIds NVARCHAR(100)
 		,@OldMatchOfferIds NVARCHAR(100)
 		-- send message by condition date
-		,@AssigneeMatchInfo TVP_INT
-		,@AssigneeProviderInfo TVP_INT
+		,@UserReceivedAssigneeMessageMatchInfo TVP_INT
+		,@UserReceivedAssigneeMessageProviderInfo TVP_INT
+		,@UserReceivedWatcherMessageMatchInfo TVP_INT
+		,@UserReceivedWatcherMessageProviderInfo TVP_INT
 		,@MessageTemplate NVARCHAR(2000) = ''
-		,@MessageType INT
+		,@MessageTypeId INT
 		,@ActorName NVARCHAR(30)
 		,@OldValue NVARCHAR(500)
 		,@NewValue NVARCHAR(500)
@@ -77,10 +80,12 @@ BEGIN
 		,@EventDateTime DATETIME
 		,@NewOtherTime TIME
 		,@CurrentDateTimeGMTplus8 DATETIME = DATEADD(HOUR, 12, GETDATE())
-
 		-- Notification Setting
-		,@NotifyMatchInfoUpdatedId INT = 5
-		,@NotifyProviderInfoUpdatedId INT = 11
+		,@NotifyAssigneeMatchInfoUpdatedId INT = 5
+		,@NotifyAssigneeProviderInfoUpdatedId INT = 11
+		,@NotifyWatcherMatchInfoUpdatedId INT = 9
+		,@NotifyWatcherProviderInfoUpdatedId INT = 13
+
 
 	CREATE TABLE #tblOldItem (
 		Id INT
@@ -90,6 +95,14 @@ BEGIN
 	CREATE TABLE #tblNewItem (
 		Id INT
 		,[Text] NVARCHAR(100)
+		)
+				
+	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
+
+	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
+		MemberId INT
+		,UserReceivedWatcherId INT
+		,NotificationSettingId INT
 		)
 
 	BEGIN TRY
@@ -119,6 +132,8 @@ BEGIN
 		FROM dbo.MatchInfo m WITH (NOLOCK)
 			LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 		WHERE m.OWPMatchId = @OWPMatchId
+
+		SELECT @NoOfHDPId = CASE WHEN @NoOfHDPId = 0 THEN NULL ELSE @NoOfHDPId END
 
 		-- update new value
 		UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
@@ -188,16 +203,77 @@ BEGIN
 
 			SELECT @NewOtherTime = CAST(@OtherTime AS TIME)
 
-			-- Assignee Match Info --
-			INSERT INTO @AssigneeMatchInfo
-			SELECT UserId
-			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotifyMatchInfoUpdatedId)
+			-- get all assignee in match (include main + minor)
+			INSERT INTO #tblAllAssigneeOfMatch (UserId)
+			SELECT a.UserId
+			FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
 
-			-- Assignee Provider Info --
-			INSERT INTO @AssigneeProviderInfo
-			SELECT UserId
-			FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotifyProviderInfoUpdatedId)
+			-- get list users received ASSIGNEE message update Match Info
+			INSERT INTO @UserReceivedAssigneeMessageMatchInfo (Id)
+			SELECT a.UserId
+			FROM #tblAllAssigneeOfMatch AS a
+				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeMatchInfoUpdatedId
+				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+				AND nsm.UserId = a.UserId
+			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 			
+			-- get list users received ASSIGNEE message update Provider Info
+			INSERT INTO @UserReceivedAssigneeMessageProviderInfo (Id)
+			SELECT a.UserId
+			FROM #tblAllAssigneeOfMatch AS a
+				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeProviderInfoUpdatedId
+				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+				AND nsm.UserId = a.UserId
+			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+
+			-- get all SectionMemberOfUserReceivedWatcher
+			INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
+				MemberId
+				,UserReceivedWatcherId
+				,NotificationSettingId
+				)
+			SELECT ISNULL(mem.UserId, r.UserId)
+				,r.UserId
+				,r.NotificationSettingId
+			FROM (
+			SELECT DISTINCT nm.UserId
+						,u.SectionId
+						,ns.NotificationSettingId
+			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+			INNER JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON ns.NotificationSettingId = nm.NotificationSettingId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nm.UserId = u.UserId
+			WHERE ns.IsWatcher = 1
+				AND nm.Value = 'True' 
+				AND ns.NotificationSettingId IN (@NotifyWatcherMatchInfoUpdatedId, @NotifyWatcherProviderInfoUpdatedId)
+				) AS r
+			LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId AND mem.SectionId IS NOT NULL
+
+			-- get list users received WATCHER message change Match Info
+			INSERT INTO @UserReceivedWatcherMessageMatchInfo (Id)
+			SELECT DISTINCT sm.UserReceivedWatcherId
+			FROM #tblAllAssigneeOfMatch AS a
+				INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
+			WHERE sm.NotificationSettingId = @NotifyWatcherMatchInfoUpdatedId
+			AND NOT EXISTS (
+					-- ignore user received Assignee message
+					SELECT 1
+					FROM @UserReceivedAssigneeMessageMatchInfo AS ur
+					WHERE ur.Id = sm.UserReceivedWatcherId
+					)
+
+			-- get list users received WATCHER message change Provider Info
+			INSERT INTO @UserReceivedWatcherMessageProviderInfo (Id)
+			SELECT DISTINCT sm.UserReceivedWatcherId
+			FROM #tblAllAssigneeOfMatch AS a
+				INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
+			WHERE sm.NotificationSettingId = @NotifyWatcherProviderInfoUpdatedId
+			AND NOT EXISTS (
+					-- ignore user received Assignee message
+					SELECT 1
+					FROM @UserReceivedAssigneeMessageProviderInfo AS ur
+					WHERE ur.Id = sm.UserReceivedWatcherId
+					)
+
 			-- Edit TV--
 			INSERT INTO #tblOldItem (
 				Id
@@ -248,7 +324,7 @@ BEGIN
 								), 1, 2, ''), '')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditTV'
 
@@ -256,9 +332,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageProviderInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -315,7 +400,7 @@ BEGIN
 								), 1, 2, ''), '')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditOtherProvider'
 
@@ -323,9 +408,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageProviderInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -382,7 +476,7 @@ BEGIN
 								), 1, 2, ''), '')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditProvider' 
 
@@ -390,9 +484,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageProviderInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -449,7 +552,7 @@ BEGIN
 								), 1, 2, ''), '')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditAgent'
 
@@ -457,9 +560,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageProviderInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -471,7 +583,7 @@ BEGIN
 					,@NewValue = @Phone
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditPhone'
 
@@ -479,9 +591,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageProviderInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -492,7 +613,7 @@ BEGIN
 					,@NewValue = @Channel
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditChannel'
 
@@ -500,9 +621,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageProviderInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -513,7 +643,7 @@ BEGIN
 					,@NewValue = @WB
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditWB'
 
@@ -521,9 +651,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeProviderInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageProviderInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -546,7 +685,7 @@ BEGIN
 					,@NewValue = ISNULL(CONVERT(NVARCHAR(10), @NewOtherTime, 100), '')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditOtherTime'
 
@@ -554,9 +693,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -567,7 +715,7 @@ BEGIN
 					,@NewValue = @Round
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditRound'
 
@@ -575,9 +723,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -588,7 +745,7 @@ BEGIN
 					,@NewValue = @Division
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditDivision'
 
@@ -596,9 +753,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -609,7 +775,7 @@ BEGIN
 					,@NewValue = @Remark
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditRemark'
 
@@ -617,30 +783,48 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
 			-- Edit No Of HDP
-			IF @OldNoOfHDPId <> @NoOfHDPId
+			IF ISNULL(@OldNoOfHDPId, 0) <> ISNULL(@NoOfHDPId, 0)
 			BEGIN
 				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP')
 					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditNoOfHDP'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', ISNULL(@OldValue, '')), '<newvalue>', ISNULL(@NewValue, ''))
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -651,7 +835,7 @@ BEGIN
 					,@NewValue = @Venue
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditVenue'
 
@@ -659,9 +843,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -720,7 +913,7 @@ BEGIN
 								), 1, 2, ''), '')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditMarket'
 
@@ -728,9 +921,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 			
@@ -789,7 +991,7 @@ BEGIN
 								), 1, 2, ''), '')
 
 				SELECT @MessageTemplate = mt.MsgTemplateContent
-					,@MessageType = mt.MsgTemplateId
+					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditMatchOffer'
 
@@ -797,9 +999,18 @@ BEGIN
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
-					,@MessageTo = @AssigneeMatchInfo
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
 					,@IsImportant = 0
-					,@MessageType = @MessageType
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
 
@@ -817,4 +1028,8 @@ BEGIN
 	DROP TABLE #tblOldItem
 
 	DROP TABLE #tblNewItem
+
+	DROP TABLE #tblAllAssigneeOfMatch
+
+	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 END

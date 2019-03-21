@@ -15,6 +15,7 @@ Revisions:
 	20181004@Kane.Le: delete recommend odds
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
+	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -29,12 +30,14 @@ BEGIN
 		,@OldOddsText NVARCHAR(50) = ''
 		,@MessageTemplate NVARCHAR(MAX) = ''
 		,@MessageType INT
-		,@Assignee TVP_INT
-		,@NotificationSettingId INT = 4
 		,@BettypeHDP INT = 1
 		,@Bettype1HHDP INT = 7
 		,@BettypeOU INT = 3
 		,@Bettype1HOU INT = 8
+		,@NotifyAssigneeRecommendOddsUpdatedId INT = 4
+		,@NotifyWatcherRecommendOddsUpdatedId INT = 8
+		,@UserReceivedAssigneeMessageRecommendOdds TVP_INT
+		,@UserReceivedWatcherMessageRecommendOdds TVP_INT
 
 	SELECT @OWPMatchId = OWPMatchId
 		,@Bettype = Bettype
@@ -47,7 +50,6 @@ BEGIN
 	BEGIN
 		SELECT @ErrMsg = 'Recommend odds is not existed or deleted'
 			,@ErrCode = 4503 -- ActionId + 03
-
 		RETURN
 	END
 
@@ -56,66 +58,142 @@ BEGIN
 		,Odds MONEY
 		)
 
+	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
+
+	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
+		MemberId INT
+		,UserReceivedWatcherId INT
+		)
+
 	DELETE
-	FROM dbo.MatchRecommendOdds WITH (ROWLOCK, UPDLOCK)
+	FROM dbo.MatchRecommendOdds WITH (
+			ROWLOCK
+			,UPDLOCK
+			)
 	WHERE MatchRecommendOddsId = @Id
 
 	DELETE
-	FROM dbo.MatchRecommendOddsDetail WITH (ROWLOCK, UPDLOCK)
+	FROM dbo.MatchRecommendOddsDetail WITH (
+			ROWLOCK
+			,UPDLOCK
+			)
 	OUTPUT deleted.Choice
 		,deleted.Odds
 	INTO #OldRecommendOdds(Choice, Odds)
 	WHERE MatchRecommendOddsId = @Id
 
+	SELECT @MessageTemplate = mt.MsgTemplateContent
+		,@MessageType = mt.MsgTemplateId
+	FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+	WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
+
+	SELECT @BettypeName = ShortName
+	FROM dbo.MajorBettype WITH (NOLOCK)
+	WHERE BettypeId = @Bettype
+
+	IF @Bettype IN (
+			@BettypeHDP
+			,@Bettype1HHDP
+			)
+	BEGIN
+		SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
+
+		IF @OldTeamChoice = 1
+			SET @OldTeamName = 'Home@'
+		ELSE IF @OldTeamChoice = 2
+			SET @OldTeamName = 'Away@'
+	END
+	ELSE IF @Bettype IN (
+			@BettypeOU
+			,@Bettype1HOU
+			)
+	BEGIN
+		SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
+	END
+
+	SELECT @OldOddsText = STUFF((
+				SELECT '/' + CAST(Odds AS NVARCHAR(30))
+				FROM #OldRecommendOdds
+				ORDER BY Choice ASC
+				FOR XML PATH('')
+				), 1, 1, '')
+
+	SET @OldOddsText = @OldTeamName + @OldHandicapText + @OldOddsText
+	SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
+	SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', @OldOddsText)
+	SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', '')
+	SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
+
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
-		SELECT @MessageTemplate = mt.MsgTemplateContent
-			,@MessageType = mt.MsgTemplateId
-		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-		WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
+		-------------- ASSIGNEE --------------------
+		-- get all assignee in match (include main + minor)
+		INSERT INTO #tblAllAssigneeOfMatch (UserId)
+		SELECT a.UserId
+		FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
 
-		SELECT @BettypeName = ShortName
-		FROM dbo.MajorBettype WITH (NOLOCK)
-		WHERE BettypeId = @Bettype
-
-		IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
-		BEGIN
-			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
-
-			IF @OldTeamChoice = 1
-				SET @OldTeamName = 'Home@'
-			ELSE IF @OldTeamChoice = 2
-				SET @OldTeamName = 'Away@'
-		END
-		ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
-		BEGIN
-			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
-		END
-
-		SELECT @OldOddsText = STUFF((
-					SELECT '/' + CAST(Odds AS NVARCHAR(30))
-					FROM #OldRecommendOdds
-					ORDER BY Choice ASC
-					FOR XML PATH('')
-					), 1, 1, '')
-
-		SET @OldOddsText = @OldTeamName + @OldHandicapText + @OldOddsText
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', @OldOddsText)
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', '')
-		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
-
-		INSERT INTO @Assignee
-		SELECT UserId
-		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
+		-- get list users received ASSIGNEE message update Recommend Odds
+		INSERT INTO @UserReceivedAssigneeMessageRecommendOdds (Id)
+		SELECT a.UserId
+		FROM #tblAllAssigneeOfMatch AS a
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeRecommendOddsUpdatedId
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			AND nsm.UserId = a.UserId
+		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
 		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 			,@MessageContent = @MessageTemplate
-			,@MessageTo = @Assignee
-			,@IsImportant = 0
 			,@MessageType = @MessageType
+			,@MessageTo = @UserReceivedAssigneeMessageRecommendOdds
+			,@IsImportant = 0
+			,@IsWatcher = 0
 			,@SessionId = @SessionId
-			,@ErrCode = 0
-			,@ErrMsg = ''
+			,@ErrCode = @ErrCode OUTPUT
+			,@ErrMsg = @ErrMsg OUTPUT
+
+		-------------- WATCHER --------------------
+		-- get all SectionMemberOfUserReceivedWatcher
+		INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
+			MemberId
+			,UserReceivedWatcherId
+			)
+		SELECT ISNULL(mem.UserId, r.UserId)
+			,r.UserId
+		FROM (
+			SELECT w.UserId
+				,u.SectionId
+			FROM dbo.fnc_GetWatcherToSendMessage(@NotifyWatcherRecommendOddsUpdatedId) AS w
+				LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
+			) AS r
+			LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId
+			AND mem.SectionId IS NOT NULL
+
+		-- get list users received Watcher message update Recommend Odds
+		INSERT INTO @UserReceivedWatcherMessageRecommendOdds (Id)
+		SELECT DISTINCT sm.UserReceivedWatcherId
+		FROM #tblAllAssigneeOfMatch AS a
+			INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
+		WHERE NOT EXISTS (
+				-- ignore user received Assignee message
+				SELECT 1
+				FROM @UserReceivedAssigneeMessageRecommendOdds AS ur
+				WHERE ur.Id = sm.UserReceivedWatcherId
+				)
+
+		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+			,@MessageContent = @MessageTemplate
+			,@MessageType = @MessageType
+			,@MessageTo = @UserReceivedWatcherMessageRecommendOdds
+			,@IsImportant = 0
+			,@IsWatcher = 1
+			,@SessionId = @SessionId
+			,@ErrCode = @ErrCode OUTPUT
+			,@ErrMsg = @ErrMsg OUTPUT
 	END
+
+	DROP TABLE #OldRecommendOdds
+
+	DROP TABLE #tblAllAssigneeOfMatch
+
+	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 END

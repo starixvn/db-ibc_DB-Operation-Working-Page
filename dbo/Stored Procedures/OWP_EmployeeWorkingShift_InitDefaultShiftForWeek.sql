@@ -11,6 +11,7 @@ AS
  
 Revisions:
 	20190215@Leo.Vo: Initial SP - [Redmine: #108723]
+	20190312@Leo.Vo: Fix to update ShiftEndTime - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -50,6 +51,11 @@ BEGIN
 				BEGIN
 					SELECT @ShiftStartTime = DATEADD(DAY, 1, @ShiftStartTime)
 						,@ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)
+				END
+
+				IF @StartTime > @EndTime
+				BEGIN
+					SET @ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)
 				END
 			END
 

@@ -13,6 +13,7 @@ Revisions:
 	20181126@Kane.Le: Select Column SectionId for check permisson [Redmine: #105043]
 	20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	20190215@Leo.Vo: Change output result - [Redmine: #108723]
+	20190312@Leo.Vo: Add overtime - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -28,13 +29,7 @@ BEGIN
 		,ShiftDate DATE
 		,ShiftStartTime DATETIME
 		,ShiftEndTime DATETIME
-		)
-	DECLARE @OutputWorkingShift TABLE (
-		EmployeeId INT
-		,ShiftId INT
-		,ShiftDate DATE
-		,ShiftStartTime DATETIME
-		,ShiftEndTime DATETIME
+		,RefShiftId INT
 		)
 
 	-- get working shift need to be copied
@@ -44,6 +39,7 @@ BEGIN
 		,DATEADD(DAY, 7, ShiftDate) AS ShiftDate
 		,DATEADD(DAY, 7, ShiftStartTime) AS ShiftStartTime
 		,DATEADD(DAY, 7, ShiftEndTime) AS ShiftEndTime
+		,RefShiftId
 	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
 	WHERE EmployeeId = @UserId
 		AND ShiftDate >= @PreviousFromDate
@@ -62,6 +58,7 @@ BEGIN
 			,ShiftDate
 			,ShiftStartTime
 			,ShiftEndTime
+			,RefShiftId
 		FROM @CopyWorkingShift
 		) AS s ON s.EmployeeId = t.EmployeeId
 			AND s.ShiftDate = t.ShiftDate
@@ -70,6 +67,7 @@ BEGIN
 			SET t.ShiftId = s.ShiftId
 				,t.ShiftStartTime = s.ShiftStartTime
 				,t.ShiftEndTime = s.ShiftEndTime
+				,t.RefShiftId = s.RefShiftId
 	WHEN NOT MATCHED BY TARGET THEN
 			INSERT (
 				EmployeeId
@@ -77,6 +75,7 @@ BEGIN
 				,ShiftDate
 				,ShiftStartTime
 				,ShiftEndTime
+				,RefShiftId
 				)
 			VALUES (
 				s.EmployeeId
@@ -84,17 +83,13 @@ BEGIN
 				,s.ShiftDate
 				,s.ShiftStartTime
 				,s.ShiftEndTime
-				)
-	OUTPUT inserted.EmployeeId
-		,inserted.ShiftId
-		,inserted.ShiftDate
-		,inserted.ShiftStartTime
-		,inserted.ShiftEndTime
-	INTO @OutputWorkingShift;
+				,s.RefShiftId
+				);
 
 	SELECT EmployeeId
 		,ShiftId
 		,ShiftDate
+		,RefShiftId
 	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
 	WHERE EmployeeId = @UserId
 		AND ShiftDate BETWEEN @CurrentFromDate

@@ -18,21 +18,23 @@ Revisions:
    20170420@Tim.Trinh: modify time to send message
    20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
    20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+   20190307@Kane.Le: add Notification Watcher - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @MessageTemplate NVARCHAR(MAX) = ''
+	DECLARE @MessageTemplate NVARCHAR(2000) = ''
 		,@MessageType INT
-		,@StartRun DATETIME
-		,@EndRun DATETIME
-		,@Duration INT
-		,@LogData NVARCHAR(MAX)
-		,@Xml XML
-		,@Assignee TVP_INT
-		,@NotificationSettingId INT = 3
+		,@NotifyAssigneeNoteUpdatedId INT = 3
+		,@NotifyWatcherNoteUpdatedId INT = 7
+		,@UserReceivedAssigneeMessageNote TVP_INT
+		,@UserReceivedWatcherMessageNote TVP_INT
+		,@AllAssigneeOfMatch TVP_INT
 
-	SET @StartRun = GETDATE()
+	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
+		MemberId INT
+		,UserReceivedWatcherId INT
+		)
 
 	-- insert
 	INSERT INTO dbo.MatchNote (
@@ -48,6 +50,18 @@ BEGIN
 
 	SELECT @MatchNoteId = SCOPE_IDENTITY()
 
+	-- get all assignee in match (include main + minor)
+	INSERT INTO @AllAssigneeOfMatch (Id)
+	SELECT a.UserId
+	FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
+
+	-- insert MatchNoteUser
+	EXEC dbo.OWP_MatchNoteUser_Insert @MatchNoteId = @MatchNoteId
+		,@CreatorId = @UserId
+		,@UserIds = @AllAssigneeOfMatch
+		,@ErrCode = @ErrCode OUTPUT
+		,@ErrMsg = @ErrMsg OUTPUT
+
 	-- insert message
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
@@ -59,48 +73,65 @@ BEGIN
 		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newnote>', @Note)
 		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
-		INSERT INTO @Assignee
-		SELECT UserId
-		FROM dbo.[fnc_GetAssigneeToSendMessage](@OWPMatchId, @NotificationSettingId)
+		-------------- ASSIGNEE --------------------
+		-- get list users received ASSIGNEE message update match Note
+		INSERT INTO @UserReceivedAssigneeMessageNote (Id)
+		SELECT a.Id
+		FROM @AllAssigneeOfMatch AS a
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeNoteUpdatedId
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			AND nsm.UserId = a.Id
+		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
-		-- insert MatchNoteUser
-		EXEC dbo.OWP_MatchNoteUser_Insert @MatchNoteId = @MatchNoteId
-			,@CreatorId = @UserId
-			,@UserIds = @Assignee
+		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+			,@MessageContent = @MessageTemplate
+			,@MessageType = @MessageType
+			,@MessageTo = @UserReceivedAssigneeMessageNote
+			,@IsImportant = 0
+			,@IsWatcher = 0
+			,@SessionId = @SessionId
 			,@ErrCode = @ErrCode OUTPUT
 			,@ErrMsg = @ErrMsg OUTPUT
 
-		-- insert message
+		-------------- WATCHER --------------------
+		-- get all SectionMemberOfUserReceivedWatcher
+		INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
+			MemberId
+			,UserReceivedWatcherId
+			)
+		SELECT ISNULL(mem.UserId, r.UserId)
+			,r.UserId
+		FROM (
+			SELECT w.UserId
+				,u.SectionId
+			FROM dbo.fnc_GetWatcherToSendMessage(@NotifyWatcherNoteUpdatedId) AS w
+				LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
+			) AS r
+			LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId
+			AND mem.SectionId IS NOT NULL
+
+		-- get list users received Watcher message update Note
+		INSERT INTO @UserReceivedWatcherMessageNote (Id)
+		SELECT DISTINCT sm.UserReceivedWatcherId
+		FROM @AllAssigneeOfMatch AS a
+			INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.Id
+		WHERE NOT EXISTS (
+				-- ignore user received Assignee message
+				SELECT 1
+				FROM @UserReceivedAssigneeMessageNote AS ur
+				WHERE ur.Id = sm.UserReceivedWatcherId
+				)
+
 		EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 			,@MessageContent = @MessageTemplate
-			,@MessageTo = @Assignee
-			,@IsImportant = 0
 			,@MessageType = @MessageType
+			,@MessageTo = @UserReceivedWatcherMessageNote
+			,@IsImportant = 0
+			,@IsWatcher = 1
 			,@SessionId = @SessionId
 			,@ErrCode = @ErrCode OUTPUT
 			,@ErrMsg = @ErrMsg OUTPUT
 	END
 
-	SELECT @ErrMsg = @MatchNoteId
-
-	-- For write log
-	SET @Xml = (
-			SELECT @OWPMatchId AS '@mt'
-				,@Note AS '@nt'
-				,@UserId AS '@cb'
-				,GETDATE() AS '@cd'
-			FOR XML PATH('z')
-				,ROOT('r')
-			)
-	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-	SET @EndRun = GETDATE()
-	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-	EXECUTE dbo.OWP_WriteLog @CreatorId = @UserId
-		,@SPName = 'OWP_LiveDetail_InsertMatchNote'
-		,@LoggedDate = @StartRun
-		,@Duration = @Duration
-		,@ObjectId = @MatchNoteId
-		,@Data = @LogData
-		,@DataOld = NULL
+	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 END

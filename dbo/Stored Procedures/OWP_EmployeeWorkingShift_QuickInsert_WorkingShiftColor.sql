@@ -20,6 +20,7 @@ AS
  Revisions:
 	 20181012@Kane.Le: Initial SP - [Redmine: #102867]
 	 20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
+	 20190312@Leo.Vo: Set ShiftCode empty if it is time shift - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -66,7 +67,10 @@ BEGIN
 			,IsTimeShift
 			)
 		VALUES (
-			UPPER(LTRIM(RTRIM(@ShiftCode)))
+			CASE 
+				WHEN @StartTime IS NULL THEN UPPER(LTRIM(RTRIM(@ShiftCode)))
+				ELSE ''
+				END
 			,@Background
 			,@Color
 			,@StartTime

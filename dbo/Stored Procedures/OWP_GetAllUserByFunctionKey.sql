@@ -1,5 +1,4 @@
-
-/*<info serverAlias="DBPOL-NAP_UserControl" executers="bodbAdminNet" isFunction="0"></info>*/
+ /*<info serverAlias="DBPOL-NAP_UserControl" executers="bodbAdminNet" isFunction="0"></info>*/
 
 CREATE PROCEDURE [dbo].[OWP_GetAllUserByFunctionKey] @FunctionKey NVARCHAR(100) = 'NotificationSettingWatcher'
 AS
@@ -10,6 +9,7 @@ AS
  
  Revisions:
      20190107@Kane.Le: Init SP      [Redmine: #108723]	 
+	 20190314@Kane.Le: Update Policy     [Redmine: #109560]	 
 
 -- @Note:    
 EXEC [OWP_GetAllUserByFunctionKey] @FunctionKey = N'NotificationSettingWatcher';
@@ -29,6 +29,5 @@ BEGIN
 		,fn.FunctionId
 		,fn.[Policy]		
 	FROM dbo.NAP_UserFunction fn WITH (NOLOCK)
-	WHERE FunctionId = @FunctionId
+	WHERE FunctionId = @FunctionId AND fn.[Policy] > 0
 END
-GO

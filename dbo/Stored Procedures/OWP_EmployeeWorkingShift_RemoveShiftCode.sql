@@ -11,6 +11,7 @@ AS
 Revisions:
 	 20181106@Kane.Le: Initial SP - [Redmine: #104291]
 	 20190215@Leo.Vo: Init default shift - [Redmine: #108723]
+	 20190312@Leo.Vo: Add overtime - [Redmine: #109560]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -33,14 +34,27 @@ BEGIN
 			,@EndDate = @EndDate
 	END
 
-	DELETE
-	FROM EmployeeWorkingShift WITH (ROWLOCK)
+	UPDATE EmployeeWorkingShift WITH (ROWLOCK)
+	SET ShiftId = RefShiftId
+		,ShiftStartTime = NULL
+		,ShiftEndTime = NULL
+		,RefShiftId = NULL
 	WHERE EmployeeId = @EmployeeId
 		AND ShiftDate = @ShiftDate
+		AND RefShiftId IS NOT NULL
+
+	IF @@ROWCOUNT = 0
+	BEGIN
+		DELETE
+		FROM EmployeeWorkingShift WITH (ROWLOCK)
+		WHERE EmployeeId = @EmployeeId
+			AND ShiftDate = @ShiftDate
+	END
 
 	SELECT EmployeeId
 		,ShiftId
 		,ShiftDate
+		,RefShiftId
 	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
 	WHERE EmployeeId = @EmployeeId
 		AND ShiftDate BETWEEN @StartDate
