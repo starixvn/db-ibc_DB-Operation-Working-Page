@@ -28,6 +28,7 @@ AS
 	20190308@Leo.Vo: Avoid to send message to UserId NULL - [Redmine: #110010]
 	20190320@Raymond.Le: Remove invalid data if has error from previous upload - [Redmine: #110575]
 	20190304@Raymond.Le: Implement section Watcher notification - [Redmine: #109560]
+	20190325@Raymond.Le: Fix not send message change assignment when UserId is NULL in OtherTrader - [Redmine: #110322]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -128,7 +129,6 @@ BEGIN
 		,@EditVenueMessageTypeId INT = 23
 		,@EditWBMessageTypeId INT = 16
 		,@TempEventDate DATETIME
-
 
 	SELECT @Username = dbo.fnc_GetUsernameByUserId(@UserId)
 
@@ -562,7 +562,7 @@ BEGIN
 	CREATE TABLE #tblInvalidMatch (
 		OWPMatchId INT
 	)
-		
+
 	BEGIN TRY
 		/*------Remove invalid data if has error from previous upload-----*/
 		SELECT TOP 1 @TempEventDate = au.EventDate
@@ -1071,12 +1071,12 @@ BEGIN
 			INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tl.[Text] = tv.TVCode
 
 		UPDATE m
-		SET m.TV = STUFF((
+		SET m.TV = LEFT(STUFF((
 					SELECT ',' + CAST(Id AS VARCHAR(10))
 					FROM #tblDistinctTextList AS tl
 					WHERE tl.OWPMatchId = m.OWPMatchId
 					FOR XML PATH('')
-					), 1, 1, '')
+					), 1, 1, ''), 500) -- ATTENTION: MaxLength of TVCode in dbo.MatchInfo
 		FROM #tblMatch AS m
 		WHERE m.TV <> ''
 
@@ -1183,12 +1183,12 @@ BEGIN
 			INNER JOIN dbo.Agent AS tv WITH (NOLOCK) ON tl.[Text] = tv.AgentName
 
 		UPDATE m
-		SET m.Agent = STUFF((
+		SET m.Agent = LEFT(STUFF((
 					SELECT ',' + CAST(Id AS VARCHAR(10))
 					FROM #tblDistinctTextList AS tl
 					WHERE tl.OWPMatchId = m.OWPMatchId
 					FOR XML PATH('')
-					), 1, 1, '')
+					), 1, 1, ''), 100) -- ATTENTION: MaxLength of Agent in dbo.MatchInfo
 		FROM #tblMatch AS m
 		WHERE m.Agent <> ''
 
@@ -1295,12 +1295,12 @@ BEGIN
 			INNER JOIN dbo.[Provider] AS p WITH (NOLOCK) ON tl.[Text] = p.ProviderName
 
 		UPDATE m
-		SET m.[Provider] = STUFF((
+		SET m.[Provider] = LEFT(STUFF((
 					SELECT ',' + CAST(Id AS VARCHAR(10))
 					FROM #tblDistinctTextList AS tl
 					WHERE tl.OWPMatchId = m.OWPMatchId
 					FOR XML PATH('')
-					), 1, 1, '')
+					), 1, 1, ''), 100) -- ATTENTION: MaxLength of Provider in dbo.MatchInfo
 		FROM #tblMatch AS m
 		WHERE m.[Provider] <> ''
 
@@ -1407,12 +1407,12 @@ BEGIN
 			INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON tl.[Text] = op.OtherProviderName
 
 		UPDATE m
-		SET m.OtherProvider = STUFF((
+		SET m.OtherProvider = LEFT(STUFF((
 					SELECT ',' + CAST(Id AS VARCHAR(10))
 					FROM #tblDistinctTextList AS tl
 					WHERE tl.OWPMatchId = m.OWPMatchId
 					FOR XML PATH('')
-					), 1, 1, '')
+					), 1, 1, ''), 100) -- ATTENTION: MaxLength of OtherProvider in dbo.MatchInfo
 		FROM #tblMatch AS m
 		WHERE m.OtherProvider <> ''
 
@@ -2655,13 +2655,7 @@ BEGIN
 					LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON u.UserId = nm.UserId
 					AND nm.NotificationSettingId = m.NotificationSettingId
 				WHERE ISNULL(nm.Value, ns.DefaultValue) = 'True'
-				AND NOT EXISTS ( -- ignore user has received 'MyAssignmentUpdateMessage'
-					SELECT 1
-					FROM #tblChangeOfAssignmentMessage AS cm 
-					WHERE cm.UserId = u.UserId
-						AND cm.OWPMatchId = m.OWPMatchId
-						AND cm.Bettype = m.Bettype
-				)
+					AND u.UserId IS NOT NULL
 			) AS mu ON 1 = 0
 		WHEN NOT MATCHED THEN
 			INSERT (
@@ -2739,13 +2733,6 @@ BEGIN
 			INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON u.UserId = sm.MemberId
 			LEFT JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON nm.UserId = sm.UserReceivedWatcherId AND nm.NotificationSettingId = m.NotificationSettingId
 			WHERE nm.[Value] = 'True'
-			AND NOT EXISTS ( -- ignore user has received 'MyAssignmentUpdateMessage'
-					SELECT 1
-					FROM #tblChangeOfAssignmentMessage AS cm 
-					WHERE cm.UserId = sm.UserReceivedWatcherId
-						AND cm.OWPMatchId = m.OWPMatchId
-						AND cm.BetType = m.Bettype
-				)
 			AND NOT EXISTS ( -- ignore assignee message change assignment same type
 				SELECT 1
 				FROM #tblIgnoreUserReceivedAssigneeMessage AS ig 
@@ -2754,6 +2741,7 @@ BEGIN
 					AND ig.MessageTypeId = m.MessageTypeId
 					AND ig.Bettype = m.Bettype
 			)
+			AND u.UserId IS NOT NULL
 
 		/*------Send message edit maxbet, spread-----*/
 		SELECT @MessageEditMaxbet = mt.MsgTemplateContent
@@ -3247,6 +3235,6 @@ BEGIN
 	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 
 	DROP TABLE #tblIgnoreUserReceivedAssigneeMessage
-	
+
 	DROP TABLE #tblInvalidMatch
 END

@@ -21,6 +21,7 @@ Revisions:
 	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20190325@Kane.Le: add @ErrMsg = @@IDENTITY - [Redmine: #110322]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -100,6 +101,8 @@ BEGIN
 		,@UserId
 		,@AssignmentNote
 		)
+
+	SELECT @ErrMsg = @@IDENTITY
 
 	SELECT @HomeTeam = h.OWPTeamName
 		,@AwayTeam = a.OWPTeamName
