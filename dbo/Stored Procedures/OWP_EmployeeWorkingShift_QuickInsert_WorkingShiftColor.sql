@@ -6,6 +6,9 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QuickInsert_WorkingShiftColor] 
 	,@Color NVARCHAR(50)
 	,@StartTime TIME(7) = NULL
 	,@EndTime TIME(7) = NULL
+	,@ErrCode INT = 0 OUTPUT
+	,@ErrMsg NVARCHAR(2000) = NULL OUTPUT
+	,@ShiftId INT = 0 OUTPUT
 AS
 /*    
  Created: 20181009@Kane.Le
@@ -21,13 +24,12 @@ AS
 	 20181012@Kane.Le: Initial SP - [Redmine: #102867]
 	 20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	 20190312@Leo.Vo: Set ShiftCode empty if it is time shift - [Redmine: #109560]
+	 20190326@Leo.Vo: Change to handle error code - [Redmine: #110322]
 */
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @ErrCode INT = 0
-		,@ErrMsg NVARCHAR(200) = ''
-		,@TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@ActorId)
+	DECLARE @TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@ActorId)
 
 	SELECT @StartTime = DATEADD(MINUTE, - @TimezoneOffset, @StartTime)
 		,@EndTime = DATEADD(MINUTE, - @TimezoneOffset, @EndTime)
@@ -46,15 +48,8 @@ BEGIN
 					)
 			)
 	BEGIN
-		SELECT 1 AS ErrCode
-			,'Shift existed' AS ErrMsg
-			,NULL AS ShiftId
-			,NULL AS ShiftCode
-			,@Color AS Color
-			,@Background AS Background
-			,NULL AS StartTime
-			,NULL AS EndTime
-			,0 AS IsTimeShift
+		SELECT @ErrCode = 1
+			,@ErrMsg = 'Shift existed'
 	END
 	ELSE
 	BEGIN
@@ -66,8 +61,7 @@ BEGIN
 			,EndTime
 			,IsTimeShift
 			)
-		VALUES (
-			CASE 
+		VALUES (CASE 
 				WHEN @StartTime IS NULL THEN UPPER(LTRIM(RTRIM(@ShiftCode)))
 				ELSE ''
 				END
@@ -81,16 +75,6 @@ BEGIN
 				END
 			);
 
-		SELECT 0 AS ErrCode
-			,'' AS ErrMsg
-			,ShiftId
-			,@ShiftCode AS ShiftCode
-			,@Color AS Color
-			,@Background AS Background
-			,@StartTime AS StartTime
-			,@EndTime AS EndTime
-			,IsTimeShift
-		FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK)
-		WHERE ShiftId = @@IDENTITY
+		SELECT @ShiftId = @@IDENTITY
 	END
 END
