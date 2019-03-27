@@ -34,19 +34,19 @@ BEGIN
 	SELECT @StartTime = DATEADD(MINUTE, - @TimezoneOffset, @StartTime)
 		,@EndTime = DATEADD(MINUTE, - @TimezoneOffset, @EndTime)
 
-	IF EXISTS (
-			SELECT 1
-			FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK)
-			WHERE (
-					@StartTime IS NULL
-					AND ShiftCode = LTRIM(RTRIM(@ShiftCode))
-					)
-				OR (
-					@StartTime IS NOT NULL
-					AND StartTime = @StartTime
-					AND EndTime = @EndTime
-					)
+	SELECT @ShiftId = ShiftId
+	FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK)
+	WHERE (
+			@StartTime IS NULL
+			AND ShiftCode = LTRIM(RTRIM(@ShiftCode))
 			)
+		OR (
+			@StartTime IS NOT NULL
+			AND StartTime = @StartTime
+			AND EndTime = @EndTime
+			)
+
+	IF @ShiftId > 0
 	BEGIN
 		SELECT @ErrCode = 1
 			,@ErrMsg = 'Shift existed'
