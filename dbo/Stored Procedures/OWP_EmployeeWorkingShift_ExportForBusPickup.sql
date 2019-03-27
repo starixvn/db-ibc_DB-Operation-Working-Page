@@ -27,20 +27,18 @@ BEGIN
 
 	DECLARE @TimeZoneOffsetOfUser INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
 	DECLARE @ExcludeClosedAccount INT
-		,@OrderBySectionId INT
+		,@OrderByUserId INT
 		,@SiteId INT
 
 	SET @ExcludeClosedAccount = 1
 
 	IF (@IsReadWeeklySection = 1)
 	BEGIN
-		SELECT @OrderBySectionId = 0
+		SELECT @OrderByUserId = 0
 	END
 	ELSE
 	BEGIN
-		SELECT @OrderBySectionId = u.SectionId
-		FROM dbo.[User] AS u WITH (NOLOCK)
-		WHERE u.UserId = @UserId
+		SELECT @OrderByUserId = @UserId
 	END
 
 	--SET @FromDate = CAST(DATEADD(MINUTE, @TimeZoneOffsetOfUser, @FromDate) AS DATETIME)
@@ -264,9 +262,17 @@ BEGIN
 		,od.SectionId
 		,od.OrderId
 	FROM @tblUserOutput u
-	LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON u.UserId = od.EmployeeId AND od.SectionId = @OrderBySectionId
-	ORDER BY od.OrderId
-		,SectionName
+	LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
+		AND od.SectionId = u.SectionId
+		AND od.UserId = @OrderByUserId
+	ORDER BY SectionName
+		,CASE 
+			WHEN od.OrderId IS NOT NULL
+				THEN 1
+			ELSE 2
+			END
+		,od.OrderId
+		,[Name];
 
 	SELECT u.UserId AS EmployeeId
 		,s.ShiftCode
