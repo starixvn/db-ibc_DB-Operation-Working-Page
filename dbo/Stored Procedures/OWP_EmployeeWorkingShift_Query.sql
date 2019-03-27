@@ -35,20 +35,18 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SiteId INT
-			,@OrderBySectionId INT
+			,@OrderByUserId INT
 	DECLARE @TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
 
 	-- get Order Section of current User querying
 
 	IF (@IsReadWeeklySection = 1)
 	BEGIN
-		SELECT @OrderBySectionId = 0
+		SELECT @OrderByUserId = 0
 	END
 	ELSE
 	BEGIN
-		SELECT @OrderBySectionId = u.SectionId
-		FROM dbo.[User] AS u WITH (NOLOCK)
-		WHERE u.UserId = @UserId
+		SELECT @OrderByUserId = @UserId
 	END
 
 	SELECT @SiteId = SiteId
@@ -177,9 +175,12 @@ BEGIN
 		INNER JOIN @tblCategory AS tc ON tc.CategoryId = u.CategoryId
 		INNER JOIN @tblLocation AS tl ON tl.LocationCode = u.LocationCode
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
-		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON u.UserId = od.EmployeeId AND od.SectionId = @OrderBySectionId
-	ORDER BY od.OrderId
-		,ts.SectionName
+		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId AND od.SectionId = u.SectionId 
+					AND od.UserId = @OrderByUserId
+	ORDER BY ts.SectionName
+		,CASE WHEN od.OrderId IS NOT NULL THEN 1
+			ELSE 2 END
+		,od.OrderId
 		,[Name];
 
 	SELECT u.UserId AS EmployeeId
