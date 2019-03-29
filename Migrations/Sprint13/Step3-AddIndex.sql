@@ -22,9 +22,4 @@ CREATE UNIQUE INDEX [IX_EmployeeWorkingShiftColor_NonTimeShift] ON [dbo].[Employ
 	[ShiftCode]
 	)
 WHERE IsTimeShift = 0 ON [OWP_Index];
-
--- create INDEX for EmployeeWorkingShiftOrder
-CREATE CLUSTERED INDEX	CIX_EmployeeWorkingShiftOrder ON dbo.EmployeeWorkingShiftOrder (
-							SectionId	ASC
-						) ON OWP_Data;
 GO
