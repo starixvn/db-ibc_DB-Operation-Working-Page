@@ -5,3 +5,10 @@
     [OrderId]    INT NOT NULL
 );
 
+
+
+
+GO
+CREATE CLUSTERED INDEX [CIX_EmployeeWorkingShiftOrder]
+    ON [dbo].[EmployeeWorkingShiftOrder]([SectionId] ASC);
+
