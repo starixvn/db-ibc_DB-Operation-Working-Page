@@ -42,5 +42,14 @@ BEGIN
 		,DATEADD(MINUTE, @Offset, StartTime) AS StartTime
 		,DATEADD(MINUTE, @Offset, EndTime) AS EndTime
 		,IsTimeShift
-	FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK)
+	FROM dbo.EmployeeWorkingShiftColor AS emp WITH (NOLOCK)
+	WHERE (
+		IsTimeShift = 1
+		AND StartTime IS NOT NULL
+		AND EndTime IS NOT NULL
+		)
+	OR (
+		IsTimeShift = 0
+		AND ShiftCode IS NOT NULL
+		)
 END;
