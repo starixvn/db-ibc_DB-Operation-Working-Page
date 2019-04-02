@@ -17,7 +17,7 @@ CREATE PROCEDURE [dbo].[OWP_UserUpdate] @Editor INT
 	,@Pickup BIT = NULL
 	,@Address NVARCHAR(500) = NULL
 	,@Level INT = NULL
-	,@IsSecondAccount BIT = NULL
+	,@IsSecondAccount BIT = 0
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
