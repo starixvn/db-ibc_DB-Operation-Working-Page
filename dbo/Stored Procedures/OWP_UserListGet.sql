@@ -17,6 +17,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Kane.Le: Get Pickup, Address, Level [Redmine: #105043]
 	20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
+	20190402@Kane.Le: Get IsSecondAccount - [Redmine: #11068]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,10 +50,10 @@ BEGIN
 			) AS RowNumber
 		,u.UserId
 	FROM dbo.[User] AS u WITH (NOLOCK)
-		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+	INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
-		LEFT JOIN dbo.UserRole AS r WITH (NOLOCK) ON r.UserId = u.UserId
+	LEFT JOIN dbo.UserRole AS r WITH (NOLOCK) ON r.UserId = u.UserId
 	WHERE (
 			@ExcludeClosedAccount = 0
 			OR (
@@ -67,11 +68,13 @@ BEGIN
 			OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@User, '') + '%'
 			)
 		AND @RoleId = CASE @RoleId
-			WHEN 0 THEN @RoleId
+			WHEN 0
+				THEN @RoleId
 			ELSE r.RoleId
 			END
 		AND @SectionId = CASE @SectionId
-			WHEN 0 THEN @SectionId
+			WHEN 0
+				THEN @SectionId
 			ELSE u.SectionId
 			END
 
@@ -113,16 +116,20 @@ BEGIN
 		,u.Pickup
 		,u.[Address]
 		,u.[Level]
+		,ucl.[Value] AS 'LevelName'
+		,ISNULL(u.IsSecondAccount, 0) AS IsSecondAccount
 	FROM dbo.[User] AS u WITH (NOLOCK)
-		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
-		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
-		LEFT JOIN dbo.[Role] AS r WITH (NOLOCK) ON r.RoleId = ur.RoleId
-		LEFT JOIN dbo.RefResource AS dept WITH (NOLOCK) ON u.DepartmentId = dept.ResourceId
+	INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
+	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
+	LEFT JOIN dbo.[Role] AS r WITH (NOLOCK) ON r.RoleId = ur.RoleId
+	LEFT JOIN dbo.RefResource AS dept WITH (NOLOCK) ON u.DepartmentId = dept.ResourceId
 		AND dept.RefName = 'Department'
-		LEFT JOIN dbo.RefResource AS sec WITH (NOLOCK) ON u.SectionId = sec.ResourceId
+	LEFT JOIN dbo.RefResource AS sec WITH (NOLOCK) ON u.SectionId = sec.ResourceId
 		AND sec.RefName = 'Section'
-		LEFT JOIN dbo.RefResource AS uc WITH (NOLOCK) ON u.CategoryId = uc.ResourceId
+	LEFT JOIN dbo.RefResource AS uc WITH (NOLOCK) ON u.CategoryId = uc.ResourceId
 		AND uc.RefName = 'UserCategory'
+	LEFT JOIN dbo.RefResource AS ucl WITH (NOLOCK) ON u.[Level] = ucl.ResourceId
+		AND ucl.RefName = 'UserLevel'
 
 	-- total item
 	SELECT @TotalRecords = COUNT(1)

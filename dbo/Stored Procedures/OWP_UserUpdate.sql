@@ -17,6 +17,7 @@ CREATE PROCEDURE [dbo].[OWP_UserUpdate] @Editor INT
 	,@Pickup BIT = NULL
 	,@Address NVARCHAR(500) = NULL
 	,@Level INT = NULL
+	,@IsSecondAccount BIT = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -28,6 +29,8 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Kane.Le: Update Pickup, Address, Level, Refactor SP  [Redmine: #105043]
+	20190402@Kane.Le: Update IsSecondAccount - [Redmine: #11068]
+
 */
 BEGIN
 	SET NOCOUNT ON
@@ -86,6 +89,7 @@ BEGIN
 					,ISNULL(ou.Pickup, '') AS '@pk'
 					,ISNULL(ou.[Address], '') AS '@ad'
 					,ISNULL(ou.[Level], '') AS '@lv'
+					,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
 				FROM [User] ou WITH (NOLOCK)
 					LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 				WHERE ou.UserId = @UserId
@@ -110,6 +114,7 @@ BEGIN
 			,Pickup = @Pickup
 			,[Address] = @Address
 			,[Level] = @Level
+			,IsSecondAccount = @IsSecondAccount
 		WHERE UserId = @UserId
 
 		DELETE
@@ -145,6 +150,7 @@ BEGIN
 					,ISNULL(@Pickup, '') AS '@pk'
 					,ISNULL(@Address, '') AS '@ad'
 					,ISNULL(@Level, '') AS '@lv'
+					,ISNULL(@IsSecondAccount, '') AS '@sa'
 				FOR XML PATH('z')
 					,ROOT('r')
 				)
