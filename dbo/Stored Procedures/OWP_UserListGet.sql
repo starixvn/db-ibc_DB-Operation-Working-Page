@@ -1,8 +1,11 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_UserListGet] @User VARCHAR(30) = NULL
-	,@RoleId SMALLINT = 0
-	,@SectionId SMALLINT = 0
+	,@RoleId SMALLINT = NULL
+	,@SectionId SMALLINT = NULL
+	,@DepartmentId SMALLINT = NULL
+	,@CategoryId SMALLINT = NULL
+	,@LocationCode VARCHAR(10) = NULL
 	,@PageSize INT = NULL
 	,@PageIndex INT = NULL
 	,@TotalRecords INT = 0 OUTPUT
@@ -50,10 +53,10 @@ BEGIN
 			) AS RowNumber
 		,u.UserId
 	FROM dbo.[User] AS u WITH (NOLOCK)
-	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-	INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
-	LEFT JOIN dbo.UserRole AS r WITH (NOLOCK) ON r.UserId = u.UserId
+		LEFT JOIN dbo.UserRole AS r WITH (NOLOCK) ON r.UserId = u.UserId
 	WHERE (
 			@ExcludeClosedAccount = 0
 			OR (
@@ -67,16 +70,26 @@ BEGIN
 			ISNULL(u.Username, '') LIKE '%' + ISNULL(@User, '') + '%'
 			OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@User, '') + '%'
 			)
-		AND @RoleId = CASE @RoleId
-			WHEN 0
-				THEN @RoleId
-			ELSE r.RoleId
-			END
-		AND @SectionId = CASE @SectionId
-			WHEN 0
-				THEN @SectionId
-			ELSE u.SectionId
-			END
+		AND (
+			@RoleId IS NULL
+			OR @RoleId = ISNULL(r.RoleId, 0)
+			)
+		AND (
+			@SectionId IS NULL
+			OR @SectionId = ISNULL(u.SectionId, 0)
+			)
+		AND (
+			@DepartmentId IS NULL
+			OR @DepartmentId = ISNULL(u.DepartmentId, 0)
+			)
+		AND (
+			@CategoryId IS NULL
+			OR @CategoryId = ISNULL(u.CategoryId, 0)
+			)
+		AND (
+			@LocationCode IS NULL
+			OR @LocationCode = ISNULL(u.LocationCode, 'None')
+			)
 
 	IF @PageIndex IS NOT NULL
 		AND @PageSize IS NOT NULL
@@ -117,18 +130,18 @@ BEGIN
 		,u.[Address]
 		,u.[Level]
 		,ucl.[Value] AS 'LevelName'
-		,ISNULL(u.IsSecondAccount, 0) AS IsSecondAccount
+		,u.IsSecondAccount
 	FROM dbo.[User] AS u WITH (NOLOCK)
-	INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
-	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
-	LEFT JOIN dbo.[Role] AS r WITH (NOLOCK) ON r.RoleId = ur.RoleId
-	LEFT JOIN dbo.RefResource AS dept WITH (NOLOCK) ON u.DepartmentId = dept.ResourceId
+		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
+		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
+		LEFT JOIN dbo.[Role] AS r WITH (NOLOCK) ON r.RoleId = ur.RoleId
+		LEFT JOIN dbo.RefResource AS dept WITH (NOLOCK) ON u.DepartmentId = dept.ResourceId
 		AND dept.RefName = 'Department'
-	LEFT JOIN dbo.RefResource AS sec WITH (NOLOCK) ON u.SectionId = sec.ResourceId
+		LEFT JOIN dbo.RefResource AS sec WITH (NOLOCK) ON u.SectionId = sec.ResourceId
 		AND sec.RefName = 'Section'
-	LEFT JOIN dbo.RefResource AS uc WITH (NOLOCK) ON u.CategoryId = uc.ResourceId
+		LEFT JOIN dbo.RefResource AS uc WITH (NOLOCK) ON u.CategoryId = uc.ResourceId
 		AND uc.RefName = 'UserCategory'
-	LEFT JOIN dbo.RefResource AS ucl WITH (NOLOCK) ON u.[Level] = ucl.ResourceId
+		LEFT JOIN dbo.RefResource AS ucl WITH (NOLOCK) ON u.[Level] = ucl.ResourceId
 		AND ucl.RefName = 'UserLevel'
 
 	-- total item
