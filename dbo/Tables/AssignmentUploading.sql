@@ -8,9 +8,9 @@
     [KickOffTime]        NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_KickOffTime] DEFAULT (N'') NOT NULL,
     [OtherTime]          NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_OtherTime] DEFAULT (N'') NOT NULL,
     [MatchOffer]         NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_MatchOffer] DEFAULT (N'') NOT NULL,
-    [League]             NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_League] DEFAULT (N'') NOT NULL,
-    [Home]               NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Home] DEFAULT (N'') NOT NULL,
-    [Away]               NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Away] DEFAULT (N'') NOT NULL,
+    [League]             NVARCHAR (500)  CONSTRAINT [DF_AssignmentUploading_League] DEFAULT (N'') NOT NULL,
+    [Home]               NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_Home] DEFAULT (N'') NOT NULL,
+    [Away]               NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_Away] DEFAULT (N'') NOT NULL,
     [Note]               XML             NULL,
     [Round]              NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Round] DEFAULT (N'') NOT NULL,
     [Division]           NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Division] DEFAULT (N'') NOT NULL,
@@ -69,6 +69,8 @@
     [ParentRowNumber]    INT             NULL,
     CONSTRAINT [PK_AssignmentUploading] PRIMARY KEY CLUSTERED ([SessionId] ASC, [RowNumber] ASC)
 );
+
+
 
 
 

@@ -19,7 +19,8 @@ AS
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257] 
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
-	20190227@Raymond.Le: Extend number days delete old data - [Redmine: #108723] 
+	20190227@Raymond.Le: Extend number days delete old data - [Redmine: #108723]
+	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068] 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -204,9 +205,9 @@ BEGIN
 		,[KickOffTime] [nvarchar](200)
 		,[OtherTime] [nvarchar](200)
 		,[MatchOffer] [nvarchar](2000)
-		,[LeagueName] [nvarchar](2000)
-		,[HomeName] [nvarchar](2000)
-		,[AwayName] [nvarchar](2000)
+		,[LeagueName] [nvarchar](500)
+		,[HomeName] [nvarchar](200)
+		,[AwayName] [nvarchar](200)
 		,[Note] [nvarchar](max)
 		,[Round] [nvarchar](2000)
 		,[Division] [nvarchar](2000)
@@ -243,7 +244,7 @@ BEGIN
 		,[Trader10Mins] [nvarchar](200)
 		,[OtherTraders10Mins] [nvarchar](max)
 		,[LA] [nvarchar](200)
-		,[OtherLA] [nvarchar](2000)
+		,[OtherLA] [nvarchar](max)
 		,[MaxBetFM] [nvarchar](200)
 		,[SpreadFM] [nvarchar](200)
 		,[TraderFM] [nvarchar](200)

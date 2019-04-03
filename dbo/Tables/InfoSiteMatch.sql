@@ -2,19 +2,19 @@
     [InfoSiteMatchId] INT             NOT NULL,
     [EventDateTime]   DATETIME        NOT NULL,
     [UpdatedTime]     DATETIME        NOT NULL,
-    [LeagueName]      NVARCHAR (2000) NOT NULL,
-    [HomeName]        NVARCHAR (2000) NOT NULL,
-    [AwayName]        NVARCHAR (2000) NOT NULL,
+    [LeagueName]      NVARCHAR (500)  NOT NULL,
+    [HomeName]        NVARCHAR (200)  NOT NULL,
+    [AwayName]        NVARCHAR (200)  NOT NULL,
     [Round]           NVARCHAR (2000) NULL,
     [Division]        NVARCHAR (2000) NULL,
     [Agent]           NVARCHAR (2000) NULL,
     [TV]              NVARCHAR (2000) NULL,
-    [Channel]         NVARCHAR (2000) NULL,
-    [WB]              NVARCHAR (2000) NULL,
-    [Website1]        NVARCHAR (2000) NULL,
-    [Website2]        NVARCHAR (2000) NULL,
-    [Website3]        NVARCHAR (2000) NULL,
-    [Website4]        NVARCHAR (2000) NULL,
+    [Channel]         NVARCHAR (100)  NULL,
+    [WB]              NVARCHAR (100)  NULL,
+    [Website1]        NVARCHAR (1000) NULL,
+    [Website2]        NVARCHAR (1000) NULL,
+    [Website3]        NVARCHAR (1000) NULL,
+    [Website4]        NVARCHAR (1000) NULL,
     [OWPLeagueId]     INT             NOT NULL,
     [OWPHomeId]       INT             NOT NULL,
     [OWPAwayId]       INT             NOT NULL,
@@ -23,6 +23,8 @@
     [IsDeleted]       BIT             DEFAULT ((0)) NULL,
     CONSTRAINT [PK_InfoSiteMatch] PRIMARY KEY CLUSTERED ([InfoSiteMatchId] ASC)
 );
+
+
 
 
 
