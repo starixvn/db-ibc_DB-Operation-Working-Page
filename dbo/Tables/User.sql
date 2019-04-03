@@ -17,9 +17,11 @@
     [Address]           NVARCHAR (500) NULL,
     [Level]             INT            NULL,
     [TimeZoneSettingId] SMALLINT       NULL,
-    [IsSecondAccount]   BIT            CONSTRAINT [DF__User__IsSecondAc__1FA39FB9] DEFAULT ((0)) NOT NULL,
+    [IsSecondAccount]   BIT            DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED ([UserId] ASC)
 );
+
+
 
 
 
