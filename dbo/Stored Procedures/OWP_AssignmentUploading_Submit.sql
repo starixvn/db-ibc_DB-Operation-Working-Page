@@ -29,6 +29,7 @@ AS
 	20190320@Raymond.Le: Remove invalid data if has error from previous upload - [Redmine: #110575]
 	20190304@Raymond.Le: Implement section Watcher notification - [Redmine: #109560]
 	20190325@Raymond.Le: Fix not send message change assignment when UserId is NULL in OtherTrader - [Redmine: #110322]
+	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -184,11 +185,11 @@ BEGIN
 		,MinorBetTypeId INT
 		,OWPMatchId INT
 		,EventDate DATETIME
-		,League NVARCHAR(2000)
+		,League NVARCHAR(500)
 		,OWPLeagueId INT
-		,Home NVARCHAR(2000)
+		,Home NVARCHAR(200)
 		,OWPHomeId INT
-		,Away NVARCHAR(2000)
+		,Away NVARCHAR(200)
 		,OWPAwayId INT
 		,MatchNo VARCHAR(50)
 		,KickOffTime TIME(7)
@@ -293,7 +294,7 @@ BEGIN
 		[Action] VARCHAR(10) NOT NULL
 		,OWPLeagueId INT NOT NULL
 		,CategoryId SMALLINT
-		,OWPLeagueName NVARCHAR(2000) NOT NULL
+		,OWPLeagueName NVARCHAR(500) NOT NULL
 		)
 
 	--list of upload values of TV, Provider, OtherProvider or Agent in upload data

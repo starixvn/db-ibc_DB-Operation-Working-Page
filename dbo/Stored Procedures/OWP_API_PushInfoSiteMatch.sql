@@ -12,6 +12,7 @@ AS
 	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
 	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
 	20190108@Kane.Le: Update Field IsDeleted - [Redmine: #105574]
+	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -43,19 +44,19 @@ BEGIN
 		[InfoSiteMatchId] [int] NOT NULL
 		,[EventDateTime] [datetime] NOT NULL
 		,[UpdatedTime] [datetime] NOT NULL
-		,[LeagueName] [nvarchar](2000) NOT NULL
-		,[HomeName] [nvarchar](2000) NOT NULL
-		,[AwayName] [nvarchar](2000) NOT NULL
+		,[LeagueName] [nvarchar](500) NOT NULL
+		,[HomeName] [nvarchar](200) NOT NULL
+		,[AwayName] [nvarchar](200) NOT NULL
 		,[Round] [nvarchar](2000) NULL
 		,[Division] [nvarchar](2000) NULL
 		,[Agent] [nvarchar](2000) NULL
 		,[TV] [nvarchar](2000) NULL
-		,[Channel] [nvarchar](2000) NULL
-		,[WB] [nvarchar](2000) NULL
-		,[Website1] [nvarchar](2000) NULL
-		,[Website2] [nvarchar](2000) NULL
-		,[Website3] [nvarchar](2000) NULL
-		,[Website4] [nvarchar](2000) NULL
+		,[Channel] [nvarchar](100) NULL
+		,[WB] [nvarchar](100) NULL
+		,[Website1] [nvarchar](1000) NULL
+		,[Website2] [nvarchar](1000) NULL
+		,[Website3] [nvarchar](1000) NULL
+		,[Website4] [nvarchar](1000) NULL
 		,[OWPLeagueId] INT NULL
 		,[OWPHomeId] INT NULL
 		,[OWPAwayId] INT NULL
@@ -96,7 +97,7 @@ BEGIN
 		,[Website2]
 		,[Website3]
 		,[Website4]
-	FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([InfoSiteMatchId] [int], [EventDateTime] [datetime], [UpdatedTime] [datetime], [LeagueName] [nvarchar](2000), [HomeName] [nvarchar](2000), [AwayName] [nvarchar](2000), [Round] [nvarchar](2000), [Division] [nvarchar](2000), [Agent] [nvarchar](2000), [LocalTV] [nvarchar](2000), [LiveTV] [nvarchar](2000), [WatchBet] [nvarchar](2000), [Website1] [nvarchar](2000), [Website2] [nvarchar](2000), [Website3] [nvarchar](2000), [Website4] [nvarchar](2000))
+	FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([InfoSiteMatchId] [int], [EventDateTime] [datetime], [UpdatedTime] [datetime], [LeagueName] [nvarchar](500), [HomeName] [nvarchar](200), [AwayName] [nvarchar](200), [Round] [nvarchar](2000), [Division] [nvarchar](2000), [Agent] [nvarchar](2000), [LocalTV] [nvarchar](2000), [LiveTV] [nvarchar](100), [WatchBet] [nvarchar](100), [Website1] [nvarchar](1000), [Website2] [nvarchar](1000), [Website3] [nvarchar](1000), [Website4] [nvarchar](1000))
 
 	EXEC sp_xml_removedocument @idoc
 

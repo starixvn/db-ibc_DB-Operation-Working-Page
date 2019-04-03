@@ -15,6 +15,7 @@ AS
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190221@Leo.Vo: Fix to sync minor match - [Redmine: #109216]
 	20190304@Leo.Vo: Message for watcher - [Redmine: #109560]
+	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -211,19 +212,19 @@ BEGIN
 		[InfoSiteMatchId] [int] NOT NULL
 		,[EventDateTime] [datetime] NOT NULL
 		,[UpdatedTime] [datetime] NOT NULL
-		,[LeagueName] [nvarchar](2000) NOT NULL
-		,[HomeName] [nvarchar](2000) NOT NULL
-		,[AwayName] [nvarchar](2000) NOT NULL
+		,[LeagueName] [nvarchar](500) NOT NULL
+		,[HomeName] [nvarchar](200) NOT NULL
+		,[AwayName] [nvarchar](200) NOT NULL
 		,[Round] [nvarchar](2000) NULL
 		,[Division] [nvarchar](2000) NULL
 		,[Agent] [nvarchar](2000) NULL
 		,[TV] [nvarchar](2000) NULL
-		,[Channel] [nvarchar](2000) NULL
-		,[WB] [nvarchar](2000) NULL
-		,[Website1] [nvarchar](2000) NULL
-		,[Website2] [nvarchar](2000) NULL
-		,[Website3] [nvarchar](2000) NULL
-		,[Website4] [nvarchar](2000) NULL
+		,[Channel] [nvarchar](100) NULL
+		,[WB] [nvarchar](100) NULL
+		,[Website1] [nvarchar](1000) NULL
+		,[Website2] [nvarchar](1000) NULL
+		,[Website3] [nvarchar](1000) NULL
+		,[Website4] [nvarchar](1000) NULL
 		,[OWPLeagueId] [int] NOT NULL
 		,[OWPHomeId] [int] NOT NULL
 		,[OWPAwayId] [int] NOT NULL
@@ -271,7 +272,7 @@ BEGIN
 	CREATE TABLE #tblMinorMatch (
 		MinorMatchId INT NOT NULL
 		,ParentMatchId INT NOT NULL
-		,OWPLeagueName NVARCHAR(200)
+		,OWPLeagueName NVARCHAR(500)
 		,OWPHomeName NVARCHAR(200)
 		,OWPAwayName NVARCHAR(200)
 		)
