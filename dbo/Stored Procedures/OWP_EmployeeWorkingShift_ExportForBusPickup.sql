@@ -18,6 +18,7 @@ AS
      20190107@Kane.Le: Init SP     
 	 20190121@Kane.Le: Change shift code to shiftId
 	 20190319@Kane.Le: Customize employee order of weekly WS - [Redmine: #110322]
+	 20190404@Kane.Le: Filter by Second Account - [Redmine: #111068]
 
 -- @Note:    
 EXEC [OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -224,6 +225,7 @@ BEGIN
 			OR u.Username LIKE '%' + @User + '%'
 			)
 		AND u.Pickup = 1
+		AND u.IsSecondAccount = 0
 		AND u.UserId IN (
 			SELECT ep.EmployeeId
 			FROM @tblEmpWorkingShift ep
@@ -278,6 +280,7 @@ BEGIN
 		,s.ShiftCode
 		,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
 		,s.ShiftStartTime
+		,s.ShiftEndTime
 		,c.Background
 		,c.Color
 		,s.ShiftId
