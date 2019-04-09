@@ -11,6 +11,7 @@ AS
      20180925@Raymond: calculate shift time
 	 20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	 20190314@Leo.Vo: New working shift with OT - [Redmine: #109560]
+	 20190409@Kane.Le: Correct rule ShiftCode GMT+8 - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -35,14 +36,14 @@ BEGIN
 
 	UPDATE ws
 	SET ws.ShiftStartTime = DATEADD(DAY, CASE 
-				WHEN DATEPART(HOUR, sc.StartTime) < 6 THEN 1
+				WHEN DATEPART(HOUR, sc.StartTime)  BETWEEN 1 AND 6  THEN 1
 				ELSE 0
 				END, ws.ShiftDate + CAST(sc.StartTime AS DATETIME))
 		,ws.ShiftEndTime = DATEADD(DAY, (CASE 
 				WHEN sc.StartTime > sc.EndTime THEN 1
 				ELSE 0 END
 				) + (CASE 
-				WHEN DATEPART(HOUR, sc.StartTime) < 6 THEN 1
+				WHEN DATEPART(HOUR, sc.StartTime)  BETWEEN 1 AND 6  THEN 1
 				ELSE 0 END
 				), ws.ShiftDate + CAST(sc.EndTime AS DATETIME))
 	FROM @tblWorkingShift AS ws

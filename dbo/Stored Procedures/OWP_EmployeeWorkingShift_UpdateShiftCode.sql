@@ -16,6 +16,7 @@ Revisions:
 	20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	20190215@Leo.Vo: Init default shift - [Redmine: #108723]
 	20190312@Leo.Vo: Add overtime - [Redmine: #109560]
+	20190409@Raymond.Le: Correct rule ShiftCode GMT+8 - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -47,7 +48,7 @@ BEGIN
 		SELECT @ShiftStartTime = @ShiftDate + CAST(@StartTime AS DATETIME)
 			,@ShiftEndTime = @ShiftDate + CAST(@EndTime AS DATETIME)
 
-		IF DATEPART(HOUR, @StartTime) < 6
+		IF DATEPART(HOUR, @StartTime) BETWEEN 1 AND 6
 		BEGIN
 			SELECT @ShiftStartTime = DATEADD(DAY, 1, @ShiftStartTime)
 				,@ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)

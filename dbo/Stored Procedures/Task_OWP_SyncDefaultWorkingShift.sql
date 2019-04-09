@@ -9,6 +9,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190213@Raymond.Le: Initial SP - [Redmine: #108723]
+	20190409@Raymond.Le: Correct rule GMT+8 ShiftCode - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -76,7 +77,7 @@ BEGIN
 
 	--Update shift start date
 	UPDATE ds WITH (ROWLOCK, UPDLOCK)
-	SET ds.ShiftStartDate = CASE WHEN DATEPART(HOUR, ds.ShiftStartTime) < 6 THEN DATEADD(DAY, 1, ds.ShiftDate)
+	SET ds.ShiftStartDate = CASE WHEN DATEPART(HOUR, ds.ShiftStartTime) BETWEEN 1 AND 6 THEN DATEADD(DAY, 1, ds.ShiftDate)
 								ELSE ds.ShiftDate END
 	FROM #tblDefaultWorkingShift AS ds
 	WHERE ds.IsTimeShift = 1
