@@ -13,6 +13,8 @@ AS
 	20180416@leo.vo: check FM, AIO
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 8 + 14 - [Redmine: #92868]
+	20190405@Lita.Tang: Apply for the second account only (row 165,189) - [Redmine: #111068]
+
 */
 BEGIN
 	SET NOCOUNT ON
@@ -155,6 +157,7 @@ BEGIN
 		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
 			OR upload.Trader = u.Username
 		WHERE upload.IsValid = 0
+			AND u.IsSecondAccount = 0
 
 		-- other traders
 		INSERT INTO #tblOtherTrader (
@@ -178,6 +181,7 @@ BEGIN
 			OR ot.Trader = u.Username
 		WHERE ISNULL(ot.Trader, '') <> ''
 			AND ot.SessionId = @SessionId
+			AND u.IsSecondAccount = 0
 
 		INSERT INTO #tblGroupOtherTrader (
 			RowNumber

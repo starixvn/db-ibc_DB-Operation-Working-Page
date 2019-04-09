@@ -14,6 +14,8 @@ AS
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
+	20190405@Lita.Tang: Apply for the second account only (row 141) - [Redmine: #111068]
+
 */
 BEGIN
 	SET NOCOUNT ON
@@ -130,6 +132,7 @@ BEGIN
 			OR unpvt.Trader = u.Username
 		WHERE ISNULL(unpvt.Trader, '') <> ''
 			AND u.UserId IS NOT NULL
+			AND u.IsSecondAccount = 0
 
 		-- Update parentRowNumber for main match
 		UPDATE assignment

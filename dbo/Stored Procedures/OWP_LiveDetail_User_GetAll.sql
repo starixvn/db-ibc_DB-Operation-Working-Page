@@ -11,7 +11,7 @@ AS
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181015@Kane.Le Get Nickname as Username if NULL - [Redmine: #103202]
 	20190326@Kane.Le Get Only Active Users - [Redmine: #103202]
-	20190404@Lita.Tang Get users that are with second account
+	20190405@Kane.Le Get the second account column (row 42) - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON

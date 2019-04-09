@@ -12,6 +12,8 @@ AS
     20170407@Tim.Trinh: check match 15mins, 10mins
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20190405@Lita.Tang: Apply for the second account only (row 162,218) - [Redmine: #111068]
+
 */
 BEGIN
 	SET NOCOUNT ON
@@ -151,8 +153,11 @@ BEGIN
 			AND (
 				SELECT COUNT(1)
 				FROM dbo.[User] AS u WITH (NOLOCK)
-				WHERE u.Username = upload.Trader
-					OR u.Nickname = upload.Trader
+				WHERE 
+					u.IsSecondAccount = 0
+					AND (u.Username = upload.Trader
+					OR u.Nickname = upload.Trader)
+					
 				) > 1
 
 		-- combine
@@ -204,8 +209,10 @@ BEGIN
 		IF (
 				SELECT COUNT(1)
 				FROM dbo.[User] AS u WITH (NOLOCK)
-				WHERE u.Username = @Username
-					OR u.Nickname = @Username
+				WHERE 
+					u.IsSecondAccount = 0
+					AND (u.Username = @Username
+					OR u.Nickname = @Username)
 				) > 1
 		BEGIN
 			SELECT @RuleResultType AS ResultType

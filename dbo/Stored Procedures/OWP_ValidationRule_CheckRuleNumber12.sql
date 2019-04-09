@@ -11,6 +11,7 @@ AS
  Revisions:
 	20180727@Raymond.Le: Validate exceed trader working shift - [Redmine: #92868]
 	20190124@Raymond.Le: Change ShiftCode to ShiftId - [Redmine: #108206]
+	20190405@Lita.Tang: Apply for the second account only (row 133,151,172)- [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -123,7 +124,8 @@ BEGIN
 		UNPIVOT(Trader FOR ColumnName IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2, LA)) unpvt
 			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Nickname
 			OR unpvt.Trader = u.Username
-		WHERE ISNULL(unpvt.Trader, '') <> ''
+		WHERE u.IsSecondAccount = 0 
+		AND ISNULL(unpvt.Trader, '') <> ''
 			AND (RowNumber % 10) = 0
 		
 		UNION -- Get trader of special match (rowNum = 11, 12, 13, 14, 21, 22....)
@@ -140,7 +142,8 @@ BEGIN
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
 			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON au.TraderHDP = u.Nickname
 			OR au.TraderHDP = u.Username
-		WHERE SessionId = @SessionId
+		WHERE u.IsSecondAccount = 0
+			AND SessionId = @SessionId
 			AND (RowNumber % 10) <> 0
 			AND ISNULL(au.TraderHDP, '') <> ''
 
@@ -160,7 +163,8 @@ BEGIN
 		FROM dbo.AssignmentUploadingOtherTrader AS ot WITH (NOLOCK)
 			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Nickname
 			OR ot.Trader = u.Username
-		WHERE ISNULL(ot.Trader, '') <> ''
+		WHERE u.IsSecondAccount = 0
+			AND ISNULL(ot.Trader, '') <> ''
 			AND ot.SessionId = @SessionId
 
 		-- Get current Event Date
