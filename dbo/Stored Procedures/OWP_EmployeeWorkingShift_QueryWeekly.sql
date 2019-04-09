@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Query] @UserId INT = 0
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @UserId INT = 0
 	,@FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
@@ -28,18 +28,15 @@ AS
 	 20190319@Raymond.Le: Customize employee order of weekly WS - [Redmine: #110322]
 
 -- @Note:    
-EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
-EXEC OWP_EmployeeWorkingShift_Query @FromDate = '2018/03/12', @ToDate = '2018/05/13', @UserId=NULL, @SectionId = N'1,2,3,4,9,0', @ShiftId = N'1';
+EXEC OWP_EmployeeWorkingShift_QueryWeekly @FromDate = '2018/03/12', @ToDate = '2018/03/13', @SectionId = N'1,2,3,4';
 */
 BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @SiteId INT
 			,@OrderByUserId INT
-	DECLARE @TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@UserId)
 
 	-- get Order Section of current User querying
-
 	IF (@IsReadWeeklySection = 1)
 	BEGIN
 		SELECT @OrderByUserId = 0
@@ -55,79 +52,45 @@ BEGIN
 		AND IsActive = 1
 		AND Environment = 'LIVE'
 
-	-- table of sections
 	DECLARE @tblSection TABLE (
 		SectionId INT
 		,SectionName VARCHAR(50)
-		);
+		)
 
-	IF LEN(ISNULL(@SectionId, '')) = 0
-	BEGIN
-		INSERT INTO @tblSection
-		SELECT ResourceId
-			,Value
-		FROM dbo.RefResource WITH (NOLOCK)
-		WHERE RefName = 'Section';
-
-		INSERT INTO @tblSection
-		VALUES (
-			0
-			,'None'
-			);
-	END;
-	ELSE
-	BEGIN
-		INSERT INTO @tblSection
-		SELECT ISNULL(ResourceId, 0)
-			,ISNULL(Value, 'None')
-		FROM dbo.strSplit(@SectionId, ',')
-			LEFT JOIN dbo.RefResource WITH (NOLOCK) ON RefName = 'Section'
-			AND val = ResourceId
-	END;
-
-	-- table of categories
 	DECLARE @tblCategory TABLE (
 		CategoryId INT
 		,CategoryName VARCHAR(50)
-		);
+		)
 
-	IF LEN(ISNULL(@CategoryId, '')) = 0
-	BEGIN
-		INSERT INTO @tblCategory
-		SELECT ResourceId
-			,Value
-		FROM dbo.RefResource WITH (NOLOCK)
-		WHERE RefName = 'UserCategory';
+	DECLARE @tblLocation TABLE (LocationCode VARCHAR(10))
 
-		INSERT INTO @tblCategory
-		VALUES (
-			0
-			,'None'
-			);
-	END;
-	ELSE
-	BEGIN
-		INSERT INTO @tblCategory
-		SELECT ISNULL(ResourceId, 0)
-			,ISNULL(Value, 'None')
-		FROM dbo.strSplit(@CategoryId, ',')
-			LEFT JOIN dbo.RefResource WITH (NOLOCK) ON RefName = 'UserCategory'
-			AND val = ResourceId
-	END;
+	-- Get Section filter
+	INSERT INTO @tblSection (
+		SectionId
+		,SectionName
+		)
+	SELECT SectionId
+		,SectionName
+	FROM dbo.fnc_GetSectionByIds(@SectionId)
 
-	-- table of locations
-	DECLARE @tblLocation TABLE (LocationCode VARCHAR(10));
+	-- Get Category filter
+	INSERT INTO @tblCategory (
+		CategoryId
+		,CategoryName
+	)
+	SELECT CategoryId
+		,CategoryName
+	FROM dbo.fnc_GetCategoryByIds(@CategoryId)
 
-	INSERT INTO @tblLocation
+	-- Get LocationCode filter
+	INSERT INTO @tblLocation (LocationCode)
 	SELECT val
-	FROM dbo.strSplit(@LocationCode, ',')
+	FROM dbo.fnc_SplitStrings(@LocationCode, ',')
 
 	-- table of users
 	DECLARE @tblUser TABLE (
 		UserId INT
-		,Nickname NVARCHAR(30)
-		,UserName NVARCHAR(30)
-		,ProfilePic NVARCHAR(500)
+		,[Name] NVARCHAR(30)
 		,SectionId SMALLINT
 		,CategoryId SMALLINT
 		,LocationCode VARCHAR(10)
@@ -135,9 +98,7 @@ BEGIN
 
 	INSERT INTO @tblUser
 	SELECT u.UserId
-		,u.Nickname
-		,u.Username
-		,u.ProfilePic
+		,ISNULL(u.Nickname, u.Username)
 		,ISNULL(u.SectionId, 0)
 		,ISNULL(u.CategoryId, 0)
 		,ISNULL(u.LocationCode, 'None')
@@ -145,9 +106,6 @@ BEGIN
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
 		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
-		LEFT JOIN @tblSection AS s ON u.SectionId = s.SectionId
-		LEFT JOIN @tblCategory AS c ON u.CategoryId = c.CategoryId
-		LEFT JOIN @tblLocation AS l ON u.LocationCode = l.LocationCode
 	WHERE (
 			@ExcludeClosedAccount = 0
 			OR (
@@ -157,17 +115,45 @@ BEGIN
 				AND us.IsActive = 1
 				)
 			)
+		AND u.IsSecondAccount = 0 
 		AND (
 			LEN(ISNULL(@User, '')) = 0
 			OR u.Nickname LIKE '%' + @User + '%'
 			OR u.Username LIKE '%' + @User + '%'
 			)
+		AND EXISTS (
+			SELECT 1
+			FROM @tblSection AS s
+			WHERE u.SectionId = s.SectionId
+				OR (
+					u.SectionId IS NULL
+					AND s.SectionId = 0
+					)
+			)
+		AND EXISTS (
+			SELECT 1
+			FROM @tblLocation AS l
+			WHERE u.LocationCode = l.LocationCode
+				OR (
+					u.LocationCode IS NULL
+					AND l.LocationCode = 'None'
+					)
+			)
+		AND EXISTS (
+			SELECT 1
+			FROM @tblCategory AS c
+			WHERE u.CategoryId = c.CategoryId
+				OR (
+					u.CategoryId IS NULL
+					AND c.CategoryId = 0
+					)
+			)
 
+	-- return UserList
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
 		,ts.SectionName
-		,ISNULL(u.Nickname, u.Username) AS [Name]
-		,u.ProfilePic AS Avatar
+		,u.[Name]
 		,tc.CategoryName
 		,n.Note
 	FROM @tblUser AS u
@@ -183,6 +169,7 @@ BEGIN
 		,od.OrderId
 		,[Name];
 
+	-- return Shifts
 	SELECT u.UserId AS EmployeeId
 		,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
 		,s.ShiftId
@@ -192,6 +179,7 @@ BEGIN
 		AND ShiftDate >= @FromDate
 		AND ShiftDate <= @ToDate
 
+	-- return Default Shift
 	IF @IsGetDefaultShift = 1
 	BEGIN
 		SELECT s.UserId, s.DayOfTheWeek, s.ShiftId

@@ -1,0 +1,263 @@
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date DATE
+	,@User VARCHAR(2000) = ''
+	,@SectionId VARCHAR(2000) = ''
+	,@ShiftId VARCHAR(MAX) = ''
+	,@LocationCode VARCHAR(2000) = ''
+	,@ExcludeClosedAccount BIT = 1
+AS
+/*      
+ Created: 20180508@Leo.Vo     
+ Task : OWP - Search Daily Working Shift by Date
+ DB: bodb_OWP      
+
+ Revisions:
+	20181209@Kane.Le: Add LeagueName
+	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20181209@Kane.Le: Add Runner, Provider, IsMinorMatch - [Redmine: #104291]
+	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+*/
+BEGIN
+	SET NOCOUNT ON;
+
+	DECLARE @EventFromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '10:00:01')
+		,@EventToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @Date), '11:59:59')
+		,@SiteId INT
+	DECLARE @tblUser TABLE (
+		UserId INT
+		,[Name] NVARCHAR(30)
+		,SectionId SMALLINT
+		,LocationCode VARCHAR(10)
+		)
+	DECLARE @tblSection TABLE (
+		SectionId INT
+		,SectionName VARCHAR(50)
+		)
+	DECLARE @tblLocation TABLE (LocationCode VARCHAR(10))
+	DECLARE @tblMatch TABLE (OWPMatchId INT)
+
+	CREATE TABLE #tblWorkingShift (EmployeeId INT)
+
+	CREATE TABLE #tblUserBettype (
+		UserId INT
+		,OWPMatchId INT
+		,BetType INT
+		)
+
+	--
+	SELECT @SiteId = SiteId
+	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
+	WHERE SiteName = 'Operation Working Page'
+		AND IsActive = 1
+		AND Environment = 'LIVE'
+
+	-- Get Section filter
+	INSERT INTO @tblSection (
+		SectionId
+		,SectionName
+		)
+	SELECT SectionId
+		,SectionName
+	FROM dbo.fnc_GetSectionByIds(@SectionId)
+
+	-- Get LocationCode filter
+	INSERT INTO @tblLocation (LocationCode)
+	SELECT val
+	FROM dbo.fnc_SplitStrings(@LocationCode, ',')
+
+	-- Get Users have WorkingShift filter
+	IF LEN(ISNULL(@ShiftId, '')) = 0
+	BEGIN
+		INSERT INTO #tblWorkingShift (EmployeeId)
+		SELECT UserId
+		FROM dbo.[User] AS u WITH (NOLOCK)
+	END
+	ELSE
+	BEGIN
+		INSERT INTO #tblWorkingShift (EmployeeId)
+		SELECT ws.EmployeeId
+		FROM dbo.fnc_SplitStrings(@ShiftId, ',') AS sh
+			INNER JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON sh.val = ws.ShiftId
+		WHERE ws.ShiftDate = @Date
+		OPTION (MAXRECURSION 0)
+	END
+
+	-- Get Users have valid filter
+	INSERT INTO @tblUser (
+		UserId
+		,[Name]
+		,SectionId
+		,LocationCode
+		)
+	SELECT u.UserId
+		,ISNULL(u.Nickname, u.Username) AS [Name]
+		,ISNULL(u.SectionId, 0)
+		,ISNULL(u.LocationCode, 'None')
+	FROM dbo.[User] AS u WITH (NOLOCK)
+		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+		AND us.SiteId = @SiteId
+	WHERE (
+			@ExcludeClosedAccount = 0
+			OR (
+				ci.closed = 0
+				AND ci.reject = 0
+				AND ci.[Enabled] = 1
+				AND us.IsActive = 1
+				)
+			)
+		AND (
+			LEN(ISNULL(@User, '')) = 0
+			OR u.Nickname LIKE '%' + @User + '%'
+			OR u.Username LIKE '%' + @User + '%'
+			)
+		AND EXISTS (
+			SELECT 1
+			FROM @tblSection AS s
+			WHERE u.SectionId = s.SectionId
+				OR (
+					u.SectionId IS NULL
+					AND s.SectionId = 0
+					)
+			)
+		AND EXISTS (
+			SELECT 1
+			FROM @tblLocation AS l
+			WHERE u.LocationCode = l.LocationCode
+				OR (
+					u.LocationCode IS NULL
+					AND l.LocationCode = 'None'
+					)
+			)
+		AND EXISTS (
+			SELECT 1
+			FROM #tblWorkingShift AS ws
+			WHERE ws.EmployeeId = u.UserId
+		)
+
+	-- Major bet types
+	INSERT INTO #tblUserBettype (
+		UserId
+		,OWPMatchId
+		,Bettype
+		)
+	SELECT DISTINCT u.UserId
+		,a.OWPMatchId
+		,a.Bettype
+	FROM @tblUser u
+		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
+		LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
+		LEFT JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+		LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
+		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
+	WHERE mi.MatchStatus <> 'Cancel'
+		AND a.AssignmentType = 1
+		AND m.EventDateTime >= @EventFromDate
+		AND m.EventDateTime <= @EventToDate
+		AND mm.ParentMatchId IS NULL
+
+	-- Minor bet types
+	INSERT INTO #tblUserBettype (
+		UserId
+		,OWPMatchId
+		,Bettype
+		)
+	SELECT DISTINCT u.UserId
+		,mm.ParentMatchId
+		,mb.ParentBettypeId
+	FROM @tblUser u
+		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
+		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
+		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+		AND mm.MinorBettypeId = mb.ParentBettypeId
+	WHERE mi.MatchStatus <> 'Cancel'
+		AND a.AssignmentType = 1
+		AND m.EventDateTime >= @EventFromDate
+		AND m.EventDateTime <= @EventToDate
+
+	INSERT INTO @tblMatch
+	SELECT DISTINCT OWPMatchId
+	FROM #tblUserBettype
+
+	------------------------
+	-- return UserList
+	SELECT u.UserId AS EmployeeId
+		,u.SectionId
+		,ts.SectionName
+		,u.[Name]
+	FROM @tblUser AS u
+		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
+		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
+		AND od.SectionId = u.SectionId
+		AND od.UserId = 0
+	ORDER BY ts.SectionName
+		,CASE 
+			WHEN od.OrderId IS NOT NULL THEN 1
+			ELSE 2
+			END
+		,od.OrderId
+		,[Name];
+
+	-- return WorkingShift
+	SELECT u.UserId AS EmployeeId
+		,ws.ShiftDate
+		,ws.ShiftId
+		,ws.ShiftStartTime
+		,ws.ShiftEndTime
+	FROM @tblUser AS u
+		INNER JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON u.UserId = ws.EmployeeId
+		AND ws.ShiftDate BETWEEN DATEADD(DAY, - 1, @Date)
+			AND DATEADD(DAY, 1, @Date)
+
+	-- return UserBettype
+	SELECT UserId
+		,OWPMatchId
+		,Bettype
+	FROM #tblUserBettype WITH (NOLOCK)
+
+	-- return MatchInfo
+	SELECT m.OWPMatchId
+		,m.MatchNo
+		,STUFF((
+				SELECT ', ' + CAST(op.OtherProviderName AS NVARCHAR(30))
+				FROM dbo.OtherProvider AS op WITH (NOLOCK)
+				WHERE op.OtherProviderId IN (
+						SELECT val
+						FROM dbo.[strSplit](mi.OtherProvider, ',')
+						)
+				FOR XML PATH('')
+				), 1, 1, '') AS 'OtherProvider'
+		,STUFF((
+				SELECT ', ' + CAST(p.ProviderName AS NVARCHAR(30))
+				FROM dbo.[Provider] AS p WITH (NOLOCK)
+				WHERE p.ProviderId IN (
+						SELECT val
+						FROM dbo.[strSplit](mi.[Provider], ',')
+						)
+				FOR XML PATH('')
+				), 1, 1, '') AS 'Provider'
+		,m.EventDateTime
+		,l.CategoryId
+		,l.OWPLeagueName AS 'LeagueName'
+		,h.OWPTeamName AS 'HomeName'
+		,a.OWPTeamName AS 'AwayName'
+		,(CASE 
+			WHEN ms.Maxbet IS NOT NULL THEN ms.Maxbet
+			ELSE dbo.OWP_MaxBetGet(m.OWPMatchId, m.OWPLeagueId, 1) END
+			) AS MaxBet
+	FROM @tblMatch match
+		INNER JOIN dbo.OWPMatch m WITH (NOLOCK) ON m.OWPMatchId = match.OWPMatchId
+		INNER JOIN dbo.OWPLeague l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+		INNER JOIN dbo.MatchInfo mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
+		AND ms.Bettype = 1
+
+	DROP TABLE #tblUserBettype
+
+	DROP TABLE #tblWorkingShift
+END;

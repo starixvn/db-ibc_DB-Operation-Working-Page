@@ -229,8 +229,6 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftColorSel.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftColorIns.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_Upload.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryByDate.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_Query.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_GetAllShift.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AssignmentUploading_Submit.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AssignmentUploading_Insert.sql" />
@@ -338,6 +336,11 @@
     <Build Include="dbo\Tables\EmployeeWorkingShiftOrder.sql" />
     <Build Include="dbo\Stored Procedures\OWP_GetUserInfoById.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_SaveOrder.sql" />
+    <Build Include="dbo\Functions\fnc_GetSectionByIds.sql" />
+    <Build Include="dbo\Functions\fnc_GetCategoryByIds.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryWeeklyByUser.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryWeekly.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryDaily.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
