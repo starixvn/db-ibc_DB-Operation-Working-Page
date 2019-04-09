@@ -11,7 +11,7 @@ AS
      20180925@Raymond: calculate shift time
 	 20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	 20190314@Leo.Vo: New working shift with OT - [Redmine: #109560]
-	 20190409@Kane.Le: Correct rule ShiftCode GMT+8 - [Redmine: #111068]
+	 20190409@Kane.Le: Apply new rule StartTime >1 & StartTime <6 GMT 8 - [Redmine: #111068]
 */
 BEGIN
 	SET NOCOUNT ON;
