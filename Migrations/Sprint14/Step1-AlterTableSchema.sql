@@ -32,3 +32,7 @@ ALTER TABLE dbo.AssignmentUploading ALTER COLUMN Home NVARCHAR(200) NOT NULL;
 ALTER TABLE dbo.AssignmentUploading ALTER COLUMN Away NVARCHAR(200) NOT NULL;
 
 GO
+
+DROP PROCEDURE dbo.OWP_EmployeeWorkingShift_Query
+DROP PROCEDURE dbo.OWP_EmployeeWorkingShift_QueryByDate
+GO
