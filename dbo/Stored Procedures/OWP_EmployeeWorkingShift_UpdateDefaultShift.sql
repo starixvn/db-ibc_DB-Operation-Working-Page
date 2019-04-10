@@ -44,7 +44,7 @@ BEGIN
 				SELECT ',' + ISNULL(CONVERT(VARCHAR(10), s.ShiftId), '')
 				FROM @tblDayOfTheWeek AS w
 					LEFT JOIN dbo.EmployeeWorkingShiftDefault AS s WITH (NOLOCK) ON w.DayOfTheWeek = s.DayOfTheWeek
-					AND UserId = 26815597
+					AND UserId = @EmployeeId
 				ORDER BY w.DayOfTheWeek ASC
 				FOR XML PATH('')
 				), 1, 1, '')

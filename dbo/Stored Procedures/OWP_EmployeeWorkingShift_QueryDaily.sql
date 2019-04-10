@@ -31,6 +31,7 @@ BEGIN
 		,[Name] NVARCHAR(30)
 		,SectionId SMALLINT
 		,LocationCode VARCHAR(10)
+		,IsSecondAccount BIT
 		)
 	DECLARE @tblSection TABLE (
 		SectionId INT
@@ -91,11 +92,13 @@ BEGIN
 		,[Name]
 		,SectionId
 		,LocationCode
+		,IsSecondAccount
 		)
 	SELECT u.UserId
 		,ISNULL(u.Nickname, u.Username) AS [Name]
 		,ISNULL(u.SectionId, 0)
 		,ISNULL(u.LocationCode, 'None')
+		,u.IsSecondAccount
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
 		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
@@ -184,14 +187,25 @@ BEGIN
 	SELECT DISTINCT OWPMatchId
 	FROM #tblUserBettype
 
+	-- DELETE users have isSecondAccount = true but not have assignment on this date range
+	DELETE u
+	FROM @tblUser AS u
+	WHERE u.IsSecondAccount = 1
+	AND NOT EXISTS (
+		SELECT 1
+		FROM #tblUserBettype AS bt
+		WHERE bt.UserId = u.UserId
+	)
 	------------------------
 	-- return UserList
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
 		,ts.SectionName
 		,u.[Name]
+		,ws.ShiftId
 	FROM @tblUser AS u
 		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
+		LEFT JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON u.UserId = ws.EmployeeId AND ws.ShiftDate = @Date
 		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
 		AND od.SectionId = u.SectionId
 		AND od.UserId = 0
