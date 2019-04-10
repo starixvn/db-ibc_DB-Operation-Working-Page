@@ -49,9 +49,6 @@ VALUES (
 	)
 
 -- Update Data WorkingShift by new rule
-DECLARE @RuleStartTime TIME = '01:00'
-	,@RuleEndTime TIME = '06:00'
-
 CREATE TABLE #tblTempEmployeeWorkingShift (
 	ShiftId INT
 	,ShiftDate DATE
@@ -73,50 +70,34 @@ SELECT DISTINCT ws.ShiftId
 	,wc.StartTime
 	,wc.EndTime
 FROM dbo.[EmployeeWorkingShift] AS ws WITH (NOLOCK)
-INNER JOIN dbo.[EmployeeWorkingShiftColor] AS wc WITH (NOLOCK) ON ws.ShiftId = wc.ShiftId
+	INNER JOIN dbo.[EmployeeWorkingShiftColor] AS wc WITH (NOLOCK) ON ws.ShiftId = wc.ShiftId
 WHERE wc.IsTimeShift = 1
-	AND wc.StartTime >= @RuleStartTime
-	AND wc.StartTime <= @RuleEndTime
 
 -- update Shift start date
-UPDATE t
-WITH (
-		ROWLOCK
-		,UPDLOCK
-		)
-
-SET t.ShiftStartDate = CASE WHEN DATEPART(HOUR, t.StartTime) BETWEEN 1 AND 6 THEN DATEADD(DAY, 1, t.ShiftDate)
+UPDATE t WITH (ROWLOCK, UPDLOCK)
+SET t.ShiftStartDate = CASE 
+		WHEN DATEPART(HOUR, t.StartTime) BETWEEN 1
+				AND 6 THEN DATEADD(DAY, 1, t.ShiftDate)
 		ELSE t.ShiftDate
 		END
 FROM #tblTempEmployeeWorkingShift AS t
 
 -- update shift end date
-UPDATE t
-WITH (
-		ROWLOCK
-		,UPDLOCK
-		)
-
-SET t.ShiftEndDate = CASE WHEN DATEPART(HOUR, t.StartTime) > DATEPART(HOUR, t.EndTime)
-			THEN DATEADD(DAY, 1, t.ShiftStartDate)
+UPDATE t WITH (ROWLOCK, UPDLOCK)
+SET t.ShiftEndDate = CASE 
+		WHEN DATEPART(HOUR, t.StartTime) > DATEPART(HOUR, t.EndTime) THEN DATEADD(DAY, 1, t.ShiftStartDate)
 		ELSE t.ShiftStartDate
 		END
 FROM #tblTempEmployeeWorkingShift AS t
 
 -- Update timeShift in EmployeeWorkingShift
-UPDATE ws
-WITH (
-		ROWLOCK
-		,UPDLOCK
-		)
-
+UPDATE ws WITH (ROWLOCK, UPDLOCK)
 SET ws.ShiftStartTime = t.ShiftStartDate + CAST(t.StartTime AS DATETIME)
 	,ws.ShiftEndTime = t.ShiftEndDate + CAST(t.EndTime AS DATETIME)
 FROM dbo.[EmployeeWorkingShift] AS ws
-INNER JOIN #tblTempEmployeeWorkingShift AS t WITH (NOLOCK) ON ws.ShiftId = t.ShiftId
+	INNER JOIN #tblTempEmployeeWorkingShift AS t WITH (NOLOCK) ON ws.ShiftId = t.ShiftId
 	AND ws.ShiftDate = t.ShiftDate
 
 DROP TABLE #tblTempEmployeeWorkingShift
 GO
-
 
