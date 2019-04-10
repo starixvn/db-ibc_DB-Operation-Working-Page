@@ -8,7 +8,47 @@
 -- 2. Update data
 --------------------------------
 USE bodb_OWP
+-- Insert data log
+INSERT INTO dbo.Module (
+	ModuleId
+	,ModuleName
+	)
+VALUES (
+	7
+	,'Working Shift'
+	)
 
+INSERT INTO dbo.ModuleObject (
+	ModuleObjectId
+	,ModuleObjectName
+	,ModuleId
+	)
+VALUES (
+	21
+	,'DefaultWorkingShift'
+	,7
+	)
+
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
+	74
+	,7
+	,21
+	,2
+	,'OWP_EmployeeWorkingShift_UpdateDefaultShift'
+	,'OWP_EmployeeWorkingShift_UpdateDefaultShift'
+	,'<root><xml path="r/z" /><row item="EmployeeId" alias="eid" /><row item="ShiftIds" alias="sids" /><row item="IsApplyCurrentWeek" alias="iacw" /><row item="FromDate" alias="fd" /><row item="ToDate" alias="td" /></root>'
+	)
+
+-- Update Data WorkingShift by new rule
 DECLARE @RuleStartTime TIME = '01:00'
 	,@RuleEndTime TIME = '06:00'
 
@@ -45,8 +85,7 @@ WITH (
 		,UPDLOCK
 		)
 
-SET t.ShiftStartDate = CASE 
-		WHEN DATEPART(HOUR, t.StartTime) BETWEEN 1 AND 6 THEN DATEADD(DAY, 1, t.ShiftDate)
+SET t.ShiftStartDate = CASE WHEN DATEPART(HOUR, t.StartTime) BETWEEN 1 AND 6 THEN DATEADD(DAY, 1, t.ShiftDate)
 		ELSE t.ShiftDate
 		END
 FROM #tblTempEmployeeWorkingShift AS t
@@ -58,8 +97,7 @@ WITH (
 		,UPDLOCK
 		)
 
-SET t.ShiftEndDate = CASE 
-		WHEN DATEPART(HOUR, t.StartTime) > DATEPART(HOUR, t.EndTime)
+SET t.ShiftEndDate = CASE WHEN DATEPART(HOUR, t.StartTime) > DATEPART(HOUR, t.EndTime)
 			THEN DATEADD(DAY, 1, t.ShiftStartDate)
 		ELSE t.ShiftStartDate
 		END
