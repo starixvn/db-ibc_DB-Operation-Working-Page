@@ -21,8 +21,10 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @EventFromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '10:00:01')
-		,@EventToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @Date), '11:59:59')
+	DECLARE @EventDateFrom DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '10:00:01')
+		,@EventDateTo DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @Date), '11:59:59')
+		,@QueryDateFrom DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00')
+		,@QueryDateTo DATETIME = DATEADD(DAY, (DATEDIFF(DAY, 0, @Date) + 1), '11:59:59')
 		,@SiteId INT
 	DECLARE @tblUser TABLE (
 		UserId INT
@@ -153,8 +155,8 @@ BEGIN
 		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
 	WHERE mi.MatchStatus <> 'Cancel'
 		AND a.AssignmentType = 1
-		AND m.EventDateTime >= @EventFromDate
-		AND m.EventDateTime <= @EventToDate
+		AND m.EventDateTime >= @EventDateFrom
+		AND m.EventDateTime <= @EventDateTo
 		AND mm.ParentMatchId IS NULL
 
 	-- Minor bet types
@@ -175,8 +177,8 @@ BEGIN
 		AND mm.MinorBettypeId = mb.ParentBettypeId
 	WHERE mi.MatchStatus <> 'Cancel'
 		AND a.AssignmentType = 1
-		AND m.EventDateTime >= @EventFromDate
-		AND m.EventDateTime <= @EventToDate
+		AND m.EventDateTime >= @EventDateFrom
+		AND m.EventDateTime <= @EventDateTo
 
 	INSERT INTO @tblMatch
 	SELECT DISTINCT OWPMatchId
@@ -209,8 +211,7 @@ BEGIN
 		,ws.ShiftEndTime
 	FROM @tblUser AS u
 		INNER JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON u.UserId = ws.EmployeeId
-		AND ws.ShiftDate BETWEEN DATEADD(DAY, - 1, @Date)
-			AND DATEADD(DAY, 1, @Date)
+	WHERE @QueryDateFrom <= ws.ShiftEndTime AND @QueryDateTo >= ws.ShiftStartTime
 
 	-- return UserBettype
 	SELECT UserId
@@ -260,4 +261,4 @@ BEGIN
 	DROP TABLE #tblUserBettype
 
 	DROP TABLE #tblWorkingShift
-END;
+END
