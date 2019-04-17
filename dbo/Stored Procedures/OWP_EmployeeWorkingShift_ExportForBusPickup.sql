@@ -19,6 +19,7 @@ AS
 	 20190121@Kane.Le: Change shift code to shiftId
 	 20190319@Kane.Le: Customize employee order of weekly WS - [Redmine: #110322]
 	 20190404@Kane.Le: Filter by Second Account - [Redmine: #111068]
+	 20190417@Kane.Le: Format ShiftCode by [A(space)>B] - [Redmine: #111068]
 
 -- @Note:    
 EXEC [OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -171,7 +172,7 @@ BEGIN
 		,wsc.ShiftId
 		,CASE 
 			WHEN (wsc.IsTimeShift = 1)
-				THEN wsc.StartTimeText + ' > ' + wsc.EndTimeText
+				THEN wsc.StartTimeText + ' >' + wsc.EndTimeText
 			ELSE wsc.ShiftCode
 			END AS ShiftCode
 		,emp.ShiftDate
@@ -293,7 +294,7 @@ BEGIN
 	SELECT wsc.ShiftId
 		,CASE 
 			WHEN (wsc.IsTimeShift = 1)
-				THEN wsc.StartTimeText + ' > ' + wsc.EndTimeText
+				THEN wsc.StartTimeText + ' >' + wsc.EndTimeText
 			ELSE wsc.ShiftCode
 			END AS ShiftCode
 		,wsc.Background
