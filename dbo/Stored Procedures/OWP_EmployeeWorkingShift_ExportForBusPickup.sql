@@ -20,6 +20,8 @@ AS
 	 20190319@Kane.Le: Customize employee order of weekly WS - [Redmine: #110322]
 	 20190404@Kane.Le: Filter by Second Account - [Redmine: #111068]
 	 20190417@Kane.Le: Format ShiftCode by [A(space)>B] - [Redmine: #111068]
+	 20190423@Kane.Le: show all employees even they don't have any shift in a week - [Redmine: #111840]
+	 
 
 -- @Note:    
 EXEC [OWP_EmployeeWorkingShift_ExportForBusPickup] @FromDate = '2018/03/12', @ToDate = '2018/03/13', @UserId = '8,9,10', @SectionId = N'1,2,3,4';
@@ -227,11 +229,12 @@ BEGIN
 			)
 		AND u.Pickup = 1
 		AND u.IsSecondAccount = 0
+		/*		
 		AND u.UserId IN (
 			SELECT ep.EmployeeId
 			FROM @tblEmpWorkingShift ep
-			)
-
+			)		
+		*/
 	DECLARE @tblUserOutput TABLE (
 		UserId INT
 		,SectionId SMALLINT
