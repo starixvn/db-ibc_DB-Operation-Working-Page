@@ -21,14 +21,16 @@ Revisions:
 	20181120@Kane.Le: Get Pickup, Address, Level [Redmine: #105043]
 	20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
 	20190402@Kane.Le: Get IsSecondAccount - [Redmine: #11068]
+	20190426@Kane.Le: Remove space whene search username - [Redmine: #111840]
 */
 BEGIN
 	SET NOCOUNT ON
-
+	DECLARE @UserName VARCHAR(30) 
+	SELECT @UserName = RTRIM(LTRIM(@User))
 	DECLARE @RowCount INT
 		,@RowStart INT
 		,@RowEnd INT
-
+	
 	CREATE TABLE #tblUserId (
 		RowNumber INT
 		,UserId INT
@@ -67,8 +69,8 @@ BEGIN
 				)
 			)
 		AND (
-			ISNULL(u.Username, '') LIKE '%' + ISNULL(@User, '') + '%'
-			OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@User, '') + '%'
+			ISNULL(u.Username, '') LIKE '%' + ISNULL(@UserName, '') + '%'
+			OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@UserName, '') + '%'
 			)
 		AND (
 			@RoleId IS NULL
