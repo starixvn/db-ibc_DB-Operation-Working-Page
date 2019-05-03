@@ -12,6 +12,7 @@ AS
 	20181015@Kane.Le Get Nickname as Username if NULL - [Redmine: #103202]
 	20190326@Kane.Le Get Only Active Users - [Redmine: #103202]
 	20190405@Kane.Le Get the second account column (row 42) - [Redmine: #111068]
+	20190503@Kane.Le Get IsSecondAccount - [Redmine: #111840]
 */
 BEGIN
 	SET NOCOUNT ON
