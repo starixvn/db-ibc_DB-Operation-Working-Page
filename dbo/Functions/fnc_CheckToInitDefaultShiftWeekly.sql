@@ -1,13 +1,6 @@
-﻿USE [bodb_OWP]
-GO
-/****** Object:  UserDefinedFunction [dbo].[fnc_CheckToInitDefaultShiftWeekly]    Script Date: 5/6/2019 10:48:29 AM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
+﻿
 /*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
-ALTER FUNCTION [dbo].[fnc_CheckToInitDefaultShiftWeekly] (
+CREATE FUNCTION [dbo].[fnc_CheckToInitDefaultShiftWeekly] (
 	@EmployeeId INT
 	,@ShiftDate DATE
 	)
