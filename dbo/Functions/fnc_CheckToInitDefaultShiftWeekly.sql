@@ -19,10 +19,10 @@ Param's Explanation:
 
 Revisions:
 	20190215@Leo.Vo: Initial function - [Redmine: #108723]
- 
+	20190506@Kane.Le: Change Today -> GMT-7 - [Redmine: #111840]
 */
-BEGIN
-	DECLARE @Today DATE = CONVERT(DATE, GETDATE())
+BEGIN		
+	DECLARE @Today_GMT7 DATE = DATEADD(HOUR, 7, GETUTCDATE())
 		,@StartDate DATE
 		,@EndDate DATE
 		,@IsInit BIT = 0
@@ -31,7 +31,7 @@ BEGIN
 	SET @EndDate = DATEADD(DAY, 6, @StartDate)
 
 	-- init default working shift if selected week is future one and there is no working shift in selected week
-	IF @Today < @StartDate
+	IF @Today_GMT7 < @StartDate
 		AND NOT EXISTS (
 			SELECT 1
 			FROM dbo.EmployeeWorkingShift WITH (NOLOCK)

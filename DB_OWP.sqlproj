@@ -341,6 +341,10 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryWeeklyByUser.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryWeekly.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryDaily.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_DeleteWholeShifts.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopyWholeShifts.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_SyncUsers_Get_Change_From_AdminSite.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_API_SyncUsers_From_AdminSite.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
