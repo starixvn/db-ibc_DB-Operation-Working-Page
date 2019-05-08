@@ -1,9 +1,11 @@
 ﻿
 
+
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopySingleShift] @ActorId INT
-	,@FromUserId INT = 13060628
-	,@ToUserId INT = 26815597
-	,@Date DATE = '2019-04-24'
+	,@FromUserId INT  
+	,@ToUserId INT  
+	,@FromDate DATE
+	,@ToDate DATE  
 
 AS
 /*      
@@ -59,13 +61,13 @@ BEGIN
 		,ws.RefShiftId
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
 	WHERE ws.EmployeeId = @ToUserId
-		AND ws.ShiftDate = @Date
-
+		AND ws.ShiftDate = @ToDate
+		
 	-- delete current data of ToUser
 	DELETE dbo.EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
 	WHERE EmployeeId = @ToUserId
-		AND ShiftDate = @Date
-
+		AND ShiftDate = @ToDate
+	
 	-- insert data from FromUser to ToUser
 	INSERT INTO dbo.EmployeeWorkingShift (
 		EmployeeId
@@ -83,14 +85,20 @@ BEGIN
 		,inserted.RefShiftId
 	INTO @tblNewWorkingShift(EmployeeId, ShiftDate, ShiftStartTime, ShiftEndTime, ShiftId, RefShiftId)
 	SELECT @ToUserId
-		,ws.ShiftDate
-		,ws.ShiftStartTime
-		,ws.ShiftEndTime
+		,@ToDate
+		,@ToDate + CAST(c.StartTime AS DATETIME)
+		,@ToDate + CAST(c.EndTime AS DATETIME)
 		,ws.ShiftId
 		,ws.RefShiftId
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
+	INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH(NOLOCK) ON c.ShiftId = ws.ShiftId
 	WHERE ws.EmployeeId = @FromUserId
-		AND ws.ShiftDate = @Date
+		AND ws.ShiftDate = @FromDate
+
+	-- SELECT TO OUTPUT
+	SELECT TOP 1 ws.EmployeeId, ws.ShiftDate,  ws.ShiftId, ws.RefShiftId
+	FROM EmployeeWorkingShift AS ws WITH (NOLOCK)
+	WHERE ws.ShiftDate=@ToDate AND ws.EmployeeId=@ToUserId
 
 	-- write log
 	SET @Xml = (
