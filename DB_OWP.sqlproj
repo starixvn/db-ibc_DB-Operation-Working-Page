@@ -173,7 +173,6 @@
     <Build Include="dbo\Stored Procedures\OWP_RefResourceGetByName.sql" />
     <Build Include="dbo\Stored Procedures\OWP_QuickSearchMatchGet.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPTeamInsert.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OWPMatch_UpdateFromInfoSite.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeagueInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsBlackList.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsActive.sql" />
