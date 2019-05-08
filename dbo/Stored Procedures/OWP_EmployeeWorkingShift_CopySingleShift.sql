@@ -1,7 +1,8 @@
 ﻿
 
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopySingleShift] @ActorId INT
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopySingleShift] @ActorId INT	
 	,@FromUserId INT  
 	,@ToUserId INT  
 	,@FromDate DATE
@@ -62,7 +63,7 @@ BEGIN
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
 	WHERE ws.EmployeeId = @ToUserId
 		AND ws.ShiftDate = @ToDate
-		
+ 
 	-- delete current data of ToUser
 	DELETE dbo.EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
 	WHERE EmployeeId = @ToUserId
