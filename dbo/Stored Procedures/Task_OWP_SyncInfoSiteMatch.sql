@@ -16,6 +16,7 @@ AS
 	20190221@Leo.Vo: Fix to sync minor match - [Redmine: #109216]
 	20190304@Leo.Vo: Message for watcher - [Redmine: #109560]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -90,6 +91,11 @@ BEGIN
 	CREATE TABLE #tblUserInSectionOfAssignee (
 		UserId INT NOT NULL
 		,OWPMatchId INT NOT NULL
+		)
+
+	CREATE TABLE #tblMatchTelevision (
+		OWPMatchId INT NOT NULL
+		,TVId INT NOT NULL
 		)
 
 	--temp list of matches planned to sync
@@ -382,18 +388,41 @@ BEGIN
 		FULL JOIN #tblAwayTeamLog AS a ON h.OWPMatchId = a.OWPMatchId
 
 	-- sync TVIds
-	MERGE INTO dbo.MatchInfo AS om
-	USING (
-		SELECT om.OWPMatchId
-			,im.TVIds
-		FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
-			INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
-			INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
-		) AS im ON om.OWPMatchId = im.OWPMatchId
-	WHEN MATCHED
-		AND om.TVCode <> im.TVIds THEN
-			UPDATE
-			SET om.TVCode = im.TVIds;
+	INSERT INTO #tblMatchTelevision (
+		OWPMatchId
+		,TVId
+		)
+	SELECT m.OWPMatchId
+		,f.val
+	FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
+		INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
+		CROSS APPLY dbo.fnc_SplitStrings(im.TVIds, ',') AS f
+	WHERE im.TVIds <> ''
+
+	DELETE t
+	FROM dbo.MatchTelevision AS t WITH (ROWLOCK)
+		INNER JOIN #tblMatch AS m ON t.OWPMatchId = m.OWPMatchId
+	WHERE NOT EXISTS (
+			SELECT 1
+			FROM #tblMatchTelevision AS s
+			WHERE s.OWPMatchId = t.OWPMatchId
+				AND s.TVId = t.TVId
+			)
+
+	INSERT INTO dbo.MatchTelevision (
+		OWPMatchId
+		,TVId
+		)
+	SELECT s.OWPMatchId
+		,s.TVId
+	FROM #tblMatchTelevision AS s
+	WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.MatchTelevision AS t WITH (NOLOCK)
+			WHERE s.OWPMatchId = t.OWPMatchId
+				AND s.TVId = t.TVId
+			)
 
 	-- sync Round, Division, Channel, WB, Website1, Website2, Website3, Website4
 	MERGE INTO dbo.MatchInfo AS mi
@@ -736,6 +765,8 @@ BEGIN
 	DROP TABLE #tblMatch
 
 	DROP TABLE #tblSimilarMatchInfo
+
+	DROP TABLE #tblMatchTelevision
 
 	DROP TABLE #tblAssignee
 

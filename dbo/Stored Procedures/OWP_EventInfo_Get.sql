@@ -43,6 +43,7 @@ Revisions:
 	20181106@Raymond.Le: Remove paging in SP - [Redmine: #104291]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider, new structure of MatchOffer - [Redmine: #107257]
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -132,12 +133,6 @@ BEGIN
 		,Phone NVARCHAR(50)
 		,WatchBet NVARCHAR(100)
 		,Channel NVARCHAR(100)
-		,AgentIds NVARCHAR(100)
-		,TVIds NVARCHAR(500)
-		,OtherProviderIds NVARCHAR(100)
-		,OtherProvider NVARCHAR(MAX)
-		,ProviderIds NVARCHAR(100)
-		,[Provider] NVARCHAR(MAX)
 		,MatchStatus NVARCHAR(15)
 		,NoOfHDP NVARCHAR(20)
 		,NoOfHDPId INT
@@ -564,24 +559,6 @@ BEGIN
 		,tm.Phone = mi.Phone
 		,tm.WatchBet = mi.WB
 		,tm.Channel = mi.Channel
-		,tm.AgentIds = mi.Agent
-		,tm.TVIds = mi.TVCode
-		,tm.OtherProviderIds = mi.[OtherProvider]
-		,tm.[OtherProvider] = STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
-				FROM dbo.[OtherProvider] rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(mi.[OtherProvider], ',') f
-				WHERE f.val = rs.OtherProviderId
-				FOR XML PATH('')
-				), 1, 2, '')
-		,tm.ProviderIds = mi.[Provider]
-		,tm.[Provider] = STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
-				FROM dbo.[Provider] rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(mi.[Provider], ',') f
-				WHERE f.val = rs.ProviderId
-				FOR XML PATH('')
-				), 1, 2, '')
 		,tm.IsOneHourToKickOffTime = (CASE 
 			WHEN om.EventDateTime <= DATEADD(MINUTE, 60, @CurrentDateTime) THEN 1
 			ELSE 0 END
@@ -647,8 +624,8 @@ BEGIN
 			AND NOT EXISTS (
 				SELECT 1
 				FROM #tblAgent AS a
-					CROSS APPLY dbo.fnc_SplitStrings(tm.AgentIds, ',') f
-				WHERE f.val = a.Id
+					INNER JOIN dbo.MatchAgent AS ma WITH (NOLOCK) ON a.Id = ma.AgentId
+				WHERE ma.OWPMatchId = tm.OWPMatchId
 				)
 	END
 
@@ -665,8 +642,8 @@ BEGIN
 			AND NOT EXISTS (
 				SELECT 1
 				FROM #tblOtherProvider AS p
-					CROSS APPLY dbo.fnc_SplitStrings(tm.OtherProviderIds, ',') f
-				WHERE f.val = p.Id
+					INNER JOIN dbo.MatchOtherProvider AS mop WITH (NOLOCK) ON p.Id = mop.OtherProviderId
+				WHERE ma.OWPMatchId = mop.OWPMatchId
 				)
 	END
 
@@ -683,8 +660,8 @@ BEGIN
 			AND NOT EXISTS (
 				SELECT 1
 				FROM #tblProvider AS r
-					CROSS APPLY dbo.fnc_SplitStrings(tm.ProviderIds, ',') f
-				WHERE f.val = r.Id
+					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON r.Id = mp.ProviderId
+				WHERE ma.OWPMatchId = mp.OWPMatchId
 				)
 	END
 
@@ -699,10 +676,10 @@ BEGIN
 		FROM #tblMatch AS tm
 		WHERE tm.IsFiltered = 1
 			AND NOT EXISTS (
-				SELECT 1 -- can enhance by split string TVCode into tempTableTV
+				SELECT 1
 				FROM #tblTelevision AS t
-					CROSS APPLY dbo.fnc_SplitStrings(tm.TVIds, ',') f
-				WHERE f.val = t.Id
+					INNER JOIN dbo.MatchTelevision AS mt WITH (NOLOCK) ON t.Id = mt.TVId
+				WHERE ma.OWPMatchId = t.OWPMatchId
 				)
 	END
 
@@ -959,17 +936,29 @@ BEGIN
 		,tm.Phone
 		,tm.WatchBet
 		,tm.Channel
-		,tm.OtherProvider
-		,tm.[Provider]
+		,STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
+				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchOtherProvider AS mop WITH (NOLOCK) ON rs.OtherProviderId = mop.OtherProviderId
+				WHERE mop.OWPMatchId = tm.OWPMatchId
+				FOR XML PATH('')
+				), 1, 2, '') AS [OtherProvider]
+		,STUFF((
+				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
+				FROM dbo.[Provider] AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
+				WHERE mp.OWPMatchId = tm.OWPMatchId
+				FOR XML PATH('')
+				), 1, 2, '') AS [Provider]
 		,tm.IsOneHourToKickOffTime
 		,tm.MatchStatus
 		,tm.MinorBettypeId
 		,tm.IsAllowedToViewDetail
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS tm ON mf.OWPMatchId = tm.OWPMatchId
-		LEFT JOIN #tblNoOfHDPResource AS ref on ref.Id = tm.NoOfHDPId
-		WHERE mf.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
-			OR mf.MinorBettypeId IS NULL
+		LEFT JOIN #tblNoOfHDPResource AS ref ON ref.Id = tm.NoOfHDPId
+	WHERE mf.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
+		OR mf.MinorBettypeId IS NULL
 	ORDER BY tm.EventDate
 		,tm.KickOffTime
 		,tm.MatchNo
@@ -1017,16 +1006,16 @@ BEGIN
 		,tv.Color
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS tm ON mf.OWPMatchId = tm.OWPMatchId
-		CROSS APPLY dbo.fnc_SplitStrings(tm.TVIds, ',') AS f
-		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = f.val
+		INNER JOIN dbo.MatchTelevision AS mt WITH (NOLOCK) ON tm.OWPMatchId = mt.OWPMatchId
+		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = mt.TVId
 	ORDER BY tv.TVId
 
 	-- Retunr Match Offer
 	SELECT mf.OWPMatchId
 		,rr.[Value] AS MatchOfferValue
 	FROM #tblMatchFiltered AS mf WITH (NOLOCK)
-	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
-	LEFT JOIN dbo.RefResource AS rr WITH (NOLOCK) ON mo.MatchOfferId = rr.ResourceId
+		INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
+		LEFT JOIN dbo.RefResource AS rr WITH (NOLOCK) ON mo.MatchOfferId = rr.ResourceId
 	WHERE rr.RefName = 'MatchOffer'
 
 	DROP TABLE #tblMatch

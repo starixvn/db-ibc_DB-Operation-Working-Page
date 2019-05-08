@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[OWP_MaxBetGet] (
 	@OWPMatchId INT
 	,@LeagueId INT
@@ -17,6 +18,7 @@ Revisions:
     20170420@Tim.Trinh: fix bug get max bet for 1X2, 1H 1X2
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	DECLARE @MaxBet MONEY
@@ -44,7 +46,7 @@ BEGIN
 			WHEN 7 THEN 0 --'Weekend'
 			END
 
-	-- check weekday 		
+	-- check weekday
 	SELECT @weekend = CASE ISNULL(DATEPART(dw, @MatchDate), - 1)
 			WHEN 1 THEN 1 --'Weekend'
 			WHEN 2 THEN 0
@@ -56,21 +58,37 @@ BEGIN
 			END
 
 	-- check tv
-	SELECT @tv = (CASE 
-			WHEN NULLIF(mi.TVCode, '') IS NOT NULL THEN 1
-			ELSE 0 END
+	SET @tv = 0
+
+	IF EXISTS (
+			SELECT 1
+			FROM dbo.MatchTelevision WITH (NOLOCK)
+			WHERE OWPMatchId = @OWPMatchId
 			)
-	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-	WHERE mi.OWPMatchId = @OWPMatchId
+	BEGIN
+		SET @tv = 1
+	END
 
 	-- check UK
-	SELECT @ukrb = (CASE 
-			WHEN NULLIF(mi.Channel, '') IS NOT NULL
-				OR NULLIF(mi.OtherProvider, '') IS NOT NULL THEN 1
-			ELSE 0 END
+	SET @ukrb = 0
+
+	IF (
+			EXISTS (
+				SELECT 1
+				FROM dbo.MatchInfo WITH (NOLOCK)
+				WHERE OWPMatchId = @OWPMatchId
+					AND Channel IS NOT NULL
+					AND Channel <> ''
+				)
+			OR EXISTS (
+				SELECT 1
+				FROM dbo.MatchOtherProvider WITH (NOLOCK)
+				WHERE OWPMatchId = @OWPMatchId
+				)
 			)
-	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-	WHERE mi.OWPMatchId = @OWPMatchId
+	BEGIN
+		SET @ukrb = 1
+	END
 
 	IF @tv = 1
 		AND @ukrb = 1

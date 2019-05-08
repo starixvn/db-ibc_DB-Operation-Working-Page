@@ -18,6 +18,7 @@ AS
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -106,12 +107,8 @@ BEGIN
 		,MatchId
 		,NoOfHDP
 		,NoOfHDPId
-		,TVCode
 		,Channel
 		,WatchBet
-		,Agent
-		,OtherProvider
-		,[Provider]
 		,Phone
 		,[Round]
 		,OutSide
@@ -137,12 +134,8 @@ BEGIN
 		,om.MatchId
 		,r.Value
 		,mi.NoOfHDPId
-		,mi.TVCode
 		,mi.Channel
 		,mi.WB
-		,mi.Agent
-		,mi.OtherProvider
-		,mi.[Provider]
 		,mi.Phone
 		,mi.[Round]
 		,mi.Division
@@ -186,32 +179,33 @@ BEGIN
 		,ml.NoOfHDPId
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.TVCode AS VARCHAR), '')
-				FROM dbo.Television rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.TVCode, ',') f
-				WHERE f.val = rs.TVId
+				FROM dbo.Television AS rs WITH (NOLOCK)
+				INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK)
+					ON rs.TVId = mtv.TVId
+				WHERE mtv.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS TV
 		,ml.Channel
 		,ml.WatchBet
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.AgentName AS VARCHAR), '')
-				FROM dbo.Agent rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.Agent, ',') f
-				WHERE f.val = rs.AgentId
+				FROM dbo.Agent AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchAgent AS ma WITH (NOLOCK) ON rs.AgentId = ma.AgentId
+				WHERE ma.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
-				FROM dbo.OtherProvider rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.OtherProvider, ',') f
-				WHERE f.val = rs.OtherProviderId
+				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchOtherProvider AS mot WITH (NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
+				WHERE mot.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
-				FROM dbo.[Provider] rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.[Provider], ',') f
-				WHERE f.val = rs.ProviderId
+				FROM dbo.[Provider] AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
+				WHERE mp.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS [Provider]
 		,STUFF((

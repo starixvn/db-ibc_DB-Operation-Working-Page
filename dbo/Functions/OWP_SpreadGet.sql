@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[OWP_SpreadGet] (
 	@OWPMatchId INT
 	,@LeagueId INT
@@ -16,7 +17,7 @@ Param's Explanation:
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
- 
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	DECLARE @Spread MONEY
@@ -25,21 +26,37 @@ BEGIN
 		,@ukrb BIT = 0 --UK/RB
 
 	-- check tv
-	SELECT @tv = (CASE 
-			WHEN NULLIF(mi.TVCode, '') IS NOT NULL THEN 1
-			ELSE 0 END
+	SET @tv = 0
+
+	IF EXISTS (
+			SELECT 1
+			FROM dbo.MatchTelevision WITH (NOLOCK)
+			WHERE OWPMatchId = @OWPMatchId
 			)
-	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-	WHERE mi.OWPMatchId = @OWPMatchId
+	BEGIN
+		SET @tv = 1
+	END
 
 	-- check UK
-	SELECT @ukrb = (CASE 
-			WHEN NULLIF(mi.Channel, '') IS NOT NULL
-				OR NULLIF(mi.OtherProvider, '') IS NOT NULL THEN 1
-			ELSE 0 END
+	SET @ukrb = 0
+
+	IF (
+			EXISTS (
+				SELECT 1
+				FROM dbo.MatchInfo WITH (NOLOCK)
+				WHERE OWPMatchId = @OWPMatchId
+					AND Channel IS NOT NULL
+					AND Channel <> ''
+				)
+			OR EXISTS (
+				SELECT 1
+				FROM dbo.MatchOtherProvider WITH (NOLOCK)
+				WHERE OWPMatchId = @OWPMatchId
+				)
 			)
-	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-	WHERE mi.OWPMatchId = @OWPMatchId
+	BEGIN
+		SET @ukrb = 1
+	END
 
 	IF @tv = 1
 		AND @ukrb = 1

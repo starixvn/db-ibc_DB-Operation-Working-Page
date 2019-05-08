@@ -18,6 +18,7 @@ AS
 	20180805@Raymond.Le: Modify follow new structure of event assignment, add params IsGetYesterdayEvent - [Redmine: #92868]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider, new structure of MatchOffer - [Redmine: #107257]
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
@@ -119,8 +120,8 @@ BEGIN
 		,0
 		,1
 	FROM dbo.Assignment AS ass WITH (NOLOCK)
-	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
-	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 	WHERE om.EventDateTime BETWEEN @FromTime
 			AND @ToTime
 		AND mi.IsSelected = 1
@@ -132,17 +133,16 @@ BEGIN
 			)
 	
 	UNION
-	
 	SELECT DISTINCT minor.MinorMatchId
 		,minor.ParentMatchId
 		,minor.MinorBettypeId
 		,1
 		,1
 	FROM dbo.Assignment AS ass WITH (NOLOCK)
-	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
-	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-	INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON ass.OWPMatchId = minor.MinorMatchId
-	INNER JOIN dbo.MinorBettype AS mib WITH (NOLOCK) ON minor.MinorBettypeId = mib.MinorBettypeId
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+		INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON ass.OWPMatchId = minor.MinorMatchId
+		INNER JOIN dbo.MinorBettype AS mib WITH (NOLOCK) ON minor.MinorBettypeId = mib.MinorBettypeId
 	WHERE om.EventDateTime BETWEEN @FromTime
 			AND @ToTime
 		AND mi.IsSelected = 1
@@ -163,21 +163,12 @@ BEGIN
 		,1
 		,0
 	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
-	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
-	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-	INNER JOIN dbo.Assignment AS ass WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+		INNER JOIN dbo.Assignment AS ass WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
 	WHERE ass.UserId = @UserId
 		AND mi.IsSelected = 1
-		AND mm.MinorBettypeId IN (
-			@NextCorners
-			,@NoOfCorners
-			,@LastCorners
-			,@HomeSingleTeamCorners
-			,@AwaySingleTeamCorners
-			,@NextBooking
-			,@TotalBooking
-			,@LastBooking
-			)
+		AND mm.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
 		AND om.EventDateTime > @ToTimeViewDetailForSpecialBettype
 		AND om.EventDateTime <= @ToTimeForSpecialBettype
 		AND NOT EXISTS (
@@ -200,13 +191,8 @@ BEGIN
 		,0
 		,1 AS IsAllowedToViewDetail
 	FROM dbo.MinorMatch AS mim WITH (NOLOCK)
-	INNER JOIN #tblTodayMatch AS tod ON mim.MinorMatchId = tod.OWPMatchId
-	WHERE mim.MinorBettypeId IN (
-			@Specific15Mins
-			,@Specific10Mins
-			,@FastMarket
-			,@AllInOne
-			)
+		INNER JOIN #tblTodayMatch AS tod ON mim.MinorMatchId = tod.OWPMatchId
+	WHERE mim.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne)
 		AND NOT EXISTS (
 			SELECT 1
 			FROM #tblTodayMatch
@@ -230,13 +216,8 @@ BEGIN
 		SELECT DISTINCT mim.MinorMatchId AS OWPMatchId
 			,1 AS IsAllowedToViewDetail
 		FROM dbo.MinorMatch AS mim WITH (NOLOCK)
-		INNER JOIN #tblTodayMatch AS tod ON mim.ParentMatchId = tod.OWPMatchId
-		WHERE mim.MinorBettypeId IN (
-				@Specific15Mins
-				,@Specific10Mins
-				,@FastMarket
-				,@AllInOne
-				)
+			INNER JOIN #tblTodayMatch AS tod ON mim.ParentMatchId = tod.OWPMatchId
+		WHERE mim.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne)
 			AND NOT EXISTS (
 				SELECT 1
 				FROM #tblTodayMatch
@@ -244,12 +225,11 @@ BEGIN
 				)
 		
 		UNION
-		
 		SELECT DISTINCT mim1.MinorMatchId AS OWPMatchId
 			,tod.IsAllowedToViewDetail
 		FROM dbo.MinorMatch AS mim WITH (NOLOCK)
-		INNER JOIN #tblTodayMatch AS tod ON mim.MinorMatchId = tod.OWPMatchId
-		INNER JOIN dbo.MinorMatch AS mim1 WITH (NOLOCK) ON mim1.ParentMatchId = mim.ParentMatchId
+			INNER JOIN #tblTodayMatch AS tod ON mim.MinorMatchId = tod.OWPMatchId
+			INNER JOIN dbo.MinorMatch AS mim1 WITH (NOLOCK) ON mim1.ParentMatchId = mim.ParentMatchId
 		WHERE NOT EXISTS (
 				SELECT 1
 				FROM #tblTodayMatch
@@ -274,9 +254,9 @@ BEGIN
 					)
 				)
 		) AS mnm
-	INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mnm.OWPMatchId = mm.MinorMatchId
-	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
-	INNER JOIN dbo.OWPMatch AS parent WITH (NOLOCK) ON mm.ParentMatchId = parent.OWPMatchId
+		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mnm.OWPMatchId = mm.MinorMatchId
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS parent WITH (NOLOCK) ON mm.ParentMatchId = parent.OWPMatchId
 
 	-- get match setting
 	INSERT INTO #tblMatchSetting (
@@ -296,7 +276,7 @@ BEGIN
 		,ms.Spread
 		,1
 	FROM #tblTodayMatch AS ml WITH (NOLOCK)
-	INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.OWPMatchId = ms.OWPMatchId
+		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.OWPMatchId = ms.OWPMatchId
 		AND (
 			ms.Maxbet IS NOT NULL
 			OR ms.Spread IS NOT NULL
@@ -317,8 +297,8 @@ BEGIN
 		,ml.MinorBettypeId
 		,0
 	FROM #tblTodayMatch AS ml WITH (NOLOCK)
-	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON ml.OWPMatchId = om.OWPMatchId
-	INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON om.OWPLeagueId = ls.LeagueId
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON ml.OWPMatchId = om.OWPMatchId
+		INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON om.OWPLeagueId = ls.LeagueId
 	WHERE ml.IsMinorMatch = 0
 		AND NOT EXISTS (
 			SELECT 1
@@ -347,7 +327,7 @@ BEGIN
 		,ms.Spread
 		,1
 	FROM #tblTodayMatch AS ml WITH (NOLOCK)
-	INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.ParentMatchId = ms.OWPMatchId
+		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.ParentMatchId = ms.OWPMatchId
 		AND (
 			ms.Maxbet IS NOT NULL
 			OR ms.Spread IS NOT NULL
@@ -365,8 +345,8 @@ BEGIN
 		,ls.Bettype
 		,0
 	FROM #tblTodayMatch AS ml WITH (NOLOCK)
-	INNER JOIN dbo.OWPMatch AS parent WITH (NOLOCK) ON ml.ParentMatchId = parent.OWPMatchId
-	INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON parent.OWPLeagueId = ls.LeagueId
+		INNER JOIN dbo.OWPMatch AS parent WITH (NOLOCK) ON ml.ParentMatchId = parent.OWPMatchId
+		INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON parent.OWPLeagueId = ls.LeagueId
 	WHERE ml.IsMinorMatch = 1
 		AND NOT EXISTS (
 			SELECT 1
@@ -404,8 +384,8 @@ BEGIN
 			,mbt.InheritedBettypeId
 			,ms.Maxbet
 		FROM #tblTodayMatch AS ml WITH (NOLOCK)
-		INNER JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON ml.MinorBettypeId = mbt.ParentBettypeId
-		INNER JOIN #tblParentMatchSetting AS ms WITH (NOLOCK) ON ml.ParentMatchId = ms.OWPMatchId
+			INNER JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON ml.MinorBettypeId = mbt.ParentBettypeId
+			INNER JOIN #tblParentMatchSetting AS ms WITH (NOLOCK) ON ml.ParentMatchId = ms.OWPMatchId
 			AND ms.BettypeId = @BettypeHandicap
 		WHERE ml.IsMinorMatch = 1
 			AND mbt.InheritedBettypeId <> @BettypeLA
@@ -416,9 +396,9 @@ BEGIN
 					AND cms.BettypeId = mbt.InheritedBettypeId
 				)
 		) AS tbl
-	INNER JOIN dbo.MinorSetting AS minors WITH (NOLOCK) ON tbl.Maxbet BETWEEN ISNULL(minors.FromMaxBet, 0)
+		INNER JOIN dbo.MinorSetting AS minors WITH (NOLOCK) ON tbl.Maxbet BETWEEN ISNULL(minors.FromMaxBet, 0)
 			AND ISNULL(minors.ToMaxBet, 99999999999)
-	INNER JOIN dbo.MinorSettingDetail AS msdt WITH (NOLOCK) ON minors.MinorSettingId = msdt.MinorSettingId
+		INNER JOIN dbo.MinorSettingDetail AS msdt WITH (NOLOCK) ON minors.MinorSettingId = msdt.MinorSettingId
 		AND msdt.MinorBettypeId = tbl.ParentBettypeId
 
 	-- Return Match Info
@@ -441,61 +421,46 @@ BEGIN
 		,inf.Channel
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
-				FROM dbo.[OtherProvider] rs WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(inf.[OtherProvider], ',') f
-				WHERE f.val = rs.OtherProviderId
+				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchOtherProvider AS mop WITH (NOLOCK) ON rs.OtherProviderId = mop.OtherProviderId
+				WHERE mop.OWPMatchId = inf.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.[ProviderName] AS VARCHAR), '')
-				FROM dbo.[Provider] rs WITH (NOLOCK)
-				CROSS APPLY dbo.fnc_SplitStrings(inf.[Provider], ',') f
-				WHERE f.val = rs.[ProviderId]
+				FROM dbo.[Provider] AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
+				WHERE mp.OWPMatchId = inf.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS [Provider]
-		,(
-			CASE 
-				WHEN DATEDIFF(MINUTE, @CurrentDateTime, om.EventDateTime) <= 60
-					THEN 1
-				WHEN @IsGetYesterdayEvent = 1
-					THEN 1
-				ELSE 0
-				END
+		,(CASE 
+			WHEN DATEDIFF(MINUTE, @CurrentDateTime, om.EventDateTime) <= 60 THEN 1
+			WHEN @IsGetYesterdayEvent = 1 THEN 1
+			ELSE 0 END
 			) AS IsOneHourToKickOffTime
 		,[dbo].[OWP_GetCurrentMatchStatus](om.EventDate, om.KickOffTime, inf.MatchStatus) AS MatchStatus
 		,m.MinorBettypeId
 		,m.IsAllowedToViewDetail
-		,(
-			CASE 
-				WHEN om.EventDateTime BETWEEN DATEADD(DAY, DATEDIFF(DAY, 0, @Today), '12:00:00')
-						AND DATEADD(DAY, DATEDIFF(DAY, - 1, @Today), '11:59:59')
-					THEN 1
-				ELSE 0
-				END
+		,(CASE 
+			WHEN om.EventDateTime BETWEEN DATEADD(DAY, DATEDIFF(DAY, 0, @Today), '12:00:00')
+					AND DATEADD(DAY, DATEDIFF(DAY, - 1, @Today), '11:59:59') THEN 1
+			ELSE 0 END
 			) AS IsTodayEvent
 	FROM #tblTodayMatch AS m WITH (NOLOCK)
-	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.OWPMatchId = om.OWPMatchId
-	INNER JOIN dbo.OWPMatch AS pa WITH (NOLOCK) ON m.ParentMatchId = pa.OWPMatchId
-	INNER JOIN dbo.MatchInfo AS inf WITH (NOLOCK) ON m.OWPMatchId = inf.OWPMatchId
-	INNER JOIN dbo.MatchInfo AS painf WITH (NOLOCK) ON m.ParentMatchId = painf.OWPMatchId
-	INNER JOIN dbo.OWPLeague AS league WITH (NOLOCK) ON om.OWPLeagueId = league.OWPLeagueId
-	INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
-	INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
-	LEFT JOIN #tblNoOfHDPResource AS ref WITH (NOLOCK) ON inf.NoOfHDPId = ref.Id
-	WHERE m.MinorBettypeId NOT IN (
-			@Specific10Mins
-			,@Specific15Mins
-			,@Specific15MinsNoOfCorners
-			,@Specific15MinsTotalBooking
-			,@FastMarket
-			,@AllInOne
-			)
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.OWPMatchId = om.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS pa WITH (NOLOCK) ON m.ParentMatchId = pa.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS inf WITH (NOLOCK) ON m.OWPMatchId = inf.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS painf WITH (NOLOCK) ON m.ParentMatchId = painf.OWPMatchId
+		INNER JOIN dbo.OWPLeague AS league WITH (NOLOCK) ON om.OWPLeagueId = league.OWPLeagueId
+		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
+		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
+		LEFT JOIN #tblNoOfHDPResource AS ref WITH (NOLOCK) ON inf.NoOfHDPId = ref.Id
+	WHERE m.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 		OR m.MinorBettypeId IS NULL
 	ORDER BY om.EventDate
 		,om.KickOffTime
 		,CASE 
-			WHEN ISNULL(om.MatchNo, '') = ''
-				THEN 1
+			WHEN ISNULL(om.MatchNo, '') = '' THEN 1
 			ELSE 0
 			END
 		,om.MatchNo
@@ -520,19 +485,13 @@ BEGIN
 			,a.Bettype AS BettypeId
 			,ml.MinorBettypeId
 			,a.UserId
-			,(
-				CASE 
-					WHEN a.UserId = @UserId
-						THEN 1
-					ELSE 0
-					END
+			,(CASE 
+				WHEN a.UserId = @UserId THEN 1
+				ELSE 0 END
 				) AS IsCurrentUser
-			,(
-				CASE 
-					WHEN ISNULL(u.Nickname, '') <> ''
-						THEN u.Nickname
-					ELSE u.Username
-					END
+			,(CASE 
+				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
+				ELSE u.Username END
 				) AS Username
 			,u.Skype
 			,u.Extension
@@ -540,57 +499,40 @@ BEGIN
 			,a.AssignmentType
 			,a.AssignmentNote
 			,a.AssignmentId
-			,(
-				CASE 
-					WHEN btc.OWPMatchId IS NULL
-						THEN 0
-					ELSE 1
-					END
+			,(CASE 
+				WHEN btc.OWPMatchId IS NULL THEN 0
+				ELSE 1 END
 				) IsCancelled
 		FROM dbo.Assignment AS a WITH (NOLOCK)
-		INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
-		INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON a.OWPMatchId = ml.OWPMatchId
-		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
-		LEFT JOIN dbo.MatchBetypeCancel AS btc WITH (NOLOCK) ON btc.OWPMatchId = ml.OWPMatchId
+			INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
+			INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON a.OWPMatchId = ml.OWPMatchId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
+			LEFT JOIN dbo.MatchBetypeCancel AS btc WITH (NOLOCK) ON btc.OWPMatchId = ml.OWPMatchId
 			AND btc.BetType = a.Bettype
-		LEFT JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON ml.MinorBettypeId = mbt.ParentBettypeId
+			LEFT JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON ml.MinorBettypeId = mbt.ParentBettypeId
 			AND a.Bettype = mbt.InheritedBettypeId
 		WHERE (
 				ml.IsMinorMatch = 0
 				OR (
 					ml.IsMinorMatch = 1
 					AND mbt.MinorBettypeId IS NOT NULL
-					AND ml.MinorBettypeId NOT IN (
-						@Specific10Mins
-						,@Specific15Mins
-						,@Specific15MinsNoOfCorners
-						,@Specific15MinsTotalBooking
-						,@FastMarket
-						,@AllInOne
-						)
+					AND ml.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 					)
 				)
 		
 		UNION
-		
 		SELECT a.OWPMatchId
 			,ml.ParentMatchId
 			,a.Bettype AS BettypeId
 			,mbt.ParentBettypeId
 			,a.UserId
-			,(
-				CASE 
-					WHEN a.UserId = @UserId
-						THEN 1
-					ELSE 0
-					END
+			,(CASE 
+				WHEN a.UserId = @UserId THEN 1
+				ELSE 0 END
 				) AS IsCurrentUser
-			,(
-				CASE 
-					WHEN ISNULL(u.Nickname, '') <> ''
-						THEN u.Nickname
-					ELSE u.Username
-					END
+			,(CASE 
+				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
+				ELSE u.Username END
 				) AS Username
 			,u.Skype
 			,u.Extension
@@ -598,54 +540,36 @@ BEGIN
 			,a.AssignmentType
 			,a.AssignmentNote
 			,a.AssignmentId
-			,(
-				CASE 
-					WHEN btc.OWPMatchId IS NULL
-						THEN 0
-					ELSE 1
-					END
+			,(CASE 
+				WHEN btc.OWPMatchId IS NULL THEN 0
+				ELSE 1 END
 				) IsCancelled
 		FROM dbo.Assignment AS a WITH (NOLOCK)
-		INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
-		INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
-		INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON minor.ParentMatchId = ml.OWPMatchId
+			INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
+			INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
+			INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON minor.ParentMatchId = ml.OWPMatchId
 			AND ml.IsMinorMatch = 0
-		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
-		INNER JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON minor.MinorBettypeId = mbt.ParentBettypeId
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
+			INNER JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON minor.MinorBettypeId = mbt.ParentBettypeId
 			AND a.Bettype = mbt.InheritedBettypeId
-			AND mbt.ParentBettypeId IN (
-				@Specific10Mins
-				,@Specific15Mins
-				,@FastMarket
-				,@AllInOne
-				)
-		LEFT JOIN dbo.MatchBetypeCancel AS btc WITH (NOLOCK) ON btc.OWPMatchId = minor.MinorMatchId
+			AND mbt.ParentBettypeId IN (@Specific10Mins, @Specific15Mins, @FastMarket, @AllInOne)
+			LEFT JOIN dbo.MatchBetypeCancel AS btc WITH (NOLOCK) ON btc.OWPMatchId = minor.MinorMatchId
 			AND btc.BetType = a.Bettype
-		WHERE a.Bettype IN (
-				@BettypeHandicap
-				,@BettypeLA
-				)
+		WHERE a.Bettype IN (@BettypeHandicap, @BettypeLA)
 		
 		UNION
-		
 		SELECT a.OWPMatchId
 			,ml.ParentMatchId
 			,a.Bettype AS BettypeId
 			,mbt.ParentBettypeId
 			,a.UserId
-			,(
-				CASE 
-					WHEN a.UserId = @UserId
-						THEN 1
-					ELSE 0
-					END
+			,(CASE 
+				WHEN a.UserId = @UserId THEN 1
+				ELSE 0 END
 				) AS IsCurrentUser
-			,(
-				CASE 
-					WHEN ISNULL(u.Nickname, '') <> ''
-						THEN u.Nickname
-					ELSE u.Username
-					END
+			,(CASE 
+				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
+				ELSE u.Username END
 				) AS Username
 			,u.Skype
 			,u.Extension
@@ -653,35 +577,23 @@ BEGIN
 			,a.AssignmentType
 			,a.AssignmentNote
 			,a.AssignmentId
-			,(
-				CASE 
-					WHEN btc.OWPMatchId IS NULL
-						THEN 0
-					ELSE 1
-					END
+			,(CASE 
+				WHEN btc.OWPMatchId IS NULL THEN 0
+				ELSE 1 END
 				) IsCancelled
 		FROM dbo.Assignment AS a WITH (NOLOCK)
-		INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
-		INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
-		INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON minor.ParentMatchId = ml.ParentMatchId
+			INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
+			INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
+			INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON minor.ParentMatchId = ml.ParentMatchId
 			AND ml.IsMinorMatch = 1
-			AND ml.MinorBettypeId IN (
-				@NoOfCorners
-				,@TotalBooking
-				)
-		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
-		INNER JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON minor.MinorBettypeId = mbt.ParentBettypeId
+			AND ml.MinorBettypeId IN (@NoOfCorners, @TotalBooking)
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
+			INNER JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON minor.MinorBettypeId = mbt.ParentBettypeId
 			AND a.Bettype = mbt.InheritedBettypeId
-			AND mbt.ParentBettypeId IN (
-				@Specific15MinsNoOfCorners
-				,@Specific15MinsTotalBooking
-				)
-		LEFT JOIN dbo.MatchBetypeCancel AS btc WITH (NOLOCK) ON btc.OWPMatchId = minor.MinorMatchId
+			AND mbt.ParentBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
+			LEFT JOIN dbo.MatchBetypeCancel AS btc WITH (NOLOCK) ON btc.OWPMatchId = minor.MinorMatchId
 			AND btc.BetType = a.Bettype
-		WHERE a.Bettype IN (
-				@BettypeHandicap
-				,@BettypeLA
-				)
+		WHERE a.Bettype IN (@BettypeHandicap, @BettypeLA)
 		) AS am
 	ORDER BY am.AssignmentId
 
@@ -697,34 +609,21 @@ BEGIN
 	-- Return Match Notes
 	SELECT mn.OWPMatchId
 		,mn.Note
-		,(
-			CASE 
-				WHEN mnu.IsViewed IS NULL
-					OR mnu.IsViewed = 0
-					THEN 0
-				ELSE 1
-				END
+		,(CASE 
+			WHEN mnu.IsViewed IS NULL
+				OR mnu.IsViewed = 0 THEN 0
+			ELSE 1 END
 			) AS IsViewed
 	FROM dbo.MatchNote AS mn WITH (NOLOCK)
-	INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON mn.OWPMatchId = ml.OWPMatchId
-	LEFT JOIN dbo.MatchNoteUser AS mnu WITH (NOLOCK) ON mn.MatchNoteId = mnu.MatchNoteId
+		INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON mn.OWPMatchId = ml.OWPMatchId
+		LEFT JOIN dbo.MatchNoteUser AS mnu WITH (NOLOCK) ON mn.MatchNoteId = mnu.MatchNoteId
 		AND mnu.UserId = @UserId
-	WHERE ml.MinorBettypeId NOT IN (
-			@Specific10Mins
-			,@Specific15Mins
-			,@Specific15MinsNoOfCorners
-			,@Specific15MinsTotalBooking
-			,@FastMarket
-			,@AllInOne
-			)
+	WHERE ml.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 		OR ml.MinorBettypeId IS NULL
-	ORDER BY (
-			CASE 
-				WHEN mnu.IsViewed IS NULL
-					OR mnu.IsViewed = 0
-					THEN 0
-				ELSE 1
-				END
+	ORDER BY (CASE 
+			WHEN mnu.IsViewed IS NULL
+				OR mnu.IsViewed = 0 THEN 0
+			ELSE 1 END
 			) ASC
 		,mn.CreatedDate DESC
 
@@ -733,17 +632,17 @@ BEGIN
 		,tv.TVCode
 		,tv.Color
 	FROM #tblTodayMatch AS ml WITH (NOLOCK)
-	INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON ml.OWPMatchId = info.OWPMatchId
-	CROSS APPLY dbo.fnc_SplitStrings(info.TVCode, ',') AS data
-	INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON RTRIM(LTRIM(data.val)) = tv.TVId
+		INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON ml.OWPMatchId = info.OWPMatchId
+		INNER JOIN dbo.MatchTelevision AS mt WITH (NOLOCK) ON mt.OWPMatchId = info.OWPMatchId
+		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON mt.TVId = tv.TVId
 	ORDER BY tv.TVId
 
 	-- Retunr Match Offer
 	SELECT tm.OWPMatchId
 		,rr.[Value] AS MatchOfferValue
 	FROM #tblTodayMatch AS tm WITH (NOLOCK)
-	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON tm.OWPMatchId = mo.OWPMatchId
-	LEFT JOIN dbo.RefResource AS rr WITH (NOLOCK) ON mo.MatchOfferId = rr.ResourceId
+		INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON tm.OWPMatchId = mo.OWPMatchId
+		LEFT JOIN dbo.RefResource AS rr WITH (NOLOCK) ON mo.MatchOfferId = rr.ResourceId
 	WHERE rr.RefName = 'MatchOffer'
 
 	DROP TABLE #tblTodayMatch
