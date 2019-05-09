@@ -178,7 +178,7 @@ BEGIN
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.TVCode AS VARCHAR), '')
+				SELECT ', ' + ISNULL(CAST(rs.TVCode AS NVARCHAR(100)), '')
 				FROM dbo.Television AS rs WITH (NOLOCK)
 				INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK)
 					ON rs.TVId = mtv.TVId
@@ -188,21 +188,21 @@ BEGIN
 		,ml.Channel
 		,ml.WatchBet
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.AgentName AS VARCHAR), '')
+				SELECT ', ' + ISNULL(CAST(rs.AgentName AS NVARCHAR(100)), '')
 				FROM dbo.Agent AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchAgent AS ma WITH (NOLOCK) ON rs.AgentId = ma.AgentId
 				WHERE ma.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
 				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS mot WITH (NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
 				WHERE mot.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
+				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(100)), '')
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = ml.OWPMatchId

@@ -1114,6 +1114,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.TV, '/', ','), ',') AS d
 		WHERE m.TV <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1240,6 +1241,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.Agent, '/', ','), ',') AS d
 		WHERE m.Agent <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1366,6 +1368,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.[Provider], '/', ','), ',') AS d
 		WHERE m.[Provider] <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1492,6 +1495,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.OtherProvider, '/', ','), ',') AS d
 		WHERE m.OtherProvider <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
