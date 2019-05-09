@@ -37,3 +37,8 @@ CREATE TABLE [dbo].[MatchTelevision] (
     CONSTRAINT [PK_MatchTelevision] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC, [TVId] ASC)
 );
 GO
+
+ALTER TABLE dbo.MatchInfo
+ALTER COLUMN Phone NVARCHAR(200)
+
+GO
