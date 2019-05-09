@@ -8,6 +8,7 @@ AS
 
  Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -15,9 +16,9 @@ BEGIN
 	SELECT tv.TVId
 		,tv.TVCode
 		,tv.Color
-	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(mi.TVCode, ',') AS data
-		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON RTRIM(LTRIM(data.val)) = tv.TVId
+	FROM dbo.MatchTelevision AS mi WITH (NOLOCK)
+		 
+		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON mi.TVId = tv.TVId
 	WHERE mi.OWPMatchId = @OWPMatchId
 
 END

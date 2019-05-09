@@ -8,15 +8,16 @@ AS
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	SELECT a.AgentId
 		,a.AgentName
-	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(mi.Agent, ',') AS data
-		INNER JOIN dbo.Agent AS a WITH (NOLOCK) ON RTRIM(LTRIM(data.val)) = a.AgentId
+	FROM dbo.MatchAgent AS mi WITH (NOLOCK)
+		 
+		INNER JOIN dbo.Agent AS a WITH (NOLOCK) ON mi.AgentId = a.AgentId
 	WHERE mi.OWPMatchId = @OWPMatchId
 
 END

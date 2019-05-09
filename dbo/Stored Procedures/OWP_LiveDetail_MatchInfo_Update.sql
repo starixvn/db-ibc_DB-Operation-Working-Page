@@ -39,6 +39,7 @@ Revisions:
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Update Column NoOfHDPId - [Redmine: #107257]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -125,10 +126,10 @@ BEGIN
 			,@OldDivision = m.Division
 			,@OldVenue = m.Venue
 			,@OldOtherTime = om.OtherTime
-			,@OldTVIds = m.TVCode
-			,@OldOtherProviderIds = m.OtherProvider
-			,@OldProviderIds = m.[Provider]
-			,@OldAgentIds = m.Agent
+			--,@OldTVIds = m.TVCode
+			--,@OldOtherProviderIds = m.OtherProvider
+			--,@OldProviderIds = m.[Provider]
+			--,@OldAgentIds = m.Agent
 		FROM dbo.MatchInfo m WITH (NOLOCK)
 			LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 		WHERE m.OWPMatchId = @OWPMatchId
@@ -146,10 +147,10 @@ BEGIN
 			,[Round] = @Round
 			,Division = @Division
 			,Venue = @Venue
-			,OtherProvider = @OtherProviderIds
-			,[Provider] = @ProviderIds
-			,TVCode = @TVIds
-			,Agent = @AgentIds
+			--,OtherProvider = @OtherProviderIds
+			--,[Provider] = @ProviderIds
+			--,TVCode = @TVIds
+			--,Agent = @AgentIds
 		WHERE OWPMatchId = @OWPMatchId
 
 		UPDATE dbo.OWPMatch WITH (ROWLOCK, UPDLOCK)
