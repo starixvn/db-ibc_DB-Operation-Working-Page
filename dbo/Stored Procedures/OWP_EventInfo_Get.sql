@@ -4,7 +4,7 @@ CREATE PROCEDURE [dbo].[OWP_EventInfo_Get] @EventDate DATE
 	,@HomeName NVARCHAR(500) = NULL
 	,@AwayName NVARCHAR(500) = NULL
 	,@WatchBet NVARCHAR(500) = NULL
-	,@Phone NVARCHAR(50) = NULL
+	,@Phone NVARCHAR(200) = NULL
 	,@Channel NVARCHAR(100) = NULL
 	,@FilterFromTime TIME = NULL
 	,@FilterToTime TIME = NULL
@@ -44,6 +44,7 @@ Revisions:
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider, new structure of MatchOffer - [Redmine: #107257]
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -130,7 +131,7 @@ BEGIN
 		,[Round] NVARCHAR(2000)
 		,Division NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
-		,Phone NVARCHAR(50)
+		,Phone NVARCHAR(200)
 		,WatchBet NVARCHAR(100)
 		,Channel NVARCHAR(100)
 		,MatchStatus NVARCHAR(15)
@@ -178,7 +179,7 @@ BEGIN
 		,Nickname NVARCHAR(30)
 		,Skype VARCHAR(50)
 		,Extension VARCHAR(30)
-		,Phone VARCHAR(30)
+		,Phone VARCHAR(200)
 		,AssignmentType SMALLINT
 		,LocationCode VARCHAR(20)
 		,AssignmentNote NVARCHAR(200)

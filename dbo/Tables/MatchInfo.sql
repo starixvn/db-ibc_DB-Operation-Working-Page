@@ -2,7 +2,7 @@
     [OWPMatchId]            INT             NOT NULL,
     [Channel]               NVARCHAR (100)  NULL,
     [WB]                    NVARCHAR (100)  NULL,
-    [Phone]                 NVARCHAR (50)   NULL,
+    [Phone]                 NVARCHAR (200)  NULL,
     [ExtraTimeRemark]       NVARCHAR (100)  NULL,
     [Venue]                 NVARCHAR (100)  NULL,
     [LocalTV]               NVARCHAR (100)  NULL,
@@ -22,6 +22,8 @@
     [NoOfHDPId]             INT             NULL,
     CONSTRAINT [PK_MatchInfo] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC)
 );
+
+
 
 
 

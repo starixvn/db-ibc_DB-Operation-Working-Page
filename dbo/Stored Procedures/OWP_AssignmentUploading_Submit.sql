@@ -31,6 +31,7 @@ AS
 	20190325@Raymond.Le: Fix not send message change assignment when UserId is NULL in OtherTrader - [Redmine: #110322]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -201,7 +202,7 @@ BEGIN
 		,Agent NVARCHAR(2000)
 		,OtherProvider NVARCHAR(2000)
 		,[Provider] NVARCHAR(2000)
-		,Phone NVARCHAR(50)
+		,Phone NVARCHAR(200)
 		,Note XML
 		,MaxBetHDP MONEY
 		,SpreadHDP SMALLMONEY
@@ -390,7 +391,7 @@ BEGIN
 		,MatchStatus VARCHAR(15)
 		,Channel NVARCHAR(100)
 		,WB NVARCHAR(100)
-		,Phone NVARCHAR(50)
+		,Phone NVARCHAR(200)
 		,[Round] NVARCHAR(2000)
 		,Division NVARCHAR(2000)
 		,Venue NVARCHAR(100)
