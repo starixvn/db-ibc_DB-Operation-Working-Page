@@ -42,3 +42,8 @@ ALTER TABLE dbo.MatchInfo
 ALTER COLUMN Phone NVARCHAR(200)
 
 GO
+
+ALTER TABLE dbo.AssignmentUploading
+ALTER COLUMN Phone NVARCHAR(200)
+
+GO
