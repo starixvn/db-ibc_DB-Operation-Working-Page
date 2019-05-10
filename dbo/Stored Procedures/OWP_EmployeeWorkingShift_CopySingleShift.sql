@@ -98,7 +98,7 @@ BEGIN
 
 	-- SELECT TO OUTPUT
 	SELECT TOP 1 ws.EmployeeId, ws.ShiftDate,  ws.ShiftId, ws.RefShiftId
-	FROM EmployeeWorkingShift AS ws WITH (NOLOCK)
+	FROM @tblNewWorkingShift AS ws
 	WHERE ws.ShiftDate=@ToDate AND ws.EmployeeId=@ToUserId
 
 	-- write log

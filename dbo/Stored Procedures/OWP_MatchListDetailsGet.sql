@@ -19,6 +19,7 @@ AS
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -80,7 +81,7 @@ BEGIN
 		,Agent NVARCHAR(200)
 		,OtherProvider NVARCHAR(200)
 		,[Provider] NVARCHAR(200)
-		,Phone NVARCHAR(100)
+		,Phone NVARCHAR(200)
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
 		,Remark NVARCHAR(2000)

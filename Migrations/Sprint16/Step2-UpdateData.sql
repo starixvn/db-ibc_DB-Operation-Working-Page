@@ -52,3 +52,13 @@ FROM MatchInfo AS mi WITH (NOLOCK)
 	CROSS APPLY dbo.fnc_SplitStrings(mi.[TVCode], ',') AS f
 WHERE mi.[TVCode] IS NOT NULL
 GO
+
+UPDATE dbo.ValidationRule WITH (ROWLOCK)
+SET RuleResultType = 1 
+WHERE RuleId=28
+
+UPDATE dbo.ValidationRule WITH (ROWLOCK)
+SET RuleResultType = 1 
+WHERE RuleId=29
+
+GO

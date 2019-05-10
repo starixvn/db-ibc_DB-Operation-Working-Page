@@ -12,7 +12,8 @@ AS
     20170407@Tim.Trinh: remove check data in bodb02
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180718@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
-	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052] 
+	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -22,7 +23,7 @@ BEGIN
 		,@Passed TINYINT
 		,@MatchLength SMALLINT
 		,@Message NVARCHAR(MAX)
-		,@Phone NVARCHAR(50)
+		,@Phone NVARCHAR(200)
 		,@owpEventDate DATETIME
 		,@idoc INT
 		,@IsViolated BIT = 0
@@ -39,7 +40,7 @@ BEGIN
 		,League NVARCHAR(2000)
 		,Home NVARCHAR(200)
 		,Away NVARCHAR(200)
-		,Phone NVARCHAR(50)
+		,Phone NVARCHAR(200)
 		,HasPhoneNumber BIT
 		,MinorBettypeId INT NULL
 		,ParentRowNumber INT NULL
