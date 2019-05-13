@@ -13,6 +13,7 @@ AS
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Raymond.Le: Add more info to Odds Compiler - [Redmine: #105043]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190513@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -81,18 +82,20 @@ BEGIN
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
 				FROM dbo.[Provider] rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(info.[Provider], ',') f
-				WHERE f.val = rs.ProviderId
+					INNER JOIN dbo.MatchProvider AS f WITH (NOLOCK) 
+					ON rs.ProviderId=f.ProviderId
+				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
-				), 1, 2, '')
+				), 1, 2, '') AS 'Provider'
 		,info.WB
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
 				FROM dbo.OtherProvider rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(info.[OtherProvider], ',') f
-				WHERE f.val = rs.OtherProviderId
+					INNER JOIN dbo.MatchOtherProvider AS f WITH (NOLOCK) 
+					ON rs.OtherProviderId=f.OtherProviderId
+				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
-				), 1, 2, '')
+				), 1, 2, '') AS 'OtherProvider'
 		,info.Website1
 		,info.Website2
 		,info.Website3

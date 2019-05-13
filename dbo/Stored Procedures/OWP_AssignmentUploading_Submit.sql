@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT = 0
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -341,16 +342,16 @@ BEGIN
 	CREATE TABLE #tblMatchEditedInfo (
 		OWPMatchId INT NOT NULL
 		,MessageTypeId INT
-		,OldValue NVARCHAR(2000)
-		,NewValue NVARCHAR(2000)
+		,OldValue NVARCHAR(MAX)
+		,NewValue NVARCHAR(MAX)
 		)
 
 	-- store all match (main + minor) edited match info in TimeRange
 	CREATE TABLE #tblMatchEditedInTimeRange (
 		OWPMatchId INT NOT NULL
 		,MessageTypeId INT
-		,OldValue NVARCHAR(2000)
-		,NewValue NVARCHAR(2000)
+		,OldValue NVARCHAR(MAX)
+		,NewValue NVARCHAR(MAX)
 		,ParentMatchId INT
 		)
 
@@ -363,7 +364,7 @@ BEGIN
 	CREATE TABLE #tblMessageUpdateMatchInfo (
 		OWPMatchId INT
 		,MessageTypeId INT
-		,MessageContent NVARCHAR(2000)
+		,MessageContent NVARCHAR(MAX)
 		)
 
 	CREATE TABLE #tblUsersReceivedMessageUpdate (

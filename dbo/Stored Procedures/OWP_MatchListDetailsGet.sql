@@ -75,12 +75,8 @@ BEGIN
 		,MatchId INT
 		,NoOfHDP NVARCHAR(20)
 		,NoOfHDPId INT
-		,TVCode NVARCHAR(MAX)
 		,Channel NVARCHAR(200)
 		,WatchBet NVARCHAR(200)
-		,Agent NVARCHAR(200)
-		,OtherProvider NVARCHAR(200)
-		,[Provider] NVARCHAR(200)
 		,Phone NVARCHAR(200)
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
@@ -181,8 +177,7 @@ BEGIN
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.TVCode AS NVARCHAR(100)), '')
 				FROM dbo.Television AS rs WITH (NOLOCK)
-				INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK)
-					ON rs.TVId = mtv.TVId
+					INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK) ON rs.TVId = mtv.TVId
 				WHERE mtv.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS TV
@@ -409,16 +404,16 @@ BEGIN
 		,tv.TVCode
 		,tv.Color
 	FROM #owpMatchListByDate AS m
-		CROSS APPLY dbo.fnc_SplitStrings(m.TVCode, ',') AS f
-		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = f.val
+		INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK) ON m.OWPMatchId = mtv.OWPMatchId
+		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = mtv.TVId
 	ORDER BY tv.TVId
 
 	-- Return Match Offer
 	SELECT mf.OWPMatchId
 		,r.[Value] AS MatchOfferValue
-	FROM #owpMatchListByDate AS mf 
-	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
-	LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
+	FROM #owpMatchListByDate AS mf
+		INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
+		LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
 
 	DROP TABLE #owpMatchListByDate
 

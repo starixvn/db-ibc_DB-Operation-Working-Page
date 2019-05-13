@@ -66,9 +66,10 @@ BEGIN
 
 	SET @LogId = @@IDENTITY
 
-	--matches need to be checked before sync
+	--matches need to be checked before sync (home team, away team, league name)
 	CREATE TABLE #tblMatch (
 		OWPMatchId INT NOT NULL
+		,InfoSiteMatchId INT
 		,EventDate DATE NOT NULL
 		,OWPLeagueId INT NOT NULL
 		,OWPHomeId INT NOT NULL
@@ -101,6 +102,7 @@ BEGIN
 	--temp list of matches planned to sync
 	INSERT INTO #tblMatch (
 		OWPMatchId
+		,InfoSiteMatchId
 		,EventDate
 		,OWPLeagueId
 		,OWPHomeId
@@ -108,6 +110,7 @@ BEGIN
 		,IsSync
 		)
 	SELECT m.OWPMatchId
+		,m.InfoSiteMatchId
 		,CAST(DATEADD(HOUR, - 8, m.EventDateTime) AS DATE) AS EventDate
 		,ISNULL(im.OWPLeagueId, m.OWPLeagueId) AS OWPLeagueId
 		,ISNULL(im.OWPHomeId, m.OWPHomeId) AS OWPHomeId
@@ -208,10 +211,10 @@ BEGIN
 		WHERE m.IsSync = 0
 			AND om.InfoSiteMatchId IS NOT NULL
 	END
-
-	--remove matches not to be synced
-	DELETE #tblMatch
-	WHERE IsSync = 0
+	
+	DELETE m
+	FROM #tblMatch AS m
+	WHERE m.IsSync = 0 OR m.InfoSiteMatchId IS NULL
 
 	-- create temp table remove IsDeleted
 	CREATE TABLE #tblInfoSiteMatch (
