@@ -95,19 +95,80 @@ BEGIN
 	END
 
 	-- init default shift weekly
+	/*
 	IF @IsInit = 1
-	BEGIN
+	BEGIN	 
 		EXECUTE dbo.[OWP_EmployeeWorkingShift_InitDefaultShiftForWeek] @EmployeeId = @EmployeeId
 			,@StartDate = @StartDate
 			,@EndDate = @EndDate
+			 
+	END
+	*/
+	 
+
+	DECLARE @IsJoinDefaultShift BIT
+	DECLARE @GetCurrentWeek INT,
+			@GetNextWeek INT
+	
+	SELECT @GetCurrentWeek = DATEPART(wk, GETUTCDATE())	
+	SELECT @GetNextWeek= DATEPART(wk,  DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @StartDate)) % 7, @StartDate))
+
+	IF @GetNextWeek > @GetCurrentWeek
+	BEGIN
+	SET @IsJoinDefaultShift = 1
+	END
+	ELSE
+	BEGIN
+	SET @IsJoinDefaultShift = 0
 	END
 
-	SELECT EmployeeId
-		,ShiftId
-		,ShiftDate
-		,RefShiftId
-	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
-	WHERE EmployeeId = @EmployeeId
-		AND ShiftDate BETWEEN @StartDate
-			AND @EndDate
+	IF @IsJoinDefaultShift = 1
+	BEGIN
+	CREATE TABLE #tmpEmployeeWorkingShiftDefault (
+		UserId INT
+		,DateOfWeek INT
+		,ShiftId INT
+		,ShiftDate DATE
+		)
+
+	INSERT INTO #tmpEmployeeWorkingShiftDefault
+	SELECT ep.UserId
+		,ep.DayOfTheWeek
+		,ep.ShiftId
+		,DATEADD(d, (ep.DayOfTheWeek - 1), @StartDate) FromDate
+	FROM dbo.EmployeeWorkingShiftDefault AS ep
+	WHERE ep.UserId = @EmployeeId
+
+	SELECT [EmployeeId] = df.UserId
+		,[ShiftDate] = df.ShiftDate
+		,[ShiftStartTime] = ISNULL(wk.ShiftStartTime, df.ShiftDate + CAST(wsc.StartTime AS DATETIME))
+		,[ShiftEndTime] = ISNULL(wk.ShiftEndTime, df.ShiftDate + CAST(wsc.EndTime AS DATETIME))
+		,[ShiftId] = ISNULL(wk.ShiftId, df.ShiftId)
+		,[RefShiftId] = wk.RefShiftId
+		,[IsDefaultShift] = CASE 
+			WHEN wk.ShiftId IS NULL
+				THEN 1
+			ELSE 0
+			END
+	FROM #tmpEmployeeWorkingShiftDefault AS df WITH (NOLOCK)
+	JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON df.ShiftId = wsc.ShiftId
+	LEFT JOIN dbo.EmployeeWorkingShift AS wk WITH (NOLOCK) ON df.UserId = wk.EmployeeId
+		AND df.ShiftDate = wk.ShiftDate
+
+		 
+
+		DROP TABLE #tmpEmployeeWorkingShiftDefault
+	END
+	ELSE
+	BEGIN
+		SELECT   EmployeeId
+			,ShiftId
+			,ShiftDate
+			,RefShiftId,
+			[IsDefaultShift] =0 
+		FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
+		WHERE EmployeeId = @EmployeeId
+			AND ShiftDate BETWEEN @StartDate
+				AND @EndDate
+	END
 END
