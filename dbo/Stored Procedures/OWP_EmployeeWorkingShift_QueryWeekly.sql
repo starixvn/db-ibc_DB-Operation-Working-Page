@@ -189,21 +189,34 @@ BEGIN
 	-- return Shifts
 	IF @IsJoinDefaultShift = 1
 	BEGIN			
+	SET DATEFIRST 1
+	DECLARE @DateOfWeek INT = 1
+	DECLARE	@TallyShiftDate AS TABLE (ShiftDate DATE)
+
 	CREATE TABLE #tmpEmployeeWorkingShiftDefault (
 		UserId INT
 		,DateOfWeek INT
 		,ShiftId INT
 		,ShiftDate DATE
-		)
+		);
+		
+WITH cte AS (
+	SELECT	[rn] = ROW_NUMBER() OVER(ORDER BY (SELECT NULL))- 1
+	FROM		(VALUES (0), (0), (0), (0), (0), (0), (0), (0), (0), (0)) x10(n) 
+)
+INSERT INTO @TallyShiftDate (ShiftDate)
+SELECT	[ShiftDate] = DATEADD(DAY, cte.rn, @FromDate)
+FROM	cte
+WHERE	cte.rn <= DATEDIFF(DAY, @FromDate, @ToDate)
 
-	INSERT INTO #tmpEmployeeWorkingShiftDefault
-	SELECT ep.UserId
-		,ep.DayOfTheWeek
-		,ep.ShiftId
-		,DATEADD(d, (ep.DayOfTheWeek - 1), @FromDate) FromDate
-	FROM dbo.EmployeeWorkingShiftDefault AS ep
- 
-	SELECT [EmployeeId] = df.UserId
+INSERT INTO #tmpEmployeeWorkingShiftDefault
+SELECT u.UserId, ep.DayOfTheWeek, [ShiftId]=ISNULL(ep.ShiftId, 0), tally.ShiftDate from @TallyShiftDate AS tally 
+CROSS JOIN @tblUser AS u
+LEFT JOIN dbo.EmployeeWorkingShiftDefault AS ep
+		ON  ep.DayOfTheWeek = DATEPART(WEEKDAY, tally.ShiftDate)
+		AND u.UserId = ep.UserId
+
+SELECT [EmployeeId] = df.UserId
 		,[ShiftDate] = df.ShiftDate
 		,[ShiftStartTime] = ISNULL(wk.ShiftStartTime, df.ShiftDate + CAST(wsc.StartTime AS DATETIME))
 		,[ShiftEndTime] = ISNULL(wk.ShiftEndTime, df.ShiftDate + CAST(wsc.EndTime AS DATETIME))
@@ -215,7 +228,7 @@ BEGIN
 			ELSE 0
 			END
 	FROM #tmpEmployeeWorkingShiftDefault AS df WITH (NOLOCK)
-	JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON df.ShiftId = wsc.ShiftId
+	LEFT JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON df.ShiftId = wsc.ShiftId
 	LEFT JOIN dbo.EmployeeWorkingShift AS wk WITH (NOLOCK) ON df.UserId = wk.EmployeeId
 		AND df.ShiftDate = wk.ShiftDate
 

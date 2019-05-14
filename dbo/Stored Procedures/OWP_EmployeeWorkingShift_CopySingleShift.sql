@@ -114,7 +114,10 @@ BEGIN
 		FROM dbo.EmployeeWorkingShiftDefault AS ds WITH (NOLOCK)
 		INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH(NOLOCK) ON c.ShiftId = ds.ShiftId
 		WHERE ds.UserId = @FromUserId
-		AND ds.DayOfTheWeek = DATEPART(DW,@FromDate)- 1 
+		AND  ds.DayOfTheWeek = (CASE WHEN DATEPART(DW,@FromDate) >1 
+										THEN DATEPART(DW,@FromDate) -1 
+										ELSE 7 
+								END)
 	END		
  
 	--- delete current data of ToUser
