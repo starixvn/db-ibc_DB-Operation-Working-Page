@@ -21,6 +21,7 @@ BEGIN
 		,ShiftStartTime
 		,ShiftEndTime
 		,RefShiftId
+		,0 AS [IsDefaultShift]
 	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
 	WHERE EmployeeId = @EmployeeId
 		AND ShiftDate >= @FromDate
