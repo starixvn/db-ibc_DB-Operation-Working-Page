@@ -14,7 +14,7 @@ AS
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 8 + 14 - [Redmine: #92868]
 	20190405@Lita.Tang: Apply for the second account only (row 165,189) - [Redmine: #111068]
-
+	20190513@Leo.Vo: do not assign closed account - [Redmine: #113333]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -26,6 +26,13 @@ BEGIN
 		,@UserId INT
 		,@Username NVARCHAR(30) = ''
 		,@idoc INT
+		,@SiteId INT
+
+	SELECT @SiteId = SiteId
+	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
+	WHERE SiteName = 'Operation Working Page'
+		AND IsActive = 1
+		AND Environment = 'LIVE'
 
 	SELECT @RuleResultType = RuleResultType
 		,@Message = MessageFormat
@@ -79,23 +86,14 @@ BEGIN
 			,IsValid
 			)
 		SELECT DISTINCT RowNumber
-			,(
-				CASE unpvt.ColumnName
-					WHEN 'TraderHDP'
-						THEN 'Trader (HDP)'
-					WHEN 'Trader1HHDP'
-						THEN 'Trader (1H HDP)'
-					WHEN 'TraderOU'
-						THEN 'Trader (O/U)'
-					WHEN 'Trader1HOU'
-						THEN 'Trader (1H O/U)'
-					WHEN 'Trader1X2'
-						THEN 'Trader (1X2)'
-					WHEN 'Trader1H1X2'
-						THEN 'Trader (1H 1X2)'
-					WHEN 'LA'
-						THEN 'LA'
-					END
+			,(CASE unpvt.ColumnName
+				WHEN 'TraderHDP' THEN 'Trader (HDP)'
+				WHEN 'Trader1HHDP' THEN 'Trader (1H HDP)'
+				WHEN 'TraderOU' THEN 'Trader (O/U)'
+				WHEN 'Trader1HOU' THEN 'Trader (1H O/U)'
+				WHEN 'Trader1X2' THEN 'Trader (1X2)'
+				WHEN 'Trader1H1X2' THEN 'Trader (1H 1X2)'
+				WHEN 'LA' THEN 'LA' END
 				) AS ColumnName
 			,unpvt.Trader
 			,0
@@ -111,15 +109,7 @@ BEGIN
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 			) AS upload
-		UNPIVOT(Trader FOR ColumnName IN (
-					TraderHDP
-					,Trader1HHDP
-					,TraderOU
-					,Trader1HOU
-					,Trader1X2
-					,Trader1H1X2
-					,LA
-					)) unpvt
+		UNPIVOT(Trader FOR ColumnName IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2, LA)) unpvt
 		WHERE ISNULL(unpvt.Trader, '') <> ''
 			AND (RowNumber % 10) = 0
 
@@ -131,17 +121,11 @@ BEGIN
 			,IsValid
 			)
 		SELECT RowNumber / 10 * 10
-			,(
-				CASE RowNumber % 10
-					WHEN 1
-						THEN 'Trader (15mins)'
-					WHEN 2
-						THEN 'Trader (10mins)'
-					WHEN 3
-						THEN 'Trader (FM)'
-					WHEN 4
-						THEN 'Trader (AIO)'
-					END
+			,(CASE RowNumber % 10
+				WHEN 1 THEN 'Trader (15mins)'
+				WHEN 2 THEN 'Trader (10mins)'
+				WHEN 3 THEN 'Trader (FM)'
+				WHEN 4 THEN 'Trader (AIO)' END
 				) AS ColumnName
 			,TraderHDP
 			,0
@@ -154,10 +138,19 @@ BEGIN
 		UPDATE upload
 		SET upload.IsValid = 1
 		FROM #tblAssignmentUploading AS upload WITH (ROWLOCK)
-		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
 			OR upload.Trader = u.Username
+			INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+			INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+			AND us.SiteId = @SiteId
 		WHERE upload.IsValid = 0
 			AND u.IsSecondAccount = 0
+			AND (
+				ci.closed = 0
+				AND ci.reject = 0
+				AND ci.[Enabled] = 1
+				AND us.IsActive = 1
+				)
 
 		-- other traders
 		INSERT INTO #tblOtherTrader (
@@ -169,19 +162,30 @@ BEGIN
 		SELECT ot.RowNumber
 			,ot.Bettype
 			,ot.Trader
-			,(
-				CASE ISNULL(u.UserId, 0)
-					WHEN 0
-						THEN 0
-					ELSE 1
-					END
-				) AS IsValid
+			,0
 		FROM dbo.AssignmentUploadingOtherTrader AS ot WITH (NOLOCK)
 		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Nickname
 			OR ot.Trader = u.Username
 		WHERE ISNULL(ot.Trader, '') <> ''
 			AND ot.SessionId = @SessionId
+			
+		-- check trader name
+		UPDATE upload
+		SET upload.IsValid = 1
+		FROM #tblOtherTrader AS upload WITH (ROWLOCK)
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
+			OR upload.Trader = u.Username
+			INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+			INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+			AND us.SiteId = @SiteId
+		WHERE upload.IsValid = 0
 			AND u.IsSecondAccount = 0
+			AND (
+				ci.closed = 0
+				AND ci.reject = 0
+				AND ci.[Enabled] = 1
+				AND us.IsActive = 1
+				)
 
 		INSERT INTO #tblGroupOtherTrader (
 			RowNumber
@@ -190,23 +194,14 @@ BEGIN
 			,IsValid
 			)
 		SELECT RowNumber
-			,(
-				CASE Bettype
-					WHEN 1
-						THEN 'OtherTraders (HDP)'
-					WHEN 7
-						THEN 'OtherTraders (1H HDP)'
-					WHEN 3
-						THEN 'OtherTraders (O/U)'
-					WHEN 8
-						THEN 'OtherTraders (1H O/U)'
-					WHEN 5
-						THEN 'OtherTraders (1X2)'
-					WHEN 15
-						THEN 'OtherTraders (1H 1X2)'
-					WHEN - 1002
-						THEN 'OtherLA'
-					END
+			,(CASE Bettype
+				WHEN 1 THEN 'OtherTraders (HDP)'
+				WHEN 7 THEN 'OtherTraders (1H HDP)'
+				WHEN 3 THEN 'OtherTraders (O/U)'
+				WHEN 8 THEN 'OtherTraders (1H O/U)'
+				WHEN 5 THEN 'OtherTraders (1X2)'
+				WHEN 15 THEN 'OtherTraders (1H 1X2)'
+				WHEN - 1002 THEN 'OtherLA' END
 				) AS ColumnName
 			,Bettype
 			,Min(IsValid)
@@ -217,17 +212,11 @@ BEGIN
 		
 		UNION -- Special match (rowNum = 11, 12, 13, 14, 21, 22....)
 		SELECT RowNumber
-			,(
-				CASE RowNumber % 10
-					WHEN 1
-						THEN 'OtherTraders (15mins)'
-					WHEN 2
-						THEN 'OtherTraders (10mins)'
-					WHEN 3
-						THEN 'OtherTraders (FM)'
-					WHEN 4
-						THEN 'OtherTraders (AIO)'
-					END
+			,(CASE RowNumber % 10
+				WHEN 1 THEN 'OtherTraders (15mins)'
+				WHEN 2 THEN 'OtherTraders (10mins)'
+				WHEN 3 THEN 'OtherTraders (FM)'
+				WHEN 4 THEN 'OtherTraders (AIO)' END
 				) AS ColumnName
 			,Bettype
 			,Min(IsValid)
@@ -241,7 +230,7 @@ BEGIN
 			RowNumber
 			,ColumnName
 			)
-		SELECT (ot1.RowNumber/10)*10
+		SELECT (ot1.RowNumber / 10) * 10
 			,got.ColumnName + ': ' + STUFF((
 					SELECT DISTINCT ', ' + ot2.Trader
 					FROM #tblOtherTrader ot2
@@ -252,7 +241,7 @@ BEGIN
 						,TYPE
 					).value('(./text())[1]', 'VARCHAR(200)'), 1, 2, '') AS ColumnName
 		FROM #tblOtherTrader ot1
-		INNER JOIN #tblGroupOtherTrader got ON ot1.RowNumber = got.RowNumber
+			INNER JOIN #tblGroupOtherTrader got ON ot1.RowNumber = got.RowNumber
 			AND ot1.Bettype = got.Bettype
 		WHERE ot1.IsValid = 0
 		GROUP BY ot1.RowNumber
@@ -275,7 +264,6 @@ BEGIN
 		WHERE IsValid = 0
 		
 		UNION
-		
 		SELECT RowNumber
 			,ColumnName
 		FROM #tblInvalidOtherTrader WITH (NOLOCK)
@@ -302,22 +290,16 @@ BEGIN
 		SELECT @SessionId
 			,upload.RowNumber
 			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN trader.RowNumber IS NOT NULL
-						THEN @RuleResultType
-					ELSE @Passed
-					END
+			,(CASE 
+				WHEN trader.RowNumber IS NOT NULL THEN @RuleResultType
+				ELSE @Passed END
 				) AS ResultType
-			,(
-				CASE 
-					WHEN trader.RowNumber IS NOT NULL
-						THEN REPLACE(@Message, '<content>', trader.ColumnName)
-					ELSE ''
-					END
+			,(CASE 
+				WHEN trader.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', trader.ColumnName)
+				ELSE '' END
 				) AS [Message]
 		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-		LEFT JOIN #tblCombineInvalidTrader AS trader WITH (NOLOCK) ON upload.RowNumber = trader.RowNumber
+			LEFT JOIN #tblCombineInvalidTrader AS trader WITH (NOLOCK) ON upload.RowNumber = trader.RowNumber
 		WHERE upload.SessionId = @SessionId
 	END
 	ELSE -- edit
@@ -325,9 +307,8 @@ BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value
 
-		SELECT TOP 1 @Username = data.Username					
-		FROM OPENXML(@idoc, '/Root/Row', 1) 
-		WITH (Username NVARCHAR(30)) AS data
+		SELECT TOP 1 @Username = data.Username
+		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Username NVARCHAR(30)) AS data
 
 		EXEC sp_xml_removedocument @idoc
 

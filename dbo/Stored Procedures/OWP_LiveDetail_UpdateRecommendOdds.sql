@@ -18,6 +18,7 @@ Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20190513@Leo.Vo: change condition when send message - [Redmine: #113333]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -86,7 +87,6 @@ BEGIN
 		,Odds MONEY
 		)
 
-
 	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
 
 	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
@@ -109,10 +109,7 @@ BEGIN
 		)
 	SELECT DISTINCT data.Choice
 		,data.Odds
-	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
-			Choice INT
-			,Odds MONEY
-			) AS data
+	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Choice INT, Odds MONEY) AS data
 
 	EXEC sp_xml_removedocument @idoc
 
@@ -131,15 +128,12 @@ BEGIN
 		SELECT Choice
 			,Odds
 		FROM #RecommendOdds
-		) AS s
-		ON t.MatchRecommendOddsId = @Id
+		) AS s ON t.MatchRecommendOddsId = @Id
 			AND t.Choice = s.Choice
-	WHEN MATCHED
-		THEN
+	WHEN MATCHED THEN
 			UPDATE
 			SET t.Odds = s.Odds
-	WHEN NOT MATCHED BY TARGET
-		THEN
+	WHEN NOT MATCHED BY TARGET THEN
 			INSERT
 			VALUES (
 				@Id
@@ -147,19 +141,11 @@ BEGIN
 				,s.Odds
 				);
 
-	SELECT @MessageTemplate = mt.MsgTemplateContent
-		,@MessageType = mt.MsgTemplateId
-	FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-	WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
-
 	SELECT @BettypeName = ShortName
 	FROM dbo.MajorBettype WITH (NOLOCK)
 	WHERE BettypeId = @Bettype
 
-	IF @Bettype IN (
-			@BettypeHDP
-			,@Bettype1HHDP
-			)
+	IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
 	BEGIN
 		SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
 		SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
@@ -174,10 +160,7 @@ BEGIN
 		ELSE IF @OldTeamChoice = 2
 			SET @OldTeamName = 'Away@'
 	END
-	ELSE IF @Bettype IN (
-			@BettypeOU
-			,@Bettype1HOU
-			)
+	ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
 	BEGIN
 		SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
 		SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
@@ -190,7 +173,7 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 1, '')
 
-	SET @OldOddsText = @OldTeamName + @OldHandicapText + @OldOddsText
+	SET @OldOddsText = ISNULL(@OldTeamName + @OldHandicapText + @OldOddsText, '')
 
 	SELECT @NewOddsText = STUFF((
 				SELECT '/' + CAST(Odds AS NVARCHAR(30))
@@ -199,15 +182,24 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 1, '')
 
-	SET @NewOddsText = @TeamName + @HandicapText + @NewOddsText
-	SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
-	SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', @OldOddsText)
-	SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
-	SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
+	SET @NewOddsText = ISNULL(@TeamName + @HandicapText + @NewOddsText, '')
 
 	-- insert message
-	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+	IF (
+			@OldOddsText <> @NewOddsText
+			AND dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1
+			)
 	BEGIN
+		SELECT @MessageTemplate = mt.MsgTemplateContent
+			,@MessageType = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
+
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', @OldOddsText)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
+		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
+
 		-------------- ASSIGNEE --------------------
 		-- get all assignee in match (include main + minor)
 		INSERT INTO #tblAllAssigneeOfMatch (UserId)
