@@ -138,7 +138,11 @@ BEGIN
 			,NULL
 		FROM #tmp AS t 
 		LEFT JOIN dbo.EmployeeWorkingShiftColor AS c ON c.ShiftId = t.ShiftId
+		
+		DROP TABLE #tmp
 	END			
+	
+	
 			
 	-- delete current data of ToUser
 	DELETE dbo.EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
