@@ -16,7 +16,7 @@ AS
    
 Revisions:  
 	20190419@Lita.Tang: Initial SP - [Redmine: #112737]  
-	20190510@Lita.Tang: Save data to DB when pasting Default shift
+	20190514@Lita.Tang: Save data to DB when pasting Default shift [Redmine: #112737]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -119,6 +119,16 @@ BEGIN
 										ELSE 7 
 								END)
 	END		
+ 
+ 	--update following Rule 1:00 -> 6:00 ( GMT+8)
+	UPDATE @tblNewWorkingShift
+	SET ShiftStartTime = DATEADD(DAY, 1, ShiftStartTime)	
+		, ShiftEndTime = DATEADD(DAY, 1, ShiftEndTime)
+	WHERE DATEPART(HOUR, ShiftStartTime) BETWEEN 1 AND 6
+	
+	UPDATE @tblNewWorkingShift
+	SET ShiftEndTime = DATEADD(DAY, 1, ShiftEndTime)
+	WHERE DATEPART(HOUR, ShiftStartTime) >DATEPART(HOUR, ShiftEndTime)
  
 	--- delete current data of ToUser
 	DELETE dbo.EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
