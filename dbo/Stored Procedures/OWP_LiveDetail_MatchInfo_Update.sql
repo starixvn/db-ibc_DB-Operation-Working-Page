@@ -133,6 +133,7 @@ BEGIN
 			--,@OldAgentIds = m.Agent
 		FROM dbo.MatchInfo m WITH (NOLOCK)
 			LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
+		WHERE m.OWPMatchId = @OWPMatchId					 
 	 
 		SELECT @OldTVIds =ISNULL(STUFF((
 							SELECT ', ' + CAST( TVId  AS NVARCHAR)
@@ -140,6 +141,9 @@ BEGIN
 							WHERE OWPMatchId = @OWPMatchId
 							FOR XML PATH('')
 							), 1, 2, ''), '')
+
+		 
+
 		  SELECT @OldOtherProviderIds =ISNULL(STUFF((
 							SELECT ', ' + CAST( OtherProviderId  AS NVARCHAR)
 							FROM dbo.MatchOtherProvider WITH (NOLOCK) 
@@ -147,12 +151,16 @@ BEGIN
 							FOR XML PATH('')
 							), 1, 2, ''), '')
 
+	 
+
 		 SELECT @OldProviderIds =ISNULL(STUFF((
 							SELECT ', ' + CAST( ProviderId  AS NVARCHAR)
 							FROM dbo.MatchProvider WITH (NOLOCK) 
 							WHERE OWPMatchId = @OWPMatchId
 							FOR XML PATH('')
 							), 1, 2, ''), '')
+
+
 		SELECT @OldAgentIds =ISNULL(STUFF((
 							SELECT ', ' + CAST( AgentId  AS NVARCHAR)
 							FROM dbo.MatchAgent WITH (NOLOCK) 
@@ -665,7 +673,7 @@ BEGIN
 					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
-
+			 
 			-- Edit Phone
 			IF @OldPhone <> @Phone
 			  AND DATEDIFF(MINUTE, @CurrentDateTimeGMTplus8, @EventDateTime) <= 60
