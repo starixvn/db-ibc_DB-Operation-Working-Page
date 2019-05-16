@@ -982,12 +982,9 @@ BEGIN
 			,DELETED.MatchOfferId
 		INTO #tblMatchOfferLog([Action], OWPMatchId, MatchOffer)
 		FROM dbo.MatchOfferDetail AS t
-		WHERE EXISTS (
-				SELECT 1
-				FROM #tblMatchOfferDetail AS s
-				WHERE t.OWPMatchId = s.OWPMatchId
-				)
-			AND NOT EXISTS (
+		INNER JOIN #tblMatch AS m
+			ON t.OWPMatchId = m.OWPMatchId
+		WHERE NOT EXISTS (
 				SELECT 1
 				FROM #tblMatchOfferDetail AS s
 				WHERE t.OWPMatchId = s.OWPMatchId
