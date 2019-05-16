@@ -25,8 +25,8 @@ BEGIN
 		,@GetCurrentWeek INT
 		,@GetNextWeek INT		
 
-	SELECT @GetCurrentWeek = DATEPART(wk, GETUTCDATE())	
-	SELECT @GetNextWeek= DATEPART(wk,  DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @ShiftDate)) % 7, @ShiftDate))
+	SELECT @GetCurrentWeek = DATEPART(WEEK, GETUTCDATE())	
+	SELECT @GetNextWeek= DATEPART(WEEK,  DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @ShiftDate)) % 7, @ShiftDate))
 
 	IF @GetNextWeek > @GetCurrentWeek
 	BEGIN
@@ -103,7 +103,7 @@ BEGIN
 			 
 
 	SELECT TOP 1  [EmployeeId] = UserId
-		,df.ShiftId
+		,[ShiftId] = ISNULL(wk.ShiftId, df.ShiftId)
 		,df.ShiftDate
 		,[RefShiftId] = 0
 		 ,[IsDefaultShift] = CASE 
@@ -130,5 +130,5 @@ BEGIN
 			AND ShiftDate = @ShiftDate
 
 	END
-	
+	SET DATEFIRST 7
 END

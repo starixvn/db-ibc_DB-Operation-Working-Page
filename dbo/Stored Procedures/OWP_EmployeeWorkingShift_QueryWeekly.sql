@@ -255,4 +255,6 @@ SELECT [EmployeeId] = df.UserId
 		INNER JOIN @tblUser AS u
 		ON s.UserId = u.UserId
 	END
+
+	SET DATEFIRST 7
 END;

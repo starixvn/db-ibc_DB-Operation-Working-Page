@@ -216,7 +216,7 @@ WHERE	cte.rn <= DATEDIFF(DAY, @FromDate, @ToDate)
 			AND ShiftDate BETWEEN @StartDate
 				AND @EndDate
 	END
-
+	SET DATEFIRST 7
 	DROP TABLE #tmpEmployeeWorkingShiftDefault
 
 END
