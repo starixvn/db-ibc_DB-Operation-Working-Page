@@ -92,7 +92,6 @@ BEGIN
 		from cte_day
 		option (maxrecursion 0)
 
-		SELECT * FROM @tblDays
 		-- 
 		DECLARE @tmpDefault TABLE  (UserId INT, ShiftId INT, ShiftDate DATE )
 		INSERT INTO @tmpDefault (UserId,  ShiftId, ShiftDate)
