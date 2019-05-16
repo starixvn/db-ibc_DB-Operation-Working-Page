@@ -63,85 +63,63 @@ BEGIN
 		AND ws.ShiftDate BETWEEN @FromDate
 			AND @ToDate
 	
-	---count number of rows 
-	DECLARE @cnt INT
-	SELECT @cnt = COUNT(ShiftDate) 
-	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
-	WHERE ws.EmployeeId = @FromUserId
-		AND ws.ShiftDate BETWEEN @FromDate
-			AND @ToDate
-		
-	--- insert new shift 	
-	IF(@cnt <>0) 
-	Begin 	
-		INSERT INTO	@tblNewWorkingShift (
-		EmployeeId
-		,ShiftDate
-		,ShiftStartTime
-		,ShiftEndTime
-		,ShiftId
-		,RefShiftId
-		)	
-		SELECT @ToUserId
-			,ws.ShiftDate
-			,ws.ShiftStartTime
-			,ws.ShiftEndTime
-			,ws.ShiftId
-			,ws.RefShiftId
-		FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
-		WHERE ws.EmployeeId = @FromUserId
-		AND ws.ShiftDate BETWEEN @FromDate
-			AND @ToDate
-	END 
-	ELSE 
-	BEGIN 
-		--create table date 
-		declare @tblDays table (t1 int, [day] nvarchar(10))
+	--create table date 
+	declare @tblDays table (day_id int, [day] date)
 
-		;with cte_day as
-		(
-		select @fromdate as [day]
-		union all
-		select dateadd(day, 1, [day])
-		from cte_day
-		where [day] < @todate
-		)
-		insert into @tblDays (t1, [day])
-		select
-		row_number () over (order by [day] asc)
-		,convert(varchar(50), [day], 111)
+	;with cte_day as
+	(
+	select @fromdate as [day]
+	union all
+	select dateadd(day, 1, [day])
+	from cte_day
+	where [day] < @todate
+	)
+	insert into @tblDays (day_id, [day])
+	select
+	row_number () over (order by [day] asc)
+	,[day]
+
+	from cte_day
+	option (maxrecursion 0)
 	
-		from cte_day
-		option (maxrecursion 0)
-		
-		CREATE table #tmp (UserId INT, [DayOfWeek] INT, ShiftId INT, ShiftDate DATETIME )
-		
-		INSERT INTO #tmp (UserId,[DayOfWeek], ShiftId, ShiftDate)
-		SELECT ds.UserId, ds.DayOfTheWeek, ds.ShiftId, d.[day]
-		FROM dbo.EmployeeWorkingShiftDefault as ds WITH(NOLOCK)
-			LEFT JOIN @tblDays AS d ON d.t1 = ds.DayOfTheWeek 
-		WHERE ds.UserId = @FromUserId
-		
-		-- insert new ws
-		INSERT INTO	@tblNewWorkingShift (
-		EmployeeId
-		,ShiftDate
-		,ShiftStartTime
-		,ShiftEndTime
-		,ShiftId
-		,RefShiftId
-		)	
-		SELECT @ToUserId
-			,t.ShiftDate
-			,t.ShiftDate + CAST(c.StartTime AS DATETIME)
-			,t.ShiftDate + CAST(c.EndTime AS DATETIME)
-			,t.ShiftId
-			,NULL
-		FROM #tmp AS t 
-		LEFT JOIN dbo.EmployeeWorkingShiftColor AS c ON c.ShiftId = t.ShiftId
-		
-		DROP TABLE #tmp
-	END			
+	SELECT * FROM @tblDays
+	-- 
+	DECLARE @tmpDefault TABLE  (UserId INT, ShiftId INT, ShiftDate DATE )
+	INSERT INTO @tmpDefault (UserId,  ShiftId, ShiftDate)
+	SELECT @FromUserId 
+		, ISNULL(ds.ShiftId,0)
+		, d.day
+	FROM @tblDays AS d 
+	LEFT JOIN dbo.EmployeeWorkingShiftDefault as ds WITH(NOLOCK)
+			ON d.day_id = ds.DayOfTheWeek AND ds.UserId = @FromUserId 
+	
+	-----
+	DECLARE @tmpWS TABLE (UserId INT, ShiftId INT, ShiftDate DATE, RefShiftId INT)
+	INSERT INTO @tmpWS (UserId, ShiftId, ShiftDate,RefShiftId)
+	SELECT t.UserId
+	,ISNULL( ws.ShiftId, t.ShiftId)
+	,t.ShiftDate
+	, ISNULL(ws.RefShiftId,NULL ) 
+	FROM  @tmpDefault AS t 
+	LEFT JOIN dbo.EmployeeWorkingShift AS ws ON t.UserId = ws.EmployeeId AND t.ShiftDate = ws.ShiftDate
+
+	--insert new data
+	INSERT INTO	@tblNewWorkingShift (
+	EmployeeId
+	,ShiftDate
+	,ShiftStartTime
+	,ShiftEndTime
+	,ShiftId
+	,RefShiftId
+	)
+	SELECT @ToUserId
+	,t.ShiftDate
+	,t.ShiftDate + CAST(c.StartTime AS DATETIME)
+	,t.ShiftDate + CAST(c.EndTime AS DATETIME)
+	,t.ShiftId
+	,t.RefShiftId
+	FROM  @tmpWS AS t 
+	INNER JOIN dbo.EmployeeWorkingShiftColor AS c ON c.ShiftId = t.ShiftId
 	
 	--update following Rule 1:00 -> 6:00 ( GMT+8)
 	UPDATE @tblNewWorkingShift
