@@ -17,6 +17,7 @@ AS
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181209@Kane.Le: Add Runner, Provider, IsMinorMatch - [Redmine: #104291]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON;
