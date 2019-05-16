@@ -15,6 +15,7 @@ AS
 	20181004@Kane.Le: delete odds compiler - [Redmine: #92868]
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20190513@Leo.Vo: change condition when send message - [Redmine: #113333]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -257,7 +258,7 @@ BEGIN
 			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<newodds>', '')
 
 			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
+				,@MessageContent = @MatchMessageTemplate
 				,@MessageType = @MessageType
 				,@MessageTo = @UserReceivedAssigneeMessageRecommendOdds
 				,@IsImportant = 0
@@ -267,7 +268,7 @@ BEGIN
 				,@ErrMsg = @ErrMsg OUTPUT
 
 			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
+				,@MessageContent = @MatchMessageTemplate
 				,@MessageType = @MessageType
 				,@MessageTo = @UserReceivedWatcherMessageRecommendOdds
 				,@IsImportant = 0
