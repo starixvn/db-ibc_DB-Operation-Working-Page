@@ -173,7 +173,6 @@
     <Build Include="dbo\Stored Procedures\OWP_RefResourceGetByName.sql" />
     <Build Include="dbo\Stored Procedures\OWP_QuickSearchMatchGet.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPTeamInsert.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OWPMatch_UpdateFromInfoSite.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeagueInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsBlackList.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsActive.sql" />
@@ -345,6 +344,11 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopyWholeShifts.sql" />
     <Build Include="dbo\Stored Procedures\OWP_API_SyncUsers_Get_Change_From_AdminSite.sql" />
     <Build Include="dbo\Stored Procedures\OWP_API_SyncUsers_From_AdminSite.sql" />
+    <Build Include="dbo\Tables\MatchTelevision.sql" />
+    <Build Include="dbo\Tables\MatchProvider.sql" />
+    <Build Include="dbo\Tables\MatchOtherProvider.sql" />
+    <Build Include="dbo\Tables\MatchAgent.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopySingleShift.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

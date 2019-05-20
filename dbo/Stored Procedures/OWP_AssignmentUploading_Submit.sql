@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT = 0
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -30,6 +31,8 @@ AS
 	20190304@Raymond.Le: Implement section Watcher notification - [Redmine: #109560]
 	20190325@Raymond.Le: Fix not send message change assignment when UserId is NULL in OtherTrader - [Redmine: #110322]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -200,7 +203,7 @@ BEGIN
 		,Agent NVARCHAR(2000)
 		,OtherProvider NVARCHAR(2000)
 		,[Provider] NVARCHAR(2000)
-		,Phone NVARCHAR(50)
+		,Phone NVARCHAR(200)
 		,Note XML
 		,MaxBetHDP MONEY
 		,SpreadHDP SMALLMONEY
@@ -238,6 +241,26 @@ BEGIN
 		,Website4 NVARCHAR(1000)
 		,InfoSiteMatchId INT
 		)
+	
+	CREATE TABLE #tblMatchAgent (
+		OWPMatchId INT NOT NULL
+		,AgentId INT NOT NULL
+	)
+	
+	CREATE TABLE #tblMatchProvider (
+		OWPMatchId INT NOT NULL
+		,ProviderId INT NOT NULL
+	)
+	
+	CREATE TABLE #tblMatchOtherProvider (
+		OWPMatchId INT NOT NULL
+		,OtherProviderId INT NOT NULL
+	)
+	
+	CREATE TABLE #tblMatchTelevision (
+		OWPMatchId INT NOT NULL
+		,TVId INT NOT NULL
+	)
 
 	--list of existed matches
 	CREATE TABLE #tblExistedMatch (
@@ -319,16 +342,16 @@ BEGIN
 	CREATE TABLE #tblMatchEditedInfo (
 		OWPMatchId INT NOT NULL
 		,MessageTypeId INT
-		,OldValue NVARCHAR(2000)
-		,NewValue NVARCHAR(2000)
+		,OldValue NVARCHAR(MAX)
+		,NewValue NVARCHAR(MAX)
 		)
 
 	-- store all match (main + minor) edited match info in TimeRange
 	CREATE TABLE #tblMatchEditedInTimeRange (
 		OWPMatchId INT NOT NULL
 		,MessageTypeId INT
-		,OldValue NVARCHAR(2000)
-		,NewValue NVARCHAR(2000)
+		,OldValue NVARCHAR(MAX)
+		,NewValue NVARCHAR(MAX)
 		,ParentMatchId INT
 		)
 
@@ -341,7 +364,7 @@ BEGIN
 	CREATE TABLE #tblMessageUpdateMatchInfo (
 		OWPMatchId INT
 		,MessageTypeId INT
-		,MessageContent NVARCHAR(2000)
+		,MessageContent NVARCHAR(MAX)
 		)
 
 	CREATE TABLE #tblUsersReceivedMessageUpdate (
@@ -367,19 +390,35 @@ BEGIN
 	CREATE TABLE #tblOldMatchInfo (
 		OWPMatchId INT NOT NULL
 		,MatchStatus VARCHAR(15)
-		,TVCode NVARCHAR(500)
 		,Channel NVARCHAR(100)
 		,WB NVARCHAR(100)
-		,OtherProvider NVARCHAR(100)
-		,[Provider] NVARCHAR(100) 
-		,Phone NVARCHAR(50)
+		,Phone NVARCHAR(200)
 		,[Round] NVARCHAR(2000)
 		,Division NVARCHAR(2000)
 		,Venue NVARCHAR(100)
-		,Agent NVARCHAR(100)
 		,Remark NVARCHAR(2000)
 		,NoOfHDPId INT
 		)
+		
+	CREATE TABLE #tblOldMatchAgent (
+		OWPMatchId INT NOT NULL
+		,AgentId INT NOT NULL
+	)
+	
+	CREATE TABLE #tblOldMatchProvider (
+		OWPMatchId INT NOT NULL
+		,ProviderId INT NOT NULL
+	)
+	
+	CREATE TABLE #tblOldMatchOtherProvider (
+		OWPMatchId INT NOT NULL
+		,OtherProviderId INT NOT NULL
+	)
+	
+	CREATE TABLE #tblOldMatchTelevision (
+		OWPMatchId INT NOT NULL
+		,TVId INT NOT NULL
+	)
 		
 	CREATE TABLE #tblOldMatchOfferDetail (
 		OWPMatchId INT NOT NULL
@@ -943,12 +982,9 @@ BEGIN
 			,DELETED.MatchOfferId
 		INTO #tblMatchOfferLog([Action], OWPMatchId, MatchOffer)
 		FROM dbo.MatchOfferDetail AS t
-		WHERE EXISTS (
-				SELECT 1
-				FROM #tblMatchOfferDetail AS s
-				WHERE t.OWPMatchId = s.OWPMatchId
-				)
-			AND NOT EXISTS (
+		INNER JOIN #tblMatch AS m
+			ON t.OWPMatchId = m.OWPMatchId
+		WHERE NOT EXISTS (
 				SELECT 1
 				FROM #tblMatchOfferDetail AS s
 				WHERE t.OWPMatchId = s.OWPMatchId
@@ -995,35 +1031,67 @@ BEGIN
 		INSERT INTO #tblOldMatchInfo (
 			OWPMatchId
 			,MatchStatus
-			,TVCode
 			,Channel
 			,WB
-			,OtherProvider
-			,[Provider]
 			,Phone
 			,[Round]
 			,Division
 			,Venue
-			,Agent
 			,Remark
 			,NoOfHDPId
 			)
 		SELECT mi.OWPMatchId
 			,mi.MatchStatus
-			,mi.TVCode
 			,mi.Channel
 			,mi.WB
-			,mi.OtherProvider
-			,mi.[Provider]
 			,mi.Phone
 			,mi.[Round]
 			,mi.Division
 			,mi.Venue
-			,mi.Agent
 			,mi.Remark
 			,mi.NoOfHDPId
 		FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mi.OWPMatchId
+			
+		--list of old MatchAgent of existed matches
+		INSERT INTO #tblOldMatchAgent (
+			OWPMatchId
+			,AgentId
+		)
+		SELECT ma.OWPMatchId
+			,ma.AgentId
+		FROM dbo.MatchAgent AS ma WITH (NOLOCK)
+			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = ma.OWPMatchId
+			
+		--list of old MatchProvider of existed matches
+		INSERT INTO #tblOldMatchProvider (
+			OWPMatchId
+			,ProviderId
+		)
+		SELECT mp.OWPMatchId
+			,mp.ProviderId
+		FROM dbo.MatchProvider AS mp WITH (NOLOCK)
+			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mp.OWPMatchId
+			
+		--list of old MatchOtherProvider of existed matches
+		INSERT INTO #tblOldMatchOtherProvider (
+			OWPMatchId
+			,OtherProviderId
+		)
+		SELECT mop.OWPMatchId
+			,mop.OtherProviderId
+		FROM dbo.MatchOtherProvider AS mop WITH (NOLOCK)
+			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mop.OWPMatchId
+			
+		--list of old MatchTelevision of existed matches
+		INSERT INTO #tblOldMatchTelevision (
+			OWPMatchId
+			,TVId
+		)
+		SELECT mtv.OWPMatchId
+			,mtv.TVId
+		FROM dbo.MatchTelevision AS mtv WITH (NOLOCK)
+			INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mtv.OWPMatchId
 			
 		-- Insert new TV
 		DELETE
@@ -1045,6 +1113,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.TV, '/', ','), ',') AS d
 		WHERE m.TV <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1071,15 +1140,29 @@ BEGIN
 		FROM #tblDistinctTextList AS tl
 			INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tl.[Text] = tv.TVCode
 
-		UPDATE m
-		SET m.TV = LEFT(STUFF((
-					SELECT ',' + CAST(Id AS VARCHAR(10))
-					FROM #tblDistinctTextList AS tl
-					WHERE tl.OWPMatchId = m.OWPMatchId
-					FOR XML PATH('')
-					), 1, 1, ''), 500) -- ATTENTION: MaxLength of TVCode in dbo.MatchInfo
-		FROM #tblMatch AS m
-		WHERE m.TV <> ''
+		DELETE t
+		FROM dbo.MatchTelevision AS t WITH (ROWLOCK)
+			INNER JOIN #tblMatch AS m ON t.OWPMatchId = m.OWPMatchId
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblDistinctTextList AS s
+				WHERE s.OWPMatchId = t.OWPMatchId
+					AND s.Id = t.TVId
+				)
+			
+		INSERT INTO dbo.MatchTelevision (
+			OWPMatchId
+			,TVId
+		)
+		SELECT s.OWPMatchId
+			, s.Id
+		FROM #tblDistinctTextList AS s
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.MatchTelevision AS t WITH (NOLOCK)
+			WHERE s.OWPMatchId = t.OWPMatchId
+				AND s.Id = t.TVId
+		)
 
 		-- get matches edited TV
 		INSERT INTO #tblOldDistinctTextList (
@@ -1092,8 +1175,8 @@ BEGIN
 			,tv.TVCode
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			CROSS APPLY dbo.fnc_SplitStrings(omi.TVCode, ',') AS f
-			INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON f.val = tv.TVId
+			INNER JOIN #tblOldMatchTelevision AS omtv ON em.OWPMatchId = omtv.OWPMatchId
+			INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON omtv.TVId = tv.TVId
 
 		INSERT INTO #tblMatchEditedInfo (
 			OWPMatchId
@@ -1157,6 +1240,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.Agent, '/', ','), ',') AS d
 		WHERE m.Agent <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1183,15 +1267,29 @@ BEGIN
 		FROM #tblDistinctTextList AS tl
 			INNER JOIN dbo.Agent AS tv WITH (NOLOCK) ON tl.[Text] = tv.AgentName
 
-		UPDATE m
-		SET m.Agent = LEFT(STUFF((
-					SELECT ',' + CAST(Id AS VARCHAR(10))
-					FROM #tblDistinctTextList AS tl
-					WHERE tl.OWPMatchId = m.OWPMatchId
-					FOR XML PATH('')
-					), 1, 1, ''), 100) -- ATTENTION: MaxLength of Agent in dbo.MatchInfo
-		FROM #tblMatch AS m
-		WHERE m.Agent <> ''
+		DELETE t
+		FROM dbo.MatchAgent AS t WITH (ROWLOCK)
+		INNER JOIN #tblMatch AS m ON t.OWPMatchId = m.OWPMatchId
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblDistinctTextList AS s
+				WHERE s.OWPMatchId = t.OWPMatchId
+					AND s.Id = t.AgentId
+				)
+			
+		INSERT INTO dbo.MatchAgent (
+			OWPMatchId
+			, AgentId
+		)
+		SELECT s.OWPMatchId
+			, s.Id
+		FROM #tblDistinctTextList AS s
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.MatchAgent AS t WITH (NOLOCK)
+			WHERE s.OWPMatchId = t.OWPMatchId
+				AND s.Id = t.AgentId
+		)
 
 		-- get matches edited Agent
 		INSERT INTO #tblOldDistinctTextList (
@@ -1204,8 +1302,8 @@ BEGIN
 			,agent.AgentName
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			CROSS APPLY dbo.fnc_SplitStrings(omi.Agent, ',') AS f
-			INNER JOIN dbo.Agent AS agent WITH (NOLOCK) ON f.val = agent.AgentId
+			INNER JOIN #tblOldMatchAgent AS oma ON em.OWPMatchId = oma.OWPMatchId
+			INNER JOIN dbo.Agent AS agent WITH (NOLOCK) ON oma.AgentId = agent.AgentId
 
 		INSERT INTO #tblMatchEditedInfo (
 			OWPMatchId
@@ -1269,6 +1367,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.[Provider], '/', ','), ',') AS d
 		WHERE m.[Provider] <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1295,15 +1394,29 @@ BEGIN
 		FROM #tblDistinctTextList AS tl
 			INNER JOIN dbo.[Provider] AS p WITH (NOLOCK) ON tl.[Text] = p.ProviderName
 
-		UPDATE m
-		SET m.[Provider] = LEFT(STUFF((
-					SELECT ',' + CAST(Id AS VARCHAR(10))
-					FROM #tblDistinctTextList AS tl
-					WHERE tl.OWPMatchId = m.OWPMatchId
-					FOR XML PATH('')
-					), 1, 1, ''), 100) -- ATTENTION: MaxLength of Provider in dbo.MatchInfo
-		FROM #tblMatch AS m
-		WHERE m.[Provider] <> ''
+		DELETE t
+		FROM dbo.MatchProvider AS t WITH (ROWLOCK)
+			INNER JOIN #tblMatch AS m ON t.OWPMatchId = m.OWPMatchId
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblDistinctTextList AS s
+				WHERE s.OWPMatchId = t.OWPMatchId
+					AND s.Id = t.ProviderId
+				)
+			
+		INSERT INTO dbo.MatchProvider (
+			OWPMatchId
+			,ProviderId
+		)
+		SELECT s.OWPMatchId
+			, s.Id
+		FROM #tblDistinctTextList AS s
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.MatchProvider AS t WITH (NOLOCK)
+			WHERE s.OWPMatchId = t.OWPMatchId
+				AND s.Id = t.ProviderId
+		)
 
 		-- get matches edited Provider
 		INSERT INTO #tblOldDistinctTextList (
@@ -1316,8 +1429,8 @@ BEGIN
 			,p.ProviderName
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			CROSS APPLY dbo.fnc_SplitStrings(omi.[Provider], ',') AS f
-			INNER JOIN dbo.[Provider] AS p WITH (NOLOCK) ON f.val = p.ProviderId
+			INNER JOIN #tblOldMatchProvider AS omp ON em.OWPMatchId = omp.OWPMatchId
+			INNER JOIN dbo.[Provider] AS p WITH (NOLOCK) ON omp.ProviderId = p.ProviderId
 
 		INSERT INTO #tblMatchEditedInfo (
 			OWPMatchId
@@ -1381,6 +1494,7 @@ BEGIN
 			CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.OtherProvider, '/', ','), ',') AS d
 		WHERE m.OtherProvider <> ''
 			AND RTRIM(LTRIM(d.val)) <> ''
+		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1406,16 +1520,30 @@ BEGIN
 		SET tl.Id = op.OtherProviderId
 		FROM #tblDistinctTextList AS tl
 			INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON tl.[Text] = op.OtherProviderName
-
-		UPDATE m
-		SET m.OtherProvider = LEFT(STUFF((
-					SELECT ',' + CAST(Id AS VARCHAR(10))
-					FROM #tblDistinctTextList AS tl
-					WHERE tl.OWPMatchId = m.OWPMatchId
-					FOR XML PATH('')
-					), 1, 1, ''), 100) -- ATTENTION: MaxLength of OtherProvider in dbo.MatchInfo
-		FROM #tblMatch AS m
-		WHERE m.OtherProvider <> ''
+			
+		DELETE t
+		FROM dbo.MatchOtherProvider AS t WITH (ROWLOCK)
+			INNER JOIN #tblMatch AS m ON t.OWPMatchId = m.OWPMatchId
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblDistinctTextList AS s
+				WHERE s.OWPMatchId = t.OWPMatchId
+					AND s.Id = t.OtherProviderId
+				)
+			
+		INSERT INTO dbo.MatchOtherProvider (
+			OWPMatchId
+			, OtherProviderId
+		)
+		SELECT s.OWPMatchId
+			, s.Id
+		FROM #tblDistinctTextList AS s
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.MatchOtherProvider AS t WITH (NOLOCK)
+			WHERE s.OWPMatchId = t.OWPMatchId
+				AND s.Id = t.OtherProviderId
+		)
 
 		-- get matches edited Other Provider
 		INSERT INTO #tblOldDistinctTextList (
@@ -1428,8 +1556,8 @@ BEGIN
 			,op.OtherProviderName
 		FROM #tblExistedMatch AS em
 			INNER JOIN #tblOldMatchInfo AS omi ON em.OWPMatchId = omi.OWPMatchId
-			CROSS APPLY dbo.fnc_SplitStrings(omi.OtherProvider, ',') AS f
-			INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON f.val = op.OtherProviderId
+			INNER JOIN #tblOldMatchOtherProvider AS omop ON em.OWPMatchId = omop.OWPMatchId
+			INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON omop.OtherProviderId = op.OtherProviderId
 			
 		INSERT INTO #tblMatchEditedInfo (
 			OWPMatchId
@@ -1478,11 +1606,7 @@ BEGIN
 		SET mi.NoOfHDPId = m.NoOfHDPId
 			,mi.Channel = m.Channel
 			,mi.WB = m.WB
-			,mi.OtherProvider = m.OtherProvider
-			,mi.[Provider] = m.[Provider]
 			,mi.Phone = m.Phone
-			,mi.TVCode = m.TV
-			,mi.Agent = m.Agent
 			,mi.IsSelectedUpdatedDate = GETDATE()
 			,mi.IsSelected = 1
 			,mi.SelectedBy = @UserId
@@ -1695,11 +1819,7 @@ BEGIN
 			,NoOfHDPId
 			,Channel
 			,WB
-			,OtherProvider
-			,[Provider]
 			,Phone
-			,TVCode
-			,Agent
 			,IsSelectedUpdatedDate
 			,IsSelected
 			,SelectedBy
@@ -1716,11 +1836,7 @@ BEGIN
 			,m.NoOfHDPId
 			,m.Channel
 			,m.WB
-			,m.OtherProvider
-			,m.[Provider]
 			,m.Phone
-			,m.TV
-			,m.Agent
 			,GETDATE()
 			,1
 			,@UserId
@@ -3152,6 +3268,14 @@ BEGIN
 	DROP TABLE #tblCornerBookingBetTypes
 
 	DROP TABLE #tblMatch
+	
+	DROP TABLE #tblMatchAgent
+	
+	DROP TABLE #tblMatchProvider
+	
+	DROP TABLE #tblMatchOtherProvider
+	
+	DROP TABLE #tblMatchTelevision
 
 	DROP TABLE #tblExistedMatch
 
@@ -3188,6 +3312,14 @@ BEGIN
 	DROP TABLE #tblInsertedWatcherMessageUpdateMatchInfo
 
 	DROP TABLE #tblOldMatchInfo
+	
+	DROP TABLE #tblOldMatchAgent
+	
+	DROP TABLE #tblOldMatchProvider
+	
+	DROP TABLE #tblOldMatchOtherProvider
+	
+	DROP TABLE #tblOldMatchTelevision
 	
 	DROP TABLE #tblOldMatchOfferDetail
 

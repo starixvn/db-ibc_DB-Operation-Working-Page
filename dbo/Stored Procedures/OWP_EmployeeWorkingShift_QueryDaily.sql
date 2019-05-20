@@ -17,6 +17,7 @@ AS
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20181209@Kane.Le: Add Runner, Provider, IsMinorMatch - [Redmine: #104291]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -240,8 +241,9 @@ BEGIN
 				SELECT ', ' + CAST(op.OtherProviderName AS NVARCHAR(30))
 				FROM dbo.OtherProvider AS op WITH (NOLOCK)
 				WHERE op.OtherProviderId IN (
-						SELECT val
-						FROM dbo.[strSplit](mi.OtherProvider, ',')
+						SELECT ot.OtherProviderId
+						FROM dbo.MatchOtherProvider AS ot WITH (NOLOCK)
+						WHERE ot.OWPMatchId = m.OWPMatchId
 						)
 				FOR XML PATH('')
 				), 1, 1, '') AS 'OtherProvider'
@@ -249,8 +251,9 @@ BEGIN
 				SELECT ', ' + CAST(p.ProviderName AS NVARCHAR(30))
 				FROM dbo.[Provider] AS p WITH (NOLOCK)
 				WHERE p.ProviderId IN (
-						SELECT val
-						FROM dbo.[strSplit](mi.[Provider], ',')
+						SELECT p.ProviderId
+						FROM dbo.MatchProvider AS p WITH (NOLOCK)
+						WHERE p.OWPMatchId = m.OWPMatchId
 						)
 				FOR XML PATH('')
 				), 1, 1, '') AS 'Provider'

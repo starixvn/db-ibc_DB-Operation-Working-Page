@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-create PROCEDURE [dbo].[OWP_LiveDetail_OtherProvider_GetByMatchId] @OWPMatchId INT
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_OtherProvider_GetByMatchId] @OWPMatchId INT
 AS
 /*  
  Created: Raymond.Le@20180813
@@ -9,15 +9,15 @@ AS
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	SELECT op.OtherProviderId
 		,op.OtherProviderName
-	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(mi.OtherProvider, ',') AS data
-		INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON RTRIM(LTRIM(data.val)) = op.OtherProviderId
+	FROM dbo.MatchOtherProvider AS mi WITH (NOLOCK)		 
+		INNER JOIN dbo.OtherProvider AS op WITH (NOLOCK) ON mi.OtherProviderId = op.OtherProviderId
 	WHERE mi.OWPMatchId = @OWPMatchId
 
 END

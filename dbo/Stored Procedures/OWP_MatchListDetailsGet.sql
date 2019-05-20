@@ -18,6 +18,8 @@ AS
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
+	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -73,13 +75,9 @@ BEGIN
 		,MatchId INT
 		,NoOfHDP NVARCHAR(20)
 		,NoOfHDPId INT
-		,TVCode NVARCHAR(MAX)
 		,Channel NVARCHAR(200)
 		,WatchBet NVARCHAR(200)
-		,Agent NVARCHAR(200)
-		,OtherProvider NVARCHAR(200)
-		,[Provider] NVARCHAR(200)
-		,Phone NVARCHAR(100)
+		,Phone NVARCHAR(200)
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
@@ -106,12 +104,8 @@ BEGIN
 		,MatchId
 		,NoOfHDP
 		,NoOfHDPId
-		,TVCode
 		,Channel
 		,WatchBet
-		,Agent
-		,OtherProvider
-		,[Provider]
 		,Phone
 		,[Round]
 		,OutSide
@@ -137,12 +131,8 @@ BEGIN
 		,om.MatchId
 		,r.Value
 		,mi.NoOfHDPId
-		,mi.TVCode
 		,mi.Channel
 		,mi.WB
-		,mi.Agent
-		,mi.OtherProvider
-		,mi.[Provider]
 		,mi.Phone
 		,mi.[Round]
 		,mi.Division
@@ -185,33 +175,33 @@ BEGIN
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.TVCode AS VARCHAR), '')
-				FROM dbo.Television rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.TVCode, ',') f
-				WHERE f.val = rs.TVId
+				SELECT ', ' + ISNULL(CAST(rs.TVCode AS NVARCHAR(100)), '')
+				FROM dbo.Television AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK) ON rs.TVId = mtv.TVId
+				WHERE mtv.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS TV
 		,ml.Channel
 		,ml.WatchBet
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.AgentName AS VARCHAR), '')
-				FROM dbo.Agent rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.Agent, ',') f
-				WHERE f.val = rs.AgentId
+				SELECT ', ' + ISNULL(CAST(rs.AgentName AS NVARCHAR(100)), '')
+				FROM dbo.Agent AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchAgent AS ma WITH (NOLOCK) ON rs.AgentId = ma.AgentId
+				WHERE ma.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
-				FROM dbo.OtherProvider rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.OtherProvider, ',') f
-				WHERE f.val = rs.OtherProviderId
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
+				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchOtherProvider AS mot WITH (NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
+				WHERE mot.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
-				FROM dbo.[Provider] rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(ml.[Provider], ',') f
-				WHERE f.val = rs.ProviderId
+				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(100)), '')
+				FROM dbo.[Provider] AS rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
+				WHERE mp.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS [Provider]
 		,STUFF((
@@ -414,16 +404,16 @@ BEGIN
 		,tv.TVCode
 		,tv.Color
 	FROM #owpMatchListByDate AS m
-		CROSS APPLY dbo.fnc_SplitStrings(m.TVCode, ',') AS f
-		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = f.val
+		INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK) ON m.OWPMatchId = mtv.OWPMatchId
+		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = mtv.TVId
 	ORDER BY tv.TVId
 
 	-- Return Match Offer
 	SELECT mf.OWPMatchId
 		,r.[Value] AS MatchOfferValue
-	FROM #owpMatchListByDate AS mf 
-	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
-	LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
+	FROM #owpMatchListByDate AS mf
+		INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
+		LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
 
 	DROP TABLE #owpMatchListByDate
 

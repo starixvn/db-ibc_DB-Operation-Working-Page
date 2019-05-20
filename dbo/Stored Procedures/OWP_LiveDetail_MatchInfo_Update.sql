@@ -5,7 +5,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@OWPMatchId INT
 	,@Channel NVARCHAR(100) = ''
 	,@WB NVARCHAR(100) = ''
-	,@Phone NVARCHAR(50) = ''
+	,@Phone NVARCHAR(200) = ''
 	,@Remark NVARCHAR(2000) = ''
 	,@NoOfHDPId INT = NULL
 	,@IsSoloMatch BIT = 0
@@ -39,6 +39,8 @@ Revisions:
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Update Column NoOfHDPId - [Redmine: #107257]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -51,7 +53,7 @@ BEGIN
 		,@Xml XML
 		,@OldChannel NVARCHAR(100)
 		,@OldWB NVARCHAR(100)
-		,@OldPhone NVARCHAR(50)
+		,@OldPhone NVARCHAR(200)
 		,@OldRemark NVARCHAR(2000)
 		,@OldNoOfHDPId INT
 		,@OldIsSoloMatch BIT
@@ -104,7 +106,7 @@ BEGIN
 		,UserReceivedWatcherId INT
 		,NotificationSettingId INT
 		)
-
+	
 	BEGIN TRY
 		SELECT @OldMarketIds = COALESCE(@OldMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
 		FROM dbo.MatchMarket WITH (NOLOCK)
@@ -125,13 +127,46 @@ BEGIN
 			,@OldDivision = m.Division
 			,@OldVenue = m.Venue
 			,@OldOtherTime = om.OtherTime
-			,@OldTVIds = m.TVCode
-			,@OldOtherProviderIds = m.OtherProvider
-			,@OldProviderIds = m.[Provider]
-			,@OldAgentIds = m.Agent
+			--,@OldTVIds = m.TVCode
+			--,@OldOtherProviderIds = m.OtherProvider
+			--,@OldProviderIds = m.[Provider]
+			--,@OldAgentIds = m.Agent
 		FROM dbo.MatchInfo m WITH (NOLOCK)
 			LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
-		WHERE m.OWPMatchId = @OWPMatchId
+		WHERE m.OWPMatchId = @OWPMatchId					 
+	 
+		SELECT @OldTVIds =ISNULL(STUFF((
+							SELECT ', ' + CAST( TVId  AS NVARCHAR)
+							FROM dbo.MatchTelevision WITH (NOLOCK) 
+							WHERE OWPMatchId = @OWPMatchId
+							FOR XML PATH('')
+							), 1, 2, ''), '')
+
+		 
+
+		  SELECT @OldOtherProviderIds =ISNULL(STUFF((
+							SELECT ', ' + CAST( OtherProviderId  AS NVARCHAR)
+							FROM dbo.MatchOtherProvider WITH (NOLOCK) 
+							WHERE OWPMatchId = @OWPMatchId
+							FOR XML PATH('')
+							), 1, 2, ''), '')
+
+	 
+
+		 SELECT @OldProviderIds =ISNULL(STUFF((
+							SELECT ', ' + CAST( ProviderId  AS NVARCHAR)
+							FROM dbo.MatchProvider WITH (NOLOCK) 
+							WHERE OWPMatchId = @OWPMatchId
+							FOR XML PATH('')
+							), 1, 2, ''), '')
+
+
+		SELECT @OldAgentIds =ISNULL(STUFF((
+							SELECT ', ' + CAST( AgentId  AS NVARCHAR)
+							FROM dbo.MatchAgent WITH (NOLOCK) 
+							WHERE OWPMatchId = @OWPMatchId
+							FOR XML PATH('')
+							), 1, 2, ''), '')					 
 
 		SELECT @NoOfHDPId = CASE WHEN @NoOfHDPId = 0 THEN NULL ELSE @NoOfHDPId END
 
@@ -146,15 +181,79 @@ BEGIN
 			,[Round] = @Round
 			,Division = @Division
 			,Venue = @Venue
-			,OtherProvider = @OtherProviderIds
-			,[Provider] = @ProviderIds
-			,TVCode = @TVIds
-			,Agent = @AgentIds
+			--,OtherProvider = @OtherProviderIds
+			--,[Provider] = @ProviderIds
+			--,TVCode = @TVIds
+			--,Agent = @AgentIds
 		WHERE OWPMatchId = @OWPMatchId
 
 		UPDATE dbo.OWPMatch WITH (ROWLOCK, UPDLOCK)
 		SET OtherTime = @OtherTime
 		WHERE OWPMatchId = @OWPMatchId
+
+		-- handle changes TVIds
+		DELETE
+		FROM dbo.MatchTelevision
+		WHERE OWPMatchId = @OWPMatchId
+
+		IF (ISNULL(@TVIds, '') != '')
+		BEGIN
+			INSERT INTO dbo.MatchTelevision (
+			OWPMatchId
+			,TVId
+			)
+			SELECT @OWPMatchId
+				,val
+			FROM dbo.strSplit(ISNULL(@TVIds, ''), ',')
+		END
+
+		-- handle changes OtherProvider
+		DELETE
+		FROM dbo.MatchOtherProvider
+		WHERE OWPMatchId = @OWPMatchId
+
+		IF (ISNULL(@OtherProviderIds, '') != '')
+		BEGIN
+			INSERT INTO dbo.MatchOtherProvider (
+			OWPMatchId
+			,OtherProviderId
+			)
+			SELECT @OWPMatchId
+				,val
+			FROM dbo.strSplit(ISNULL(@OtherProviderIds, ''), ',')
+		END
+
+		-- handle changes Provider
+		DELETE
+		FROM dbo.MatchProvider
+		WHERE OWPMatchId = @OWPMatchId
+
+		IF (ISNULL(@ProviderIds, '') != '')
+		BEGIN
+			INSERT INTO dbo.MatchProvider (
+			OWPMatchId
+			,ProviderId
+			)
+			SELECT @OWPMatchId
+				,val
+			FROM dbo.strSplit(ISNULL(@ProviderIds, ''), ',')
+		END
+
+		-- handle changes MatchAgent
+		DELETE
+		FROM dbo.MatchAgent
+		WHERE OWPMatchId = @OWPMatchId
+
+		IF (ISNULL(@AgentIds, '') != '')
+		BEGIN
+			INSERT INTO dbo.MatchAgent(
+			OWPMatchId
+			,AgentId
+			)
+			SELECT @OWPMatchId
+				,val
+			FROM dbo.strSplit(ISNULL(@AgentIds, ''), ',')
+		END
 
 		-- handle changes of Match Market
 		DELETE
@@ -574,7 +673,7 @@ BEGIN
 					,@IsWatcher = 1
 					,@SessionId = @SessionId
 			END
-
+			 
 			-- Edit Phone
 			IF @OldPhone <> @Phone
 			  AND DATEDIFF(MINUTE, @CurrentDateTimeGMTplus8, @EventDateTime) <= 60

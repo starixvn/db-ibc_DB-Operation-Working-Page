@@ -6,7 +6,7 @@ CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckWhenEdit] @OWPMatchId INT
 	,@Username NVARCHAR(30) = ''
 	,@UserId INT = NULL
 	,@IsValidateAssignment BIT = NULL
-	,@Phone NVARCHAR(50) = ''
+	,@Phone NVARCHAR(200) = ''
 AS
 /*  
  Created: 20170214@Tim.Trinh
@@ -19,6 +19,7 @@ AS
  Revisions:
 	20180927@Raymond.Le: New structure of event assignment - [Redmine: #92868]   
 	20181128@Kane.Le: Fix bug single quote XML at Line 151 - [Redmine: #105043]   
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
  */
 BEGIN
 	SET NOCOUNT ON

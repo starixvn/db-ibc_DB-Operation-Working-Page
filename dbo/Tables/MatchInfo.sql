@@ -2,15 +2,11 @@
     [OWPMatchId]            INT             NOT NULL,
     [Channel]               NVARCHAR (100)  NULL,
     [WB]                    NVARCHAR (100)  NULL,
-    [OtherProvider]         NVARCHAR (100)  NULL,
-    [Provider]              NVARCHAR (100)  NULL,
-    [Phone]                 NVARCHAR (50)   NULL,
+    [Phone]                 NVARCHAR (200)  NULL,
     [ExtraTimeRemark]       NVARCHAR (100)  NULL,
     [Venue]                 NVARCHAR (100)  NULL,
-    [TVCode]                NVARCHAR (500)  NULL,
     [LocalTV]               NVARCHAR (100)  NULL,
     [LiveTV]                NVARCHAR (100)  NULL,
-    [Agent]                 NVARCHAR (100)  NULL,
     [IsSelectedUpdatedDate] DATETIME        NULL,
     [IsSelected]            BIT             CONSTRAINT [DF_MatchInfo_IsSelected] DEFAULT ((0)) NOT NULL,
     [SelectedBy]            INT             NULL,
@@ -26,6 +22,10 @@
     [NoOfHDPId]             INT             NULL,
     CONSTRAINT [PK_MatchInfo] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC)
 );
+
+
+
+
 
 
 

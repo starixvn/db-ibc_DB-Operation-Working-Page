@@ -13,6 +13,7 @@ AS
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Raymond.Le: Add more info to Odds Compiler - [Redmine: #105043]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20190513@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -81,18 +82,18 @@ BEGIN
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
 				FROM dbo.[Provider] rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(info.[Provider], ',') f
-				WHERE f.val = rs.ProviderId
+					INNER JOIN dbo.MatchProvider AS f WITH (NOLOCK) ON rs.ProviderId = f.ProviderId
+				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
-				), 1, 2, '')
+				), 1, 2, '') AS 'Provider'
 		,info.WB
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
 				FROM dbo.OtherProvider rs WITH (NOLOCK)
-					CROSS APPLY dbo.fnc_SplitStrings(info.[OtherProvider], ',') f
-				WHERE f.val = rs.OtherProviderId
+					INNER JOIN dbo.MatchOtherProvider AS f WITH (NOLOCK) ON rs.OtherProviderId = f.OtherProviderId
+				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
-				), 1, 2, '')
+				), 1, 2, '') AS 'OtherProvider'
 		,info.Website1
 		,info.Website2
 		,info.Website3
@@ -185,17 +186,24 @@ BEGIN
 					ELSE ukrb
 					END AS ukrb
 			FROM (
-				SELECT m.OWPMatchId
+				SELECT DISTINCT m.OWPMatchId
 					,m.OWPLeagueId
 					,ls.Bettype
 					,DATEADD(dd, DATEDIFF(dd, 0, m.EventDate), CAST(m.KickOffTime AS DATETIME)) AS OnDate
 					,(CASE 
-						WHEN NULLIF(mif.TVCode, '') IS NOT NULL THEN 1
+						WHEN EXISTS (
+								SELECT 1
+								FROM dbo.MatchTelevision WITH (NOLOCK)
+								WHERE OWPMatchId = mif.OWPMatchId
+								) THEN 1
 						ELSE 0 END
 						) AS tv
 					,(CASE 
-						WHEN NULLIF(mif.Channel, '') IS NOT NULL
-							OR NULLIF(mif.[OtherProvider], '') IS NOT NULL THEN 1
+						WHEN EXISTS (
+								SELECT 1
+								FROM dbo.MatchOtherProvider WITH (NOLOCK)
+								WHERE OWPMatchId = mif.OWPMatchId
+								) THEN 1
 						ELSE 0 END
 						) AS ukrb
 				FROM #tblMatch AS mt WITH (NOLOCK)
@@ -207,23 +215,15 @@ BEGIN
 						FROM #tblMatchSetting WITH (NOLOCK)
 						)
 					AND ls.Bettype IN (@Handicap, @OverUnder)
-				GROUP BY m.OWPMatchId
-					,m.OWPleagueid
-					,ls.Bettype
-					,m.EventDate
-					,m.KickOffTime
-					,mif.TVCode
-					,mif.Channel
-					,mif.[OtherProvider]
 				) AS tb
 			) AS tb1
 		) AS tb2
 		LEFT JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON ls.LeagueId = tb2.OWPLeagueId
-			AND ls.OptionsId = tb2.MaxBetOption
-			AND ls.Bettype = tb2.Bettype
+		AND ls.OptionsId = tb2.MaxBetOption
+		AND ls.Bettype = tb2.Bettype
 		LEFT JOIN dbo.LeagueSetting AS ls1 WITH (NOLOCK) ON ls1.LeagueId = tb2.OWPLeagueId
-			AND ls1.OptionsId = tb2.SpreadOption
-			AND ls1.Bettype = tb2.Bettype
+		AND ls1.OptionsId = tb2.SpreadOption
+		AND ls1.Bettype = tb2.Bettype
 
 	--get matchs
 	SELECT m.OWPMatchId
@@ -267,12 +267,12 @@ BEGIN
 		,mrd.Choice
 		,mrd.Odds
 	FROM dbo.MatchRecommendOdds AS mr WITH (NOLOCK)
-	INNER JOIN #tblMatch AS tm ON mr.OWPMatchId = tm.OWPMatchId
-	LEFT JOIN dbo.MatchRecommendOddsDetail AS mrd WITH (NOLOCK) ON mr.MatchRecommendOddsId = mrd.MatchRecommendOddsId
+		INNER JOIN #tblMatch AS tm ON mr.OWPMatchId = tm.OWPMatchId
+		LEFT JOIN dbo.MatchRecommendOddsDetail AS mrd WITH (NOLOCK) ON mr.MatchRecommendOddsId = mrd.MatchRecommendOddsId
 	WHERE mr.Bettype IN (@Handicap, @OverUnder, @1X2)
 	ORDER BY mr.MatchRecommendOddsId
 
-
 	DROP TABLE #tblMatch
+
 	DROP TABLE #tblMatchSetting
 END

@@ -60,7 +60,7 @@
     [WB]                 NVARCHAR (100)  CONSTRAINT [DF_AssignmentUploading_WB] DEFAULT (N'') NOT NULL,
     [OtherProvider]      NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_OtherProvider] DEFAULT (N'') NOT NULL,
     [Provider]           NVARCHAR (2000) CONSTRAINT [DF_AssignmentUploading_Provider] DEFAULT (N'') NOT NULL,
-    [Phone]              NVARCHAR (50)   CONSTRAINT [DF_AssignmentUploading_Phone] DEFAULT (N'') NOT NULL,
+    [Phone]              NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_Phone] DEFAULT (N'') NULL,
     [Website1]           NVARCHAR (1000) CONSTRAINT [DF_AssignmentUploading_Website1] DEFAULT (N'') NOT NULL,
     [Website2]           NVARCHAR (1000) CONSTRAINT [DF_AssignmentUploading_Website2] DEFAULT (N'') NOT NULL,
     [Website3]           NVARCHAR (1000) CONSTRAINT [DF_AssignmentUploading_Website3] DEFAULT (N'') NOT NULL,
@@ -69,6 +69,8 @@
     [ParentRowNumber]    INT             NULL,
     CONSTRAINT [PK_AssignmentUploading] PRIMARY KEY CLUSTERED ([SessionId] ASC, [RowNumber] ASC)
 );
+
+
 
 
 

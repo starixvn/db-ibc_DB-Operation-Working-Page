@@ -21,6 +21,7 @@ AS
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190227@Raymond.Le: Extend number days delete old data - [Redmine: #108723]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068] 
+	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -257,7 +258,7 @@ BEGIN
 		,[WatchBet] [nvarchar](100)
 		,[OtherProvider] [nvarchar](2000)
 		,[Provider] [nvarchar](2000)
-		,[Phone] [nvarchar](50)
+		,[Phone] [nvarchar](200)
 		,[Website1] [nvarchar](1000)
 		,[Website2] [nvarchar](1000)
 		,[Website3] [nvarchar](1000)
