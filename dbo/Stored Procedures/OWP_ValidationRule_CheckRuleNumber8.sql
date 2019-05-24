@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber8] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
 	,@Value NVARCHAR(4000) = NULL
@@ -15,6 +16,7 @@ AS
 	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 8 + 14 - [Redmine: #92868]
 	20190405@Lita.Tang: Apply for the second account only (row 165,189) - [Redmine: #111068]
 	20190513@Leo.Vo: do not assign closed account - [Redmine: #113333]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -138,8 +140,8 @@ BEGIN
 		UPDATE upload
 		SET upload.IsValid = 1
 		FROM #tblAssignmentUploading AS upload WITH (ROWLOCK)
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
-			OR upload.Trader = u.Username
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Username
+			OR upload.Trader = u.Nickname
 			INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
 			INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 			AND us.SiteId = @SiteId
@@ -164,17 +166,17 @@ BEGIN
 			,ot.Trader
 			,0
 		FROM dbo.AssignmentUploadingOtherTrader AS ot WITH (NOLOCK)
-		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Nickname
-			OR ot.Trader = u.Username
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Username
+			OR ot.Trader = u.Nickname
 		WHERE ISNULL(ot.Trader, '') <> ''
 			AND ot.SessionId = @SessionId
-			
+
 		-- check trader name
 		UPDATE upload
 		SET upload.IsValid = 1
 		FROM #tblOtherTrader AS upload WITH (ROWLOCK)
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
-			OR upload.Trader = u.Username
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Username
+			OR upload.Trader = u.Nickname
 			INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
 			INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 			AND us.SiteId = @SiteId

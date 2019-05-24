@@ -118,7 +118,6 @@
     <Build Include="dbo\Tables\Assignment.sql" />
     <Build Include="dbo\Functions\OWP_SpreadGet.sql" />
     <Build Include="dbo\Functions\OWP_MaxBetGet.sql" />
-    <Build Include="dbo\Functions\OWP_GetUsernameByUserId.sql" />
     <Build Include="dbo\Functions\OWP_GetUserIdByUsername.sql" />
     <Build Include="dbo\Functions\OWP_GetCurrentMatchStatus.sql" />
     <Build Include="dbo\Functions\fnc_GetValueFilter.sql" />
@@ -324,11 +323,9 @@
     <Build Include="dbo\Tables\NotificationSettingMessageTemplate.sql" />
     <Build Include="dbo\Tables\EmployeeWorkingShiftDefault.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_UpdateDefaultShift.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_RemoveDefaultShift.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_SyncDefaultWorkingShift.sql" />
     <Build Include="dbo\Stored Procedures\OWP_API_SyncNotificationSettingWatcher.sql" />
     <Build Include="dbo\Functions\fnc_CheckToInitDefaultShiftWeekly.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_InitDefaultShiftForWeek.sql" />
     <Build Include="dbo\Tables\InfoSiteSyncLogDetail.sql" />
     <Build Include="dbo\Tables\InfoSiteSyncLog.sql" />
     <Build Include="dbo\Functions\fnc_GetAllAssigneeOfMatch.sql" />
@@ -349,6 +346,7 @@
     <Build Include="dbo\Tables\MatchOtherProvider.sql" />
     <Build Include="dbo\Tables\MatchAgent.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopySingleShift.sql" />
+    <Build Include="dbo\Functions\fnc_GetShiftTime.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

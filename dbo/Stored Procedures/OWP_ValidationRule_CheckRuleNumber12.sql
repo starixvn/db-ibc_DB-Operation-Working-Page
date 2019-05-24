@@ -12,6 +12,7 @@ AS
 	20180727@Raymond.Le: Validate exceed trader working shift - [Redmine: #92868]
 	20190124@Raymond.Le: Change ShiftCode to ShiftId - [Redmine: #108206]
 	20190405@Lita.Tang: Apply for the second account only (row 133,151,172)- [Redmine: #111068]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -122,8 +123,8 @@ BEGIN
 			WHERE SessionId = @SessionId
 			) AS upload
 		UNPIVOT(Trader FOR ColumnName IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2, LA)) unpvt
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Nickname
-			OR unpvt.Trader = u.Username
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Username
+			OR unpvt.Trader = u.Nickname
 		WHERE u.IsSecondAccount = 0 
 		AND ISNULL(unpvt.Trader, '') <> ''
 			AND (RowNumber % 10) = 0
@@ -140,8 +141,8 @@ BEGIN
 			,u.UserId
 			,0
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON au.TraderHDP = u.Nickname
-			OR au.TraderHDP = u.Username
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON au.TraderHDP = u.Username
+			OR au.TraderHDP = u.Nickname
 		WHERE u.IsSecondAccount = 0
 			AND SessionId = @SessionId
 			AND (RowNumber % 10) <> 0
@@ -161,8 +162,8 @@ BEGIN
 			,u.UserId
 			,0
 		FROM dbo.AssignmentUploadingOtherTrader AS ot WITH (NOLOCK)
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Nickname
-			OR ot.Trader = u.Username
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Username
+			OR ot.Trader = u.Nickname
 		WHERE u.IsSecondAccount = 0
 			AND ISNULL(ot.Trader, '') <> ''
 			AND ot.SessionId = @SessionId

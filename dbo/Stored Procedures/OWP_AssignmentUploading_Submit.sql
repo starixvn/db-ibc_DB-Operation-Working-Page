@@ -33,6 +33,7 @@ AS
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -2155,8 +2156,8 @@ BEGIN
 			,u.UserId
 		FROM #tblMatch AS m
 		UNPIVOT(Trader FOR TraderBettype IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2, LA)) AS unpvt
-			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON Trader = u.NickName
-			OR Trader = u.Username
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON Trader = u.Username
+			OR Trader = u.NickName
 		WHERE Trader <> ''
 
 		-- Fill other assignment of upload matches
@@ -2174,8 +2175,8 @@ BEGIN
 			,ot.Note
 		FROM dbo.AssignmentUploadingOtherTrader AS ot WITH (NOLOCK)
 			INNER JOIN #tblMatch AS m ON ot.RowNumber = m.RowNumber
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.NickName
-			OR ot.Trader = u.Username
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Username
+			OR ot.Trader = u.NickName
 		WHERE ot.SessionId = @SessionId
 			AND (
 				ot.Trader <> ''
@@ -2444,12 +2445,12 @@ BEGIN
 
 		-- update Username & oldUsername
 		UPDATE a
-		SET a.Username = ISNULL(u.Nickname, u.Username)
+		SET a.Username = u.Username
 		FROM #tblAssignmentLog AS a
 			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = a.UserId
 
 		UPDATE a
-		SET a.OldUsername = ISNULL(u.Nickname, u.Username)
+		SET a.OldUsername = u.Username
 		FROM #tblAssignmentLog AS a
 			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = a.OldUserId
 

@@ -25,11 +25,19 @@ AS
 	 20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	 20190312@Leo.Vo: Set ShiftCode empty if it is time shift - [Redmine: #109560]
 	 20190326@Leo.Vo: Change to handle error code - [Redmine: #110322]
+	 20190520@Leo.Vo: Write log - [Redmine: #113763]
 */
 BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @TimezoneOffset INT = dbo.fnc_GetWorkingShiftTimezoneOffset(@ActorId)
+	DECLARE @StartRun DATETIME
+		,@EndRun DATETIME
+		,@Duration INT
+		,@LogData NVARCHAR(MAX)
+		,@Xml XML
+
+	SET @StartRun = GETDATE()
 
 	SELECT @StartTime = DATEADD(MINUTE, - @TimezoneOffset, @StartTime)
 		,@EndTime = DATEADD(MINUTE, - @TimezoneOffset, @EndTime)
@@ -53,6 +61,11 @@ BEGIN
 	END
 	ELSE
 	BEGIN
+		DECLARE @IsTimeShift BIT = (CASE 
+				WHEN @StartTime IS NULL THEN 0
+				ELSE 1 END
+				)
+
 		INSERT INTO dbo.EmployeeWorkingShiftColor (
 			ShiftCode
 			,Background
@@ -69,12 +82,33 @@ BEGIN
 			,@Color
 			,@StartTime
 			,@EndTime
-			,CASE 
-				WHEN @StartTime IS NULL THEN 0
-				ELSE 1
-				END
-			);
+			,@IsTimeShift
+			)
 
 		SELECT @ShiftId = @@IDENTITY
+
+		-- write log
+		SET @Xml = (
+				SELECT @ShiftId AS '@sid'
+					,@ShiftCode AS '@sc'
+					,@Background AS '@bg'
+					,@Color AS '@c'
+					,@StartTime AS '@st'
+					,@EndTime AS '@et'
+					,@IsTimeShift AS '@its'
+				FOR XML PATH('z')
+					,ROOT('r')
+				)
+		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+		SET @EndRun = GETDATE()
+		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+		EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+			,@SPName = 'OWP_EmployeeWorkingShift_QuickInsert_WorkingShiftColor'
+			,@LoggedDate = @StartRun
+			,@Duration = @Duration
+			,@ObjectId = @ShiftId
+			,@Data = @LogData
+			,@DataOld = NULL
 	END
 END

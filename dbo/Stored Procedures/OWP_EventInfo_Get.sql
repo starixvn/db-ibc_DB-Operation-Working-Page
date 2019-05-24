@@ -45,6 +45,7 @@ Revisions:
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -175,8 +176,8 @@ BEGIN
 		,MinorBettypeId INT
 		,UserId INT
 		,IsCurrentUser BIT
-		,Username NVARCHAR(50)
-		,Nickname NVARCHAR(30)
+		,Username VARCHAR(30)
+		,Nickname VARCHAR(30)
 		,Skype VARCHAR(50)
 		,Extension VARCHAR(30)
 		,Phone VARCHAR(200)
@@ -453,10 +454,7 @@ BEGIN
 			,a.UserId
 			,0 AS IsCurrentUser
 			,u.Username
-			,(CASE 
-				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-				ELSE u.Username END
-				) AS Nickname
+			,u.Nickname
 			,u.Skype
 			,u.Extension
 			,u.Phone
@@ -487,10 +485,7 @@ BEGIN
 			,a.UserId
 			,0 AS IsCurrentUser
 			,u.Username
-			,(CASE 
-				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-				ELSE u.Username END
-				) AS Nickname
+			,u.Nickname
 			,u.Skype
 			,u.Extension
 			,u.Phone
@@ -517,10 +512,7 @@ BEGIN
 			,a.UserId
 			,0 AS IsCurrentUser
 			,u.Username
-			,(CASE 
-				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-				ELSE u.Username END
-				) AS Nickname
+			,u.Nickname
 			,u.Skype
 			,u.Extension
 			,u.Phone

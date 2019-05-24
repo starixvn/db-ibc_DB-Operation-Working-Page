@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber25] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
 	,@Value NVARCHAR(4000) = NULL
@@ -13,7 +14,7 @@ AS
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 	20190405@Lita.Tang: Apply for the second account only (row 162,218) - [Redmine: #111068]
-
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -153,11 +154,11 @@ BEGIN
 			AND (
 				SELECT COUNT(1)
 				FROM dbo.[User] AS u WITH (NOLOCK)
-				WHERE 
-					u.IsSecondAccount = 0
-					AND (u.Username = upload.Trader
-					OR u.Nickname = upload.Trader)
-					
+				WHERE u.IsSecondAccount = 0
+					AND (
+						u.Username = upload.Trader
+						OR u.Nickname = upload.Trader
+						)
 				) > 1
 
 		-- combine
@@ -201,18 +202,18 @@ BEGIN
 			,@Value
 
 		SELECT TOP 1 @Username = data.Username
-		FROM OPENXML(@idoc, '/Root/Row', 1) 
-		WITH (Username NVARCHAR(30)) AS data
+		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Username NVARCHAR(30)) AS data
 
 		EXEC sp_xml_removedocument @idoc
 
 		IF (
 				SELECT COUNT(1)
 				FROM dbo.[User] AS u WITH (NOLOCK)
-				WHERE 
-					u.IsSecondAccount = 0
-					AND (u.Username = @Username
-					OR u.Nickname = @Username)
+				WHERE u.IsSecondAccount = 0
+					AND (
+						u.Username = @Username
+						OR u.Nickname = @Username
+						)
 				) > 1
 		BEGIN
 			SELECT @RuleResultType AS ResultType

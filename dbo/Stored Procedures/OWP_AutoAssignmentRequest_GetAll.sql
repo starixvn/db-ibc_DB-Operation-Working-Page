@@ -9,6 +9,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181221@Leo.Vo: Initial SP - [Redmine: #106196]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -17,7 +18,8 @@ BEGIN
 		,EventDate
 		,CreatedDate
 		,[Status]
-		,ISNULL(u.Nickname, u.Username) AS Creator
+		,u.Username
+		,u.Nickname
 	FROM dbo.AutoAssignmentRequest AS r WITH (NOLOCK)
 	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON r.CreatorId = u.UserId
 	ORDER BY CreatedDate DESC

@@ -22,6 +22,7 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190325@Kane.Le: add @ErrMsg = @@IDENTITY - [Redmine: #110322]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -109,7 +110,7 @@ BEGIN
 		,@BettypeName = al.BetTypeName
 		,@Username = CASE 
 			WHEN u.UserId IS NULL THEN ''
-			ELSE '#' + ISNULL(u.Nickname, u.Username)
+			ELSE '#' + u.Username
 			END
 		,@EventDateTime = m.EventDateTime
 	FROM (

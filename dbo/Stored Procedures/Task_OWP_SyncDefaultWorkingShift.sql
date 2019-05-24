@@ -11,16 +11,24 @@ Revisions:
 	20190213@Raymond.Le: Initial SP - [Redmine: #108723]
 	20190409@Raymond.Le: Correct rule GMT+8 ShiftCode - [Redmine: #111068]
 	20190513@Leo.Vo: Change rule get default shift - [Redmine: #112737]
+	20190520@Leo.Vo: Write log - [Redmine: #113763]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @CurrentDateGMTplus8 DATETIME
 		,@NextWeekStartDate DATE
+		,@NextWeekEndDate DATE
+	DECLARE @StartRun DATETIME
+		,@EndRun DATETIME
+		,@Duration INT
+		,@ActionId INT
 
+	SET @StartRun = GETDATE()
 	SET @CurrentDate = ISNULL(@CurrentDate, GETDATE())
 	SET @CurrentDateGMTplus8 = DATEADD(HOUR, 12, @CurrentDate)
 	SET @NextWeekStartDate = DATEADD(DAY, 7 + 2 - DATEPART(WEEKDAY, @CurrentDateGMTplus8), CAST(@CurrentDateGMTplus8 AS DATE))
+	SET @NextWeekEndDate = DATEADD(DAY, 6, @NextWeekStartDate)
 
 	CREATE TABLE #tblDefaultWorkingShift (
 		UserId INT
@@ -31,6 +39,20 @@ BEGIN
 		,ShiftEndDate DATE
 		,ShiftEndTime DATETIME
 		,IsTimeShift BIT
+		)
+
+	CREATE TABLE #tblInsertWorkingShift (
+		EmployeeId INT
+		,ShiftId INT
+		,ShiftDate DATE
+		,ShiftStartTime DATETIME
+		,ShiftEndTime DATETIME
+		,RefShiftId INT
+		)
+
+	CREATE TABLE #tblUserLog (
+		UserId INT
+		,LogData NVARCHAR(MAX)
 		)
 
 	-- Insert default working shift from Monday to Sunday for all user (must ignore disable... user)
@@ -86,6 +108,12 @@ BEGIN
 		,ShiftStartTime
 		,ShiftEndTime
 		)
+	OUTPUT inserted.EmployeeId
+		,inserted.ShiftId
+		,inserted.ShiftDate
+		,inserted.ShiftStartTime
+		,inserted.ShiftEndTime
+	INTO #tblInsertWorkingShift(EmployeeId, ShiftId, ShiftDate, ShiftStartTime, ShiftEndTime)
 	SELECT ds.UserId
 		,ds.ShiftId
 		,ds.ShiftDate
@@ -115,5 +143,54 @@ BEGIN
 				AND s.ShiftDate = ds.ShiftDate
 			)
 
+	-- write log
+	INSERT INTO #tblUserLog (UserId)
+	SELECT DISTINCT EmployeeId
+	FROM #tblInsertWorkingShift
+
+	UPDATE ul
+	SET LogData = REPLACE(CONVERT(NVARCHAR(MAX), (
+					SELECT s.EmployeeId AS '@eid'
+						,s.ShiftDate AS '@sd'
+						,s.ShiftId AS '@sid'
+						,s.ShiftStartTime AS '@sst'
+						,s.ShiftEndTime AS '@set'
+					FROM #tblInsertWorkingShift AS s
+					WHERE ul.UserId = s.EmployeeId
+					ORDER BY s.ShiftDate ASC
+					FOR XML PATH('z')
+						,ROOT('r')
+					)), '" />', '"/"')
+	FROM #tblUserLog AS ul
+
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+	SELECT @ActionId = ActionId
+	FROM dbo.LogAction WITH (NOLOCK)
+	WHERE SPName = 'Task_OWP_SyncDefaultWorkingShift'
+
+	INSERT INTO dbo.UserLog (
+		CreatorId
+		,LoggedDate
+		,ObjectId
+		,ActionId
+		,Duration
+		,Data
+		,DataOld
+		)
+	SELECT 0
+		,@StartRun
+		,UserId
+		,@ActionId
+		,@Duration
+		,LogData
+		,NULL
+	FROM #tblUserLog
+
 	DROP TABLE #tblDefaultWorkingShift
+
+	DROP TABLE #tblInsertWorkingShift
+
+	DROP TABLE #tblUserLog
 END

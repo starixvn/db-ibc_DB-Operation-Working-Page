@@ -19,6 +19,7 @@ Revisions:
   20180427@leo.vo: Add FM & AIO
   20181002@Raymond.Le: Fix overflow data type in RefResource
   20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+  20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -192,8 +193,8 @@ BEGIN
 			,sm.IsToday
 			,am.UserId
 			,(CASE 
-				WHEN us.Nickname LIKE '%' + @SearchKeywords + '%' THEN us.Nickname
-				WHEN us.Username LIKE '%' + @SearchKeywords + '%' THEN us.Username END
+				WHEN us.Username LIKE '%' + @SearchKeywords + '%' THEN us.Username
+				WHEN us.Nickname LIKE '%' + @SearchKeywords + '%' THEN us.Nickname END
 				)
 			,am.Bettype
 			,am.AssignmentType

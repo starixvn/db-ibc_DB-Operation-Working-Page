@@ -20,6 +20,8 @@ AS
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
+	20190521@Lita.Tang: Add Username value - [Feature: #113765]
+
 */
 BEGIN
 	SET NOCOUNT ON
@@ -247,10 +249,8 @@ BEGIN
 		,a.Bettype
 		,ml.MinorBettypeId
 		,a.UserId
-		,(CASE 
-			WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-			ELSE u.Username END
-			) AS Username
+		,u.Nickname
+		,u.Username
 		,a.AssignmentType
 		,a.AssignmentNote
 		,ml.ParentMatchId
@@ -265,10 +265,8 @@ BEGIN
 		,mb.InheritedBettypeId AS Bettype
 		,ml.MinorBettypeId
 		,a.UserId
-		,(CASE 
-			WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-			ELSE u.Username END
-			) AS Username
+		,u.Nickname
+		,u.Username
 		,a.AssignmentType
 		,a.AssignmentNote
 		,ml.ParentMatchId

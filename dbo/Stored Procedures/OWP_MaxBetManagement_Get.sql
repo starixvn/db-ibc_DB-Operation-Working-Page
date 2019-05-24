@@ -16,6 +16,8 @@ Revisions:
    20170317@Tim.Trinh: add @OptionIds
    20170418@Tim.Trinh: fix bug get option
    20180601@Leo.VO: change param type - [Redmine: #92868]
+   20190521@Lita.Tang: Add Username value - [Feature: #113765]
+
 */
 BEGIN
 	SET NOCOUNT ON
@@ -217,11 +219,8 @@ BEGIN
 		,ls.Bettype AS BettypeId
 		,(ls.Spread * 100) AS Spread
 		,(ls.Maxbet / 1000) AS MaxBet
-		--,dbo.[OWP_GetUsernameByUserId](ls.ModifiedBy) AS LastUpdatedBy
-		,CASE 
-			WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-			ELSE u.Username
-			END AS LastUpdatedBy
+		,u.Username
+		,u.Nickname
 		,ls.ModifiedDate AS LastUpdatedTime
 	FROM dbo.LeagueSetting AS ls WITH (NOLOCK)
 		INNER JOIN #tblFinalLeagueId AS lid WITH (NOLOCK) ON ls.LeagueId = lid.OWPLeagueId

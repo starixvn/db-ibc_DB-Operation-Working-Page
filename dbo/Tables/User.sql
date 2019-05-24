@@ -36,6 +36,12 @@
 
 
 
+
+
+
+
+
+
 GO
 CREATE NONCLUSTERED INDEX [IX_SectionId]
     ON [dbo].[User]([SectionId] ASC)
@@ -43,13 +49,23 @@ CREATE NONCLUSTERED INDEX [IX_SectionId]
 
 
 GO
-CREATE NONCLUSTERED INDEX [IX_Nickname]
-    ON [dbo].[User]([Nickname] ASC)
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Nickname]
+    ON [dbo].[User]([Nickname] ASC) WHERE ([Nickname] IS NOT NULL)
     ON [OWP_Index];
+
+
 
 
 GO
 CREATE NONCLUSTERED INDEX [IX_DepartmentId]
     ON [dbo].[User]([DepartmentId] ASC)
     ON [OWP_Index];
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_Username]
+    ON [dbo].[User]([Username] ASC)
+    ON [OWP_Index];
+
+
 

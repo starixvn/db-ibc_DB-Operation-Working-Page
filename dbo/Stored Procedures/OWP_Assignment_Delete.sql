@@ -18,6 +18,7 @@ Revisions:
 	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -256,10 +257,10 @@ BEGIN
 		USING (
 			SELECT s.AssignmentId
 				,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<oldAssignee>', CASE 
-									WHEN s.AssignmentNote IS NULL THEN '#' + ISNULL(us.Nickname, us.Username)
+									WHEN s.AssignmentNote IS NULL THEN '#' + us.Username
 									ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE 
 														WHEN us.UserId IS NULL THEN ''
-														ELSE '#' + ISNULL(us.Nickname, us.Username)
+														ELSE '#' + us.Username
 														END)))
 									END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<newAssignee>', '') AS MessageContent
 			FROM #tblRemoveAssignment AS s
