@@ -29,6 +29,7 @@ AS
 	 20190319@Raymond.Le: Customize employee order of weekly WS - [Redmine: #110322]
 	 20190513@Kane.Le: Change rule get default shift - [Redmine: #112737]
 	 20190521@Leo.Vo: Add Username value - [Feature: #113765]
+	 20190524@Leo.Vo: Return OrderId - [Feature: #114073]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryWeekly @FromDate = '2018/03/12', @ToDate = '2018/03/13', @SectionId = N'1,2,3,4';
@@ -183,6 +184,7 @@ BEGIN
 		,ts.SectionName
 		,u.Nickname
 		,u.Username
+		,od.OrderId
 		,tc.CategoryName
 		,n.Note
 	FROM @tblUser AS u
@@ -190,9 +192,8 @@ BEGIN
 		INNER JOIN @tblCategory AS tc ON tc.CategoryId = u.CategoryId
 		INNER JOIN @tblLocation AS tl ON tl.LocationCode = u.LocationCode
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
-		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
-		AND od.SectionId = u.SectionId
-		AND od.UserId = @OrderByUserId
+		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId AND od.SectionId = u.SectionId 
+			AND od.UserId = @OrderByUserId
 
 	-- return Shifts
 	IF @IsJoinDefaultShift = 1
