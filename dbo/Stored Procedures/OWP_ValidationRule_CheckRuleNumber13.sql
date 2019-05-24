@@ -15,7 +15,7 @@ AS
 	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20190405@Lita.Tang: Apply for the second account only (row 141) - [Redmine: #111068]
-
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -128,8 +128,8 @@ BEGIN
 			WHERE SessionId = @SessionId
 			) AS upload
 		UNPIVOT(Trader FOR ColumnName IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2)) unpvt
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Nickname
-			OR unpvt.Trader = u.Username
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Username
+			OR unpvt.Trader = u.Nickname
 		WHERE ISNULL(unpvt.Trader, '') <> ''
 			AND u.UserId IS NOT NULL
 			AND u.IsSecondAccount = 0

@@ -8,6 +8,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -17,7 +18,8 @@ BEGIN
 	SELECT @UserId = dbo.OWP_GetUserIdByUsername(@Name)
 
 	SELECT [UserId]
-		,dbo.OWP_GetUsernameByUserId(@UserId) AS Username
+		,[Username]
+		,[Nickname]
 		,[EmployeeId]
 		,[Skype]
 		,[DepartmentId]

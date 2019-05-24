@@ -18,6 +18,8 @@ AS
 	20181209@Kane.Le: Add Runner, Provider, IsMinorMatch - [Redmine: #104291]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190521@Lita.Tang: Add Username value - [Feature: #113765]
+	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -29,7 +31,8 @@ BEGIN
 		,@SiteId INT
 	DECLARE @tblUser TABLE (
 		UserId INT
-		,[Name] NVARCHAR(30)
+		,Username VARCHAR(30)
+		,Nickname VARCHAR(30)
 		,SectionId SMALLINT
 		,LocationCode VARCHAR(10)
 		,IsSecondAccount BIT
@@ -90,13 +93,15 @@ BEGIN
 	-- Get Users have valid filter
 	INSERT INTO @tblUser (
 		UserId
-		,[Name]
+		,Nickname
+		,Username
 		,SectionId
 		,LocationCode
 		,IsSecondAccount
 		)
 	SELECT u.UserId
-		,ISNULL(u.Nickname, u.Username) AS [Name]
+		,u.Nickname
+		,u.Username
 		,ISNULL(u.SectionId, 0)
 		,ISNULL(u.LocationCode, 'None')
 		,u.IsSecondAccount
@@ -202,7 +207,8 @@ BEGIN
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
 		,ts.SectionName
-		,u.[Name]
+		,u.Username
+		,u.Nickname
 		,ws.ShiftId
 	FROM @tblUser AS u
 		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
@@ -216,7 +222,7 @@ BEGIN
 			ELSE 2
 			END
 		,od.OrderId
-		,[Name];
+		,u.Username;
 
 	-- return WorkingShift
 	SELECT u.UserId AS EmployeeId

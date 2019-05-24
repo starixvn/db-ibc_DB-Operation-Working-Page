@@ -13,6 +13,7 @@ AS
 	20190326@Kane.Le Get Only Active Users - [Redmine: #103202]
 	20190405@Kane.Le Get the second account column (row 42) - [Redmine: #111068]
 	20190503@Kane.Le Get IsSecondAccount - [Redmine: #111840]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -29,22 +30,20 @@ BEGIN
 
 	SELECT u.UserId
 		,u.Username
-		,ISNULL(u.Nickname, u.Username) AS Nickname
+		,u.Nickname
 		,u.Extension
 		,u.Phone
 		,u.Skype
 		,u.IsSecondAccount
 	FROM dbo.[User] AS u WITH (NOLOCK)
-	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-	INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
 	WHERE u.Username IS NOT NULL
-		 
 		AND (
 			ci.closed = 0
 			AND ci.reject = 0
 			AND ci.[Enabled] = 1
 			AND us.IsActive = 1
 			)
-			
 END

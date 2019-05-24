@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @UserId INT = 0
 	,@FromDate DATE
 	,@ToDate DATE
@@ -27,6 +28,7 @@ AS
 	 20190311@Kane.Le: Get RefShiftId output - [Redmine: #109560]
 	 20190319@Raymond.Le: Customize employee order of weekly WS - [Redmine: #110322]
 	 20190513@Kane.Le: Change rule get default shift - [Redmine: #112737]
+	 20190521@Leo.Vo: Add Username value - [Feature: #113765]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryWeekly @FromDate = '2018/03/12', @ToDate = '2018/03/13', @SectionId = N'1,2,3,4';
@@ -36,22 +38,24 @@ BEGIN
 
 	-- caculate is need get defaultShift
 	DECLARE @IsJoinDefaultShift BIT
-	DECLARE @GetCurrentWeek INT,
-			@GetNextWeek INT
-	
-	SELECT @GetCurrentWeek = DATEPART(wk, GETUTCDATE())	
-	SELECT @GetNextWeek= DATEPART(wk,  DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @FromDate)) % 7, @FromDate))
+	DECLARE @GetCurrentWeek INT
+		,@GetNextWeek INT
+
+	SELECT @GetCurrentWeek = DATEPART(wk, GETUTCDATE())
+
+	SELECT @GetNextWeek = DATEPART(wk, DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @FromDate)) % 7, @FromDate))
 
 	IF @GetNextWeek > @GetCurrentWeek
 	BEGIN
-	SET @IsJoinDefaultShift = 1
+		SET @IsJoinDefaultShift = 1
 	END
 	ELSE
 	BEGIN
-	SET @IsJoinDefaultShift = 0
+		SET @IsJoinDefaultShift = 0
 	END
+
 	DECLARE @SiteId INT
-			,@OrderByUserId INT
+		,@OrderByUserId INT
 
 	-- get Order Section of current User querying
 	IF (@IsReadWeeklySection = 1)
@@ -73,12 +77,10 @@ BEGIN
 		SectionId INT
 		,SectionName VARCHAR(50)
 		)
-
 	DECLARE @tblCategory TABLE (
 		CategoryId INT
 		,CategoryName VARCHAR(50)
 		)
-
 	DECLARE @tblLocation TABLE (LocationCode VARCHAR(10))
 
 	-- Get Section filter
@@ -94,7 +96,7 @@ BEGIN
 	INSERT INTO @tblCategory (
 		CategoryId
 		,CategoryName
-	)
+		)
 	SELECT CategoryId
 		,CategoryName
 	FROM dbo.fnc_GetCategoryByIds(@CategoryId)
@@ -107,15 +109,24 @@ BEGIN
 	-- table of users
 	DECLARE @tblUser TABLE (
 		UserId INT
-		,[Name] NVARCHAR(30)
+		,Nickname VARCHAR(30)
+		,Username VARCHAR(30)
 		,SectionId SMALLINT
 		,CategoryId SMALLINT
 		,LocationCode VARCHAR(10)
 		);
 
-	INSERT INTO @tblUser
+	INSERT INTO @tblUser (
+		UserId
+		,Nickname
+		,Username
+		,SectionId
+		,CategoryId
+		,LocationCode
+		)
 	SELECT u.UserId
-		,ISNULL(u.Nickname, u.Username)
+		,u.Nickname
+		,u.Username
 		,ISNULL(u.SectionId, 0)
 		,ISNULL(u.CategoryId, 0)
 		,ISNULL(u.LocationCode, 'None')
@@ -132,7 +143,7 @@ BEGIN
 				AND us.IsActive = 1
 				)
 			)
-		AND u.IsSecondAccount = 0 
+		AND u.IsSecondAccount = 0
 		AND (
 			LEN(ISNULL(@User, '')) = 0
 			OR u.Nickname LIKE '%' + @User + '%'
@@ -170,7 +181,8 @@ BEGIN
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
 		,ts.SectionName
-		,u.[Name]
+		,u.Nickname
+		,u.Username
 		,tc.CategoryName
 		,n.Note
 	FROM @tblUser AS u
@@ -178,82 +190,98 @@ BEGIN
 		INNER JOIN @tblCategory AS tc ON tc.CategoryId = u.CategoryId
 		INNER JOIN @tblLocation AS tl ON tl.LocationCode = u.LocationCode
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
-		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId AND od.SectionId = u.SectionId 
-					AND od.UserId = @OrderByUserId
-	ORDER BY ts.SectionName
-		,CASE WHEN od.OrderId IS NOT NULL THEN 1
-			ELSE 2 END
-		,od.OrderId
-		,[Name];
+		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
+		AND od.SectionId = u.SectionId
+		AND od.UserId = @OrderByUserId
 
 	-- return Shifts
 	IF @IsJoinDefaultShift = 1
-	BEGIN			
-	SET DATEFIRST 1
-	DECLARE @DateOfWeek INT = 1
-	DECLARE	@TallyShiftDate AS TABLE (ShiftDate DATE)
+	BEGIN
+		SET DATEFIRST 1
 
-	CREATE TABLE #tmpEmployeeWorkingShiftDefault (
-		UserId INT
-		,DateOfWeek INT
-		,ShiftId INT
-		,ShiftDate DATE
-		);
-		
-WITH cte AS (
-	SELECT	[rn] = ROW_NUMBER() OVER(ORDER BY (SELECT NULL))- 1
-	FROM		(VALUES (0), (0), (0), (0), (0), (0), (0), (0), (0), (0)) x10(n) 
-)
-INSERT INTO @TallyShiftDate (ShiftDate)
-SELECT	[ShiftDate] = DATEADD(DAY, cte.rn, @FromDate)
-FROM	cte
-WHERE	cte.rn <= DATEDIFF(DAY, @FromDate, @ToDate)
+		DECLARE @DateOfWeek INT = 1
+		DECLARE @TallyShiftDate AS TABLE (ShiftDate DATE)
 
-INSERT INTO #tmpEmployeeWorkingShiftDefault
-SELECT u.UserId, ep.DayOfTheWeek, [ShiftId]=ISNULL(ep.ShiftId, 0), tally.ShiftDate from @TallyShiftDate AS tally 
-CROSS JOIN @tblUser AS u
-LEFT JOIN dbo.EmployeeWorkingShiftDefault AS ep
-		ON  ep.DayOfTheWeek = DATEPART(WEEKDAY, tally.ShiftDate)
-		AND u.UserId = ep.UserId
+		CREATE TABLE #tmpEmployeeWorkingShiftDefault (
+			UserId INT
+			,DateOfWeek INT
+			,ShiftId INT
+			,ShiftDate DATE
+			);
 
-SELECT [EmployeeId] = df.UserId
-		,[ShiftDate] = df.ShiftDate
-		,[ShiftStartTime] = ISNULL(wk.ShiftStartTime, df.ShiftDate + CAST(wsc.StartTime AS DATETIME))
-		,[ShiftEndTime] = ISNULL(wk.ShiftEndTime, df.ShiftDate + CAST(wsc.EndTime AS DATETIME))
-		,[ShiftId] = ISNULL(wk.ShiftId, df.ShiftId)
-		,[RefShiftId] = wk.RefShiftId
-		,[IsDefaultShift] = CASE 
-			WHEN wk.ShiftId IS NULL
-				THEN 1
-			ELSE 0
-			END
-	FROM #tmpEmployeeWorkingShiftDefault AS df WITH (NOLOCK)
-	LEFT JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON df.ShiftId = wsc.ShiftId
-	LEFT JOIN dbo.EmployeeWorkingShift AS wk WITH (NOLOCK) ON df.UserId = wk.EmployeeId
-		AND df.ShiftDate = wk.ShiftDate
+		WITH cte
+		AS (
+			SELECT [rn] = ROW_NUMBER() OVER (
+					ORDER BY (
+							SELECT NULL
+							)
+					) - 1
+			FROM (
+				VALUES (0)
+					,(0)
+					,(0)
+					,(0)
+					,(0)
+					,(0)
+					,(0)
+					,(0)
+					,(0)
+					,(0)
+				) x10(n)
+			)
+		INSERT INTO @TallyShiftDate (ShiftDate)
+		SELECT [ShiftDate] = DATEADD(DAY, cte.rn, @FromDate)
+		FROM cte
+		WHERE cte.rn <= DATEDIFF(DAY, @FromDate, @ToDate)
 
-	DROP TABLE #tmpEmployeeWorkingShiftDefault
-	END 
+		INSERT INTO #tmpEmployeeWorkingShiftDefault
+		SELECT u.UserId
+			,ep.DayOfTheWeek
+			,[ShiftId] = ISNULL(ep.ShiftId, 0)
+			,tally.ShiftDate
+		FROM @TallyShiftDate AS tally
+			CROSS JOIN @tblUser AS u
+			LEFT JOIN dbo.EmployeeWorkingShiftDefault AS ep WITH (NOLOCK) ON ep.DayOfTheWeek = DATEPART(WEEKDAY, tally.ShiftDate)
+			AND u.UserId = ep.UserId
+
+		SELECT [EmployeeId] = df.UserId
+			,[ShiftDate] = df.ShiftDate
+			,[ShiftStartTime] = ISNULL(wk.ShiftStartTime, df.ShiftDate + CAST(wsc.StartTime AS DATETIME))
+			,[ShiftEndTime] = ISNULL(wk.ShiftEndTime, df.ShiftDate + CAST(wsc.EndTime AS DATETIME))
+			,[ShiftId] = ISNULL(wk.ShiftId, df.ShiftId)
+			,[RefShiftId] = wk.RefShiftId
+			,[IsDefaultShift] = CASE 
+				WHEN wk.ShiftId IS NULL THEN 1
+				ELSE 0
+				END
+		FROM #tmpEmployeeWorkingShiftDefault AS df WITH (NOLOCK)
+			LEFT JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON df.ShiftId = wsc.ShiftId
+			LEFT JOIN dbo.EmployeeWorkingShift AS wk WITH (NOLOCK) ON df.UserId = wk.EmployeeId
+			AND df.ShiftDate = wk.ShiftDate
+
+		DROP TABLE #tmpEmployeeWorkingShiftDefault
+	END
 	ELSE
 	BEGIN
-	SELECT u.UserId AS EmployeeId
-		,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
-		,s.ShiftId
-		,s.RefShiftId
-		,0 AS IsDefaultShift
-	FROM @tblUser AS u
-		INNER JOIN dbo.EmployeeWorkingShift AS s WITH (NOLOCK) ON u.UserId = s.EmployeeId
-		AND ShiftDate >= @FromDate
-		AND ShiftDate <= @ToDate
+		SELECT u.UserId AS EmployeeId
+			,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
+			,s.ShiftId
+			,s.RefShiftId
+			,0 AS IsDefaultShift
+		FROM @tblUser AS u
+			INNER JOIN dbo.EmployeeWorkingShift AS s WITH (NOLOCK) ON u.UserId = s.EmployeeId
+			AND ShiftDate >= @FromDate
+			AND ShiftDate <= @ToDate
 	END
 
 	-- return Default Shift	 
 	IF @IsGetDefaultShift = 1
 	BEGIN
-		SELECT s.UserId, s.DayOfTheWeek, s.ShiftId
+		SELECT s.UserId
+			,s.DayOfTheWeek
+			,s.ShiftId
 		FROM dbo.EmployeeWorkingShiftDefault AS s WITH (NOLOCK)
-		INNER JOIN @tblUser AS u
-		ON s.UserId = u.UserId
+			INNER JOIN @tblUser AS u ON s.UserId = u.UserId
 	END
 
 	SET DATEFIRST 7

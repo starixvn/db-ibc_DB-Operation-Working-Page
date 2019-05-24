@@ -1,13 +1,12 @@
 ﻿
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopySingleShift] @ActorId INT	
-	,@FromUserId INT  
-	,@ToUserId INT  
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopySingleShift] @ActorId INT
+	,@FromUserId INT
+	,@ToUserId INT
 	,@FromDate DATE
-	,@ToDate DATE  
-
+	,@ToDate DATE
+	,@ShiftId INT
+	,@RefShiftId INT = NULL
 AS
 /*      
  Created: 20190503@Lita.Tang
@@ -17,6 +16,7 @@ AS
 Revisions:  
 	20190419@Lita.Tang: Initial SP - [Redmine: #112737]  
 	20190514@Lita.Tang: Save data to DB when pasting Default shift [Redmine: #112737]
+	20190520@Kane.Le: Refactor SP [Redmine: #112737]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -27,152 +27,124 @@ BEGIN
 		,@LogData NVARCHAR(MAX)
 		,@LogDataOld NVARCHAR(MAX)
 		,@Xml XML
+		,@OldEmployeeId INT
+		,@OldShiftId INT
+		,@OldRefShiftId INT
+		,@OldShiftDate DATETIME
+		,@OldShiftStartTime DATETIME
+		,@OldShiftEndTime DATETIME
+		,@NewEmployeeId INT
+		,@NewShiftId INT
+		,@NewRefShiftId INT
+		,@NewShiftDate DATETIME
+		,@NewShiftStartTime DATETIME
+		,@NewShiftEndTime DATETIME
 
 	SET @StartRun = GETDATE()
 
-	DECLARE @tblOldWorkingShift TABLE (
-		EmployeeId INT
-		,ShiftDate DATE
-		,ShiftStartTime DATETIME
-		,ShiftEndTime DATETIME
-		,ShiftId INT
-		,RefShiftId INT
-		)
-	DECLARE @tblNewWorkingShift TABLE (
-		EmployeeId INT
-		,ShiftDate DATE
-		,ShiftStartTime DATETIME
-		,ShiftEndTime DATETIME
-		,ShiftId INT
-		,RefShiftId INT
-		)
-		
-	--- insert old shift
-	INSERT INTO @tblOldWorkingShift (
-		EmployeeId
-		,ShiftDate
-		,ShiftStartTime
-		,ShiftEndTime
-		,ShiftId
-		,RefShiftId
-		)
-	SELECT ws.EmployeeId
-		,ws.ShiftDate
-		,ws.ShiftStartTime
-		,ws.ShiftEndTime
-		,ws.ShiftId
-		,ws.RefShiftId
+	-- select old data to write log
+	SELECT TOP 1 @OldEmployeeId = @ToUserId
+		,@OldShiftDate = @ToDate
+		,@OldShiftStartTime = ws.ShiftStartTime
+		,@OldShiftEndTime = ws.ShiftEndTime
+		,@OldShiftId = ws.ShiftId
+		,@OldRefShiftId = ws.RefShiftId
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
 	WHERE ws.EmployeeId = @ToUserId
 		AND ws.ShiftDate = @ToDate
-	
-	---count number of rows 
-	DECLARE @cnt INT
-	SELECT @cnt = COUNT(ShiftDate) 
-	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
-	WHERE ws.EmployeeId = @FromUserId
-		AND ws.ShiftDate = @FromDate
-		
-	--- insert new shift 	
-	IF(@cnt <>0) 
-	Begin 	
-		INSERT INTO	@tblNewWorkingShift (
-		EmployeeId
-		,ShiftDate
-		,ShiftStartTime
-		,ShiftEndTime
-		,ShiftId
-		,RefShiftId
-		)	
-		SELECT @ToUserId
-			,@ToDate
-			,@ToDate + CAST(c.StartTime AS DATETIME)
-			,@ToDate + CAST(c.EndTime AS DATETIME)
+
+	-- select new data to write log
+	SELECT @NewShiftStartTime = st.ShiftStartTime
+		,@NewShiftEndTime = st.ShiftEndTime
+	FROM dbo.fnc_GetShiftTime(@ToDate, @ShiftId) AS st
+
+	SELECT @NewEmployeeId = @ToUserId
+		,@NewShiftDate = @ToDate
+		,@NewShiftId = @ShiftId
+		,@NewRefShiftId = @RefShiftId
+
+	IF @OldEmployeeId = @NewEmployeeId
+		AND @OldShiftId = @NewShiftId
+		AND @OldShiftDate = @NewShiftDate
+		AND @OldRefShiftId = @NewRefShiftId
+	BEGIN
+		-- SELECT TO OUTPUT	
+		SELECT TOP 1 ws.EmployeeId
+			,ws.ShiftDate
 			,ws.ShiftId
 			,ws.RefShiftId
 		FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
-		INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH(NOLOCK) ON c.ShiftId = ws.ShiftId
-		WHERE ws.EmployeeId = @FromUserId
-			AND ws.ShiftDate = @FromDate
-	END 
-	ELSE 
-	BEGIN 
-		INSERT INTO	@tblNewWorkingShift (
-		EmployeeId
-		,ShiftDate
-		,ShiftStartTime
-		,ShiftEndTime
-		,ShiftId
-		,RefShiftId
-		)	
-		SELECT @ToUserId
-			,@ToDate
-			,@ToDate + CAST(c.StartTime AS DATETIME)
-			,@ToDate + CAST(c.EndTime AS DATETIME)
-			,ds.ShiftId
-			,NULL
-		FROM dbo.EmployeeWorkingShiftDefault AS ds WITH (NOLOCK)
-		INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH(NOLOCK) ON c.ShiftId = ds.ShiftId
-		WHERE ds.UserId = @FromUserId
-		AND  ds.DayOfTheWeek = (CASE WHEN DATEPART(DW,@FromDate) >1 
-										THEN DATEPART(DW,@FromDate) -1 
-										ELSE 7 
-								END)
-	END		
- 
- 	--update following Rule 1:00 -> 6:00 ( GMT+8)
-	UPDATE @tblNewWorkingShift
-	SET ShiftStartTime = DATEADD(DAY, 1, ShiftStartTime)	
-		, ShiftEndTime = DATEADD(DAY, 1, ShiftEndTime)
-	WHERE DATEPART(HOUR, ShiftStartTime) BETWEEN 1 AND 6
-	
-	UPDATE @tblNewWorkingShift
-	SET ShiftEndTime = DATEADD(DAY, 1, ShiftEndTime)
-	WHERE DATEPART(HOUR, ShiftStartTime) >DATEPART(HOUR, ShiftEndTime)
- 
-	--- delete current data of ToUser
-	DELETE dbo.EmployeeWorkingShift WITH (ROWLOCK, UPDLOCK)
-	WHERE EmployeeId = @ToUserId
-		AND ShiftDate = @ToDate
-	
-	--- insert data from FromUser to ToUser
-	INSERT INTO dbo.EmployeeWorkingShift (
-		EmployeeId
-		,ShiftDate
-		,ShiftStartTime
-		,ShiftEndTime
-		,ShiftId
-		,RefShiftId
-		)
-	SELECT n.EmployeeId, n.ShiftDate, n.ShiftStartTime, n.ShiftEndTime, n.ShiftId, n.RefShiftId
-	FROM @tblNewWorkingShift AS n
-	
+		WHERE ws.ShiftDate = @ToDate
+			AND ws.EmployeeId = @ToUserId
+
+		RETURN
+	END
+
+	UPDATE dbo.EmployeeWorkingShift
+	WITH (
+			ROWLOCK
+			,UPDLOCK
+			)
+
+	SET EmployeeId = @NewEmployeeId
+		,ShiftDate = @NewShiftDate
+		,ShiftStartTime = @NewShiftStartTime
+		,ShiftEndTime = @NewShiftEndTime
+		,ShiftId = @NewShiftId
+		,RefShiftId = @NewRefShiftId
+	WHERE EmployeeId = @OldEmployeeId
+		AND ShiftId = @OldShiftId
+		AND ShiftDate = @OldShiftDate
+
+	IF @@ROWCOUNT = 0
+	BEGIN
+		--- insert data from FromUser to ToUser
+		INSERT INTO dbo.EmployeeWorkingShift (
+			EmployeeId
+			,ShiftDate
+			,ShiftStartTime
+			,ShiftEndTime
+			,ShiftId
+			,RefShiftId
+			)
+		VALUES (
+			@NewEmployeeId
+			,@NewShiftDate
+			,@NewShiftStartTime
+			,@NewShiftEndTime
+			,@NewShiftId
+			,@NewRefShiftId
+			)
+	END
+
 	-- SELECT TO OUTPUT	
-	SELECT TOP 1 ws.EmployeeId, ws.ShiftDate,  ws.ShiftId, ws.RefShiftId
+	SELECT TOP 1 ws.EmployeeId
+		,ws.ShiftDate
+		,ws.ShiftId
+		,ws.RefShiftId
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
-	WHERE ws.ShiftDate=@ToDate AND ws.EmployeeId=@ToUserId
+	WHERE ws.ShiftDate = @ToDate
+		AND ws.EmployeeId = @ToUserId
 
 	-- write log
 	SET @Xml = (
-			SELECT EmployeeId AS '@eid'
-				,ShiftDate AS '@sd'
-				,ShiftStartTime AS '@st'
-				,ShiftEndTime AS '@et'
-				,ShiftId AS '@sid'
-				,RefShiftId AS '@rsid'
-			FROM @tblOldWorkingShift
+			SELECT @OldEmployeeId AS '@eid'
+				,@OldShiftDate AS '@sd'
+				,@OldShiftStartTime AS '@st'
+				,@OldShiftEndTime AS '@et'
+				,@OldShiftId AS '@sid'
+				,@OldRefShiftId AS '@rsid'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 	SET @Xml = (
-			SELECT EmployeeId AS '@eid'
-				,ShiftDate AS '@sd'
-				,ShiftStartTime AS '@st'
-				,ShiftEndTime AS '@et'
-				,ShiftId AS '@sid'
-				,RefShiftId AS '@rsid'
-			FROM @tblNewWorkingShift
+			SELECT @NewEmployeeId AS '@eid'
+				,@NewShiftDate AS '@sd'
+				,@NewShiftStartTime AS '@st'
+				,@NewShiftEndTime AS '@et'
+				,@NewShiftId AS '@sid'
+				,@NewRefShiftId AS '@rsid'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)

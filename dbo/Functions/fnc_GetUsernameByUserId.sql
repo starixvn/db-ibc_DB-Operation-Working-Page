@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[fnc_GetUsernameByUserId] (@UserId INT)
 RETURNS VARCHAR(30)
 AS
@@ -11,11 +12,12 @@ Param's Explanation:
 
 Revisions:
 	20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
+	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 */
 BEGIN
 	DECLARE @Username VARCHAR(30)
 
-	SELECT @Username = ISNULL(Nickname, Username)
+	SELECT @Username = Username
 	FROM dbo.[User] WITH (NOLOCK)
 	WHERE UserId = @UserId
 

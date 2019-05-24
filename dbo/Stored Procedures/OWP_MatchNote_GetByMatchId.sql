@@ -9,12 +9,14 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	SELECT   mn.MatchNoteId
-			,(CASE WHEN u.Nickname IS NOT NULL THEN u.Nickname ELSE u.Username END) AS Username
+			,u.Username
+			,u.Nickname
 			,mn.Note
 	FROM dbo.MatchNote mn WITH (NOLOCK)
 	INNER JOIN dbo.[User] AS u WITH (NOLOCK)

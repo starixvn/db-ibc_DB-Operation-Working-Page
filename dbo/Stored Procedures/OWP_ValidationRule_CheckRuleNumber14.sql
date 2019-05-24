@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber14] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
 	,@Value NVARCHAR(2000) = NULL
@@ -12,6 +13,7 @@ AS
     20170427@Tim.Trinh: change Trader -> Suspender, trim value
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20190405@Lita.Tang: Apply for the second account only (row 111, 150) - [Redmine: #111068]
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -93,14 +95,13 @@ BEGIN
 			) (
 			SELECT ot.RowNumber
 			,ot.Trader
-			,(
-				CASE ISNULL(u.UserId, 0)
-					WHEN 0
-						THEN 0
-					ELSE 1
-					END
-				) AS IsValid FROM AssignmentUploadingOtherTrader AS ot LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Nickname
-			OR ot.Trader = u.Username WHERE ISNULL(ot.Trader, '') <> '' AND ot.SessionId = @SessionId
+			,(CASE ISNULL(u.UserId, 0)
+				WHEN 0 THEN 0
+				ELSE 1 END
+				) AS IsValid FROM AssignmentUploadingOtherTrader AS ot
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ot.Trader = u.Username
+			OR ot.Trader = u.Nickname WHERE ISNULL(ot.Trader, '') <> ''
+			AND ot.SessionId = @SessionId
 			AND ot.Bettype = - 1002
 			AND u.IsSecondAccount = 0
 			)
@@ -129,7 +130,7 @@ BEGIN
 						,TYPE
 					).value('(./text())[1]', 'VARCHAR(200)'), 1, 2, '') AS ColumnName
 		FROM #tblOtherLA ol1
-		INNER JOIN #tblGroupOtherLA gol ON ol1.RowNumber = gol.RowNumber
+			INNER JOIN #tblGroupOtherLA gol ON ol1.RowNumber = gol.RowNumber
 		WHERE ol1.IsValid = 0
 		GROUP BY ol1.RowNumber
 			,gol.ColumnName
@@ -138,10 +139,10 @@ BEGIN
 		UPDATE upload
 		SET upload.IsValid = 1
 		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
-		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Nickname
-			OR upload.Trader = u.Username
+			INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON upload.Trader = u.Username
+			OR upload.Trader = u.Nickname
 		WHERE upload.IsValid = 0
-		AND u.IsSecondAccount = 0
+			AND u.IsSecondAccount = 0
 
 		-- combine
 		CREATE TABLE #tblUnionInvalidLA (
@@ -159,7 +160,6 @@ BEGIN
 		WHERE IsValid = 0
 		
 		UNION
-		
 		SELECT RowNumber
 			,ColumnName
 		FROM #tblInvalidOtherLA WITH (NOLOCK)
@@ -184,22 +184,16 @@ BEGIN
 		SELECT @SessionId
 			,upload.RowNumber
 			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN trader.RowNumber IS NOT NULL
-						THEN @RuleResultType
-					ELSE @Passed
-					END
+			,(CASE 
+				WHEN trader.RowNumber IS NOT NULL THEN @RuleResultType
+				ELSE @Passed END
 				) AS ResultType
-			,(
-				CASE 
-					WHEN trader.RowNumber IS NOT NULL
-						THEN REPLACE(@Message, '<content>', trader.ColumnName)
-					ELSE ''
-					END
+			,(CASE 
+				WHEN trader.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', trader.ColumnName)
+				ELSE '' END
 				) AS [Message]
 		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-		LEFT JOIN #tblCombineInvalidTrader AS trader WITH (NOLOCK) ON upload.RowNumber = trader.RowNumber
+			LEFT JOIN #tblCombineInvalidTrader AS trader WITH (NOLOCK) ON upload.RowNumber = trader.RowNumber
 		WHERE SessionId = @SessionId
 	END
 	ELSE -- edit

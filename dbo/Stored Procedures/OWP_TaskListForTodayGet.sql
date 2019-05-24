@@ -19,6 +19,8 @@ AS
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider, new structure of MatchOffer - [Redmine: #107257]
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190521@Lita.Tang: Add Username value - [Feature: #113765]
+
 */
 BEGIN
 	DECLARE @FromTime DATETIME
@@ -489,10 +491,8 @@ BEGIN
 				WHEN a.UserId = @UserId THEN 1
 				ELSE 0 END
 				) AS IsCurrentUser
-			,(CASE 
-				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-				ELSE u.Username END
-				) AS Username
+			,u.Username
+			,u.Nickname
 			,u.Skype
 			,u.Extension
 			,u.Phone
@@ -530,10 +530,8 @@ BEGIN
 				WHEN a.UserId = @UserId THEN 1
 				ELSE 0 END
 				) AS IsCurrentUser
-			,(CASE 
-				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-				ELSE u.Username END
-				) AS Username
+			,u.Username
+			,u.Nickname
 			,u.Skype
 			,u.Extension
 			,u.Phone
@@ -567,10 +565,8 @@ BEGIN
 				WHEN a.UserId = @UserId THEN 1
 				ELSE 0 END
 				) AS IsCurrentUser
-			,(CASE 
-				WHEN ISNULL(u.Nickname, '') <> '' THEN u.Nickname
-				ELSE u.Username END
-				) AS Username
+			,u.Username
+			,u.Nickname
 			,u.Skype
 			,u.Extension
 			,u.Phone

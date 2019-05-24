@@ -13,7 +13,7 @@ AS
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180723@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868] 
 	20190405@Lita.Tang: Apply for the second account only (row 163) - [Redmine: #111068]
-
+	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -151,8 +151,8 @@ BEGIN
 			WHERE SessionId = @SessionId
 			) AS upload
 		UNPIVOT(Trader FOR ColumnName IN (LA)) unpvt
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Nickname
-			OR unpvt.Trader = u.Username
+			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Username
+			OR unpvt.Trader = u.Nickname
 		WHERE ISNULL(unpvt.Trader, '') <> ''
 			AND u.UserId IS NOT NULL
 			AND u.IsSecondAccount = 0

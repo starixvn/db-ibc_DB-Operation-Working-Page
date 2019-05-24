@@ -1,6 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWeekly] @UserId INT
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWeekly] @ActorId INT
+	,@UserId INT
 	,@Date DATE
 AS
 /*
@@ -14,6 +15,7 @@ Revisions:
 	20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	20190215@Leo.Vo: Change output result - [Redmine: #108723]
 	20190312@Leo.Vo: Add overtime - [Redmine: #109560]
+	20190520@Leo.Vo: Write log - [Redmine: #113763]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -31,6 +33,30 @@ BEGIN
 		,ShiftEndTime DATETIME
 		,RefShiftId INT
 		)
+	DECLARE @StartRun DATETIME
+		,@EndRun DATETIME
+		,@Duration INT
+		,@LogData NVARCHAR(MAX)
+		,@LogDataOld NVARCHAR(MAX)
+		,@Xml XML
+
+	SET @StartRun = GETDATE()
+	SET @Xml = (
+			SELECT EmployeeId AS '@eid'
+				,ShiftDate AS '@sd'
+				,ShiftId AS '@sid'
+				,ShiftStartTime AS '@sst'
+				,ShiftEndTime AS '@set'
+				,RefShiftId AS '@rsid'
+			FROM dbo.EmployeeWorkingShift WITH (ROWLOCK)
+			WHERE EmployeeId = @UserId
+				AND ShiftDate >= @CurrentFromDate
+				AND ShiftDate <= @CurrentToDate
+			ORDER BY ShiftDate ASC
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
 	-- get working shift need to be copied
 	INSERT INTO @CopyWorkingShift
@@ -94,4 +120,28 @@ BEGIN
 	WHERE EmployeeId = @UserId
 		AND ShiftDate BETWEEN @CurrentFromDate
 			AND @CurrentToDate
+
+	-- write log
+	SET @Xml = (
+			SELECT EmployeeId AS '@eid'
+				,ShiftDate AS '@sd'
+				,ShiftId AS '@sid'
+				,ShiftStartTime AS '@sst'
+				,ShiftEndTime AS '@set'
+				,RefShiftId AS '@rsid'
+			FROM @CopyWorkingShift
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+	EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+		,@SPName = 'OWP_EmployeeWorkingShift_CopyWeekly'
+		,@LoggedDate = @StartRun
+		,@Duration = @Duration
+		,@ObjectId = @UserId
+		,@Data = @LogData
+		,@DataOld = @LogDataOld
 END

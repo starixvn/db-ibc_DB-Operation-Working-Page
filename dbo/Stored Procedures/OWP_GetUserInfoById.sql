@@ -9,6 +9,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190318@Leo.Vo: Initial SP - [Redmine: #110322]
+	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -16,6 +17,7 @@ BEGIN
 	SELECT UserId
 		,FullName
 		,Nickname
+		,Username
 	FROM dbo.[User] WITH (NOLOCK)
 	WHERE UserId = @UserId
 END
