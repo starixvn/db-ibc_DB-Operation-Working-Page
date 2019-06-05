@@ -76,7 +76,6 @@ BEGIN
 			,ShiftId = @ShiftId
 			,RefShiftId = @RefShiftId
 		WHERE EmployeeId = @UserId
-			AND ShiftId = @ShiftId
 			AND ShiftDate = @ShiftDate
 	END
 
