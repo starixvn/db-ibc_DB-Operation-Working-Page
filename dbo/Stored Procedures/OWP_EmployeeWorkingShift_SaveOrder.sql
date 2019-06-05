@@ -12,6 +12,7 @@ AS
  Revisions:
 	20190321@Leo.Vo: Initial SP - [Redmine: #110322]
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
+	20190605@Kane.Le: Remove UserId on Delete - [Redmine: #113832]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -42,8 +43,7 @@ BEGIN
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
 	DELETE dbo.EmployeeWorkingShiftOrder WITH (ROWLOCK)
-	WHERE UserId = @UserId
-		AND SectionId = @SectionId
+	WHERE SectionId = @SectionId
 
 	INSERT INTO dbo.EmployeeWorkingShiftOrder (
 		UserId
