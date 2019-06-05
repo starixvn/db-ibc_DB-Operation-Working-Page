@@ -224,7 +224,6 @@
     <Build Include="dbo\Stored Procedures\OWP_EventInfo_GetByFilterId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EventInfo_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftColorUpd.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftColorSel.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftColorIns.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_Upload.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_GetAllShift.sql" />
@@ -281,7 +280,6 @@
     <Build Include="dbo\Functions\fnc_GetUsernameByUserId.sql" />
     <Build Include="dbo\Functions\fnc_GetWatcherToSendMessage.sql" />
     <Build Include="dbo\Functions\fnc_GetAssigneeToSendMessage.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ValidateBeforeDelete_WorkingShiftColor.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickInsert_WorkingShiftColor.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QuickDelete_WorkingShiftColor.sql" />
     <Build Include="dbo\User Defined Types\TVP_INT.sql" />
@@ -304,7 +302,6 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetUsersByDate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetMatchesByDate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_API_SyncEventDeletedInfoSiteMatch.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ExportForBusPickup.sql" />
     <Build Include="dbo\Tables\NotificationQueue.sql" />
     <Build Include="dbo\Stored Procedures\OWP_GetNotificationQueue.sql" />
     <Build Include="dbo\Tables\OtherProvider.sql" />
@@ -347,7 +344,13 @@
     <Build Include="dbo\Tables\MatchAgent.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopySingleShift.sql" />
     <Build Include="dbo\Functions\fnc_GetShiftTime.sql" />
+    <Build Include="dbo\Tables\EmployeeWorkingShiftPublish.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EventAssignment_DataReport.sql" />
+    <Build Include="dbo\Stored Procedures\Task_OWP_EmployeeWorkingShiftPublish_AutoPublish.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftPublish_ManualPublish.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftPublish_GetSectionByWeek.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftDefault_QueryByUser.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryByUser.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

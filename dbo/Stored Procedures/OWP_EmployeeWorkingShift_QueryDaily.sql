@@ -6,6 +6,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date DATE
 	,@ShiftId VARCHAR(MAX) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
+	,@SiteId INT
 AS
 /*      
  Created: 20180508@Leo.Vo     
@@ -19,6 +20,7 @@ AS
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
+	20190604@Kane.Le: Add SiteId - [Feature: #113832]
 	
 */
 BEGIN
@@ -28,7 +30,7 @@ BEGIN
 		,@EventDateTo DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @Date), '11:59:59')
 		,@QueryDateFrom DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00')
 		,@QueryDateTo DATETIME = DATEADD(DAY, (DATEDIFF(DAY, 0, @Date) + 1), '11:59:59')
-		,@SiteId INT
+	 
 	DECLARE @tblUser TABLE (
 		UserId INT
 		,Username VARCHAR(30)
@@ -52,13 +54,7 @@ BEGIN
 		,BetType INT
 		)
 
-	--
-	SELECT @SiteId = SiteId
-	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
-	WHERE SiteName = 'Operation Working Page'
-		AND IsActive = 1
-		AND Environment = 'LIVE'
-
+	 
 	-- Get Section filter
 	INSERT INTO @tblSection (
 		SectionId

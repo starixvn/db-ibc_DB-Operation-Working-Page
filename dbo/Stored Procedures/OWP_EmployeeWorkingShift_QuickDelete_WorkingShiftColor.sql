@@ -2,6 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QuickDelete_WorkingShiftColor] @ActorId INT
 	,@ShiftId INT
+	,@ErrCode INT = 0 OUTPUT
+	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
 /*    
  Created: 20181009@Kane.Le
@@ -13,12 +15,30 @@ AS
 	 20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	 20190520@Leo.Vo: Write log - [Redmine: #113763]
 	 20190521@Kane.Le: Delete in defaul shift - [Redmine: #113763]
+	 20190524@Kane.Le: Refactor SP - [Redmine: #114047]
 */
 BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @ShiftCode NVARCHAR(50)
-		,@Background VARCHAR(50)
+
+	IF EXISTS (
+			SELECT 1
+			FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
+			WHERE ShiftId = @ShiftId
+			)
+	BEGIN
+		SELECT @ShiftCode = ShiftCode
+		FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK)
+		WHERE ShiftId = @ShiftId
+
+		SET @ErrCode = 1
+		SET @ErrMsg = 'You cannot delete the assigned shift'
+
+		RETURN
+	END
+
+	DECLARE @Background VARCHAR(50)
 		,@Color VARCHAR(50)
 		,@StartTime TIME(7)
 		,@EndTime TIME(7)
