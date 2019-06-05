@@ -4,7 +4,7 @@
 	Task: [Redmine: #112737]
 	DB: bodb_OWP
 */
-USE bodb_OWP_DEV
+USE bodb_OWP
 
 CREATE TABLE [dbo].[EmployeeWorkingShiftPublish] (
 	[SectionId] INT NOT NULL

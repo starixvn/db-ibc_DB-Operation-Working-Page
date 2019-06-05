@@ -142,7 +142,7 @@ BEGIN
 		,n.Note
 	FROM @tblUser AS tmp
 		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON tmp.UserId = u.UserId
-		INNER JOIN @tblSection AS s ON s.SectionId = u.SectionId
+		INNER JOIN @tblSection AS s ON s.SectionId = tmp.SectionId
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
 		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
 		AND od.SectionId = u.SectionId
