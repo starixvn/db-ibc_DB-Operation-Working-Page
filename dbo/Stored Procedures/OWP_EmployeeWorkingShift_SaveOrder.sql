@@ -1,8 +1,7 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_SaveOrder] @ActorId INT
-	,@UserId INT
 	,@SectionId INT
-	,@EmployeeIds NVARCHAR(MAX)
+	,@UserIds NVARCHAR(MAX)
 AS
 /*    
  Created: 20190321@Leo
@@ -26,13 +25,12 @@ BEGIN
 
 	SET @StartRun = GETDATE()
 	SET @Xml = (
-			SELECT @UserId AS '@uid'
+			SELECT 0 AS '@uid'
 				,(
 					STUFF((
 							SELECT ',' + CAST(EmployeeId AS NVARCHAR(30))
 							FROM dbo.EmployeeWorkingShiftOrder WITH (NOLOCK)
-							WHERE UserId = @UserId
-								AND SectionId = @SectionId
+							WHERE SectionId = @SectionId
 							ORDER BY OrderId
 							FOR XML PATH('')
 							), 1, 1, '')
@@ -51,7 +49,7 @@ BEGIN
 		,EmployeeId
 		,OrderId
 		)
-	SELECT @UserId
+	SELECT 0
 		,@SectionId
 		,val
 		,ROW_NUMBER() OVER (
@@ -59,13 +57,13 @@ BEGIN
 					SELECT NULL
 					)
 			) AS OrderId
-	FROM dbo.fnc_SplitStrings(@EmployeeIds, ',')
+	FROM dbo.fnc_SplitStrings(@UserIds, ',')
 	OPTION (MAXRECURSION 0)
 
 	-- write log
 	SET @Xml = (
-			SELECT @UserId AS '@uid'
-				,@EmployeeIds AS '@eids'
+			SELECT 0 AS '@uid'
+				,@UserIds AS '@eids'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
