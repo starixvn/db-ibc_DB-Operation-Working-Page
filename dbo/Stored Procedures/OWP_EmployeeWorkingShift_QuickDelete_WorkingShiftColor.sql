@@ -21,23 +21,6 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @ShiftCode NVARCHAR(50)
-
-	IF EXISTS (
-			SELECT 1
-			FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
-			WHERE ShiftId = @ShiftId
-			)
-	BEGIN
-		SELECT @ShiftCode = ShiftCode
-		FROM dbo.EmployeeWorkingShiftColor WITH (NOLOCK)
-		WHERE ShiftId = @ShiftId
-
-		SET @ErrCode = 1
-		SET @ErrMsg = 'You cannot delete the assigned shift'
-
-		RETURN
-	END
-
 	DECLARE @Background VARCHAR(50)
 		,@Color VARCHAR(50)
 		,@StartTime TIME(7)
