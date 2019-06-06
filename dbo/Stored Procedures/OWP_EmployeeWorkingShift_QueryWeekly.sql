@@ -132,6 +132,7 @@ BEGIN
 		,u.Nickname
 		,u.Username
 		,u.[Address]
+		,u.Pickup
 		,u.Phone
 		,u.Extension
 		,u.Skype
