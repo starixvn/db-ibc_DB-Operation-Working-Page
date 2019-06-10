@@ -351,6 +351,7 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftPublish_GetSectionByWeek.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftDefault_QueryByUser.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryByUser.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ValidateBeforeDelete_WorkingShiftColor.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

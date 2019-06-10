@@ -8,6 +8,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @SiteId INT
 	,@CategoryId VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
+	,@OrderUserId INT = NULL
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -145,6 +146,7 @@ BEGIN
 		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON tmp.UserId = u.UserId
 		INNER JOIN @tblSection AS s ON s.SectionId = tmp.SectionId
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
-		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
+		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.UserId = @OrderUserId
+		AND od.EmployeeId = u.UserId
 		AND od.SectionId = u.SectionId
 END;

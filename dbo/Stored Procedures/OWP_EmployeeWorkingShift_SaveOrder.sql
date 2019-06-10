@@ -1,5 +1,6 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_SaveOrder] @ActorId INT
+	,@OrderUserId INT
 	,@SectionId INT
 	,@UserIds NVARCHAR(MAX)
 AS
@@ -41,7 +42,7 @@ BEGIN
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
 	DELETE dbo.EmployeeWorkingShiftOrder WITH (ROWLOCK)
-	WHERE SectionId = @SectionId
+	WHERE UserId = @OrderUserId AND SectionId = @SectionId
 
 	INSERT INTO dbo.EmployeeWorkingShiftOrder (
 		UserId
@@ -49,7 +50,7 @@ BEGIN
 		,EmployeeId
 		,OrderId
 		)
-	SELECT 0
+	SELECT @OrderUserId
 		,@SectionId
 		,val
 		,ROW_NUMBER() OVER (
