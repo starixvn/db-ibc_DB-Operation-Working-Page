@@ -347,6 +347,7 @@
     <Build Include="dbo\Tables\MatchAgent.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_CopySingleShift.sql" />
     <Build Include="dbo\Functions\fnc_GetShiftTime.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EventAssignment_DataReport.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
