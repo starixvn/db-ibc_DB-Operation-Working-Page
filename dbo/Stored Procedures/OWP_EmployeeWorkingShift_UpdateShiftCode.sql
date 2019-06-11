@@ -4,6 +4,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateShiftCode] @ActorId INT
 	,@EmployeeId INT
 	,@ShiftId INT
 	,@ShiftDate DATE
+	,@RefShiftId INT = NULL
 	,@IsOvertime BIT = 0
 AS
 /*    
@@ -37,7 +38,6 @@ BEGIN
 		,@OldShiftStartTime DATETIME
 		,@OldShiftEndTime DATETIME
 		,@OldIsOvertime BIT
-		,@RefShiftId INT
 
 	SET @StartRun = GETDATE()
 
@@ -66,20 +66,11 @@ BEGIN
 
 	IF @OldShiftId IS NOT NULL
 	BEGIN
-		IF @IsOvertime = 1
-			SET @RefShiftId = @OldShiftId
-
 		UPDATE dbo.EmployeeWorkingShift WITH (ROWLOCK)
-		SET RefShiftId = (CASE 
-				WHEN @IsOvertime = 1 THEN CASE 
-						WHEN RefShiftId IS NULL THEN ShiftId
-						ELSE RefShiftId
-						END
-				ELSE NULL END
-				)
-			,ShiftId = @ShiftId
+		SET ShiftId = @ShiftId
 			,ShiftStartTime = @ShiftStartTime
 			,ShiftEndTime = @ShiftEndTime
+			,RefShiftId = @RefShiftId
 		WHERE EmployeeId = @EmployeeId
 			AND ShiftDate = @ShiftDate
 	END
