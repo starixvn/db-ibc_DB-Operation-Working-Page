@@ -9,6 +9,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181221@Raymond.Le: Initial SP - [Redmine: #106196]
+	20190531@Leo.Vo: Refactor SP [Redmine: #114442]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -58,7 +59,11 @@ BEGIN
 	SET m.KOTime = om.EventDateTime
 		,m.LeagueId = om.OWPLeagueId
 		,m.HasTV = CASE 
-			WHEN NULLIF(mi.TVCode, '') IS NOT NULL THEN 1
+			WHEN EXISTS (
+					SELECT 1
+					FROM dbo.MatchTelevision WITH (NOLOCK)
+					WHERE OWPMatchId = mi.OWPMatchId
+					) THEN 1
 			ELSE 0
 			END
 		,m.Maxbet = ms.Maxbet
