@@ -9,9 +9,10 @@ DB: bodb_OWP
 
 Revisions:
 	20190607@Leo: Initial SP - [Redmine: #114749]
+	20190610@Leo: Update time & column name - [Redmine: #114749]
 */
 BEGIN
-	DECLARE @FromDate DATETIME = '2019-06-01'
+	DECLARE @FromDate DATETIME = '2018-06-01'
 		,@ToDate DATETIME = '2019-06-08 11:59:59'
 	DECLARE @BettypeHDP INT = 1
 		,@Specific15Mins INT = - 1
@@ -323,10 +324,10 @@ BEGIN
 				ELSE ml.EventDate END
 				), 101) AS 'Date'
 		,ml.MatchNo AS 'No'
-		,ml.MatchStatus AS 'Match Status'
-		,ml.InfoSiteMatchId AS 'InfoSite ID'
+		,ml.MatchStatus AS MatchStatus
+		,ml.InfoSiteMatchId AS InfoSiteID
 		,convert(VARCHAR, ml.EventDate, 101) + ' ' + convert(VARCHAR, ml.KickOffTime, 100) AS 'Time'
-		,convert(VARCHAR, ml.OtherTime, 100) AS 'Other Time'
+		,convert(VARCHAR, ml.OtherTime, 100) AS OtherTime
 		,STUFF((
 				SELECT ', ' + r.Value
 				FROM dbo.MatchOfferDetail AS mo
@@ -344,28 +345,28 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 2, '') AS Note
 		,ml.[Round]
-		,ml.OutSide AS 'Division'
+		,ml.OutSide AS Division
 		,ml.Remark
-		,ref.[Value] AS 'No.HDP'
+		,ref.[Value] AS NoOfHDP
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 1
-			) AS 'Max Bet (HDP)'
+			) AS MaxBetHDP
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 1
-			) AS 'Spread (HDP)'
+			) AS SpreadHDP
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 1
 				AND a.AssignmentType = 1
-			) AS 'Trader (HDP)'
+			) AS TraderHDP
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -374,26 +375,26 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (HDP)'
+				), 1, 2, '') AS OtherTradersHDP
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 7
-			) AS 'Max Bet (1H HDP)'
+			) AS MaxBet1HHDP
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 7
-			) AS 'Spread (1H HDP)'
+			) AS Spread1HHDP
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 7
 				AND a.AssignmentType = 1
-			) AS 'Trader (1H HDP)'
+			) AS Trader1HHDP
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -402,26 +403,26 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (1H HDP)'
+				), 1, 2, '') AS OtherTraders1HHDP
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 3
-			) AS 'Max Bet (OU)'
+			) AS MaxBetOU
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 3
-			) AS 'Spread (OU)'
+			) AS SpreadOU
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 3
 				AND a.AssignmentType = 1
-			) AS 'Trader (OU)'
+			) AS TraderOU
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -430,26 +431,26 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (OU)'
+				), 1, 2, '') AS OtherTradersOU
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 8
-			) AS 'Max Bet (1H OU)'
+			) AS MaxBet1HOU
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 8
-			) AS 'Spread (1H OU)'
+			) AS Spread1HOU
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 8
 				AND a.AssignmentType = 1
-			) AS 'Trader (1H OU)'
+			) AS Trader1HOU
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -458,26 +459,26 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (1H OU)'
+				), 1, 2, '') AS OtherTraders1HOU
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 5
-			) AS 'Max Bet (1X2)'
+			) AS MaxBet1X2
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 5
-			) AS 'Spread (1X2)'
+			) AS Spread1X2
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 5
 				AND a.AssignmentType = 1
-			) AS 'Trader (1X2)'
+			) AS Trader1X2
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -486,26 +487,26 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (1X2)'
+				), 1, 2, '') AS OtherTraders1X2
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 15
-			) AS 'Max Bet (1H 1X2)'
+			) AS MaxBet1H1X2
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 15
-			) AS 'Spread (1H 1X2)'
+			) AS Spread1H1X2
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = 15
 				AND a.AssignmentType = 1
-			) AS 'Trader (1H 1X2)'
+			) AS Trader1H1X2
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -514,19 +515,19 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (1H 1X2)'
+				), 1, 2, '') AS OtherTraders1H1X2
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.ParentMatchId = ml.OWPMatchId
 				AND a.MinorBettypeId = - 1
-			) AS 'Max Bet (x mins)'
+			) AS MaxBetXMins
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.ParentMatchId = ml.OWPMatchId
 				AND a.MinorBettypeId = - 1
-			) AS 'Spread (x mins)'
+			) AS SpreadXMins
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
@@ -534,7 +535,7 @@ BEGIN
 				AND a.Bettype = 1
 				AND a.MinorBettypeId = - 1
 				AND a.AssignmentType = 1
-			) AS 'Trader (15 mins)'
+			) AS Trader15Mins
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -544,7 +545,7 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (15 mins)'
+				), 1, 2, '') AS OtherTraders15Mins
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
@@ -552,7 +553,7 @@ BEGIN
 				AND a.Bettype = 1
 				AND a.MinorBettypeId = - 2
 				AND a.AssignmentType = 1
-			) AS 'Trader (10 mins)'
+			) AS Trader10Mins
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -562,14 +563,14 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (10 mins)'
+				), 1, 2, '') AS OtherTraders10Mins
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 				AND a.Bettype = - 1002
 				AND a.AssignmentType = 1
-			) AS 'LA'
+			) AS LA
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -578,19 +579,19 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other LA'
+				), 1, 2, '') AS OtherLA
 		,(
 			SELECT CAST(a.MaxBet / 1000 AS VARCHAR(20)) + 'K'
 			FROM #tblMatchSetting AS a
 			WHERE a.ParentMatchId = ml.OWPMatchId
 				AND a.MinorBettypeId = - 88
-			) AS 'Max Bet (FM)'
+			) AS MaxBetFM
 		,(
 			SELECT CAST(a.Spread * 100 AS INT)
 			FROM #tblMatchSetting AS a
 			WHERE a.ParentMatchId = ml.OWPMatchId
 				AND a.MinorBettypeId = - 88
-			) AS 'Spread (FM)'
+			) AS SpreadFM
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
@@ -598,7 +599,7 @@ BEGIN
 				AND a.Bettype = 1
 				AND a.MinorBettypeId = - 88
 				AND a.AssignmentType = 1
-			) AS 'Trader (FM)'
+			) AS TraderFM
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -608,7 +609,7 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (FM)'
+				), 1, 2, '') AS OtherTradersFM
 		,(
 			SELECT ISNULL(a.AssignmentContent, '')
 			FROM #tblAssignment AS a
@@ -616,7 +617,7 @@ BEGIN
 				AND a.Bettype = 1
 				AND a.MinorBettypeId = - 89
 				AND a.AssignmentType = 1
-			) AS 'Trader (AIO)'
+			) AS TraderAIO
 		,STUFF((
 				SELECT ', ' + ISNULL(a.AssignmentContent, '')
 				FROM #tblAssignment AS a
@@ -626,7 +627,7 @@ BEGIN
 					AND a.AssignmentType = 2
 				ORDER BY a.AssignmentId
 				FOR XML PATH('')
-				), 1, 2, '') AS 'Other Traders (AIO)'
+				), 1, 2, '') AS OtherTradersAIO
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.AgentName AS NVARCHAR(100)), '')
 				FROM dbo.Agent AS rs WITH (NOLOCK)
@@ -642,7 +643,7 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 2, '') AS TV
 		,ml.Channel
-		,ml.WatchBet AS 'WB'
+		,ml.WatchBet AS WB
 		,STUFF((
 				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
 				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
