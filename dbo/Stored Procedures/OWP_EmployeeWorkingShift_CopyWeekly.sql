@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWeekly] @ActorId INT
 	,@UserId INT
-	,@Date DATE
+	,@StartDateOfWeek DATE
 AS
 /*
 Created: 20180913@Leo
@@ -16,15 +16,15 @@ Revisions:
 	20190215@Leo.Vo: Change output result - [Redmine: #108723]
 	20190312@Leo.Vo: Add overtime - [Redmine: #109560]
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
+	20190531@Leo.Vo: Refactor SP [Redmine: #114442]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @PreviousFromDate DATE = DATEADD(DAY, - 7, @Date)
-	DECLARE @PreviousToDate DATE = DATEADD(DAY, - 1, @Date)
-	DECLARE @CurrentFromDate DATE = @Date
-	DECLARE @CurrentToDate DATE = DATEADD(DAY, 6, @Date)
-	DECLARE @SectionId INT = NULL
+	DECLARE @PreviousFromDate DATE = DATEADD(DAY, - 7, @StartDateOfWeek)
+	DECLARE @PreviousToDate DATE = DATEADD(DAY, - 1, @StartDateOfWeek)
+	DECLARE @CurrentFromDate DATE = @StartDateOfWeek
+	DECLARE @CurrentToDate DATE = DATEADD(DAY, 6, @StartDateOfWeek)
 	DECLARE @CopyWorkingShift TABLE (
 		EmployeeId INT
 		,ShiftId INT
@@ -111,15 +111,6 @@ BEGIN
 				,s.ShiftEndTime
 				,s.RefShiftId
 				);
-
-	SELECT EmployeeId
-		,ShiftId
-		,ShiftDate
-		,RefShiftId
-	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
-	WHERE EmployeeId = @UserId
-		AND ShiftDate BETWEEN @CurrentFromDate
-			AND @CurrentToDate
 
 	-- write log
 	SET @Xml = (

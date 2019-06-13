@@ -4,6 +4,7 @@
 	Server:		DBOWP
 	Revision:
 		- 20190220@Raymond.Le:		Sync Default Working Shift [Redmine: #108723]
+		- 20190605@Kane.Le:		Task_OWP_EmployeeWorkingShiftPublish_AutoPublish [Redmine: #113832]
 */
 
 SET NOCOUNT ON;
@@ -25,7 +26,7 @@ DECLARE	@Category		NVARCHAR(128)	= N'OWP'
 	,	@JobName		NVARCHAR(128)	= N'bodb_OWP - Job: Sync Default Working Shift'
 	,	@Description	NVARCHAR(512)	= N'20190220@Raymond.Le: Sync Default Working Shift - [Redmine: #108723]'
 	,	@EmailOperator	NVARCHAR(128)	= N''
-	,	@Steps			INT				= 1
+	,	@Steps			INT				= 2
 	;
 
 SELECT	@ReturnCode		= 0;
@@ -143,7 +144,7 @@ BEGIN;
 						,	@step_name					= N'Sync Default Working Shift'
 						,	@step_id					= @Loop
 						,	@cmdexec_success_code		= 0
-						,	@on_success_action			= 1
+						,	@on_success_action			= 3
 						,	@on_success_step_id			= 0
 						,	@on_fail_action				= 2
 						,	@on_fail_step_id			= 0
@@ -154,6 +155,33 @@ BEGIN;
 						,	@database_name				= N'bodb_OWP'
 						,	@flags						= 0
 						,	@command					= N'EXECUTE bodb_OWP.dbo.Task_OWP_SyncDefaultWorkingShift';
+
+	IF	@@ERROR <> 0 OR @ReturnCode <> 0
+		GOTO QuitWithRollback;
+
+	SELECT	@Msg = N'STEP %d UPDATED';
+	RAISERROR(@Msg, 0, 0, @Loop) WITH NOWAIT;
+END;
+---- Step 2 ----
+BEGIN;
+	SELECT	@Loop = 2;
+
+	EXECUTE	@ReturnCode	= msdb.dbo.sp_update_jobstep
+							@job_id						= @JobId
+						,	@step_name					= N'Task_OWP_EmployeeWorkingShiftPublish_AutoPublish'
+						,	@step_id					= @Loop
+						,	@cmdexec_success_code		= 0
+						,	@on_success_action			= 1
+						,	@on_success_step_id			= 0
+						,	@on_fail_action				= 2
+						,	@on_fail_step_id			= 0
+						,	@retry_attempts				= 0
+						,	@retry_interval				= 0
+						,	@os_run_priority			= 0
+						,	@subsystem					= N'TSQL'
+						,	@database_name				= N'bodb_OWP'
+						,	@flags						= 0
+						,	@command					= N'EXECUTE bodb_OWP.dbo.Task_OWP_EmployeeWorkingShiftPublish_AutoPublish';
 
 	IF	@@ERROR <> 0 OR @ReturnCode <> 0
 		GOTO QuitWithRollback;

@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @UserId INT = 0
+CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @SiteId INT
 	,@FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
@@ -8,8 +8,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @UserId INT = 0
 	,@CategoryId VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
-	,@IsGetDefaultShift BIT = 0
-	,@IsReadWeeklySection BIT = 0
+	,@OrderUserId INT = NULL
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -30,49 +29,13 @@ AS
 	 20190513@Kane.Le: Change rule get default shift - [Redmine: #112737]
 	 20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	 20190524@Leo.Vo: Return OrderId - [Feature: #114073]
+	 20190531@Leo.Vo: Refactor SP [Redmine: #114442]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryWeekly @FromDate = '2018/03/12', @ToDate = '2018/03/13', @SectionId = N'1,2,3,4';
 */
 BEGIN
 	SET NOCOUNT ON;
-
-	-- caculate is need get defaultShift
-	DECLARE @IsJoinDefaultShift BIT
-	DECLARE @GetCurrentWeek INT
-		,@GetNextWeek INT
-
-	SELECT @GetCurrentWeek = DATEPART(wk, GETUTCDATE())
-
-	SELECT @GetNextWeek = DATEPART(wk, DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @FromDate)) % 7, @FromDate))
-
-	IF @GetNextWeek > @GetCurrentWeek
-	BEGIN
-		SET @IsJoinDefaultShift = 1
-	END
-	ELSE
-	BEGIN
-		SET @IsJoinDefaultShift = 0
-	END
-
-	DECLARE @SiteId INT
-		,@OrderByUserId INT
-
-	-- get Order Section of current User querying
-	IF (@IsReadWeeklySection = 1)
-	BEGIN
-		SELECT @OrderByUserId = 0
-	END
-	ELSE
-	BEGIN
-		SELECT @OrderByUserId = @UserId
-	END
-
-	SELECT @SiteId = SiteId
-	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
-	WHERE SiteName = 'Operation Working Page'
-		AND IsActive = 1
-		AND Environment = 'LIVE'
 
 	DECLARE @tblSection TABLE (
 		SectionId INT
@@ -110,27 +73,15 @@ BEGIN
 	-- table of users
 	DECLARE @tblUser TABLE (
 		UserId INT
-		,Nickname VARCHAR(30)
-		,Username VARCHAR(30)
 		,SectionId SMALLINT
-		,CategoryId SMALLINT
-		,LocationCode VARCHAR(10)
 		);
 
 	INSERT INTO @tblUser (
 		UserId
-		,Nickname
-		,Username
 		,SectionId
-		,CategoryId
-		,LocationCode
 		)
 	SELECT u.UserId
-		,u.Nickname
-		,u.Username
 		,ISNULL(u.SectionId, 0)
-		,ISNULL(u.CategoryId, 0)
-		,ISNULL(u.LocationCode, 'None')
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
 		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
@@ -178,112 +129,24 @@ BEGIN
 					)
 			)
 
-	-- return UserList
-	SELECT u.UserId AS EmployeeId
-		,u.SectionId
-		,ts.SectionName
+	SELECT u.UserId
 		,u.Nickname
 		,u.Username
+		,u.[Address]
+		,u.Pickup
+		,u.Phone
+		,u.Extension
+		,u.Skype
+		,u.SectionId
+		,s.SectionName
+		,u.CategoryId
 		,od.OrderId
-		,tc.CategoryName
 		,n.Note
-	FROM @tblUser AS u
-		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
-		INNER JOIN @tblCategory AS tc ON tc.CategoryId = u.CategoryId
-		INNER JOIN @tblLocation AS tl ON tl.LocationCode = u.LocationCode
+	FROM @tblUser AS tmp
+		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON tmp.UserId = u.UserId
+		INNER JOIN @tblSection AS s ON s.SectionId = tmp.SectionId
 		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
-		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId AND od.SectionId = u.SectionId 
-			AND od.UserId = @OrderByUserId
-
-	-- return Shifts
-	IF @IsJoinDefaultShift = 1
-	BEGIN
-		SET DATEFIRST 1
-
-		DECLARE @DateOfWeek INT = 1
-		DECLARE @TallyShiftDate AS TABLE (ShiftDate DATE)
-
-		CREATE TABLE #tmpEmployeeWorkingShiftDefault (
-			UserId INT
-			,DateOfWeek INT
-			,ShiftId INT
-			,ShiftDate DATE
-			);
-
-		WITH cte
-		AS (
-			SELECT [rn] = ROW_NUMBER() OVER (
-					ORDER BY (
-							SELECT NULL
-							)
-					) - 1
-			FROM (
-				VALUES (0)
-					,(0)
-					,(0)
-					,(0)
-					,(0)
-					,(0)
-					,(0)
-					,(0)
-					,(0)
-					,(0)
-				) x10(n)
-			)
-		INSERT INTO @TallyShiftDate (ShiftDate)
-		SELECT [ShiftDate] = DATEADD(DAY, cte.rn, @FromDate)
-		FROM cte
-		WHERE cte.rn <= DATEDIFF(DAY, @FromDate, @ToDate)
-
-		INSERT INTO #tmpEmployeeWorkingShiftDefault
-		SELECT u.UserId
-			,ep.DayOfTheWeek
-			,[ShiftId] = ISNULL(ep.ShiftId, 0)
-			,tally.ShiftDate
-		FROM @TallyShiftDate AS tally
-			CROSS JOIN @tblUser AS u
-			LEFT JOIN dbo.EmployeeWorkingShiftDefault AS ep WITH (NOLOCK) ON ep.DayOfTheWeek = DATEPART(WEEKDAY, tally.ShiftDate)
-			AND u.UserId = ep.UserId
-
-		SELECT [EmployeeId] = df.UserId
-			,[ShiftDate] = df.ShiftDate
-			,[ShiftStartTime] = ISNULL(wk.ShiftStartTime, df.ShiftDate + CAST(wsc.StartTime AS DATETIME))
-			,[ShiftEndTime] = ISNULL(wk.ShiftEndTime, df.ShiftDate + CAST(wsc.EndTime AS DATETIME))
-			,[ShiftId] = ISNULL(wk.ShiftId, df.ShiftId)
-			,[RefShiftId] = wk.RefShiftId
-			,[IsDefaultShift] = CASE 
-				WHEN wk.ShiftId IS NULL THEN 1
-				ELSE 0
-				END
-		FROM #tmpEmployeeWorkingShiftDefault AS df WITH (NOLOCK)
-			LEFT JOIN dbo.EmployeeWorkingShiftColor AS wsc WITH (NOLOCK) ON df.ShiftId = wsc.ShiftId
-			LEFT JOIN dbo.EmployeeWorkingShift AS wk WITH (NOLOCK) ON df.UserId = wk.EmployeeId
-			AND df.ShiftDate = wk.ShiftDate
-
-		DROP TABLE #tmpEmployeeWorkingShiftDefault
-	END
-	ELSE
-	BEGIN
-		SELECT u.UserId AS EmployeeId
-			,ISNULL(s.ShiftDate, @ToDate) AS ShiftDate
-			,s.ShiftId
-			,s.RefShiftId
-			,0 AS IsDefaultShift
-		FROM @tblUser AS u
-			INNER JOIN dbo.EmployeeWorkingShift AS s WITH (NOLOCK) ON u.UserId = s.EmployeeId
-			AND ShiftDate >= @FromDate
-			AND ShiftDate <= @ToDate
-	END
-
-	-- return Default Shift	 
-	IF @IsGetDefaultShift = 1
-	BEGIN
-		SELECT s.UserId
-			,s.DayOfTheWeek
-			,s.ShiftId
-		FROM dbo.EmployeeWorkingShiftDefault AS s WITH (NOLOCK)
-			INNER JOIN @tblUser AS u ON s.UserId = u.UserId
-	END
-
-	SET DATEFIRST 7
+		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.UserId = @OrderUserId
+		AND od.EmployeeId = u.UserId
+		AND od.SectionId = u.SectionId
 END;
