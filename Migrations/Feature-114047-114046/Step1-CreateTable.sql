@@ -7,14 +7,12 @@
 USE bodb_OWP
 
 CREATE TABLE [dbo].[EmployeeWorkingShiftPublish] (
-	[SectionId] INT NOT NULL
-	,FromDate DATETIME NOT NULL
-	,ToDate DATETIME NOT NULL
-	,IsPublished BIT DEFAULT(0)
-	,LastPublishedById INT NOT NULL
-	,LastPublishedDate DATETIME NOT NULL DEFAULT GETDATE()
-	);
+    [SectionId]         INT      NOT NULL,
+    [FromDate]          DATETIME NOT NULL,
+    [ToDate]            DATETIME NOT NULL,
+    [IsPublished]       BIT      CONSTRAINT [DF_EmployeeWorkingShiftPublish_IsPublished] DEFAULT ((0)) NULL,
+    [LastPublishedById] INT      NULL,
+    [LastPublishedDate] DATETIME CONSTRAINT [DF_EmployeeWorkingShiftPublish_LastPublishedDate] DEFAULT (getdate()) NULL,
+    CONSTRAINT [PK_EmployeeWorkingShiftPublish] PRIMARY KEY CLUSTERED ([SectionId] ASC, [FromDate] ASC)
+);
 GO
-
-CREATE INDEX IDX_EmployeeWorkingShiftPublish_SectionId
-ON [dbo].[EmployeeWorkingShiftPublish] (SectionId);
