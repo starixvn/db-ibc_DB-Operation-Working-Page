@@ -30,6 +30,7 @@ AS
 	 20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	 20190524@Leo.Vo: Return OrderId - [Feature: #114073]
 	 20190531@Leo.Vo: Refactor SP [Redmine: #114442]
+	 20190531@Leo.Vo: Add Email info [Redmine: #114047]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryWeekly @FromDate = '2018/03/12', @ToDate = '2018/03/13', @SectionId = N'1,2,3,4';
@@ -137,6 +138,7 @@ BEGIN
 		,u.Phone
 		,u.Extension
 		,u.Skype
+		,u.Email
 		,u.SectionId
 		,s.SectionName
 		,u.CategoryId
