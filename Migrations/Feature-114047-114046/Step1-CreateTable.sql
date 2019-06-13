@@ -15,3 +15,6 @@ CREATE TABLE [dbo].[EmployeeWorkingShiftPublish] (
 	,LastPublishedDate DATETIME NOT NULL DEFAULT GETDATE()
 	);
 GO
+
+CREATE INDEX IDX_EmployeeWorkingShiftPublish_SectionId
+ON [dbo].[EmployeeWorkingShiftPublish] (SectionId);
