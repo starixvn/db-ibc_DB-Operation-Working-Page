@@ -44,6 +44,7 @@ BEGIN
 	-- Match list
 	CREATE TABLE #owpMatchListByDate (
 		OWPMatchId INT
+		,MatchNo NVARCHAR(50)
 		,EventDate DATE
 		,EventDateTime DATETIME
 		,KickOffTime TIME(7)
@@ -59,6 +60,7 @@ BEGIN
 
 	INSERT INTO #owpMatchListByDate (
 		OWPMatchId
+		,MatchNo
 		,EventDate
 		,EventDateTime
 		,KickOffTime
@@ -72,6 +74,7 @@ BEGIN
 		,InfoSiteMatchId
 		)
 	SELECT om.OWPMatchId
+		,om.MatchNo
 		,om.EventDate
 		,om.EventDateTime
 		,om.KickOffTime
@@ -302,20 +305,22 @@ BEGIN
 		,b.MinorBettypeId
 		,1
 		,NULL
-		,a.UserId
+		,b.UserId
 		,u.Username
 		,rs.[Value]
 		,NULL
 		,NULL
 	FROM dbo.AutoAssignmentResult AS a
 	JOIN #tblAssignment AS b ON a.OWPMatchId = b.OWPMatchId
-	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
+	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON b.UserId = u.UserId
 	LEFT JOIN @tblRefResource AS rs ON u.[Level] = rs.Id
 	WHERE a.RequestId = @RequestId
 		AND b.Bettype = - 1002
 		AND b.AssignmentType = 1
 
-	SELECT ml.OWPMatchId
+	SELECT 
+		ml.OWPMatchId
+		,ml.MatchNo
 		,CONVERT(VARCHAR, (
 				CASE 
 					WHEN DATEPART(HOUR, ml.KickOffTime) >= 0
@@ -450,8 +455,7 @@ BEGIN
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
-	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
-	LEFT JOIN dbo.AutoAssignmentResult AS rs WITH (NOLOCK) ON rs.RequestId = @RequestId
+	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId	
 	WHERE (
 			ml.MinorBettypeId NOT IN (
 				@Specific15Mins
@@ -470,17 +474,7 @@ BEGIN
 		,l.OWPLeagueName
 		,h.OWPTeamName
 
-	SELECT *
-	FROM @tblRefResource
-
-	SELECT *
-	FROM #tblAssignment
-
-	SELECT *
-	FROM #tblAssignmentAuto
-
-	SELECT @RequestId
-
+	
 	DROP TABLE #owpMatchListByDate
 
 	DROP TABLE #tblMatchSetting
