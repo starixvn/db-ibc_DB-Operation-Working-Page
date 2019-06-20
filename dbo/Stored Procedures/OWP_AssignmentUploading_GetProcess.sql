@@ -8,6 +8,7 @@ AS
           
  Revisions:      
          20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+		 20190620@Kane.Le: Count total records like excel - [Redmine: #114614]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -38,7 +39,7 @@ BEGIN
 
 	SELECT @TotalRecord = COUNT(1)
 	FROM dbo.AssignmentUploading WITH (NOLOCK)
-	WHERE SessionId = @SessionId
+	WHERE SessionId = @SessionId AND MinorBettypeId IS NULL
 	GROUP BY SessionId
 
 	SELECT @CurrentRowResult = COUNT(1)
@@ -69,8 +70,8 @@ BEGIN
 		,@WarningRecord AS WarningRecord
 		,@FailedRecord AS FailedRecord
 		,@TotalRecord AS TotalRecord
-	FROM dbo.AssignmentUploadingLog AS l WITH (NOLOCK)
-	WHERE l.SessionId = @SessionId
+	FROM dbo.AssignmentUploadingLog AS l WITH (NOLOCK)	 
+	WHERE l.SessionId = @SessionId	
 
 	SELECT SessionId
 		,RowNumber / 10 AS RowNumber
