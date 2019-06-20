@@ -7,8 +7,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-         20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
-		 20190620@Kane.Le: Count total records like excel - [Redmine: #114614]
+         20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]		 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -39,7 +38,7 @@ BEGIN
 
 	SELECT @TotalRecord = COUNT(1)
 	FROM dbo.AssignmentUploading WITH (NOLOCK)
-	WHERE SessionId = @SessionId AND MinorBettypeId IS NULL
+	WHERE SessionId = @SessionId
 	GROUP BY SessionId
 
 	SELECT @CurrentRowResult = COUNT(1)
