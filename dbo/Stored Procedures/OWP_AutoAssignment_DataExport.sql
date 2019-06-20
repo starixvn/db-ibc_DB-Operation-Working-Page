@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_DataExport] @EventDate DATE
+CREATE PROCEDURE [dbo].[OWP_AutoAssignment_DataExport] @RequestId NVARCHAR (50)
 AS
 /*
 Created: 20190617@Kane.Le
@@ -11,6 +11,10 @@ Revisions:
 	20190617@Kane.Le: Initial SP - [Redmine: #114749]	 
 */
 BEGIN
+	DECLARE @EventDate DATE
+	SELECT @EventDate = rq.EventDate 
+	FROM dbo.AutoAssignmentRequest AS rq WITH (NOLOCK)
+	WHERE rq.RequestId = @RequestId
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 	DECLARE @BettypeHDP INT = 1
@@ -20,12 +24,7 @@ BEGIN
 		,@Specific15MinsTotalBooking INT = - 8
 		,@FastMarket INT = - 88
 		,@AllInOne INT = - 89
-	DECLARE @LineBreak NVARCHAR(10) = CHAR(10)
-		,@RequestId NVARCHAR(50)
-
-	SELECT @RequestId = rq.RequestId
-	FROM dbo.AutoAssignmentRequest AS rq WITH (NOLOCK)
-	WHERE rq.EventDate = @EventDate
+	DECLARE @LineBreak NVARCHAR(10) = CHAR(10)		 
 
 	DECLARE @tblRefResource TABLE (
 		Id INT
@@ -220,6 +219,7 @@ BEGIN
 		,UserId INT
 		,Username NVARCHAR(50)
 		,[Level] NVARCHAR(50)
+		,[LocationCode] NVARCHAR(50)
 		,ParentMatchId INT
 		)
 
@@ -232,6 +232,7 @@ BEGIN
 		,UserId
 		,Username
 		,[Level]
+		,LocationCode
 		,AssignmentId
 		,ParentMatchId
 		)
@@ -243,6 +244,7 @@ BEGIN
 		,a.UserId
 		,u.Username
 		,rs.[Value]
+		,u.LocationCode
 		,a.AssignmentId
 		,ml.ParentMatchId
 	FROM dbo.Assignment AS a WITH (NOLOCK)
@@ -262,6 +264,7 @@ BEGIN
 		,a.UserId
 		,u.Username
 		,rs.[Value]
+		,u.LocationCode
 		,a.AssignmentId
 		,ml.ParentMatchId
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
@@ -285,6 +288,7 @@ BEGIN
 		,UserId INT
 		,Username NVARCHAR(50)
 		,[Level] NVARCHAR(50)
+		,LocationCode NVARCHAR(50)
 		,ParentMatchId INT
 		)
 
@@ -297,6 +301,7 @@ BEGIN
 		,UserId
 		,Username
 		,[Level]
+		,LocationCode
 		,AssignmentId
 		,ParentMatchId
 		)
@@ -305,14 +310,15 @@ BEGIN
 		,b.MinorBettypeId
 		,1
 		,NULL
-		,b.UserId
+		,a.UserId
 		,u.Username
 		,rs.[Value]
+		,u.LocationCode
 		,NULL
 		,NULL
 	FROM dbo.AutoAssignmentResult AS a
 	JOIN #tblAssignment AS b ON a.OWPMatchId = b.OWPMatchId
-	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON b.UserId = u.UserId
+	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
 	LEFT JOIN @tblRefResource AS rs ON u.[Level] = rs.Id
 	WHERE a.RequestId = @RequestId
 		AND b.Bettype = - 1002
@@ -411,6 +417,13 @@ BEGIN
 				AND a.Bettype = - 1002
 				AND a.AssignmentType = 1
 			) AS LALevel
+			,(
+			SELECT a.LocationCode
+			FROM #tblAssignment AS a
+			WHERE a.OWPMatchId = ml.OWPMatchId
+				AND a.Bettype = - 1002
+				AND a.AssignmentType = 1
+			) AS LALocation
 		,(
 			SELECT TOP 1 a.Username
 			FROM #tblAssignmentAuto AS a
@@ -421,6 +434,11 @@ BEGIN
 			FROM #tblAssignmentAuto AS a
 			WHERE a.OWPMatchId = ml.OWPMatchId
 			) AS LAAutoLevel
+		,(
+			SELECT TOP 1 a.LocationCode
+			FROM #tblAssignmentAuto AS a
+			WHERE a.OWPMatchId = ml.OWPMatchId
+			) AS LAAutoLocation
 		,(
 			SELECT a.Username
 			FROM #tblAssignment AS a
@@ -473,8 +491,7 @@ BEGIN
 		,ml.IsMinorMatch
 		,l.OWPLeagueName
 		,h.OWPTeamName
-
-	
+ 
 	DROP TABLE #owpMatchListByDate
 
 	DROP TABLE #tblMatchSetting
