@@ -10,6 +10,7 @@ DB: bodb_OWP
 Revisions:
 	20181221@Raymond.Le: Initial SP - [Redmine: #106196]
 	20190531@Leo.Vo: Refactor SP [Redmine: #114442]
+	20190618@Leo.Vo: Add MatchSolo & filter only Live match [Redmine: #114614]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -25,17 +26,15 @@ BEGIN
 		,@BettypeHDP INT = 1
 
 	CREATE TABLE #tblMatch (
-		MatchId INT
-		,--id of main match
-		MinorBettypeId INT
-		,KOTime DATETIME
+		ParentMatchId INT
+		,MinorBettypeId INT
 		,LeagueId INT
 		,HasTV BIT
 		,Maxbet MONEY
 		)
 
 	INSERT INTO #tblMatch (
-		MatchId
+		ParentMatchId
 		,MinorBettypeId
 		)
 	SELECT CASE 
@@ -56,38 +55,39 @@ BEGIN
 
 	-- update info from main match
 	UPDATE m
-	SET m.KOTime = om.EventDateTime
-		,m.LeagueId = om.OWPLeagueId
+	SET m.LeagueId = om.OWPLeagueId
 		,m.HasTV = CASE 
 			WHEN EXISTS (
 					SELECT 1
 					FROM dbo.MatchTelevision WITH (NOLOCK)
-					WHERE OWPMatchId = mi.OWPMatchId
+					WHERE OWPMatchId = m.ParentMatchId
 					) THEN 1
 			ELSE 0
 			END
 		,m.Maxbet = ms.Maxbet
 	FROM #tblMatch AS m
-		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.MatchId = om.OWPMatchId
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.MatchId = mi.OWPMatchId
-		LEFT JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON m.MatchId = ms.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.ParentMatchId = om.OWPMatchId
+		LEFT JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON m.ParentMatchId = ms.OWPMatchId
 		AND ms.Bettype = @BettypeHDP
 
 	-- update maxbet from MaxbetManagement setting
 	UPDATE m
-	SET m.Maxbet = dbo.OWP_MaxBetGet(m.MatchId, m.LeagueId, @BettypeHDP)
+	SET m.Maxbet = dbo.OWP_MaxBetGet(m.ParentMatchId, m.LeagueId, @BettypeHDP)
 	FROM #tblMatch AS m
 	WHERE m.Maxbet IS NULL
 
 	-- return match list
-	SELECT m.MatchId
-		,m.KOTime
+	SELECT m.ParentMatchId AS MatchId
+		,om.EventDateTime AS KOTime
 		,ISNULL(bt.SchedulingBettypeId, 0) AS SchedulingBettypeId
 		,m.HasTV
 		,m.Maxbet
+		,mi.IsSoloMatch
 	FROM #tblMatch AS m
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.ParentMatchId = om.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
 		LEFT JOIN dbo.AutoAssignmentBettype AS bt ON m.MinorBettypeId = bt.MinorBettypeId
-	WHERE m.Maxbet IS NOT NULL
+	WHERE m.Maxbet IS NOT NULL AND mi.MatchStatus = 'Live'
 
 	DROP TABLE #tblMatch
 END

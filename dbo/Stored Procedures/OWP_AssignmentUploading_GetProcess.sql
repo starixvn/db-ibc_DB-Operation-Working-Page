@@ -7,7 +7,7 @@ AS
  DB: bodb_OWP          
           
  Revisions:      
-         20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+         20180621@Leo.Vo: New structure of event assignment - [Redmine: #92868]		 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -69,8 +69,8 @@ BEGIN
 		,@WarningRecord AS WarningRecord
 		,@FailedRecord AS FailedRecord
 		,@TotalRecord AS TotalRecord
-	FROM dbo.AssignmentUploadingLog AS l WITH (NOLOCK)
-	WHERE l.SessionId = @SessionId
+	FROM dbo.AssignmentUploadingLog AS l WITH (NOLOCK)	 
+	WHERE l.SessionId = @SessionId	
 
 	SELECT SessionId
 		,RowNumber / 10 AS RowNumber
