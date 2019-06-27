@@ -47,6 +47,7 @@ BEGIN
 			SELECT val
 			FROM dbo.fnc_SplitStrings(@MatchStatusIds, ',')
 			)
+ 
 
 	CREATE TABLE #tblMatchOfferResource (
 		Id INT NOT NULL
@@ -177,13 +178,8 @@ BEGIN
 			minor.IsRepresented = 1
 			OR minor.IsRepresented IS NULL
 			)
-		AND (
-			@MatchStatusIds IS NULL
-			OR mi.MatchStatus IN (
-				SELECT [Value]
-				FROM @tblRefResourceMatchStatus
-				)
-			)
+		
+		 
 
 	CREATE TABLE #tblMatchIdsFilterByUserId (
 		OWPMatchId INT
@@ -297,6 +293,14 @@ BEGIN
 				FROM #tblMatchIdsFilterByUserId
 				)
 			)
+			AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
+
 	ORDER BY ma.EventDate
 		,ma.KickOffTime
 		,ml.ParentMatchId
@@ -327,7 +331,13 @@ BEGIN
 				FROM #tblMatchIdsFilterByUserId
 				)
 			)
-	
+	AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 	UNION
 	SELECT ml.OWPMatchId
 		,mb.InheritedBettypeId AS Bettype
@@ -353,7 +363,13 @@ BEGIN
 				FROM #tblMatchIdsFilterByUserId
 				)
 			)
-
+			AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 	-- Return notes
 	SELECT mn.OWPMatchId
 		,mn.MatchNoteId
@@ -368,6 +384,13 @@ BEGIN
 			OR ml.OWPMatchId IN (
 				SELECT OWPMatchId
 				FROM #tblMatchIdsFilterByUserId
+				)
+			)
+			AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
 				)
 			)
 	ORDER BY mn.CreatedDate DESC
@@ -409,7 +432,13 @@ BEGIN
 				FROM #tblMatchIdsFilterByUserId
 				)
 			)
-
+			AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 	-- league setting
 	INSERT INTO #tblMaxBet (
 		OWPMatchId
@@ -430,6 +459,13 @@ BEGIN
 			FROM #tblMaxBet WITH (NOLOCK)
 			)
 		AND ml.IsMinorMatch = 0
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 	GROUP BY ml.OWPMatchId
 		,ml.OWPLeagueId
 		,ls.Bettype
@@ -476,6 +512,13 @@ BEGIN
 				SELECT OWPMatchId
 				FROM #tblMaxBet WITH (NOLOCK)
 				)
+				AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 		) AS t
 		INNER JOIN dbo.MinorSetting AS m WITH (NOLOCK) ON t.MaxBetHDP BETWEEN ISNULL(FromMaxBet, 0)
 			AND ISNULL(ToMaxBet, 99999999999)
@@ -511,6 +554,13 @@ BEGIN
 			OR mf.OWPMatchId IN (
 				SELECT OWPMatchId
 				FROM #tblMatchIdsFilterByUserId
+				)
+			)
+			AND (
+			@MatchStatusIds IS NULL
+			OR mf.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
 				)
 			)
 
