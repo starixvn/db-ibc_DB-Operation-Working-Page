@@ -353,6 +353,7 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryByUser.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ValidateBeforeDelete_WorkingShiftColor.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_DataExport.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_Query.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
