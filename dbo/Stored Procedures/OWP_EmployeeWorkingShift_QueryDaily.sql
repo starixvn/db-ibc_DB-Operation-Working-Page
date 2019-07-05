@@ -6,7 +6,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date DATE
 	,@ShiftId VARCHAR(MAX) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
-	,@SiteId INT
+	,@SiteId INT = 99
 AS
 /*      
  Created: 20180508@Leo.Vo     
@@ -53,6 +53,7 @@ BEGIN
 		UserId INT
 		,OWPMatchId INT
 		,BetType INT
+		,EventDateTime DATETIME
 		)
 
 	 
@@ -149,10 +150,12 @@ BEGIN
 		UserId
 		,OWPMatchId
 		,Bettype
+		,EventDateTime
 		)
 	SELECT DISTINCT u.UserId
 		,a.OWPMatchId
 		,a.Bettype
+		,m.EventDateTime
 	FROM @tblUser u
 		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
 		LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
@@ -170,10 +173,12 @@ BEGIN
 		UserId
 		,OWPMatchId
 		,Bettype
+		,EventDateTime
 		)
 	SELECT DISTINCT u.UserId
 		,mm.ParentMatchId
 		,mb.ParentBettypeId
+		,m.EventDateTime
 	FROM @tblUser u
 		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
 		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
@@ -235,6 +240,7 @@ BEGIN
 	SELECT UserId
 		,OWPMatchId
 		,Bettype
+		,EventDateTime
 	FROM #tblUserBettype WITH (NOLOCK)
 
 	-- return MatchInfo
@@ -260,8 +266,7 @@ BEGIN
 						)
 				FOR XML PATH('')
 				), 1, 1, '') AS 'Provider'
-		,m.EventDateTime
-		,mm.MinorBettypeId
+		,m.EventDateTime		
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'
 		,h.OWPTeamName AS 'HomeName'
@@ -276,8 +281,7 @@ BEGIN
 		INNER JOIN dbo.MatchInfo mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
-		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = match.OWPMatchId
+		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId		
 		AND ms.Bettype = 1
 
 	DROP TABLE #tblUserBettype
