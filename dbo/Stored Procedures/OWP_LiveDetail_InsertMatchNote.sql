@@ -19,6 +19,7 @@ Revisions:
    20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
    20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
    20190307@Kane.Le: add Notification Watcher - [Redmine: #109560]
+   20190407@Carlos.Nguyen: Note inserted: MatchNoteInsert - [Redmine: #116308]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -70,7 +71,7 @@ BEGIN
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'MatchNoteInsert'
 
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newnote>', @Note)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', @Note)
 		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
 		-------------- ASSIGNEE --------------------

@@ -18,6 +18,7 @@ AS
 		20181128@Kane.Le: Prevent send message if HDP no change - [Redmine: #105043]
 		20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 		20190513@Leo.Vo: change condition when send message - [Redmine: #113333]
+		20190703@Tyler.Dang: change message template - [Redmine: #116230]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -124,42 +125,7 @@ BEGIN
 		FROM dbo.MajorBettype WITH (NOLOCK)
 		WHERE BettypeId = @Bettype
 
-		IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
-		BEGIN
-			SET @HandicapText = CAST(@HDP AS NVARCHAR(50)) + ' '
-			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
-
-			IF @TeamChoice = 1
-				SET @TeamName = 'Home@'
-			ELSE IF @TeamChoice = 2
-				SET @TeamName = 'Away@'
-
-			IF @OldTeamChoice = 1
-				SET @OldTeamName = 'Home@'
-			ELSE IF @OldTeamChoice = 2
-				SET @OldTeamName = 'Away@'
-		END
-		ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
-		BEGIN
-			SET @HandicapText = CAST(@HDP AS NVARCHAR(50)) + ' '
-			SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
-		END
-
-		SELECT @OddsText = STUFF((
-					SELECT '/' + CAST(Odds AS NVARCHAR(30))
-					FROM #RecommendOdds
-					ORDER BY Choice ASC
-					FOR XML PATH('')
-					), 1, 1, '')
-
-		IF @OldHandicap IS NOT NULL
-			SET @OldOddsText = @OldTeamName + @OldHandicapText + @OddsText
-
-		IF @HDP IS NOT NULL
-			SET @NewOddsText = @TeamName + @HandicapText + @OddsText
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', @OldOddsText)
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @BettypeName)
 		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
 		-------------- ASSIGNEE --------------------

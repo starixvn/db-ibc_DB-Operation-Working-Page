@@ -20,6 +20,7 @@ Revisions:
 	20181126@Leo.Vo: Seperate change of assignment LA & Trader - [Redmine: #105043]
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20190704@Leo.Vo: Change message template - [Feature: #115459]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -55,6 +56,8 @@ BEGIN
 		,@Username NVARCHAR(30) = ''
 		,@OldUsername NVARCHAR(30) = ''
 		,@BettypeName NVARCHAR(200)
+		,@LeagueName NVARCHAR(500)
+		,@MatchNo VARCHAR(50)
 		,@HomeTeam NVARCHAR(200)
 		,@AwayTeam NVARCHAR(200)
 		,@ActorName NVARCHAR(30)
@@ -111,6 +114,8 @@ BEGIN
 		,@AwayTeam = a.OWPTeamName
 		,@BettypeName = al.BetTypeName
 		,@EventDateTime = m.EventDateTime
+		,@LeagueName = l.OWPLeagueName
+		,@MatchNo = CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END
 	FROM (
 		SELECT (CASE 
 				WHEN mm.MinorMatchId IS NULL THEN d.OWPMatchId
@@ -133,6 +138,7 @@ BEGIN
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON al.OWPMatchId = m.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
 
 	-- insert data trade 5 match per day
 	IF @UserId IS NOT NULL
@@ -179,6 +185,8 @@ BEGIN
 			,@MessageChangeOfAssignmentId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
+		
+		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
 		IF @OldUserId IS NOT NULL
 			AND @OldUserId <> ISNULL(@UserId, 0)
@@ -196,10 +204,19 @@ BEGIN
 				,1
 			FROM (
 				SELECT @OldUserId AS UserId
-					,REPLACE(CASE 
-							WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignment
-							ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
-							END, '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName) AS MessageContent
+					,REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(CASE 
+											WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignment
+											ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
+											END
+									,'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+								,'<Bettype>', @BettypeName)
+							,'<League>', @LeagueName)
+						,'<Match.No>', @MatchNo)
+					,'<User>', @ActorName) AS MessageContent
 					,(CASE 
 						WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignmentId
 						ELSE @MessageDeleteOtherAssignmentId END
@@ -228,10 +245,19 @@ BEGIN
 				,1
 			FROM (
 				SELECT @UserId AS UserId
-					,REPLACE(CASE 
-							WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
-							ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
-							END, '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' bettype: ' + @BettypeName) AS MessageContent
+					,REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(CASE 
+											WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
+											ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
+											END
+									,'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+								,'<Bettype>', @BettypeName)
+							,'<League>', @LeagueName)
+						,'<Match.No>', @MatchNo)
+					,'<User>', @ActorName) AS MessageContent
 					,(CASE 
 						WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignmentId
 						ELSE @MessageInsertOtherAssignmentId END
@@ -260,7 +286,20 @@ BEGIN
 				,1
 			FROM (
 				SELECT @UserId AS UserId
-					,REPLACE(REPLACE(REPLACE(@MessageUpdateOtherAssignment, '<newnote>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', '')))), '<oldnote>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', '')))), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName) AS MessageContent
+					,REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(
+										REPLACE(
+											REPLACE(@MessageUpdateOtherAssignment,
+											'<New>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
+										,'<Old>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
+									,'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+								,'<Bettype>', @BettypeName)
+							,'<League>', @LeagueName)
+						,'<Match.No>', @MatchNo)
+					,'<User>', @ActorName) AS MessageContent
 					,@MessageUpdateOtherAssignmentId AS MessageTypeId
 				) AS d
 				INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = @UserId
@@ -301,22 +340,32 @@ BEGIN
 
 		-------------- ASSIGNEE --------------------
 		-- send message to traders have match assigned
-		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
-
 		IF @UserId IS NOT NULL
 			SET @Username = '#' + dbo.[fnc_GetUsernameByUserId](@UserId)
 
 		IF @OldUserId IS NOT NULL
 			SET @OldUsername = '#' + dbo.[fnc_GetUsernameByUserId](@OldUserId)
 
-		SELECT @MessageChangeOfAssignmentContent = REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
-								WHEN @AssignmentNote IS NULL THEN @Username
-								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
-								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', CASE 
-					WHEN @OldAssignmentNote IS NULL THEN @OldUsername
-					ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername)))
-					END)
-
+		SELECT @MessageChangeOfAssignmentContent = 
+			REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(@MessageChangeOfAssignment
+								,'<New>', CASE 
+											WHEN @AssignmentNote IS NULL THEN @Username
+											ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
+											END)
+							,'<Old>', CASE 
+										WHEN @OldAssignmentNote IS NULL THEN @OldUsername
+										ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername)))
+										END)
+						,'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+					,'<Bettype>', @BettypeName)
+				,'<Match.No>', @MatchNo)
+			,'<User>', @ActorName)
+			
 		SELECT @ChangeOfAssignmentNotificationSettingId = CASE 
 				WHEN @BetType = @BettypeLA THEN @NotifyAssigneeLAUpdatedId
 				ELSE @NotifyAssigneeTraderUpdatedId

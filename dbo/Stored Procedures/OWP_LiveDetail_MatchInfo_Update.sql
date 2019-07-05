@@ -41,6 +41,7 @@ Revisions:
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
+	20190704@Tyler.Dang: change message template - [Redmine: #116230]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -82,6 +83,8 @@ BEGIN
 		,@EventDateTime DATETIME
 		,@NewOtherTime TIME
 		,@CurrentDateTimeGMTplus8 DATETIME = DATEADD(HOUR, 12, GETDATE())
+		,@MatchNo VARCHAR(50)
+		,@League NVARCHAR(500)
 		-- Notification Setting
 		,@NotifyAssigneeMatchInfoUpdatedId INT = 5
 		,@NotifyAssigneeProviderInfoUpdatedId INT = 11
@@ -295,9 +298,12 @@ BEGIN
 			SELECT @HomeTeamName = home.OWPTeamName
 				,@AwayTeamName = away.OWPTeamName
 				,@EventDateTime = om.EventDateTime
+				,@MatchNo = CASE WHEN om.MatchNo = '' THEN '' ELSE '#' + om.MatchNo END
+				,@League = ol.OWPLeagueName
 			FROM dbo.OWPMatch AS om WITH (NOLOCK)
 				LEFT JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
 				LEFT JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
+				LEFT JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON om.OWPLeagueId = ol.OWPLeagueId
 			WHERE om.OWPMatchId = @OWPMatchId
 
 			SELECT @NewOtherTime = CAST(@OtherTime AS TIME)
@@ -427,7 +433,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditTV'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -503,7 +519,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditOtherProvider'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -579,7 +605,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditProvider' 
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -655,7 +691,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditAgent'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -686,7 +732,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditPhone'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -716,7 +772,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditChannel'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -746,7 +812,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditWB'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -788,7 +864,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditOtherTime'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -818,7 +904,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditRound'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -848,7 +944,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditDivision'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -878,7 +984,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditRemark'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -908,7 +1024,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditNoOfHDP'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', ISNULL(@OldValue, '')), '<newvalue>', ISNULL(@NewValue, ''))
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -938,7 +1064,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditVenue'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -1016,7 +1152,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditMarket'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
@@ -1094,7 +1240,17 @@ BEGIN
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 				WHERE mt.MsgTemplateCode = 'EditMatchOffer'
 
-				SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<user>', @ActorName), '<home>', @HomeTeamName), '<away>', @AwayTeamName), '<bettype>', ''), '<oldvalue>', @OldValue), '<newvalue>', @NewValue)
+				SELECT @MessageTemplate = REPLACE(
+												REPLACE(
+													REPLACE(
+														REPLACE(
+															REPLACE(
+																REPLACE(@MessageTemplate, '<User>', @ActorName)
+															, '<Match.No>', @MatchNo)
+														, '<League>', @League)
+													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+												, '<Old>', @OldValue)
+											, '<New>', @NewValue)
 
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate

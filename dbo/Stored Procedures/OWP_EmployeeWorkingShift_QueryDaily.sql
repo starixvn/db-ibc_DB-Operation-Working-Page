@@ -21,6 +21,7 @@ AS
 	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 	20190604@Kane.Le: Add SiteId - [Feature: #113832]
+	20190703@Kane.Le: Add MinorBettypeId - [Feature: #115390]
 	
 */
 BEGIN
@@ -260,6 +261,7 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 1, '') AS 'Provider'
 		,m.EventDateTime
+		,mm.MinorBettypeId
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'
 		,h.OWPTeamName AS 'HomeName'
@@ -275,6 +277,7 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
 		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
+		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = match.OWPMatchId
 		AND ms.Bettype = 1
 
 	DROP TABLE #tblUserBettype
