@@ -19,6 +19,7 @@ Revisions:
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190513@Leo.Vo: change condition when send message - [Redmine: #113333]
+	20180705@Tyler.Dang: Edit SP for Live Details Recommend odds notification [Redmine: #116398]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -195,9 +196,7 @@ BEGIN
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditMatchRecommendOdds'
 
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', @OldOddsText)
-		SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
+		SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @BettypeName)
 		SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
 		-------------- ASSIGNEE --------------------

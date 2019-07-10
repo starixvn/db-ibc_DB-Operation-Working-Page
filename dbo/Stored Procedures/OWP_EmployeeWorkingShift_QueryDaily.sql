@@ -6,7 +6,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date DATE
 	,@ShiftId VARCHAR(MAX) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
-	,@SiteId INT = 99
+	,@SiteId INT
 AS
 /*      
  Created: 20180508@Leo.Vo     
@@ -163,7 +163,7 @@ BEGIN
 		LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
 		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
 	WHERE mi.MatchStatus <> 'Cancel'
-		AND a.AssignmentType = 1
+		AND a.UserId IS NOT NULL
 		AND m.EventDateTime >= @EventDateFrom
 		AND m.EventDateTime <= @EventDateTo
 		AND mm.ParentMatchId IS NULL
@@ -187,7 +187,7 @@ BEGIN
 		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
 		AND mm.MinorBettypeId = mb.ParentBettypeId
 	WHERE mi.MatchStatus <> 'Cancel'
-		AND a.AssignmentType = 1
+		AND a.UserId IS NOT NULL
 		AND m.EventDateTime >= @EventDateFrom
 		AND m.EventDateTime <= @EventDateTo
 

@@ -203,7 +203,7 @@ BEGIN
 									WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
 									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
 									END
-							,'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 						,'<Bettype>', @BettypeName)
 					,'<League>', @LeagueName)
 				,'<Match.No>', @MatchNo)
@@ -284,7 +284,7 @@ BEGIN
 													ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE WHEN us.UserId IS NULL THEN '' ELSE '#' + us.Username END)))
 													END)
 									,'<New>', '')
-								,'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+								,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 							,'<League>', @LeagueName)
 						,'<Bettype>', @BettypeName)
 					,'<User>', @ActorName)

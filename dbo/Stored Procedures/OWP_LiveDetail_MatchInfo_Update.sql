@@ -110,7 +110,7 @@ BEGIN
 		,NotificationSettingId INT
 		)
 	
-	BEGIN TRY
+	--BEGIN TRY
 		SELECT @OldMarketIds = COALESCE(@OldMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
 		FROM dbo.MatchMarket WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
@@ -441,7 +441,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -527,7 +527,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -613,7 +613,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -699,7 +699,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -740,7 +740,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -780,7 +780,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -820,7 +820,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -872,7 +872,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -912,7 +912,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -952,7 +952,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -992,7 +992,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -1016,9 +1016,10 @@ BEGIN
 			-- Edit No Of HDP
 			IF ISNULL(@OldNoOfHDPId, 0) <> ISNULL(@NoOfHDPId, 0)
 			BEGIN
-				SELECT @OldValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP')
-					,@NewValue = (SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP')
-
+				SELECT @OldValue = ISNULL((SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP'),'None')
+						,@NewValue = ISNULL((SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP'),'None')
+				print 'old' + @OldValue
+				print 'new' + @NewValue
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
@@ -1032,10 +1033,10 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
-
+				
 				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 					,@MessageContent = @MessageTemplate
 					,@MessageType = @MessageTypeId
@@ -1072,7 +1073,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -1160,7 +1161,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -1248,7 +1249,7 @@ BEGIN
 																REPLACE(@MessageTemplate, '<User>', @ActorName)
 															, '<Match.No>', @MatchNo)
 														, '<League>', @League)
-													, '<Event>', @HomeTeamName + ' vs ' + @AwayTeamName)
+													, '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName)
 												, '<Old>', @OldValue)
 											, '<New>', @NewValue)
 
@@ -1271,15 +1272,15 @@ BEGIN
 
 		END
 		 
-	END TRY
-
+	--END TRY
+	/*
 	BEGIN CATCH
 		SELECT @ErrMsg = 'Update Match Info failed. Please try again.'
 			,@ErrCode = 5001 -- ActionId + 01
 
 		RETURN
 	END CATCH
-
+	*/
 	DROP TABLE #tblOldItem
 
 	DROP TABLE #tblNewItem

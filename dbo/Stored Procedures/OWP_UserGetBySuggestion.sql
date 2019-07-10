@@ -11,6 +11,7 @@ AS
 	20181015@Kane.Le Get Nickname as Username if NULL - [Redmine: #103202]
 	20190503@Kane.Le Get IsSecondAccount - [Redmine: #111840]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
+	20190704@Leo.Vo: Change message template - [Feature: #115459]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -46,6 +47,7 @@ BEGIN
 		,Username
 		,Nickname
 	FROM #tblUsers WITH (NOLOCK)
+	ORDER BY Username
 
 	DROP TABLE #tblUsers
 END

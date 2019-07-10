@@ -200,7 +200,7 @@ BEGIN
 										WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
 										ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
 										END, 
-									'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+									'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
 							,'<League>', @LeagueName)
 						,'<Match.No>', @MatchNo)
@@ -258,7 +258,7 @@ BEGIN
 													ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
 													END)
 								,'<Old>', '')
-							,'<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 						,'<Bettype>', @BettypeName)
 					,'<League>', @LeagueName)
 				,'<Match.No>', @MatchNo)

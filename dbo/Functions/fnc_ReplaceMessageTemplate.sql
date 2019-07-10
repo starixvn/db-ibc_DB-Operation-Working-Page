@@ -36,7 +36,7 @@ BEGIN
 
 	SET @MessageTemplate = REPLACE(
 								REPLACE(
-									REPLACE(@MessageTemplate, '<Event>', @HomeTeam + ' vs ' + @AwayTeam)
+									REPLACE(@MessageTemplate, '<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								, '<League>', @League)
 							, '<Match.No>', @MatchNo)
 

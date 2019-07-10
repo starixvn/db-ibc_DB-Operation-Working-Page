@@ -14,6 +14,7 @@ AS
 	20190405@Kane.Le Get the second account column (row 42) - [Redmine: #111068]
 	20190503@Kane.Le Get IsSecondAccount - [Redmine: #111840]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
+	20190704@Leo.Vo: Change message template - [Feature: #115459]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -36,14 +37,12 @@ BEGIN
 		,u.Skype
 		,u.IsSecondAccount
 	FROM dbo.[User] AS u WITH (NOLOCK)
-		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
+	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
+	INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
-	WHERE u.Username IS NOT NULL
-		AND (
-			ci.closed = 0
+	WHERE ci.closed = 0
 			AND ci.reject = 0
 			AND ci.[Enabled] = 1
 			AND us.IsActive = 1
-			)
+	ORDER BY u.Username
 END

@@ -17,6 +17,7 @@ AS
 	20190304@Leo.Vo: Message for watcher - [Redmine: #109560]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20190705@Carlos.Nguyen: Sync info site - [Redmine: #116479]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -509,7 +510,16 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(@EditTeamMessageTemplate, '<oldevent>', oh.OWPTeamName + ' vs ' + oa.OWPTeamName), '<newevent>', nh.OWPTeamName + ' vs ' + na.OWPTeamName) AS MessageContent
+		,REPLACE(
+			REPLACE(
+				REPLACE(
+					REPLACE(
+						@EditTeamMessageTemplate,
+						'<Match.No>',
+						CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END),
+					'<League>',le.OWPLeagueName),
+				'<Event>',nh.OWPTeamName + ' -vs- ' + na.OWPTeamName),
+			'<Old>',oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName)AS MessageContent
 		,@EditTeamMessageTemplateId
 		,1
 	FROM #tblTeamLog AS l
@@ -519,10 +529,25 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = l.OldOWPAwayId
 		INNER JOIN dbo.OWPTeam AS nh WITH (NOLOCK) ON nh.OWPTeamId = m.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
+		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
 	
 	UNION
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(@EditLeagueMessageTemplate, '<home>', h.OWPTeamName), '<away>', a.OWPTeamName), '<oldvalue>', ol.OWPLeagueName), '<newvalue>', nl.OWPLeagueName) AS MessageContent
+			,REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								@EditLeagueMessageTemplate,
+								'<Match.No>',
+								CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END), 
+							'<League>',
+							 nl.OWPLeagueName), 
+						'<Event>',
+						 h.OWPTeamName + ' -vs- ' + a.OWPTeamName), 
+					'<User>',
+					 'InfoSite'),
+				'<Old>',ol.OWPLeagueName) AS MessageContent
 		,@EditLeagueMessageTemplateId
 		,1
 	FROM #tblLeagueLog AS l
