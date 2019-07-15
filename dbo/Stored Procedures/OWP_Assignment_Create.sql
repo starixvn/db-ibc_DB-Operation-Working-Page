@@ -23,6 +23,7 @@ Revisions:
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190325@Kane.Le: add @ErrMsg = @@IDENTITY - [Redmine: #110322]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
+	20190704@Leo.Vo: Change message template - [Feature: #115459]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -62,6 +63,8 @@ BEGIN
 		,@NotifyWatcherLAUpdatedId INT = 12
 		--
 		,@BettypeName NVARCHAR(200)
+		,@LeagueName NVARCHAR(500)
+		,@MatchNo VARCHAR(50)
 		,@HomeTeam NVARCHAR(200)
 		,@AwayTeam NVARCHAR(200)
 		,@Username NVARCHAR(30)
@@ -108,6 +111,8 @@ BEGIN
 	SELECT @HomeTeam = h.OWPTeamName
 		,@AwayTeam = a.OWPTeamName
 		,@BettypeName = al.BetTypeName
+		,@LeagueName = l.OWPLeagueName
+		,@MatchNo = CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END
 		,@Username = CASE 
 			WHEN u.UserId IS NULL THEN ''
 			ELSE '#' + u.Username
@@ -136,6 +141,7 @@ BEGIN
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON al.OWPMatchId = m.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
 		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = al.UserId
 
 	-- insert data trade 5 match per day
@@ -144,7 +150,7 @@ BEGIN
 		EXEC dbo.OWP_Trade5MatchPerDay_RunAfterInsertAssignment @EventDateTime
 			,@UserId
 	END
-
+	
 	-- send message
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
@@ -168,6 +174,8 @@ BEGIN
 			,@MessageChangeOfAssignmentId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
+		
+		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
 		IF @UserId IS NOT NULL
 		BEGIN
@@ -184,10 +192,19 @@ BEGIN
 				,1
 			FROM (
 				SELECT @UserId AS UserId
-					,REPLACE(CASE 
-							WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
-							ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
-							END, '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName) AS MessageContent
+					,REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(CASE 
+										WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
+										ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
+										END, 
+									'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
+								,'<Bettype>', @BettypeName)
+							,'<League>', @LeagueName)
+						,'<Match.No>', @MatchNo)
+					,'<User>', @ActorName) AS MessageContent
 					,(CASE 
 						WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignmentId
 						ELSE @MessageInsertOtherAssignmentId END
@@ -228,13 +245,24 @@ BEGIN
 		END
 
 		-------------- ASSIGNEE --------------------
-		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
-
-		SELECT @MessageChangeOfAssignmentContent = REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<newAssignee>', CASE 
-								WHEN @AssignmentNote IS NULL THEN @Username
-								ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
-								END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<oldAssignee>', '')
-
+		SELECT @MessageChangeOfAssignmentContent = 
+			REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(@MessageChangeOfAssignment
+										,'<New>', CASE
+													WHEN @AssignmentNote IS NULL THEN @Username
+													ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
+													END)
+								,'<Old>', '')
+							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
+						,'<Bettype>', @BettypeName)
+					,'<League>', @LeagueName)
+				,'<Match.No>', @MatchNo)
+			,'<User>', @ActorName)
 		SELECT @ChangeOfAssignmentNotificationSettingId = CASE 
 				WHEN @BetType = @BettypeLA THEN @NotifyAssigneeLAUpdatedId
 				ELSE @NotifyAssigneeTraderUpdatedId

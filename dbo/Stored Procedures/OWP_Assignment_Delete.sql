@@ -19,6 +19,7 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
+	20190704@Leo.Vo: Change message template - [Feature: #115459]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -46,6 +47,8 @@ BEGIN
 		,@Bettype INT
 		,@AssignmentType INT
 		,@BettypeName NVARCHAR(200)
+		,@LeagueName NVARCHAR(500)
+		,@MatchNo VARCHAR(50)
 		,@HomeTeam NVARCHAR(200)
 		,@AwayTeam NVARCHAR(200)
 		,@ActorName NVARCHAR(30)
@@ -139,6 +142,8 @@ BEGIN
 		SELECT @HomeTeam = h.OWPTeamName
 			,@AwayTeam = a.OWPTeamName
 			,@BettypeName = al.BetTypeName
+			,@LeagueName = l.OWPLeagueName
+			,@MatchNo = CASE WHEN MatchNo = '' THEN '' ELSE '#' + m.MatchNo END
 			,@EventDateTime = m.EventDateTime
 		FROM (
 			SELECT (CASE 
@@ -162,6 +167,7 @@ BEGIN
 			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON al.OWPMatchId = m.OWPMatchId
 			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
 			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
+			INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
 
 		SELECT @MessageDeleteAssignment = mt.MsgTemplateContent
 			,@MessageDeleteAssignmentId = mt.MsgTemplateId
@@ -177,6 +183,8 @@ BEGIN
 			,@MessageChangeOfAssignmentId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
+		
+		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
 		-------------- My Assignment --------------------
 		-- send message to trader unassigned
@@ -187,10 +195,19 @@ BEGIN
 			,IsImportant
 			)
 		SELECT a.UserId
-			,REPLACE(CASE 
-					WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
-					ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
-					END, '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName)
+			,REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(CASE 
+									WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
+									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
+									END
+							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
+						,'<Bettype>', @BettypeName)
+					,'<League>', @LeagueName)
+				,'<Match.No>', @MatchNo)
+			,'<User>', @ActorName)
 			,CASE 
 				WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignmentId
 				ELSE @MessageDeleteOtherAssignmentId
@@ -233,7 +250,6 @@ BEGIN
 
 		-------------- ASSIGNEE --------------------
 		-- send message to traders have match assigned
-		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
 		SELECT @ChangeOfAssignmentNotificationSettingId = CASE 
 				WHEN @BetType = @BettypeLA THEN @NotifyAssigneeLAUpdatedId
@@ -256,13 +272,23 @@ BEGIN
 		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
 		USING (
 			SELECT s.AssignmentId
-				,REPLACE(REPLACE(REPLACE(REPLACE(@MessageChangeOfAssignment, '<oldAssignee>', CASE 
-									WHEN s.AssignmentNote IS NULL THEN '#' + us.Username
-									ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE 
-														WHEN us.UserId IS NULL THEN ''
-														ELSE '#' + us.Username
-														END)))
-									END), '<event>', @HomeTeam + ' vs ' + @AwayTeam + ' - bettype: ' + @BettypeName), '<user>', @ActorName), '<newAssignee>', '') AS MessageContent
+				,REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(
+										REPLACE(@MessageChangeOfAssignment
+										,'<Old>', CASE 
+													WHEN s.AssignmentNote IS NULL THEN '#' + us.Username
+													ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE WHEN us.UserId IS NULL THEN '' ELSE '#' + us.Username END)))
+													END)
+									,'<New>', '')
+								,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
+							,'<League>', @LeagueName)
+						,'<Bettype>', @BettypeName)
+					,'<User>', @ActorName)
+				,'<Match.No>', @MatchNo) AS MessageContent
 			FROM #tblRemoveAssignment AS s
 			LEFT JOIN dbo.[User] AS us WITH (NOLOCK) ON s.UserId = us.UserId
 			) AS msn ON 1 = 0

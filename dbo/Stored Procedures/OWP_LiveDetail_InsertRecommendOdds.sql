@@ -19,6 +19,7 @@ Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]  
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
+	20180705@Tyler.Dang: Edit SP for Live Details Recommend odds notification [Redmine: #116398]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -117,31 +118,8 @@ BEGIN
 	FROM dbo.MajorBettype WITH (NOLOCK)
 	WHERE BettypeId = @Bettype
 
-	IF @Bettype IN (@BettypeHDP, @Bettype1HHDP)
-	BEGIN
-		SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
-
-		IF @TeamChoice = 1
-			SET @TeamName = 'Home@'
-		ELSE IF @TeamChoice = 2
-			SET @TeamName = 'Away@'
-	END
-	ELSE IF @Bettype IN (@BettypeOU, @Bettype1HOU)
-	BEGIN
-		SET @HandicapText = CAST(@Handicap AS NVARCHAR(50)) + ' '
-	END
-
-	SELECT @NewOddsText = STUFF((
-				SELECT '/' + CAST(Odds AS NVARCHAR(30))
-				FROM #RecommendOdds
-				ORDER BY Choice ASC
-				FOR XML PATH('')
-				), 1, 1, '')
-
 	SET @NewOddsText = @TeamName + @HandicapText + @NewOddsText
-	SET @MessageTemplate = REPLACE(@MessageTemplate, '<bettype>', @BettypeName)
-	SET @MessageTemplate = REPLACE(@MessageTemplate, '<oldodds>', '')
-	SET @MessageTemplate = REPLACE(@MessageTemplate, '<newodds>', @NewOddsText)
+	SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @BettypeName)
 	SET @MessageTemplate = dbo.[fnc_ReplaceMessageTemplate](@MessageTemplate, @OWPMatchId, @UserId)
 
 	-- insert message  	

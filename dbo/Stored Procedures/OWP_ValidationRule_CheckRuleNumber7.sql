@@ -108,7 +108,7 @@ BEGIN
 			,Match
 			)
 		SELECT upload.RowNumber
-			,upload1.Home + ' vs ' + upload1.Away
+			,upload1.Home + ' -vs- ' + upload1.Away
 		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
 			INNER JOIN #tblAssignmentUploading AS upload1 WITH (NOLOCK) ON upload.Phone = upload1.Phone
 		WHERE upload.RowNumber <> upload1.RowNumber
@@ -184,7 +184,7 @@ BEGIN
 				,Match
 				)
 			SELECT 1
-				,home.OWPTeamName + ' vs ' + away.OWPTeamName
+				,home.OWPTeamName + ' -vs- ' + away.OWPTeamName
 			FROM dbo.MatchInfo AS info WITH (NOLOCK)
 				INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON info.OWPMatchId = m.OWPMatchId
 				INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON m.OWPHomeId = home.OWPTeamId

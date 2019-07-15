@@ -21,6 +21,7 @@ AS
 	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 	20190604@Kane.Le: Add SiteId - [Feature: #113832]
+	20190703@Kane.Le: Add MinorBettypeId - [Feature: #115390]
 	
 */
 BEGIN
@@ -52,6 +53,7 @@ BEGIN
 		UserId INT
 		,OWPMatchId INT
 		,BetType INT
+		,EventDateTime DATETIME
 		)
 
 	 
@@ -148,10 +150,12 @@ BEGIN
 		UserId
 		,OWPMatchId
 		,Bettype
+		,EventDateTime
 		)
 	SELECT DISTINCT u.UserId
 		,a.OWPMatchId
 		,a.Bettype
+		,m.EventDateTime
 	FROM @tblUser u
 		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
 		LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
@@ -159,7 +163,7 @@ BEGIN
 		LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
 		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
 	WHERE mi.MatchStatus <> 'Cancel'
-		AND a.AssignmentType = 1
+		AND a.UserId IS NOT NULL
 		AND m.EventDateTime >= @EventDateFrom
 		AND m.EventDateTime <= @EventDateTo
 		AND mm.ParentMatchId IS NULL
@@ -169,10 +173,12 @@ BEGIN
 		UserId
 		,OWPMatchId
 		,Bettype
+		,EventDateTime
 		)
 	SELECT DISTINCT u.UserId
 		,mm.ParentMatchId
 		,mb.ParentBettypeId
+		,m.EventDateTime
 	FROM @tblUser u
 		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
 		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
@@ -181,7 +187,7 @@ BEGIN
 		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
 		AND mm.MinorBettypeId = mb.ParentBettypeId
 	WHERE mi.MatchStatus <> 'Cancel'
-		AND a.AssignmentType = 1
+		AND a.UserId IS NOT NULL
 		AND m.EventDateTime >= @EventDateFrom
 		AND m.EventDateTime <= @EventDateTo
 
@@ -234,6 +240,7 @@ BEGIN
 	SELECT UserId
 		,OWPMatchId
 		,Bettype
+		,EventDateTime
 	FROM #tblUserBettype WITH (NOLOCK)
 
 	-- return MatchInfo
@@ -259,7 +266,7 @@ BEGIN
 						)
 				FOR XML PATH('')
 				), 1, 1, '') AS 'Provider'
-		,m.EventDateTime
+		,m.EventDateTime		
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'
 		,h.OWPTeamName AS 'HomeName'
@@ -274,7 +281,7 @@ BEGIN
 		INNER JOIN dbo.MatchInfo mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
+		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId		
 		AND ms.Bettype = 1
 
 	DROP TABLE #tblUserBettype

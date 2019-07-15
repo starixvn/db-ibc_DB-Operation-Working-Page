@@ -443,7 +443,7 @@ BEGIN
 				,MatchName
 				)
 			SELECT 1
-				,Home + ' vs ' + Away + ' - ' + MinorBettypeName
+				,Home + ' -vs- ' + Away + ' - ' + MinorBettypeName
 			FROM #tblAssignmentInfo WITH (NOLOCK)
 
 			SELECT @RuleResultType AS ResultType

@@ -16,6 +16,7 @@ AS
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190513@Leo.Vo: change condition when send message - [Redmine: #113333]
+	20190703@Tyler.Dang: change message template - [Redmine: #116230]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -220,42 +221,8 @@ BEGIN
 			FROM dbo.MajorBettype WITH (NOLOCK)
 			WHERE BettypeId = @Bettype
 
-			SELECT @OldTeamName = ''
-				,@OldHandicapText = ''
-
-			IF @Bettype IN (
-					@BettypeHDP
-					,@Bettype1HHDP
-					)
-			BEGIN
-				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
-
-				IF @OldTeamChoice = 1
-					SET @OldTeamName = 'Home@'
-				ELSE IF @OldTeamChoice = 2
-					SET @OldTeamName = 'Away@'
-			END
-			ELSE IF @Bettype IN (
-					@BettypeOU
-					,@Bettype1HOU
-					)
-			BEGIN
-				SET @OldHandicapText = CAST(@OldHandicap AS NVARCHAR(50)) + ' '
-			END
-
-			SELECT @OldOddsText = STUFF((
-						SELECT '/' + CAST(Odds AS NVARCHAR(30))
-						FROM #ValidMatchRecommendOddsDetail
-						WHERE MatchRecommendOddsId = @MatchRecommendOddId
-						ORDER BY Choice ASC
-						FOR XML PATH('')
-						), 1, 1, '')
-
-			SET @OldOddsText = @OldTeamName + @OldHandicapText + @OldOddsText
 			SET @MatchMessageTemplate = @MessageTemplate
-			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<bettype>', @BettypeName)
-			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<oldodds>', @OldOddsText)
-			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<newodds>', '')
+			SET @MatchMessageTemplate = REPLACE(@MatchMessageTemplate, '<Bettype>', @BettypeName)
 
 			EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
 				,@MessageContent = @MatchMessageTemplate
