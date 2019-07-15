@@ -35,6 +35,7 @@ AS
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -80,8 +81,12 @@ BEGIN
 		,@MessageChangeOfAssignmentId INT
 		,@MessageEditMaxbet NVARCHAR(2000)
 		,@MessageEditMaxbetId INT
+		,@MessageEditMaxbetCN88 NVARCHAR(2000)
+		,@MessageEditMaxbetCN88Id INT
 		,@MessageEditSpread NVARCHAR(2000)
 		,@MessageEditSpreadId INT
+		,@MessageEditSpreadCN88 NVARCHAR(2000)
+		,@MessageEditSpreadCN88Id INT
 		-- send message by condition date
 		,@FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
@@ -122,7 +127,6 @@ BEGIN
 		,@EditKOTimeMessageTypeId INT = 28
 		,@EditMarketMessageTypeId INT = 24
 		,@EditMatchOfferMessageTypeId INT = 20
-		,@EditMaxbetMessageTypeId INT = 29
 		,@EditNoOfHDPMessageTypeId INT = 27
 		,@EditOtherProviderMessageTypeId INT = 17
 		,@EditOtherTimeMessageTypeId INT = 19
@@ -130,7 +134,6 @@ BEGIN
 		,@EditProviderMessageTypeId INT = 18
 		,@EditRemarkMessageTypeId INT = 26
 		,@EditRoundMessageTypeId INT = 21
-		,@EditSpreadMessageTypeId INT = 30
 		,@EditTVMessageTypeId INT = 11
 		,@EditVenueMessageTypeId INT = 23
 		,@EditWBMessageTypeId INT = 16
@@ -209,16 +212,28 @@ BEGIN
 		,Note XML
 		,MaxBetHDP MONEY
 		,SpreadHDP SMALLMONEY
+		,MaxBetHDP_CN88 MONEY
+		,SpreadHDP_CN88 SMALLMONEY
 		,MaxBet1HHDP MONEY
 		,Spread1HHDP SMALLMONEY
+		,MaxBet1HHDP_CN88 MONEY
+		,Spread1HHDP_CN88 SMALLMONEY
 		,MaxBetOU MONEY
 		,SpreadOU SMALLMONEY
+		,MaxBetOU_CN88 MONEY
+		,SpreadOU_CN88 SMALLMONEY
 		,MaxBet1HOU MONEY
 		,Spread1HOU SMALLMONEY
+		,MaxBet1HOU_CN88 MONEY
+		,Spread1HOU_CN88 SMALLMONEY
 		,MaxBet1X2 MONEY
 		,Spread1X2 SMALLMONEY
+		,MaxBet1X2_CN88 MONEY
+		,Spread1X2_CN88 SMALLMONEY
 		,MaxBet1H1X2 MONEY
 		,Spread1H1X2 SMALLMONEY
+		,MaxBet1H1X2_CN88 MONEY
+		,Spread1H1X2_CN88 SMALLMONEY
 		,TraderHDP NVARCHAR(200)
 		,Trader1HHDP NVARCHAR(200)
 		,TraderOU NVARCHAR(200)
@@ -228,8 +243,12 @@ BEGIN
 		,LA NVARCHAR(200)
 		,MaxBetXMins MONEY
 		,SpreadXMins SMALLMONEY
+		,MaxBetXMins_CN88 MONEY
+		,SpreadXMins_CN88 SMALLMONEY
 		,MaxBetFM MONEY
 		,SpreadFM SMALLMONEY
+		,MaxBetFM_CN88 MONEY
+		,SpreadFM_CN88 SMALLMONEY
 		,EventDateTime DATETIME
 		,MatchStatus VARCHAR(15)
 		,[Round] NVARCHAR(2000)
@@ -454,7 +473,9 @@ BEGIN
 		OWPMatchId INT NOT NULL
 		,BetType INT NOT NULL
 		,MaxBet MONEY
+		,MaxBetCN88 MONEY
 		,Spread SMALLMONEY
+		,SpreadCN88 SMALLMONEY
 		)
 
 	--list of old MatchSetting of existed match 
@@ -462,7 +483,9 @@ BEGIN
 		OWPMatchId INT NOT NULL
 		,BetType INT NOT NULL
 		,MaxBet MONEY
+		,MaxBetCN88 MONEY
 		,Spread SMALLMONEY
+		,SpreadCN88 SMALLMONEY
 		)
 
 	--log for actions on table MatchSetting
@@ -471,7 +494,9 @@ BEGIN
 		,OWPMatchId INT NOT NULL
 		,BetType INT NOT NULL
 		,MaxBet MONEY
+		,MaxBetCN88 MONEY
 		,Spread SMALLMONEY
+		,SpreadCN88 SMALLMONEY
 		)
 
 	--list of Assignment from upload data
@@ -562,9 +587,13 @@ BEGIN
 		,ParentMatchId INT
 		,Bettype INT
 		,OldMaxbet NVARCHAR(200)
+		,OldMaxbetCN88 NVARCHAR(200)
 		,NewMaxbet NVARCHAR(200)
+		,NewMaxbetCN88 NVARCHAR(200)
 		,OldSpread NVARCHAR(200)
+		,OldSpreadCN88 NVARCHAR(200)
 		,NewSpread NVARCHAR(200)
+		,NewSpreadCN88 NVARCHAR(200)
 		)
 
 	CREATE TABLE #tblMessageUpdateMatchSetting(
@@ -668,16 +697,28 @@ BEGIN
 			,Note
 			,MaxBetHDP
 			,SpreadHDP
+			,MaxBetHDP_CN88
+			,SpreadHDP_CN88
 			,MaxBet1HHDP
 			,Spread1HHDP
+			,MaxBet1HHDP_CN88
+			,Spread1HHDP_CN88
 			,MaxBetOU
 			,SpreadOU
+			,MaxBetOU_CN88
+			,SpreadOU_CN88
 			,MaxBet1HOU
 			,Spread1HOU
+			,MaxBet1HOU_CN88
+			,Spread1HOU_CN88
 			,MaxBet1X2
 			,Spread1X2
+			,MaxBet1X2_CN88
+			,Spread1X2_CN88
 			,MaxBet1H1X2
 			,Spread1H1X2
+			,MaxBet1H1X2_CN88
+			,Spread1H1X2_CN88
 			,TraderHDP
 			,Trader1HHDP
 			,TraderOU
@@ -687,8 +728,12 @@ BEGIN
 			,LA
 			,MaxBetXMins
 			,SpreadXMins
+			,MaxBetXMins_CN88
+			,SpreadXMins_CN88
 			,MaxBetFM
 			,SpreadFM
+			,MaxBetFM_CN88
+			,SpreadFM_CN88
 			,EventDateTime
 			,MatchStatus
 			,[Round]
@@ -733,11 +778,27 @@ BEGIN
 				ELSE NULL
 				END
 			,CASE 
+				WHEN ISNUMERIC(au.MaxBetHDP_CN88) = 1 THEN CAST(au.MaxBetHDP_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.SpreadHDP_CN88) = 1 THEN CAST(au.SpreadHDP_CN88 AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
 				WHEN ISNUMERIC(au.MaxBet1HHDP) = 1 THEN CAST(au.MaxBet1HHDP AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1HHDP) = 1 THEN CAST(au.Spread1HHDP AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.MaxBet1HHDP_CN88) = 1 THEN CAST(au.MaxBet1HHDP_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.Spread1HHDP_CN88) = 1 THEN CAST(au.Spread1HHDP_CN88 AS SMALLMONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -749,11 +810,27 @@ BEGIN
 				ELSE NULL
 				END
 			,CASE 
+				WHEN ISNUMERIC(au.MaxBetOU_CN88) = 1 THEN CAST(au.MaxBetOU_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.SpreadOU_CN88) = 1 THEN CAST(au.SpreadOU_CN88 AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
 				WHEN ISNUMERIC(au.MaxBet1HOU) = 1 THEN CAST(au.MaxBet1HOU AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1HOU) = 1 THEN CAST(au.Spread1HOU AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.MaxBet1HOU_CN88) = 1 THEN CAST(au.MaxBet1HOU_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.Spread1HOU_CN88) = 1 THEN CAST(au.Spread1HOU_CN88 AS SMALLMONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -765,11 +842,27 @@ BEGIN
 				ELSE NULL
 				END
 			,CASE 
+				WHEN ISNUMERIC(au.MaxBet1X2_CN88) = 1 THEN CAST(au.MaxBet1X2_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.Spread1X2_CN88) = 1 THEN CAST(au.Spread1X2_CN88 AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
 				WHEN ISNUMERIC(au.MaxBet1H1X2) = 1 THEN CAST(au.MaxBet1H1X2 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1H1X2) = 1 THEN CAST(au.Spread1H1X2 AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.MaxBet1H1X2_CN88) = 1 THEN CAST(au.MaxBet1H1X2_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.Spread1H1X2_CN88) = 1 THEN CAST(au.Spread1H1X2_CN88 AS SMALLMONEY)
 				ELSE NULL
 				END
 			,au.TraderHDP
@@ -788,11 +881,27 @@ BEGIN
 				ELSE NULL
 				END
 			,CASE 
+				WHEN ISNUMERIC(au.MaxBetXMins_CN88) = 1 THEN CAST(au.MaxBetXMins_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.SpreadXMins_CN88) = 1 THEN CAST(au.SpreadXMins_CN88 AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
 				WHEN ISNUMERIC(au.MaxBetFM) = 1 THEN CAST(au.MaxBetFM AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadFM) = 1 THEN CAST(au.SpreadFM AS SMALLMONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.MaxBetFM_CN88) = 1 THEN CAST(au.MaxBetFM_CN88 AS MONEY)
+				ELSE NULL
+				END
+			,CASE 
+				WHEN ISNUMERIC(au.SpreadFM_CN88) = 1 THEN CAST(au.SpreadFM_CN88 AS SMALLMONEY)
 				ELSE NULL
 				END
 			,DATEADD(DAY, DATEDIFF(DAY, 0, EventDate), CAST(KickOffTime AS DATETIME))
@@ -1996,59 +2105,85 @@ BEGIN
 			,BetType
 			,MaxBet
 			,Spread
+			,MaxBetCN88
+			,SpreadCN88
 			)
 		SELECT OWPMatchId
 			,1
 			,MaxBetHDP
 			,SpreadHDP
+			,MaxBetHDP_CN88
+			,SpreadHDP_CN88
 		FROM #tblMatch
 		WHERE MaxBetHDP IS NOT NULL
 			OR SpreadHDP IS NOT NULL
+			OR MaxBetHDP_CN88 IS NOT NULL
+			OR SpreadHDP_CN88 IS NOT NULL
 		
 		UNION ALL
 		SELECT OWPMatchId
 			,3
 			,MaxBetOU
 			,SpreadOU
+			,MaxBetOU_CN88
+			,SpreadOU_CN88
 		FROM #tblMatch
 		WHERE MaxBetOU IS NOT NULL
 			OR SpreadOU IS NOT NULL
+			OR MaxBetOU_CN88 IS NOT NULL
+			OR SpreadOU_CN88 IS NOT NULL
 		
 		UNION ALL
 		SELECT OWPMatchId
 			,5
 			,MaxBet1X2
 			,Spread1X2
+			,MaxBet1X2_CN88
+			,Spread1X2_CN88
 		FROM #tblMatch
 		WHERE MaxBet1X2 IS NOT NULL
 			OR Spread1X2 IS NOT NULL
+			OR MaxBet1X2_CN88 IS NOT NULL
+			OR Spread1X2_CN88 IS NOT NULL
 		
 		UNION ALL
 		SELECT OWPMatchId
 			,7
 			,MaxBet1HHDP
 			,Spread1HHDP
+			,MaxBet1HHDP_CN88
+			,Spread1HHDP_CN88
 		FROM #tblMatch
 		WHERE MaxBet1HHDP IS NOT NULL
 			OR Spread1HHDP IS NOT NULL
+			OR MaxBet1HHDP_CN88 IS NOT NULL
+			OR Spread1HHDP_CN88 IS NOT NULL
 		
 		UNION ALL
 		SELECT OWPMatchId
 			,8
 			,MaxBet1HOU
 			,Spread1HOU
+			,MaxBet1HOU_CN88
+			,Spread1HOU_CN88
 		FROM #tblMatch
 		WHERE MaxBet1HOU IS NOT NULL
 			OR Spread1HOU IS NOT NULL
+			OR MaxBet1HOU_CN88 IS NOT NULL
+			OR Spread1HOU_CN88 IS NOT NULL
 		
 		UNION ALL
 		SELECT OWPMatchId
 			,15
 			,MaxBet1H1X2
 			,Spread1H1X2
+			,MaxBet1H1X2_CN88
+			,Spread1H1X2_CN88
 		FROM #tblMatch
 		WHERE MaxBet1H1X2 IS NOT NULL
 			OR Spread1H1X2 IS NOT NULL
+			OR MaxBet1H1X2_CN88 IS NOT NULL
+			OR Spread1H1X2_CN88 IS NOT NULL
 
 		-- store old match setting of existed match
 		INSERT INTO #tblOldMatchSetting (
@@ -2056,11 +2191,15 @@ BEGIN
 			,BetType
 			,MaxBet
 			,Spread
+			,MaxBetCN88
+			,SpreadCN88
 			)
 		SELECT ms.OWPMatchId
 			,ms.Bettype
 			,ms.Maxbet
 			,ms.Spread
+			,ms.MaxbetCN88
+			,ms.SpreadCN88
 		FROM dbo.MatchSetting AS ms WITH (NOLOCK)
 			INNER JOIN #tblExistedMatch AS em ON ms.OWPMatchId = em.OWPMatchId
 
@@ -2071,7 +2210,9 @@ BEGIN
 			,deleted.Bettype
 			,deleted.Maxbet
 			,deleted.Spread
-		INTO #tblMatchSettingLog
+			,deleted.MaxbetCN88
+			,deleted.SpreadCN88
+		INTO #tblMatchSettingLog ([Action], OWPMatchId, BetType, MaxBet, Spread, MaxBetCN88, SpreadCN88)
 		FROM dbo.MatchSetting AS ms WITH (ROWLOCK)
 			INNER JOIN #tblRemoveMatch AS rm WITH (NOLOCK) ON ms.OWPMatchId = rm.OWPMatchId
 
@@ -2082,7 +2223,9 @@ BEGIN
 			,deleted.Bettype
 			,deleted.Maxbet
 			,deleted.Spread
-		INTO #tblMatchSettingLog
+			,deleted.MaxbetCN88
+			,deleted.SpreadCN88
+		INTO #tblMatchSettingLog ([Action], OWPMatchId, BetType, MaxBet, Spread, MaxBetCN88, SpreadCN88)
 		FROM dbo.MatchSetting AS ms WITH (ROWLOCK)
 			INNER JOIN #tblMatch AS m ON ms.OWPMatchId = m.OWPMatchId
 			LEFT JOIN #tblMatchSetting AS tms ON ms.OWPMatchId = tms.OWPMatchId
@@ -2096,6 +2239,8 @@ BEGIN
 				,BetType
 				,MaxBet
 				,Spread
+				,MaxBetCN88
+				,SpreadCN88
 			FROM #tblMatchSetting
 			) AS tms ON ms.OWPMatchId = tms.OWPMatchId
 				AND ms.BetType = tms.BetType
@@ -2103,22 +2248,30 @@ BEGIN
 			AND (
 				ISNULL(ms.MaxBet, - 1) <> ISNULL(tms.MaxBet, - 1)
 				OR ISNULL(ms.Spread, - 1) <> ISNULL(tms.Spread, - 1)
+				OR ISNULL(ms.MaxBetCN88, - 1) <> ISNULL(tms.MaxBetCN88, - 1)
+				OR ISNULL(ms.SpreadCN88, - 1) <> ISNULL(tms.SpreadCN88, - 1)
 				) THEN
 				UPDATE
 				SET ms.MaxBet = tms.MaxBet
 					,ms.Spread = tms.Spread
+					,ms.MaxBetCN88 = tms.MaxBetCN88
+					,ms.SpreadCN88 = tms.SpreadCN88
 		WHEN NOT MATCHED BY TARGET THEN
 				INSERT (
 					OWPMatchId
 					,Bettype
 					,MaxBet
 					,Spread
+					,MaxBetCN88
+					,SpreadCN88
 					)
 				VALUES (
 					tms.OWPMatchId
 					,tms.Bettype
 					,tms.MaxBet
 					,tms.Spread
+					,tms.MaxBetCN88
+					,tms.SpreadCN88
 					)
 		OUTPUT $ACTION
 			,CASE 
@@ -2136,6 +2289,14 @@ BEGIN
 			,CASE 
 				WHEN inserted.Spread IS NOT NULL THEN inserted.Spread
 				ELSE deleted.Spread
+				END
+			,CASE 
+				WHEN inserted.MaxbetCN88 IS NOT NULL THEN inserted.MaxbetCN88
+				ELSE deleted.MaxbetCN88
+				END
+			,CASE 
+				WHEN inserted.SpreadCN88 IS NOT NULL THEN inserted.SpreadCN88
+				ELSE deleted.SpreadCN88
 				END
 		INTO #tblMatchSettingLog;
 
@@ -2915,11 +3076,21 @@ BEGIN
 			,@MessageEditMaxbetId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditMaxbet'
+		
+		SELECT @MessageEditMaxbetCN88 = mt.MsgTemplateContent
+			,@MessageEditMaxbetCN88Id = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditMaxbetCN88'
 
 		SELECT @MessageEditSpread = mt.MsgTemplateContent
 			,@MessageEditSpreadId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditSpread'
+		
+		SELECT @MessageEditSpreadCN88 = mt.MsgTemplateContent
+			,@MessageEditSpreadCN88Id = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditSpreadCN88'
 		
 		-- get List match edited match setting in time range
 		INSERT INTO #tblMatchEditedMatchSettingInTimeRange (
@@ -2927,31 +3098,49 @@ BEGIN
 			,ParentMatchId
 			,Bettype
 			,OldMaxbet
+			,OldMaxbetCN88
 			,NewMaxbet
+			,NewMaxbetCN88
 			,OldSpread
+			,OldSpreadCN88
 			,NewSpread
+			,NewSpreadCN88
 			)
 		SELECT um.OWPMatchId
 			,mtr.ParentMatchId
 			,um.BetType
 			,CASE WHEN um.OldMaxBet IS NOT NULL THEN REPLACE(REPLACE(RTRIM(REPLACE(LTRIM(STR(um.OldMaxBet/1000, 100, 3)), '0' ,' ')), ' ','0') + ' ', '. ', '') + 'k'
 				ELSE '' END AS OldMaxBet
+			,CASE WHEN um.OldMaxBetCN88 IS NOT NULL THEN REPLACE(REPLACE(RTRIM(REPLACE(LTRIM(STR(um.OldMaxBetCN88/1000, 100, 3)), '0' ,' ')), ' ','0') + ' ', '. ', '') + 'k'
+				ELSE '' END AS OldMaxBetCN88
 			,CASE WHEN um.NewMaxBet IS NOT NULL THEN REPLACE(REPLACE(RTRIM(REPLACE(LTRIM(STR(um.NewMaxBet/1000, 100, 3)), '0' ,' ')), ' ','0') + ' ', '. ', '') + 'k'
-				ELSE '' END
+				ELSE '' END AS NewMaxBet
+			,CASE WHEN um.NewMaxBetCN88 IS NOT NULL THEN REPLACE(REPLACE(RTRIM(REPLACE(LTRIM(STR(um.NewMaxBetCN88/1000, 100, 3)), '0' ,' ')), ' ','0') + ' ', '. ', '') + 'k'
+				ELSE '' END AS NewMaxBetCN88
 			,CASE WHEN um.OldSpread IS NOT NULL THEN CONVERT(varchar, CAST(um.OldSpread * 100 AS float)) + '%'
 				ELSE '' END AS OldSpread
+			,CASE WHEN um.OldSpreadCN88 IS NOT NULL THEN CONVERT(varchar, CAST(um.OldSpreadCN88 * 100 AS float)) + '%'
+				ELSE '' END AS OldSpreadCN88
 			,CASE WHEN um.NewSpread IS NOT NULL THEN CONVERT(varchar, CAST(um.NewSpread * 100 AS float)) + '%'
-				ELSE '' END
+				ELSE '' END AS NewSpread
+			,CASE WHEN um.NewSpreadCN88 IS NOT NULL THEN CONVERT(varchar, CAST(um.NewSpreadCN88 * 100 AS float)) + '%'
+				ELSE '' END AS NewSpreadCN88
 		FROM (SELECT ISNULL(n.OWPMatchId, o.OWPMatchId) AS OWPMatchId
 				,ISNULL(n.BetType, o.BetType) AS BetType
 				,n.MaxBet AS NewMaxBet
+				,n.MaxBetCN88 AS NewMaxBetCN88
 				,o.MaxBet AS OldMaxBet
+				,o.MaxBetCN88 AS OldMaxBetCN88
 				,n.Spread AS NewSpread
+				,n.SpreadCN88 AS NewSpreadCN88
 				,o.Spread AS OldSpread
+				,o.SpreadCN88 AS OldSpreadCN88
 			FROM #tblMatchSetting AS n
 			FULL JOIN #tblOldMatchSetting AS o ON n.OWPMatchId = o.OWPMatchId AND n.BetType = o.BetType
 			WHERE ISNULL(n.MaxBet, 0) <> ISNULL(o.MaxBet, 0)
+				OR ISNULL(n.MaxBetCN88, 0) <> ISNULL(o.MaxBetCN88, 0)
 				OR ISNULL(n.Spread, 0) <> ISNULL(o.Spread, 0)
+				OR ISNULL(n.SpreadCN88, 0) <> ISNULL(o.SpreadCN88, 0)
 			) AS um
 			INNER JOIN #tblExistedMatch AS em ON um.OWPMatchId = em.OWPMatchId
 			INNER JOIN #tblMatchInTimeRange AS mtr ON um.OWPMatchId = mtr.OWPMatchId
@@ -2989,8 +3178,39 @@ BEGIN
 			WHERE m.OldMaxbet <> m.NewMaxbet
 				AND (mm.MinorBettypeId IS NULL
 				OR mm.MinorBettypeId <> @Specific10Mins) -- not show diff maxbet of 10mins match
+				
+			UNION
+			
+			SELECT m.OWPMatchId
+				,@MessageEditMaxbetCN88Id AS MessageTypeId
+				,REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(
+										REPLACE(@MessageEditMaxbetCN88
+										,'<User>', @Username)
+									,'<Event>', pm.Home + ' -vs- ' + pm.Away)
+								,'<Bettype>', CASE WHEN mb.MinorBettypeId IS NULL THEN mjb.ShortName
+												WHEN mm.MinorBettypeId = @Specific15Mins THEN 'X MIN'
+												WHEN mm.MinorBettypeId = @FastMarket THEN 'Fast Market'
+												ELSE mb.MinorBettypeName END)
+							,'<Old>', m.OldMaxbetCN88)
+						,'<New>', m.NewMaxbetCN88)
+					,'<League>', pm.League)
+				,'<Match.No>', CASE WHEN pm.MatchNo = '' THEN '' ELSE '#' + pm.MatchNo END) AS MessageContent
+			FROM #tblMatchEditedMatchSettingInTimeRange AS m
+				LEFT JOIN #tblMatch AS pm ON m.ParentMatchId = pm.OWPMatchId
+				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
+				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.ParentBettypeId = mm.MinorBettypeId AND m.Bettype = mb.InheritedBettypeId
+				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON mjb.BettypeId = m.Bettype
+			WHERE m.OldMaxbetCN88 <> m.NewMaxbetCN88
+				AND (mm.MinorBettypeId IS NULL
+				OR mm.MinorBettypeId <> @Specific10Mins) -- not show diff maxbet of 10mins match
 			
 			UNION
+			
 			SELECT m.OWPMatchId
 				,@MessageEditSpreadId AS MessageTypeId
 				,REPLACE(
@@ -3016,6 +3236,36 @@ BEGIN
 				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.ParentBettypeId = mm.MinorBettypeId AND m.Bettype = mb.InheritedBettypeId
 				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON mjb.BettypeId = m.Bettype
 			WHERE m.OldSpread <> m.NewSpread
+				AND (mm.MinorBettypeId IS NULL
+				OR mm.MinorBettypeId <> @Specific10Mins)  -- not show diff spread of 10mins match
+				
+			UNION
+			
+			SELECT m.OWPMatchId
+				,@MessageEditSpreadCN88Id AS MessageTypeId
+				,REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(
+										REPLACE(@MessageEditSpreadCN88
+										,'<User>', @Username)
+									,'<Event>', pm.Home + ' -vs- ' + pm.Away)
+								,'<Bettype>', CASE WHEN mb.MinorBettypeId IS NULL THEN mjb.ShortName
+												WHEN mm.MinorBettypeId = @Specific15Mins THEN 'X MIN'
+												WHEN mm.MinorBettypeId = @FastMarket THEN 'Fast Market'
+												ELSE mb.MinorBettypeName END)
+							,'<Old>', m.OldSpreadCN88)
+						,'<New>', m.NewSpreadCN88)
+					,'<League>', pm.League)
+				,'<Match.No>', CASE WHEN pm.MatchNo = '' THEN '' ELSE '#' + pm.MatchNo END) AS MessageContent
+			FROM #tblMatchEditedMatchSettingInTimeRange AS m
+				LEFT JOIN #tblMatch AS pm ON m.ParentMatchId = pm.OWPMatchId
+				LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
+				LEFT JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.ParentBettypeId = mm.MinorBettypeId AND m.Bettype = mb.InheritedBettypeId
+				LEFT JOIN dbo.MajorBettype AS mjb WITH (NOLOCK) ON mjb.BettypeId = m.Bettype
+			WHERE m.OldSpreadCN88 <> m.NewSpreadCN88
 				AND (mm.MinorBettypeId IS NULL
 				OR mm.MinorBettypeId <> @Specific10Mins)  -- not show diff spread of 10mins match
 

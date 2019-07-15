@@ -11,6 +11,7 @@ AS
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180724@Raymond.Le: Modify rule follow new uploading structure  - [Redmine: #92868]
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -68,7 +69,15 @@ BEGIN
 				WHEN 'Spread1X2' THEN 'Spread (1X2)'
 				WHEN 'Spread1H1X2' THEN 'Spread (1H 1X2)'
 				WHEN 'SpreadXmins' THEN 'Spread (x mins)'
-				WHEN 'SpreadFM' THEN 'Spread (FM)' END
+				WHEN 'SpreadFM' THEN 'Spread (FM)'
+				WHEN 'SpreadHDP_CN88' THEN 'Spread CN88 (HDP)'
+				WHEN 'Spread1HHDP_CN88' THEN 'Spread CN88 (1H HDP)'
+				WHEN 'SpreadOU_CN88' THEN 'Spread CN88 (O/U)'
+				WHEN 'Spread1HOU_CN88' THEN 'Spread CN88 (1H O/U)'
+				WHEN 'Spread1X2_CN88' THEN 'Spread CN88 (1X2)'
+				WHEN 'Spread1H1X2_CN88' THEN 'Spread CN88 (1H 1X2)'
+				WHEN 'SpreadXmins_CN88' THEN 'Spread CN88 (x mins)'
+				WHEN 'SpreadFM_CN88' THEN 'Spread CN88 (FM)' END
 				) AS ColumnName
 			,unpvt.Spread
 			,0
@@ -82,11 +91,19 @@ BEGIN
 				,Spread1H1X2
 				,SpreadXMins
 				,SpreadFM
+				,SpreadHDP_CN88
+				,Spread1HHDP_CN88
+				,SpreadOU_CN88
+				,Spread1HOU_CN88
+				,Spread1X2_CN88
+				,Spread1H1X2_CN88
+				,SpreadXMins_CN88
+				,SpreadFM_CN88
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 				AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			) AS upload
-		UNPIVOT(Spread FOR ColumnName IN (SpreadHDP, Spread1HHDP, SpreadOU, Spread1HOU, Spread1X2, Spread1H1X2, SpreadXMins, SpreadFM)) unpvt
+		UNPIVOT(Spread FOR ColumnName IN (SpreadHDP, Spread1HHDP, SpreadOU, Spread1HOU, Spread1X2, Spread1H1X2, SpreadXMins, SpreadFM, SpreadHDP_CN88, Spread1HHDP_CN88, SpreadOU_CN88, Spread1HOU_CN88, Spread1X2_CN88, Spread1H1X2_CN88, SpreadXMins_CN88, SpreadFM_CN88)) unpvt
 
 		-- check spread
 		UPDATE upload

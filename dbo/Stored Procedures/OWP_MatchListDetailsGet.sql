@@ -21,7 +21,7 @@ AS
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
-
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -292,7 +292,9 @@ BEGIN
 		,Bettype INT
 		,MinorBettypeId INT
 		,MaxBet MONEY
-		,Spread MONEY
+		,Spread SMALLMONEY
+		,MaxBetCN88 MONEY
+		,SpreadCN88 SMALLMONEY
 		,IsMatchSetting BIT
 		,LeagueId INT
 		)
@@ -304,6 +306,8 @@ BEGIN
 		,MinorBettypeId
 		,MaxBet
 		,Spread
+		,MaxBetCN88
+		,SpreadCN88
 		,IsMatchSetting
 		)
 	SELECT ml.owpmatchid
@@ -312,6 +316,8 @@ BEGIN
 		,ml.MinorBettypeId
 		,ms.Maxbet
 		,ms.Spread
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 		,1
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.owpmatchid = ms.OWPMatchId
@@ -395,6 +401,8 @@ BEGIN
 		,mb.MinorBettypeId
 		,mb.MaxBet
 		,mb.Spread
+		,mb.MaxBetCN88
+		,mb.SpreadCN88
 	FROM #tblMaxBet AS mb WITH (NOLOCK)
 
 	-- Return TV 

@@ -11,6 +11,7 @@ AS
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -72,7 +73,17 @@ BEGIN
 				WHEN ColumnName = 'SpreadXMins'
 					AND ISNULL(unpvt.MinorBettypeId, 0) IN (0, @NoOfCorners, @TotalBooking) THEN 'Spread (x mins)'
 				WHEN (ColumnName = 'SpreadFM')
-					AND unpvt.MinorBettypeId IS NULL THEN 'Spread (FM)' 
+					AND unpvt.MinorBettypeId IS NULL THEN 'Spread (FM)'
+				WHEN ColumnName = 'SpreadHDP_CN88' THEN 'Spread CN88 (HDP)'
+				WHEN ColumnName = 'Spread1HHDP_CN88' THEN 'Spread CN88 (1H HDP)'
+				WHEN ColumnName = 'SpreadOU_CN88' THEN 'Spread CN88 (O/U)'
+				WHEN ColumnName = 'Spread1HOU_CN88' THEN 'Spread CN88 (1H O/U)'
+				WHEN ColumnName = 'Spread1X2_CN88' THEN 'Spread CN88 (1X2)'
+				WHEN ColumnName = 'Spread1H1X2_CN88' THEN 'Spread CN88 (1H 1X2)'
+				WHEN ColumnName = 'SpreadXMins_CN88'
+					AND ISNULL(unpvt.MinorBettypeId, 0) IN (0, @NoOfCorners, @TotalBooking) THEN 'Spread CN88 (x mins)'
+				WHEN (ColumnName = 'SpreadFM_CN88')
+					AND unpvt.MinorBettypeId IS NULL THEN 'Spread CN88 (FM)' 
 				ELSE 'ignore' END
 				) AS ColumnName
 			,unpvt.Spread
@@ -87,12 +98,20 @@ BEGIN
 				,Spread1H1X2
 				,SpreadXMins
 				,SpreadFM
+				,SpreadHDP_CN88
+				,Spread1HHDP_CN88
+				,SpreadOU_CN88
+				,Spread1HOU_CN88
+				,Spread1X2_CN88
+				,Spread1H1X2_CN88
+				,SpreadXMins_CN88
+				,SpreadFM_CN88
 				,MinorBettypeId
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 				AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			) AS upload
-		UNPIVOT(Spread FOR ColumnName IN (SpreadHDP, Spread1HHDP, SpreadOU, Spread1HOU, Spread1X2, Spread1H1X2, SpreadXMins, SpreadFM)) unpvt
+		UNPIVOT(Spread FOR ColumnName IN (SpreadHDP, Spread1HHDP, SpreadOU, Spread1HOU, Spread1X2, Spread1H1X2, SpreadXMins, SpreadFM, SpreadHDP_CN88, Spread1HHDP_CN88, SpreadOU_CN88, Spread1HOU_CN88, Spread1X2_CN88, Spread1H1X2_CN88, SpreadXMins_CN88, SpreadFM_CN88)) unpvt
 
 		-- check spread
 		UPDATE upload

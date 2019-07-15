@@ -11,6 +11,7 @@ AS
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -73,6 +74,16 @@ BEGIN
 					AND ISNULL(unpvt.MinorBettypeId, 0) IN (0, @NoOfCorners, @TotalBooking) THEN 'Max Bet (x mins)'
 				WHEN (ColumnName = 'MaxBetFM')
 					AND unpvt.MinorBettypeId IS NULL THEN 'Max Bet (FM)' 
+				WHEN ColumnName = 'MaxBetHDP_CN88' THEN 'Max Bet CN88 (HDP)'
+				WHEN ColumnName = 'MaxBet1HHDP_CN88' THEN 'Max Bet CN88 (1H HDP)'
+				WHEN ColumnName = 'MaxBetOU_CN88' THEN 'Max Bet CN88 (O/U)'
+				WHEN ColumnName = 'MaxBet1HOU_CN88' THEN 'Max Bet CN88 (1H O/U)'
+				WHEN ColumnName = 'MaxBet1X2_CN88' THEN 'Max Bet CN88 (1X2)'
+				WHEN ColumnName = 'MaxBet1H1X2_CN88' THEN 'Max Bet CN88 (1H 1X2)'
+				WHEN (ColumnName = 'MaxBetXMins_CN88')
+					AND ISNULL(unpvt.MinorBettypeId, 0) IN (0, @NoOfCorners, @TotalBooking) THEN 'Max Bet CN88 (x mins)'
+				WHEN (ColumnName = 'MaxBetFM_CN88')
+					AND unpvt.MinorBettypeId IS NULL THEN 'Max Bet CN88 (FM)' 
 				ELSE 'ignore' END
 				) AS ColumnName
 			,unpvt.MaxBet
@@ -87,12 +98,20 @@ BEGIN
 				,MaxBet1H1X2
 				,MaxBetXMins
 				,MaxBetFM
+				,MaxBetHDP_CN88
+				,MaxBet1HHDP_CN88
+				,MaxBetOU_CN88
+				,MaxBet1HOU_CN88
+				,MaxBet1X2_CN88
+				,MaxBet1H1X2_CN88
+				,MaxBetXMins_CN88
+				,MaxBetFM_CN88
 				,MinorBettypeId
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 				AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			) AS upload
-		UNPIVOT(MaxBet FOR ColumnName IN (MaxBetHDP, MaxBet1HHDP, MaxBetOU, MaxBet1HOU, MaxBet1X2, MaxBet1H1X2, MaxBetXMins, MaxBetFM)) unpvt
+		UNPIVOT(MaxBet FOR ColumnName IN (MaxBetHDP, MaxBet1HHDP, MaxBetOU, MaxBet1HOU, MaxBet1X2, MaxBet1H1X2, MaxBetXMins, MaxBetFM, MaxBetHDP_CN88, MaxBet1HHDP_CN88, MaxBetOU_CN88, MaxBet1HOU_CN88, MaxBet1X2_CN88, MaxBet1H1X2_CN88, MaxBetXMins_CN88, MaxBetFM_CN88)) unpvt
 
 		-- check maxbet
 		UPDATE upload

@@ -46,6 +46,7 @@ Revisions:
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
+	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -158,7 +159,8 @@ BEGIN
 		,Maxbet MONEY
 		,Spread SMALLMONEY
 		,IsMatchSetting BIT
-		)
+		,MaxbetCN88 MONEY
+		,SpreadCN88 SMALLMONEY)
 
 	CREATE TABLE #tblParentMatchSetting (
 		OWPMatchId INT
@@ -279,6 +281,8 @@ BEGIN
 		,Maxbet
 		,Spread
 		,IsMatchSetting
+		,MaxbetCN88
+		,SpreadCN88
 		)
 	SELECT DISTINCT tm.OWPMatchId
 		,tm.ParentMatchId
@@ -287,6 +291,8 @@ BEGIN
 		,ms.Maxbet
 		,ms.Spread
 		,1
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 	FROM #tblMatch AS tm WITH (NOLOCK)
 		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON tm.OWPMatchId = ms.OWPMatchId
 		AND (
@@ -294,6 +300,7 @@ BEGIN
 			OR ms.Spread IS NOT NULL
 			)
 
+	
 	INSERT INTO #tblMatchSetting (
 		OWPMatchId
 		,ParentMatchId
@@ -981,6 +988,8 @@ BEGIN
 		,ms.MinorBettypeId
 		,ms.Maxbet
 		,ms.Spread
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatchSetting AS ms ON mf.OWPMatchId = ms.OWPMatchId
 

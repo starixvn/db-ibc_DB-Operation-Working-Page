@@ -67,8 +67,26 @@
     [Website4]           NVARCHAR (1000) CONSTRAINT [DF_AssignmentUploading_Website4] DEFAULT (N'') NOT NULL,
     [MinorBettypeId]     INT             NULL,
     [ParentRowNumber]    INT             NULL,
+    [MaxBetHDP_CN88]     NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBetHDP_CN88] DEFAULT (N'') NOT NULL,
+    [SpreadHDP_CN88]     NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_SpreadHDP1] DEFAULT (N'') NOT NULL,
+    [MaxBet1HHDP_CN88]   NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBet1HHDP1] DEFAULT (N'') NOT NULL,
+    [Spread1HHDP_CN88]   NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_Spread1HHDP1] DEFAULT (N'') NOT NULL,
+    [MaxBetOU_CN88]      NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBetOU1] DEFAULT (N'') NOT NULL,
+    [SpreadOU_CN88]      NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_SpreadOU1] DEFAULT (N'') NOT NULL,
+    [MaxBet1HOU_CN88]    NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBet1HOU1] DEFAULT (N'') NOT NULL,
+    [Spread1HOU_CN88]    NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_Spread1HOU1] DEFAULT (N'') NOT NULL,
+    [MaxBet1X2_CN88]     NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBet1X21] DEFAULT (N'') NOT NULL,
+    [Spread1X2_CN88]     NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_Spread1X21] DEFAULT (N'') NOT NULL,
+    [MaxBet1H1X2_CN88]   NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBet1H1X21] DEFAULT (N'') NOT NULL,
+    [Spread1H1X2_CN88]   NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_Spread1H1X21] DEFAULT (N'') NOT NULL,
+    [MaxBetXMins_CN88]   NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBetXMins1] DEFAULT (N'') NOT NULL,
+    [SpreadXMins_CN88]   NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_SpreadXMins1] DEFAULT (N'') NOT NULL,
+    [MaxBetFM_CN88]      NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_MaxBetFM1] DEFAULT (N'') NOT NULL,
+    [SpreadFM_CN88]      NVARCHAR (200)  CONSTRAINT [DF_AssignmentUploading_SpreadFM1] DEFAULT (N'') NOT NULL,
     CONSTRAINT [PK_AssignmentUploading] PRIMARY KEY CLUSTERED ([SessionId] ASC, [RowNumber] ASC)
 );
+
+
 
 
 

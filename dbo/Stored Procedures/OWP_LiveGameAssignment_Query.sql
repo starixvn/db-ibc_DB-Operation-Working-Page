@@ -11,6 +11,7 @@ AS
 
  Revisions:
 	20190619@Kane.Le: Initial SP - [Feature: #114614]
+	20190712@Tyler.Dang: Add MaxbetCN88 and SpreadCN88 Live Game Assignment - [Feature: #116791]
 
 */
 BEGIN
@@ -413,6 +414,8 @@ BEGIN
 		,MinorBettypeId INT
 		,MaxBet MONEY
 		,Spread MONEY
+		,MaxBetCN88 MONEY
+		,SpreadCN88 MONEY
 		,IsMatchSetting BIT
 		,LeagueId INT
 		)
@@ -424,6 +427,8 @@ BEGIN
 		,MinorBettypeId
 		,MaxBet
 		,Spread
+		,MaxBetCN88
+		,SpreadCN88
 		,IsMatchSetting
 		)
 	SELECT ml.owpmatchid
@@ -432,6 +437,8 @@ BEGIN
 		,ml.MinorBettypeId
 		,ms.Maxbet
 		,ms.Spread
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 		,1
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.owpmatchid = ms.OWPMatchId
@@ -544,6 +551,8 @@ BEGIN
 		,mb.MinorBettypeId
 		,mb.MaxBet
 		,mb.Spread
+		,mb.MaxBetCN88
+		,mb.SpreadCN88
 	FROM #tblMaxBet AS mb WITH (NOLOCK)
 
 	-- Return TV 
