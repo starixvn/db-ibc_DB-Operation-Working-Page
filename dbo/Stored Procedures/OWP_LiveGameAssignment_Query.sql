@@ -12,7 +12,7 @@ AS
  Revisions:
 	20190619@Kane.Le: Initial SP - [Feature: #114614]
 	20190712@Tyler.Dang: Add MaxbetCN88 and SpreadCN88 Live Game Assignment - [Feature: #116791]
-
+	20190716@Kane.Le: Filter with MinorBetType - [Feature: #116791]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -180,7 +180,6 @@ BEGIN
 			minor.IsRepresented = 1
 			OR minor.IsRepresented IS NULL
 			)
-	ORDER BY om.KickOffTime
 
 	CREATE TABLE #tblMatchIdsFilterByUserId (
 		OWPMatchId INT
@@ -218,6 +217,81 @@ BEGIN
 			OR u.UserId = @UserId
 			)
 
+	-- SELECT * FROM #owpMatchListByDate
+	CREATE TABLE #tblOWPMatchFilter (
+		OWPMatchId INT	
+		)
+
+	INSERT INTO #tblOWPMatchFilter
+	SELECT ml.ParentMatchId		
+	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
+	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
+	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
+	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
+	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
+	LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
+	WHERE (
+			ml.MinorBettypeId IN (
+				@Specific15Mins
+				,@Specific10Mins
+				,@Specific15MinsNoOfCorners
+				,@Specific15MinsTotalBooking
+				,@FastMarket
+				,@AllInOne
+				)
+			OR ml.MinorBettypeId IS NOT NULL
+			)
+		AND (
+			@UserId IS NULL
+			OR ml.OWPMatchId IN (
+				SELECT OWPMatchId
+				FROM #tblMatchIdsFilterByUserId
+				)
+			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
+	
+	UNION
+	
+	SELECT ml.OWPMatchId		
+	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
+	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
+	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
+	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
+	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
+	LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
+	WHERE (
+			ml.MinorBettypeId NOT IN (
+				@Specific15Mins
+				,@Specific10Mins
+				,@Specific15MinsNoOfCorners
+				,@Specific15MinsTotalBooking
+				,@FastMarket
+				,@AllInOne
+				)
+			OR ml.MinorBettypeId IS NULL
+			)
+		AND (
+			@UserId IS NULL
+			OR ml.OWPMatchId IN (
+				SELECT OWPMatchId
+				FROM #tblMatchIdsFilterByUserId
+				)
+			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
+
+	 
 	-- Return Matches info
 	SELECT ml.OWPMatchId
 		,ml.MatchNo
@@ -284,30 +358,9 @@ BEGIN
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
 	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
 	LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
-	WHERE (
-			ml.MinorBettypeId NOT IN (
-				@Specific15Mins
-				,@Specific10Mins
-				,@Specific15MinsNoOfCorners
-				,@Specific15MinsTotalBooking
-				,@FastMarket
-				,@AllInOne
-				)
-			OR ml.MinorBettypeId IS NULL
-			)
-		AND (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
-		AND (
-			@MatchStatusIds IS NULL
-			OR ml.MatchStatus IN (
-				SELECT [Value]
-				FROM @tblRefResourceMatchStatus
-				)
+	WHERE ml.OWPMatchId IN (
+			SELECT OWPMatchId
+			FROM #tblOWPMatchFilter
 			)
 	ORDER BY ml.EventDate
 		,ml.KickOffTime
@@ -594,4 +647,6 @@ BEGIN
 	DROP TABLE #tblNoOfHDPResource
 
 	DROP TABLE #tblMatchIdsFilterByUserId
+
+	DROP TABLE #tblOWPMatchFilter
 END
