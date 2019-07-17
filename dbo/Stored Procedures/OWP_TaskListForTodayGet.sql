@@ -289,6 +289,8 @@ BEGIN
 		AND (
 			ms.Maxbet IS NOT NULL
 			OR ms.Spread IS NOT NULL
+			OR ms.MaxbetCN88 IS NOT NULL
+			OR ms.SpreadCN88 IS NOT NULL
 			)
 
 	INSERT INTO #tblMatchSetting (
