@@ -23,6 +23,7 @@ AS
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068] 
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
+	20190718@Leo.Vo: Add total row uploaded - [Redmine: #117098]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -30,6 +31,7 @@ BEGIN
 	DECLARE @idoc INT
 		,@totalRule INT
 		,@totalRow INT
+		,@totalRowUpload INT
 		,@NumberDayDeleteOldData INT = 3
 		,@Today DATETIME = GETDATE()
 
@@ -313,6 +315,8 @@ BEGIN
 		,[Website3] [nvarchar](1000)
 		,[Website4] [nvarchar](1000)
 		)
+		
+	SELECT @totalRowUpload = @@ROWCOUNT
 
 	EXEC sp_xml_removedocument @idoc
 
@@ -440,12 +444,14 @@ BEGIN
 	INSERT INTO dbo.AssignmentUploadingLog (
 		SessionId
 		,UserId
+		,TotalRowUpload
 		,TotalRowResult
 		,[Status]
 		)
 	VALUES (
 		@SessionId
 		,@UserId
+		,@totalRowUpload
 		,@totalRow * @totalRule
 		,0
 		)

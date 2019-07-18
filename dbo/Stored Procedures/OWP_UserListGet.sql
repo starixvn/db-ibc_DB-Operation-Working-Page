@@ -22,6 +22,7 @@ Revisions:
 	20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
 	20190402@Kane.Le: Get IsSecondAccount - [Redmine: #11068]
 	20190426@Kane.Le: Remove space whene search username - [Redmine: #111840]
+	20190718@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -145,6 +146,7 @@ BEGIN
 		AND uc.RefName = 'UserCategory'
 		LEFT JOIN dbo.RefResource AS ucl WITH (NOLOCK) ON u.[Level] = ucl.ResourceId
 		AND ucl.RefName = 'UserLevel'
+	ORDER BY u.Username ASC
 
 	-- total item
 	SELECT @TotalRecords = COUNT(1)

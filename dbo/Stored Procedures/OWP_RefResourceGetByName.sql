@@ -10,13 +10,15 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]  
 	20190110@Leo.Vo: Rename column RefResourceId in table RefResource - [Redmine: #107257]
+	20190719@Tyler.Dang: WEB - Reorder RefValue in User Management - [Redmine: #117125]
 */
 
 BEGIN
 	SET NOCOUNT ON
 	
 	SELECT	 r.ResourceId
-			,r.Value
+			,r.Value			 
 	FROM dbo.RefResource r WITH (NOLOCK)
 	WHERE r.RefName = @RefName
+	ORDER BY r.[Order] ASC, r.Value ASC
 END
