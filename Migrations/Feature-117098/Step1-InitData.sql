@@ -10,3 +10,8 @@ ALTER TABLE dbo.RefResource
 ADD [Order]     SMALLINT  CONSTRAINT [DF_RefResource_Order] DEFAULT (0) NOT NULL
 
 GO
+
+ALTER TABLE dbo.AssignmentUploadingLog
+ADD [TotalRowUpload]     SMALLINT  CONSTRAINT [DF_AssignmentUploadingLog_TotalRowUpload] DEFAULT (0) NOT NULL
+
+GO
