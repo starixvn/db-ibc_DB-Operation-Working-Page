@@ -26,3 +26,6 @@ IF OBJECT_ID('dbo.[Role]', 'U') IS NOT NULL
 DROP TABLE dbo.[Role];
 
 GO
+
+DROP PROCEDURE OWP_RoleGetAll  
+GO
