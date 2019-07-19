@@ -15,3 +15,14 @@ ALTER TABLE dbo.AssignmentUploadingLog
 ADD [TotalRowUpload]     SMALLINT  CONSTRAINT [DF_AssignmentUploadingLog_TotalRowUpload] DEFAULT (0) NOT NULL
 
 GO
+
+INSERT INTO dbo.[RefResource] (RefName, ResourceId, [Value], [Order])
+SELECT 'UserRole', RoleId, RoleName, RoleId
+FROM dbo.[Role]
+
+GO
+
+IF OBJECT_ID('dbo.[Role]', 'U') IS NOT NULL 
+DROP TABLE dbo.[Role];
+
+GO

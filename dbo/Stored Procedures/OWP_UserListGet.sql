@@ -23,6 +23,7 @@ Revisions:
 	20190402@Kane.Le: Get IsSecondAccount - [Redmine: #11068]
 	20190426@Kane.Le: Remove space whene search username - [Redmine: #111840]
 	20190718@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
+	20190719@Tyler.Dang: Change Role to RefResource - [Redmine: #117285]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -127,7 +128,7 @@ BEGIN
 		,u.SectionId
 		,sec.Value AS 'SectionName'
 		,ur.RoleId
-		,r.RoleName AS 'RoleName'
+		,r.Value 'RoleName'
 		,u.LocationCode
 		,u.Pickup
 		,u.[Address]
@@ -137,7 +138,6 @@ BEGIN
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
 		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
-		LEFT JOIN dbo.[Role] AS r WITH (NOLOCK) ON r.RoleId = ur.RoleId
 		LEFT JOIN dbo.RefResource AS dept WITH (NOLOCK) ON u.DepartmentId = dept.ResourceId
 		AND dept.RefName = 'Department'
 		LEFT JOIN dbo.RefResource AS sec WITH (NOLOCK) ON u.SectionId = sec.ResourceId
@@ -146,6 +146,8 @@ BEGIN
 		AND uc.RefName = 'UserCategory'
 		LEFT JOIN dbo.RefResource AS ucl WITH (NOLOCK) ON u.[Level] = ucl.ResourceId
 		AND ucl.RefName = 'UserLevel'
+		LEFT JOIN dbo.RefResource AS r WITH (NOLOCK) ON ur.RoleId = r.ResourceId
+		AND r.RefName = 'UserRole'
 	ORDER BY u.Username ASC
 
 	-- total item
