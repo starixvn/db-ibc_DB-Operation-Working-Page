@@ -10,7 +10,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
-	20190530@Kane.Le: Initial SP - [Redmine: #110322]	
+	20190530@Kane.Le: Initial SP - [Redmine: #110322]
+	20190719@Kane.Le: Update Section Order - [Redmine: #117098]	
 */
 BEGIN
 	DECLARE @tblSection TABLE (
@@ -46,6 +47,11 @@ BEGIN
 		WHERE p.FromDate >= @FromDate
 			AND p.ToDate <= @ToDate
 		) AS t ON r.ResourceId = t.SectionId
-		
-	WHERE r.RefName = 'Section' AND r.ResourceId IN (SELECT SectionId FROM @tblSection)
+	WHERE r.RefName = 'Section'
+		AND r.ResourceId IN (
+			SELECT SectionId
+			FROM @tblSection
+			)
+	ORDER BY r.[Order]
+		,r.[Value]
 END
