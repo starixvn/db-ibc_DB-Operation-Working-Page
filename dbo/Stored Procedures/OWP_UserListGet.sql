@@ -10,6 +10,7 @@ CREATE PROCEDURE [dbo].[OWP_UserListGet] @User VARCHAR(30) = NULL
 	,@PageIndex INT = NULL
 	,@TotalRecords INT = 0 OUTPUT
 	,@ExcludeClosedAccount BIT = 1
+	,@SiteId INT
 AS
 /*
 Created: 20170117@Julien
@@ -38,15 +39,10 @@ BEGIN
 		,UserId INT
 		)
 
-	DECLARE @SiteId INT
-
-	SELECT @SiteId = SiteId
-	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
-	WHERE SiteName = 'Operation Working Page'
-		AND IsActive = 1
-		AND Environment = 'LIVE'
-
-	CREATE TABLE #tblFinalUserId (UserId INT)
+	CREATE TABLE #tblFinalUserId (
+		RowNumber INT
+		,UserId INT
+		)
 
 	INSERT INTO #tblUserId (
 		RowNumber
@@ -98,16 +94,16 @@ BEGIN
 	IF @PageIndex IS NOT NULL
 		AND @PageSize IS NOT NULL
 	BEGIN
-		INSERT INTO #tblFinalUserId (UserId)
-		SELECT UserId
+		INSERT INTO #tblFinalUserId (RowNumber, UserId)
+		SELECT RowNumber, UserId
 		FROM #tblUserId WITH (NOLOCK)
 		WHERE RowNumber BETWEEN ((@PageIndex - 1) * @PageSize + 1)
 				AND (@PageIndex * @PageSize)
 	END
 	ELSE
 	BEGIN
-		INSERT INTO #tblFinalUserId (UserId)
-		SELECT UserId
+		INSERT INTO #tblFinalUserId (RowNumber, UserId)
+		SELECT RowNumber, UserId
 		FROM #tblUserId WITH (NOLOCK)
 	END
 
@@ -148,7 +144,7 @@ BEGIN
 		AND ucl.RefName = 'UserLevel'
 		LEFT JOIN dbo.RefResource AS r WITH (NOLOCK) ON ur.RoleId = r.ResourceId
 		AND r.RefName = 'UserRole'
-	
+	ORDER BY ul.RowNumber
 
 	-- total item
 	SELECT @TotalRecords = COUNT(1)
