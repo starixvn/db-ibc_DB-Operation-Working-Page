@@ -7,7 +7,8 @@ AS
  DB: bodb_OWP          
           
  Revisions:
-	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]   
+	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -18,6 +19,8 @@ BEGIN
 		,RowNumber INT
 		,MaxBetHDP NVARCHAR(200)
 		,SpreadHDP NVARCHAR(200)
+		,MaxBetHDP_CN88 NVARCHAR(200)
+		,SpreadHDP_CN88 NVARCHAR(200)
 		,TraderHDP NVARCHAR(200)
 		,OtherTradersHDP XML
 		)
@@ -35,27 +38,29 @@ BEGIN
 		,RowNumber
 		,MaxBetHDP
 		,SpreadHDP
+		,MaxBetHDP_CN88
+		,SpreadHDP_CN88
 		,TraderHDP
 		,OtherTradersHDP
 		)
-	SELECT -1, 1, a.RowNumber, a.MaxBetXMins, a.SpreadXMins, a.Trader15Mins, a.OtherTraders15Mins
+	SELECT -1, 1, a.RowNumber, a.MaxBetXMins, a.SpreadXMins, a.MaxBetXMins_CN88, a.SpreadXMins_CN88, a.Trader15Mins, a.OtherTraders15Mins
 	FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IS NULL
-		AND (a.Trader15Mins <> '' OR a.OtherTraders15Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '')
+		AND (a.Trader15Mins <> '' OR a.OtherTraders15Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '' OR a.MaxBetXMins_CN88 <> '' OR a.SpreadXMins_CN88 <> '')
 	UNION ALL
-	SELECT -2, 2, a.RowNumber, a.MaxBetXMins, a.SpreadXMins, a.Trader10Mins, a.OtherTraders10Mins
+	SELECT -2, 2, a.RowNumber, a.MaxBetXMins, a.SpreadXMins, a.MaxBetXMins_CN88, a.SpreadXMins_CN88, a.Trader10Mins, a.OtherTraders10Mins
 	FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IS NULL
-		AND (a.Trader10Mins <> '' OR a.OtherTraders10Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '')
+		AND (a.Trader10Mins <> '' OR a.OtherTraders10Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '' OR a.MaxBetXMins_CN88 <> '' OR a.SpreadXMins_CN88 <> '')
 	UNION ALL
-	SELECT -88, 3, a.RowNumber, a.MaxBetFM, a.SpreadFM, a.TraderFM, a.OtherTradersFM
+	SELECT -88, 3, a.RowNumber, a.MaxBetFM, a.SpreadFM, a.MaxBetFM_CN88, a.SpreadFM_CN88, a.TraderFM, a.OtherTradersFM
 	FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IS NULL
 	UNION ALL
-	SELECT -89, 4, a.RowNumber, '', '', a.TraderAIO, a.OtherTradersAIO
+	SELECT -89, 4, a.RowNumber, '', '', '', '', a.TraderAIO, a.OtherTradersAIO
 	FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IS NULL
@@ -72,6 +77,8 @@ BEGIN
 		,Away
 		,MaxBetHDP
 		,SpreadHDP
+		,MaxBetHDP_CN88
+		,SpreadHDP_CN88
 		,TraderHDP
 		,OtherTradersHDP
 		,MatchStatus
@@ -87,6 +94,8 @@ BEGIN
 		,REPLACE(t.Away, '<name>', a.Away)
 		,mb.MaxBetHDP
 		,mb.SpreadHDP
+		,mb.MaxBetHDP_CN88
+		,mb.SpreadHDP_CN88
 		,mb.TraderHDP
 		,mb.OtherTradersHDP
 		,a.MatchStatus
@@ -119,6 +128,8 @@ BEGIN
 		,Away
 		,MaxBetHDP
 		,SpreadHDP
+		,MaxBetHDP_CN88
+		,SpreadHDP_CN88
 		,TraderHDP
 		,OtherTradersHDP
 		,MatchStatus
@@ -134,6 +145,8 @@ BEGIN
 		,REPLACE(t.Away, '<name>', a2.Away)
 		,a.MaxBetXMins
 		,a.SpreadXMins
+		,a.MaxBetXMins_CN88
+		,a.SpreadXMins_CN88
 		,a.Trader15Mins
 		,a.OtherTraders15Mins
 		,a.MatchStatus
@@ -147,7 +160,7 @@ BEGIN
 		AND t.IsActive = 1
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IN (-3, -6)
-		AND (a.Trader15Mins <> '' OR a.OtherTraders15Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '')
+		AND (a.Trader15Mins <> '' OR a.OtherTraders15Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '' OR a.MaxBetXMins_CN88 <> '' OR a.SpreadXMins_CN88 <> '')
 
 
 	-- drop tables

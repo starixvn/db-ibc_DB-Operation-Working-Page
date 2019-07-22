@@ -65,6 +65,7 @@ BEGIN
 		,[Status]
 		,LogMessage AS 'ErrorMessage'
 		,TotalRowResult
+		,TotalRowUpload
 		,@CurrentRowResult AS CurrentRowResult
 		,@WarningRecord AS WarningRecord
 		,@FailedRecord AS FailedRecord

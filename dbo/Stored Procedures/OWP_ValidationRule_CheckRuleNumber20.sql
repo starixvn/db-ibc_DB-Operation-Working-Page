@@ -10,7 +10,8 @@ AS
 
  Revisions:
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
-	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868] 
+	20180724@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -68,7 +69,15 @@ BEGIN
 				WHEN 'MaxBet1X2' THEN 'Max Bet (1X2)'
 				WHEN 'MaxBet1H1X2' THEN 'Max Bet (1H 1X2)'
 				WHEN 'MaxBetXMins' THEN 'Max Bet (x mins)'
-				WHEN 'MaxBetFM' THEN 'Max Bet (FM)' END
+				WHEN 'MaxBetFM' THEN 'Max Bet (FM)'
+				WHEN 'MaxBetHDP_CN88' THEN 'Max Bet CN88 (HDP)'
+				WHEN 'MaxBet1HHDP_CN88' THEN 'Max Bet CN88 (1H HDP)'
+				WHEN 'MaxBetOU_CN88' THEN 'Max Bet CN88 (O/U)'
+				WHEN 'MaxBet1HOU_CN88' THEN 'Max Bet CN88 (1H O/U)'
+				WHEN 'MaxBet1X2_CN88' THEN 'Max Bet CN88 (1X2)'
+				WHEN 'MaxBet1H1X2_CN88' THEN 'Max Bet CN88 (1H 1X2)'
+				WHEN 'MaxBetXMins_CN88' THEN 'Max Bet CN88 (x mins)'
+				WHEN 'MaxBetFM_CN88' THEN 'Max Bet CN88 (FM)' END
 				) AS ColumnName
 			,unpvt.MaxBet
 			,0
@@ -106,11 +115,43 @@ BEGIN
 					WHEN RIGHT(LOWER(MaxBetFM), 1) = 'k' THEN SUBSTRING(MaxBetFM, 0, LEN(MaxBetFM))
 					ELSE MaxBetFM END
 					) AS MaxBetFM
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBetHDP_CN88), 1) = 'k' THEN SUBSTRING(MaxBetHDP_CN88, 0, LEN(MaxBetHDP_CN88))
+					ELSE MaxBetHDP_CN88 END
+					) AS MaxBetHDP_CN88
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBet1HHDP_CN88), 1) = 'k' THEN SUBSTRING(MaxBet1HHDP_CN88, 0, LEN(MaxBet1HHDP_CN88))
+					ELSE MaxBet1HHDP_CN88 END
+					) AS MaxBet1HHDP_CN88
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBetOU_CN88), 1) = 'k' THEN SUBSTRING(MaxBetOU_CN88, 0, LEN(MaxBetOU))
+					ELSE MaxBetOU_CN88 END
+					) AS MaxBetOU_CN88
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBet1HOU_CN88), 1) = 'k' THEN SUBSTRING(MaxBet1HOU_CN88, 0, LEN(MaxBet1HOU_CN88))
+					ELSE MaxBet1HOU_CN88 END
+					) AS MaxBet1HOU_CN88
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBet1X2_CN88), 1) = 'k' THEN SUBSTRING(MaxBet1X2_CN88, 0, LEN(MaxBet1X2_CN88))
+					ELSE MaxBet1X2_CN88 END
+					) AS MaxBet1X2_CN88
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBet1H1X2_CN88), 1) = 'k' THEN SUBSTRING(MaxBet1H1X2_CN88, 0, LEN(MaxBet1H1X2_CN88))
+					ELSE MaxBet1H1X2_CN88 END
+					) AS MaxBet1H1X2_CN88
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBetXMins_CN88), 1) = 'k' THEN SUBSTRING(MaxBetXMins_CN88, 0, LEN(MaxBetXMins_CN88))
+					ELSE MaxBetXMins_CN88 END
+					) AS MaxBetXMins_CN88
+				,(CASE 
+					WHEN RIGHT(LOWER(MaxBetFM_CN88), 1) = 'k' THEN SUBSTRING(MaxBetFM_CN88, 0, LEN(MaxBetFM_CN88))
+					ELSE MaxBetFM_CN88 END
+					) AS MaxBetFM_CN88
 			FROM dbo.AssignmentUploading WITH (NOLOCK)
 			WHERE SessionId = @SessionId
 				AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			) AS upload
-		UNPIVOT(MaxBet FOR ColumnName IN (MaxBetHDP, MaxBet1HHDP, MaxBetOU, MaxBet1HOU, MaxBet1X2, MaxBet1H1X2, MaxBetXMins, MaxBetFM)) unpvt
+		UNPIVOT(MaxBet FOR ColumnName IN (MaxBetHDP, MaxBet1HHDP, MaxBetOU, MaxBet1HOU, MaxBet1X2, MaxBet1H1X2, MaxBetXMins, MaxBetFM, MaxBetHDP_CN88, MaxBet1HHDP_CN88, MaxBetOU_CN88, MaxBet1HOU_CN88, MaxBet1X2_CN88, MaxBet1H1X2_CN88, MaxBetXMins_CN88, MaxBetFM_CN88)) unpvt
 
 		-- check maxbet
 		UPDATE upload

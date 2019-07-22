@@ -10,6 +10,7 @@ CREATE PROCEDURE [dbo].[OWP_UserListGet] @User VARCHAR(30) = NULL
 	,@PageIndex INT = NULL
 	,@TotalRecords INT = 0 OUTPUT
 	,@ExcludeClosedAccount BIT = 1
+	,@SiteId INT
 AS
 /*
 Created: 20170117@Julien
@@ -22,6 +23,8 @@ Revisions:
 	20181218@Leo.Vo: Exclude inactive site - [Redmine: #106196]
 	20190402@Kane.Le: Get IsSecondAccount - [Redmine: #11068]
 	20190426@Kane.Le: Remove space whene search username - [Redmine: #111840]
+	20190718@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
+	20190719@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -36,22 +39,17 @@ BEGIN
 		,UserId INT
 		)
 
-	DECLARE @SiteId INT
-
-	SELECT @SiteId = SiteId
-	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
-	WHERE SiteName = 'Operation Working Page'
-		AND IsActive = 1
-		AND Environment = 'LIVE'
-
-	CREATE TABLE #tblFinalUserId (UserId INT)
+	CREATE TABLE #tblFinalUserId (
+		RowNumber INT
+		,UserId INT
+		)
 
 	INSERT INTO #tblUserId (
 		RowNumber
 		,UserId
 		)
 	SELECT ROW_NUMBER() OVER (
-			ORDER BY u.UserId
+			ORDER BY u.UserName
 			) AS RowNumber
 		,u.UserId
 	FROM dbo.[User] AS u WITH (NOLOCK)
@@ -96,16 +94,16 @@ BEGIN
 	IF @PageIndex IS NOT NULL
 		AND @PageSize IS NOT NULL
 	BEGIN
-		INSERT INTO #tblFinalUserId (UserId)
-		SELECT UserId
+		INSERT INTO #tblFinalUserId (RowNumber, UserId)
+		SELECT RowNumber, UserId
 		FROM #tblUserId WITH (NOLOCK)
 		WHERE RowNumber BETWEEN ((@PageIndex - 1) * @PageSize + 1)
 				AND (@PageIndex * @PageSize)
 	END
 	ELSE
 	BEGIN
-		INSERT INTO #tblFinalUserId (UserId)
-		SELECT UserId
+		INSERT INTO #tblFinalUserId (RowNumber, UserId)
+		SELECT RowNumber, UserId
 		FROM #tblUserId WITH (NOLOCK)
 	END
 
@@ -126,7 +124,7 @@ BEGIN
 		,u.SectionId
 		,sec.Value AS 'SectionName'
 		,ur.RoleId
-		,r.RoleName AS 'RoleName'
+		,r.Value 'RoleName'
 		,u.LocationCode
 		,u.Pickup
 		,u.[Address]
@@ -136,7 +134,6 @@ BEGIN
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
 		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
-		LEFT JOIN dbo.[Role] AS r WITH (NOLOCK) ON r.RoleId = ur.RoleId
 		LEFT JOIN dbo.RefResource AS dept WITH (NOLOCK) ON u.DepartmentId = dept.ResourceId
 		AND dept.RefName = 'Department'
 		LEFT JOIN dbo.RefResource AS sec WITH (NOLOCK) ON u.SectionId = sec.ResourceId
@@ -145,6 +142,9 @@ BEGIN
 		AND uc.RefName = 'UserCategory'
 		LEFT JOIN dbo.RefResource AS ucl WITH (NOLOCK) ON u.[Level] = ucl.ResourceId
 		AND ucl.RefName = 'UserLevel'
+		LEFT JOIN dbo.RefResource AS r WITH (NOLOCK) ON ur.RoleId = r.ResourceId
+		AND r.RefName = 'UserRole'
+	ORDER BY ul.RowNumber
 
 	-- total item
 	SELECT @TotalRecords = COUNT(1)

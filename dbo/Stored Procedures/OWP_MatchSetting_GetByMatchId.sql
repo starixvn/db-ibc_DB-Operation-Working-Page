@@ -8,6 +8,7 @@ DB: bodb_OWP
 
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
+	20190712@Tyler.Dang: WEB - Add MaxbetCN88 and SpreadCN88 LiveDetails - [Redmine: #116790]
 */
 
 BEGIN
@@ -27,6 +28,8 @@ BEGIN
 		,DisplayName VARCHAR(50)
 		,Maxbet MONEY
 		,Spread SMALLMONEY
+		,MaxbetCN88 MONEY
+		,SpreadCN88 SMALLMONEY
 		,IsFromMaxbetSetting BIT DEFAULT(0)
 		)
 
@@ -37,12 +40,16 @@ BEGIN
 		,DisplayName
 		,Maxbet
 		,Spread
+		,MaxbetCN88
+		,SpreadCN88
 		)
 	SELECT ms.OWPMatchId
 		,ms.Bettype
 		,mb.ShortName
 		,ms.Maxbet
 		,ms.Spread
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 	FROM dbo.MatchSetting AS ms WITH (NOLOCK)
 		INNER JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON ms.Bettype = mb.BettypeId
 	WHERE ms.OWPMatchId = @OWPMatchId
@@ -85,6 +92,8 @@ BEGIN
 		,DisplayName
 		,Maxbet
 		,Spread
+		,MaxbetCN88
+		,SpreadCN88
 		)
 	SELECT mm.MinorMatchId
 		,mb.InheritedBettypeId
@@ -92,6 +101,8 @@ BEGIN
 		,mb.MinorBettypeName
 		,ms.Maxbet
 		,ms.Spread
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON m.OWPMatchId = @OWPMatchId
 		AND m.OWPMatchId = mm.ParentMatchId
@@ -143,6 +154,8 @@ BEGIN
 		,DisplayName
 		,Maxbet
 		,Spread
+		,MaxbetCN88
+		,SpreadCN88
 		,IsFromMaxbetSetting
 	FROM #tblMatchSetting
 

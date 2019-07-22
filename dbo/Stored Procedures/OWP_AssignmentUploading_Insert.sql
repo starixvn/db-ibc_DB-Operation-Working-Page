@@ -22,6 +22,8 @@ AS
 	20190227@Raymond.Le: Extend number days delete old data - [Redmine: #108723]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068] 
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
+	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
+	20190718@Leo.Vo: Add total row uploaded - [Redmine: #117098]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -29,6 +31,7 @@ BEGIN
 	DECLARE @idoc INT
 		,@totalRule INT
 		,@totalRow INT
+		,@totalRowUpload INT
 		,@NumberDayDeleteOldData INT = 3
 		,@Today DATETIME = GETDATE()
 
@@ -78,31 +81,45 @@ BEGIN
 		,Remark
 		,MaxBetHDP
 		,SpreadHDP
+		,MaxBetHDP_CN88
+		,SpreadHDP_CN88
 		,NoHDP
 		,TraderHDP
 		,OtherTradersHDP
 		,MaxBet1HHDP
 		,Spread1HHDP
+		,MaxBet1HHDP_CN88
+		,Spread1HHDP_CN88
 		,Trader1HHDP
 		,OtherTraders1HHDP
 		,MaxBetOU
 		,SpreadOU
+		,MaxBetOU_CN88
+		,SpreadOU_CN88
 		,TraderOU
 		,OtherTradersOU
 		,MaxBet1HOU
 		,Spread1HOU
+		,MaxBet1HOU_CN88
+		,Spread1HOU_CN88
 		,Trader1HOU
 		,OtherTraders1HOU
 		,MaxBet1X2
 		,Spread1X2
+		,MaxBet1X2_CN88
+		,Spread1X2_CN88
 		,Trader1X2
 		,OtherTraders1X2
 		,MaxBet1H1X2
 		,Spread1H1X2
+		,MaxBet1H1X2_CN88
+		,Spread1H1X2_CN88
 		,Trader1H1X2
 		,OtherTraders1H1X2
 		,MaxBetXMins
 		,SpreadXMins
+		,MaxBetXMins_CN88
+		,SpreadXMins_CN88
 		,Trader15Mins
 		,OtherTraders15Mins
 		,Trader10Mins
@@ -111,6 +128,8 @@ BEGIN
 		,OtherLA
 		,MaxBetFM
 		,SpreadFM
+		,MaxBetFM_CN88
+		,SpreadFM_CN88
 		,TraderFM
 		,OtherTradersFM
 		,TraderAIO
@@ -147,31 +166,45 @@ BEGIN
 		,Remark
 		,MaxBetHDP
 		,SpreadHDP
+		,MaxBetHDP_CN88
+		,SpreadHDP_CN88
 		,NoHDP
 		,TraderHDP
 		,NULLIF(OtherTradersHDP, '')
 		,MaxBet1HHDP
 		,Spread1HHDP
+		,MaxBet1HHDP_CN88
+		,Spread1HHDP_CN88
 		,Trader1HHDP
 		,NULLIF(OtherTraders1HHDP, '')
 		,MaxBetOU
 		,SpreadOU
+		,MaxBetOU_CN88
+		,SpreadOU_CN88
 		,TraderOU
 		,NULLIF(OtherTradersOU, '')
 		,MaxBet1HOU
 		,Spread1HOU
+		,MaxBet1HOU_CN88
+		,Spread1HOU_CN88
 		,Trader1HOU
 		,NULLIF(OtherTraders1HOU, '')
 		,MaxBet1X2
 		,Spread1X2
+		,MaxBet1X2_CN88
+		,Spread1X2_CN88
 		,Trader1X2
 		,NULLIF(OtherTraders1X2, '')
 		,MaxBet1H1X2
 		,Spread1H1X2
+		,MaxBet1H1X2_CN88
+		,Spread1H1X2_CN88
 		,Trader1H1X2
 		,NULLIF(OtherTraders1H1X2, '')
 		,MaxBetXMins
 		,SpreadXMins
+		,MaxBetXMins_CN88
+		,SpreadXMins_CN88
 		,Trader15Mins
 		,NULLIF(OtherTraders15Mins, '')
 		,Trader10Mins
@@ -180,6 +213,8 @@ BEGIN
 		,NULLIF(OtherLA, '')
 		,MaxBetFM
 		,SpreadFM
+		,MaxBetFM_CN88
+		,SpreadFM_CN88
 		,TraderFM
 		,NULLIF(OtherTradersFM, '')
 		,TraderAIO
@@ -215,31 +250,45 @@ BEGIN
 		,[Remark] [nvarchar](2000)
 		,[MaxBetHDP] [nvarchar](200)
 		,[SpreadHDP] [nvarchar](200)
+		,[MaxBetHDP_CN88] [nvarchar](200)
+		,[SpreadHDP_CN88] [nvarchar](200)
 		,[NoHDP] [nvarchar](20)
 		,[TraderHDP] [nvarchar](200)
 		,[OtherTradersHDP] [nvarchar](max)
 		,[MaxBet1HHDP] [nvarchar](200)
 		,[Spread1HHDP] [nvarchar](200)
+		,[MaxBet1HHDP_CN88] [nvarchar](200)
+		,[Spread1HHDP_CN88] [nvarchar](200)
 		,[Trader1HHDP] [nvarchar](200)
 		,[OtherTraders1HHDP] [nvarchar](max)
 		,[MaxBetOU] [nvarchar](200)
 		,[SpreadOU] [nvarchar](200)
+		,[MaxBetOU_CN88] [nvarchar](200)
+		,[SpreadOU_CN88] [nvarchar](200)
 		,[TraderOU] [nvarchar](200)
 		,[OtherTradersOU] [nvarchar](max)
 		,[MaxBet1HOU] [nvarchar](200)
 		,[Spread1HOU] [nvarchar](200)
+		,[MaxBet1HOU_CN88] [nvarchar](200)
+		,[Spread1HOU_CN88] [nvarchar](200)
 		,[Trader1HOU] [nvarchar](200)
 		,[OtherTraders1HOU] [nvarchar](max)
 		,[MaxBet1X2] [nvarchar](200)
 		,[Spread1X2] [nvarchar](200)
+		,[MaxBet1X2_CN88] [nvarchar](200)
+		,[Spread1X2_CN88] [nvarchar](200)
 		,[Trader1X2] [nvarchar](200)
 		,[OtherTraders1X2] [nvarchar](max)
 		,[MaxBet1H1X2] [nvarchar](200)
 		,[Spread1H1X2] [nvarchar](200)
+		,[MaxBet1H1X2_CN88] [nvarchar](200)
+		,[Spread1H1X2_CN88] [nvarchar](200)
 		,[Trader1H1X2] [nvarchar](200)
 		,[OtherTraders1H1X2] [nvarchar](max)
 		,[MaxBetXMins] [nvarchar](200)
 		,[SpreadXMins] [nvarchar](200)
+		,[MaxBetXMins_CN88] [nvarchar](200)
+		,[SpreadXMins_CN88] [nvarchar](200)
 		,[Trader15Mins] [nvarchar](200)
 		,[OtherTraders15Mins] [nvarchar](max)
 		,[Trader10Mins] [nvarchar](200)
@@ -248,6 +297,8 @@ BEGIN
 		,[OtherLA] [nvarchar](max)
 		,[MaxBetFM] [nvarchar](200)
 		,[SpreadFM] [nvarchar](200)
+		,[MaxBetFM_CN88] [nvarchar](200)
+		,[SpreadFM_CN88] [nvarchar](200)
 		,[TraderFM] [nvarchar](200)
 		,[OtherTradersFM] [nvarchar](max)
 		,[TraderAIO] [nvarchar](200)
@@ -264,6 +315,8 @@ BEGIN
 		,[Website3] [nvarchar](1000)
 		,[Website4] [nvarchar](1000)
 		)
+		
+	SELECT @totalRowUpload = @@ROWCOUNT
 
 	EXEC sp_xml_removedocument @idoc
 
@@ -391,12 +444,14 @@ BEGIN
 	INSERT INTO dbo.AssignmentUploadingLog (
 		SessionId
 		,UserId
+		,TotalRowUpload
 		,TotalRowResult
 		,[Status]
 		)
 	VALUES (
 		@SessionId
 		,@UserId
+		,@totalRowUpload
 		,@totalRow * @totalRule
 		,0
 		)

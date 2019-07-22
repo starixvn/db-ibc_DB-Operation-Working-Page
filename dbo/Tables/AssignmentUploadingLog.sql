@@ -7,8 +7,11 @@
     [EndDate]        DATETIME      NULL,
     [Status]         TINYINT       NOT NULL,
     [LogMessage]     VARCHAR (MAX) CONSTRAINT [DF_AssignmentUploadingLog_LogMessage] DEFAULT ('') NOT NULL,
+    [TotalRowUpload] INT           CONSTRAINT [DF_AssignmentUploadingLog_TotalRowUpload] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_AssignmentUploadingLog] PRIMARY KEY CLUSTERED ([SessionId] ASC)
 );
+
+
 
 
 

@@ -20,6 +20,7 @@ AS
 	20190116@Kane.Le: Get NoOfHDP Id - [Redmine: #107257]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
+	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
 
 */
 BEGIN
@@ -57,6 +58,8 @@ BEGIN
 		,Maxbet MONEY
 		,Spread SMALLMONEY
 		,IsMatchSetting BIT
+		,MaxbetCN88 MONEY
+		,SpreadCN88 SMALLMONEY
 		)
 
 	CREATE TABLE #tblParentMatchSetting (
@@ -269,6 +272,8 @@ BEGIN
 		,Maxbet
 		,Spread
 		,IsMatchSetting
+		,MaxbetCN88
+		,SpreadCN88
 		)
 	SELECT DISTINCT ml.OWPMatchId
 		,ml.ParentMatchId
@@ -277,11 +282,15 @@ BEGIN
 		,ms.Maxbet
 		,ms.Spread
 		,1
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 	FROM #tblTodayMatch AS ml WITH (NOLOCK)
 		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.OWPMatchId = ms.OWPMatchId
 		AND (
 			ms.Maxbet IS NOT NULL
 			OR ms.Spread IS NOT NULL
+			OR ms.MaxbetCN88 IS NOT NULL
+			OR ms.SpreadCN88 IS NOT NULL
 			)
 
 	INSERT INTO #tblMatchSetting (
@@ -600,6 +609,8 @@ BEGIN
 		,MinorBettypeId
 		,Maxbet
 		,Spread
+		,MaxbetCN88
+		,SpreadCN88
 	FROM #tblMatchSetting WITH (NOLOCK)
 
 	-- Return Match Notes
