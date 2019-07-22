@@ -72,7 +72,6 @@
     <Build Include="dbo\Tables\User.sql" />
     <Build Include="dbo\Tables\Trade5MatchPerDay.sql" />
     <Build Include="dbo\Tables\Television.sql" />
-    <Build Include="dbo\Tables\Role.sql" />
     <Build Include="dbo\Tables\RefResource.sql" />
     <Build Include="dbo\Tables\OWPTeam.sql" />
     <Build Include="dbo\Tables\OWPMatch.sql" />
@@ -167,7 +166,6 @@
     <Build Include="dbo\Stored Procedures\OWP_TelevisionGetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_TaskListForTodayGet.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SoloMatchUpdate.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_RoleGetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ResourceIdGetByName.sql" />
     <Build Include="dbo\Stored Procedures\OWP_RefResourceGetByName.sql" />
     <Build Include="dbo\Stored Procedures\OWP_QuickSearchMatchGet.sql" />

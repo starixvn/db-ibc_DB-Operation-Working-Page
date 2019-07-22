@@ -23,7 +23,7 @@ Revisions:
 	20190402@Kane.Le: Get IsSecondAccount - [Redmine: #11068]
 	20190426@Kane.Le: Remove space whene search username - [Redmine: #111840]
 	20190718@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
-	20190719@Tyler.Dang: Change Role to RefResource - [Redmine: #117285]
+	20190719@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -53,7 +53,7 @@ BEGIN
 		,UserId
 		)
 	SELECT ROW_NUMBER() OVER (
-			ORDER BY u.UserId
+			ORDER BY u.UserName
 			) AS RowNumber
 		,u.UserId
 	FROM dbo.[User] AS u WITH (NOLOCK)
@@ -148,7 +148,7 @@ BEGIN
 		AND ucl.RefName = 'UserLevel'
 		LEFT JOIN dbo.RefResource AS r WITH (NOLOCK) ON ur.RoleId = r.ResourceId
 		AND r.RefName = 'UserRole'
-	ORDER BY u.Username ASC
+	
 
 	-- total item
 	SELECT @TotalRecords = COUNT(1)
