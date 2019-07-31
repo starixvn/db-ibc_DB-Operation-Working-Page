@@ -12,6 +12,12 @@ Revisions:
 	20190724@Leo: Initial SP - [Feature: #117227]
 */
 BEGIN
+	DECLARE @HomeSingleTeamOU INT = - 92
+		,@AwaySingleTeamOU INT = - 93
+		,@HomeSingleTeamOUOfCorners INT = - 94
+		,@AwaySingleTeamOUOfCorners INT = - 95
+		,@HomePenShootOut INT = - 98
+		,@AwayPenShootOut INT = - 99
 	DECLARE @LeagueName NVARCHAR(500)
 		,@HomeName NVARCHAR(200)
 		,@AwayName NVARCHAR(200)
@@ -26,8 +32,14 @@ BEGIN
 	WHERE OWPMatchId = @ParentMatchId
 
 	SELECT REPLACE(ts.League, '<name>', @LeagueName) AS LeagueName
-		,REPLACE(ts.Home, '<name>', @HomeName) AS HomeName
-		,REPLACE(ts.Away, '<name>', @AwayName) AS AwayName
+		,CASE 
+			WHEN @MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN REPLACE(ts.Away, '<name>', @AwayName)
+			ELSE REPLACE(ts.Home, '<name>', @HomeName)
+			END AS HomeName
+		,CASE 
+			WHEN @MinorBettypeId IN (@HomeSingleTeamOU, @HomeSingleTeamOUOfCorners, @HomePenShootOut) THEN REPLACE(ts.Home, '<name>', @HomeName)
+			ELSE REPLACE(ts.Away, '<name>', @AwayName)
+			END AS AwayName
 	FROM dbo.MinorMatchTemplateSetting AS ts WITH (NOLOCK)
 	WHERE ts.MinorBettypeId = @MinorBettypeId
 END

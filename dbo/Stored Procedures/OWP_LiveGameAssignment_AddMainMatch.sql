@@ -63,7 +63,7 @@ BEGIN
 		INSERT INTO dbo.OWPLeague (OWPLeagueName)
 		VALUES (@LeagueName)
 
-		SELECT @OWPLeagueId = @@IDENTITY
+		SELECT @OWPLeagueId = SCOPE_IDENTITY()
 	END
 
 	SELECT @OWPHomeTeamId = OWPTeamId
@@ -75,7 +75,7 @@ BEGIN
 		INSERT INTO dbo.OWPTeam (OWPTeamName)
 		VALUES (@HomeName)
 
-		SELECT @OWPHomeTeamId = @@IDENTITY
+		SELECT @OWPHomeTeamId = SCOPE_IDENTITY()
 	END
 
 	SELECT @OWPAwayTeamId = OWPTeamId
@@ -87,7 +87,7 @@ BEGIN
 		INSERT INTO dbo.OWPTeam (OWPTeamName)
 		VALUES (@AwayName)
 
-		SELECT @OWPAwayTeamId = @@IDENTITY
+		SELECT @OWPAwayTeamId = SCOPE_IDENTITY()
 	END
 
 	INSERT INTO dbo.OWPMatch (
@@ -113,7 +113,7 @@ BEGIN
 		,@InfoSiteMatchId
 		)
 
-	SELECT @OWPMatchId = @@IDENTITY
+	SELECT @OWPMatchId = SCOPE_IDENTITY()
 
 	INSERT INTO dbo.MatchInfo (
 		OWPMatchId
