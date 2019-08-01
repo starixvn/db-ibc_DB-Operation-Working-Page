@@ -33,11 +33,11 @@ BEGIN
 
 	SELECT REPLACE(ts.League, '<name>', @LeagueName) AS LeagueName
 		,CASE 
-			WHEN @MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN REPLACE(ts.Away, '<name>', @AwayName)
+			WHEN @MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN REPLACE(ts.Home, '<name>', @AwayName)
 			ELSE REPLACE(ts.Home, '<name>', @HomeName)
 			END AS HomeName
 		,CASE 
-			WHEN @MinorBettypeId IN (@HomeSingleTeamOU, @HomeSingleTeamOUOfCorners, @HomePenShootOut) THEN REPLACE(ts.Home, '<name>', @HomeName)
+			WHEN @MinorBettypeId IN (@HomeSingleTeamOU, @HomeSingleTeamOUOfCorners, @HomePenShootOut) THEN REPLACE(ts.Away, '<name>', @HomeName)
 			ELSE REPLACE(ts.Away, '<name>', @AwayName)
 			END AS AwayName
 	FROM dbo.MinorMatchTemplateSetting AS ts WITH (NOLOCK)
