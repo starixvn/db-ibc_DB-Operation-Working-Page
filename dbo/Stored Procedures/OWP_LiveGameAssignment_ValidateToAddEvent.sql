@@ -6,7 +6,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToAddEvent] @EventDate DA
 	,@LeagueName NVARCHAR(500)
 	,@HomeName NVARCHAR(200)
 	,@AwayName NVARCHAR(200)
-	,@MatchSettingBettypeIds VARCHAR(100)
+	,@MatchSettingBettypeIds VARCHAR(100) = ''
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(MAX) = '' OUTPUT
 	,@MinorBettypeId INT = NULL OUTPUT
@@ -35,6 +35,12 @@ BEGIN
 		,@MinorBettype_Specific10Mins INT = - 2
 		,@MinorBettype_Specific15MinsNoOfCorners INT = - 5
 		,@MinorBettype_Specific15MinsTotalBooking INT = - 8
+		,@MinorBettype_HomeSingleTeamOU INT = - 92
+		,@MinorBettype_AwaySingleTeamOU INT = - 93
+		,@MinorBettype_HomeSingleTeamOUOfCorners INT = - 94
+		,@MinorBettype_AwaySingleTeamOUOfCorners INT = - 95
+		,@MinorBettype_HomePenShootOut INT = - 98
+		,@MinorBettype_AwayPenShootOut INT = - 99
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 
@@ -60,15 +66,8 @@ BEGIN
 
 	-- determine minor match
 	CREATE TABLE #tblRuleChecking (
-		RowNumber INT
-		,MinorBettypeId INT
-		,IsFalse INT
-		)
-
-	CREATE TABLE #tblSingleTeamMatch (
 		MinorBettypeId INT
-		,TeamType INT
-		,ParentRowNumber INT
+		,IsFalse INT
 		)
 
 	INSERT INTO #tblRuleChecking (
@@ -104,6 +103,8 @@ BEGIN
 	FROM #tblRuleChecking WITH (NOLOCK)
 	GROUP BY MinorBettypeId
 	HAVING SUM(IsFalse) = 0
+
+	DROP TABLE #tblRuleChecking
 
 	IF @MinorBettypeId IS NOT NULL
 	BEGIN
@@ -143,7 +144,14 @@ BEGIN
 			END
 			ELSE
 			BEGIN
+				DECLARE @SingleTeamType SMALLINT
+
 				SELECT @ParentMatchId = m.OWPMatchId
+					,@SingleTeamType = CASE 
+						WHEN h.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
+							AND h.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars)) THEN 1
+						ELSE 2
+						END
 				FROM dbo.OWPMatch AS m WITH (NOLOCK)
 					INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
 					INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
@@ -161,6 +169,21 @@ BEGIN
 							AND a.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars))
 							)
 						)
+
+				SELECT @MinorBettypeId = CASE @MinorBettypeId
+						WHEN 1111 THEN CASE @SingleTeamType
+								WHEN 1 THEN @MinorBettype_HomeSingleTeamOU
+								WHEN 2 THEN @MinorBettype_AwaySingleTeamOU
+								END
+						WHEN 1112 THEN CASE @SingleTeamType
+								WHEN 1 THEN @MinorBettype_HomeSingleTeamOUOfCorners
+								WHEN 2 THEN @MinorBettype_AwaySingleTeamOUOfCorners
+								END
+						WHEN 1113 THEN CASE @SingleTeamType
+								WHEN 1 THEN @MinorBettype_HomePenShootOut
+								WHEN 2 THEN @MinorBettype_AwayPenShootOut
+								END
+						END
 			END
 		END
 
