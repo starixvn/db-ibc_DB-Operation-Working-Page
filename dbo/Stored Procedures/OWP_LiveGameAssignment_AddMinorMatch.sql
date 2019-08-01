@@ -3,6 +3,7 @@
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMinorMatch] @ParentMatchId INT
 	,@MinorBettypeId INT
 	,@EventDate DATE
+	,@MatchStatus VARCHAR(10)
 	,@MatchNo VARCHAR(50) = ''
 	,@KickOffTime TIME(7)
 	,@OtherTime TIME(7) = NULL
@@ -62,6 +63,7 @@ BEGIN
 	FROM @tblSpecialEventTemplate
 
 	EXEC OWP_LiveGameAssignment_AddMainMatch @EventDate = @EventDate
+		,@MatchStatus=@MatchStatus
 		,@LeagueName = @LeagueName
 		,@HomeName = @HomeName
 		,@AwayName = @AwayName

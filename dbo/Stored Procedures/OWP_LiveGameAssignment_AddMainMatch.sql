@@ -4,6 +4,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMainMatch] @EventDate DATE
 	,@LeagueName NVARCHAR(500)
 	,@HomeName NVARCHAR(200)
 	,@AwayName NVARCHAR(200)
+	,@MatchStatus VARCHAR(10)
 	,@MatchNo VARCHAR(50) = ''
 	,@KickOffTime TIME(7)
 	,@OtherTime TIME(7) = NULL
@@ -121,6 +122,7 @@ BEGIN
 		,Website2
 		,Website3
 		,Website4
+		,MatchStatus
 		,IsSelected
 		)
 	VALUES (
@@ -129,6 +131,7 @@ BEGIN
 		,@Website2
 		,@Website3
 		,@Website4
+		,@MatchStatus
 		,1
 		)
 
