@@ -11,7 +11,6 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToAddEvent] @EventDate DA
 	,@ErrMsg NVARCHAR(MAX) = '' OUTPUT
 	,@MinorBettypeId INT = NULL OUTPUT
 	,@ParentMatchId INT = NULL OUTPUT
-	,@InvalidMatchSettingBettypeIds NVARCHAR(100) = NULL OUTPUT
 AS
 /*
  Created: 20190724@Leo.Vo
@@ -314,18 +313,19 @@ BEGIN
 			,@ErrMsg = 'Minor match is existed: ' + @ExistedMinorBettypeName
 	END
 
-	SELECT @InvalidMatchSettingBettypeIds = STUFF((
-				SELECT ',' + CAST(s.BettypeId AS VARCHAR(10))
+	DECLARE @InvalidMatchSettingBettypes VARCHAR(2000) = STUFF((
+				SELECT ',' + mb.ShortName
 				FROM @tblMatchSettingBettypeIds AS s
+					INNER JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON s.BettypeId = mb.BettypeId
 					LEFT JOIN @tblValidMatchSettingBettypeIds AS t ON s.BettypeId = t.BettypeId
 				WHERE t.BettypeId IS NULL
 				FOR XML PATH('')
 				), 1, 1, '')
 
-	IF @InvalidMatchSettingBettypeIds IS NOT NULL
+	IF @InvalidMatchSettingBettypes IS NOT NULL
 	BEGIN
 		SELECT @ErrCode = 2
-			,@ErrMsg = 'Unable to save trading info for some bettypes: ' + @InvalidMatchSettingBettypeIds
+			,@ErrMsg = 'Unable to save trading info for some bettypes: ' + @InvalidMatchSettingBettypes
 
 		RETURN
 	END
