@@ -14,6 +14,6 @@ BEGIN
 	SELECT BettypeId
 		,ShortName
 	FROM dbo.MajorBettype WITH (NOLOCK)
-	WHERE BettypeId <> - 1002
+	WHERE BettypeId <> - 1002 AND BettypeId <> - 1004
 	ORDER BY (CASE WHEN BettypeId < 0 THEN -BettypeId ELSE 0 END), BettypeId ASC
 END
