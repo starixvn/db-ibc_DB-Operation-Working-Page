@@ -20,6 +20,10 @@ BEGIN
 		,AwayName
 		,[Round]
 		,Division
+		,AgentIds
+		,TVIds
+		,WB
+		,Channel
 		,Website1
 		,Website2
 		,Website3
