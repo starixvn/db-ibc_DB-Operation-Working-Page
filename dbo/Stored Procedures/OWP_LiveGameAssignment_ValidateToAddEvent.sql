@@ -260,6 +260,9 @@ BEGIN
 			INSERT INTO @tblMinorMatch (MinorBettypeId)
 			VALUES (@MinorBettype_Specific15Mins)
 				,(@MinorBettype_Specific10Mins)
+
+			INSERT INTO @tblValidMatchSettingBettypeIds (BettypeId)
+			VALUES (@MatchSettingBettype_XMin)
 		END
 
 		INSERT INTO @tblValidMatchSettingBettypeIds (BettypeId)
@@ -313,6 +316,12 @@ BEGIN
 			,@ErrMsg = 'Minor match is existed: ' + @ExistedMinorBettypeName
 	END
 
+	SELECT *
+	FROM @tblMatchSettingBettypeIds
+
+	SELECT *
+	FROM @tblValidMatchSettingBettypeIds
+
 	DECLARE @InvalidMatchSettingBettypes VARCHAR(2000) = STUFF((
 				SELECT ',' + mb.ShortName
 				FROM @tblMatchSettingBettypeIds AS s
@@ -325,7 +334,7 @@ BEGIN
 	IF @InvalidMatchSettingBettypes IS NOT NULL
 	BEGIN
 		SELECT @ErrCode = 2
-			,@ErrMsg = 'Unable to save trading info for some bettypes: ' + @InvalidMatchSettingBettypes
+			,@ErrMsg = 'Unable to save trading info for bettypes: ' + @InvalidMatchSettingBettypes
 
 		RETURN
 	END
