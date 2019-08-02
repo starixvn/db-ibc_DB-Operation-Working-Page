@@ -17,4 +17,5 @@ BEGIN
 	WHERE IsActive = 1
 		AND ParentBettypeId IS NULL
 		AND MinorBettypeId NOT IN (- 1, - 2, - 5, - 8)
+	ORDER BY m.MinorBettypeName ASC
 END

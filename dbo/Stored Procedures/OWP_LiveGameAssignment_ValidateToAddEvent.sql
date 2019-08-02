@@ -9,6 +9,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToAddEvent] @EventDate DA
 	,@MatchSettingBettypeIds VARCHAR(100) = ''
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(MAX) = '' OUTPUT
+	,@ExistedMatchId INT = NULL OUTPUT
 	,@MinorBettypeId INT = NULL OUTPUT
 	,@ParentMatchId INT = NULL OUTPUT
 AS
@@ -44,21 +45,21 @@ BEGIN
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 
 	-- check match is existed
-	IF EXISTS (
-			SELECT 1
-			FROM dbo.OWPMatch AS m WITH (NOLOCK)
-				INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-				INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-				INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-			WHERE l.OWPLeagueName = @LeagueName
-				AND h.OWPTeamName = @HomeName
-				AND a.OWPTeamName = @AwayName
-				AND m.EventDateTime BETWEEN @FromDate
-					AND @ToDate
-			)
+	SELECT @ExistedMatchId = m.OWPMatchId
+	FROM dbo.OWPMatch AS m WITH (NOLOCK)
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+	WHERE l.OWPLeagueName = @LeagueName
+		AND h.OWPTeamName = @HomeName
+		AND a.OWPTeamName = @AwayName
+		AND m.EventDateTime BETWEEN @FromDate
+			AND @ToDate
+
+	IF @ExistedMatchId IS NOT NULL
 	BEGIN
 		SELECT @ErrCode = 1
-			,@ErrMsg = 'Match is existed'
+			,@ErrMsg = 'This match is existing, please check it !'
 
 		RETURN
 	END
