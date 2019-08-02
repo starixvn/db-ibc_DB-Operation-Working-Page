@@ -2,10 +2,10 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMatchSetting] @OWPMatchId INT
 	,@Bettype INT
-	,@Spread SMALLMONEY
-	,@Maxbet MONEY
-	,@SpreadCN88 SMALLMONEY
-	,@MaxbetCN88 MONEY
+	,@Spread SMALLMONEY = NULL
+	,@Maxbet MONEY = NULL
+	,@SpreadCN88 SMALLMONEY = NULL
+	,@MaxbetCN88 MONEY = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(MAX) = '' OUTPUT
 AS
