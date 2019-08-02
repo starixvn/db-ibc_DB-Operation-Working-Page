@@ -12,6 +12,7 @@ AS
 
  Revisions:
 	20190729@Kane.Le: Initial SP - [Feature: #117461]
+	20190802@Kane.Le: Insert list MatchSettings - [Feature: #117461]
 */
 BEGIN
 	SET NOCOUNT ON
