@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToAddEvent] @EventDate DATE
 	,@KickOffTime TIME(7)
 	,@MatchStatus VARCHAR(10)
@@ -209,7 +208,7 @@ BEGIN
 			IF CAST(@ParentKickOffTime AS TIME(7)) <> @KickOffTime
 			BEGIN
 				SELECT @ErrCode = 1
-					,@ErrMsg = 'Minor match has KO Time different main match'
+					,@ErrMsg = 'Minor match''s KOTime is different from main match'
 
 				RETURN
 			END
@@ -218,7 +217,7 @@ BEGIN
 				AND @MatchStatus <> @ParentMatchStatus
 			BEGIN
 				SELECT @ErrCode = 1
-					,@ErrMsg = 'Minor match has match status different main match'
+					,@ErrMsg = 'Minor match''s status is different from main match'
 
 				RETURN
 			END

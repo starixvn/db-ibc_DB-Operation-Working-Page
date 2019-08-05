@@ -16,3 +16,8 @@ WHERE MinorBettypeId = - 40
 
 DELETE dbo.MinorMatchDetemination
 WHERE MinorBettypeId IN (- 41, - 42, - 43, - 44)
+
+UPDATE dbo.MinorMatchTemplateSetting
+SET League = REPLACE(rtrim(ltrim(League)), CHAR(13) + CHAR(10), '')
+	,Home = REPLACE(rtrim(ltrim(Home)), CHAR(13) + CHAR(10), '')
+	,Away = REPLACE(rtrim(ltrim(Away)), CHAR(13) + CHAR(10), '')
