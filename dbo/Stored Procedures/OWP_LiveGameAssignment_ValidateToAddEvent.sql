@@ -317,12 +317,6 @@ BEGIN
 			,@ErrMsg = 'Minor match is existed: ' + @ExistedMinorBettypeName
 	END
 
-	SELECT *
-	FROM @tblMatchSettingBettypeIds
-
-	SELECT *
-	FROM @tblValidMatchSettingBettypeIds
-
 	DECLARE @InvalidMatchSettingBettypes VARCHAR(2000) = STUFF((
 				SELECT ',' + mb.ShortName
 				FROM @tblMatchSettingBettypeIds AS s

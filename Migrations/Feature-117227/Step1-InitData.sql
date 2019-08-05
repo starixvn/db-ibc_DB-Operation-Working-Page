@@ -13,3 +13,6 @@ VALUES (-1001, 'XMins', 'XMins')
 	
 DELETE dbo.[MinorBettype]
 WHERE MinorBettypeId = - 40
+
+DELETE dbo.MinorMatchDetemination
+WHERE MinorBettypeId IN (- 41, - 42, - 43, - 44)
