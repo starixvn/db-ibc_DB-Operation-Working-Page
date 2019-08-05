@@ -200,6 +200,13 @@ BEGIN
 			@UserId IS NULL
 			OR u.UserId = @UserId
 			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 	
 	UNION
 	
@@ -216,14 +223,19 @@ BEGIN
 			@UserId IS NULL
 			OR u.UserId = @UserId
 			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 
 	-- SELECT * FROM #owpMatchListByDate
-	CREATE TABLE #tblOWPMatchFilter (
-		OWPMatchId INT	
-		)
+	CREATE TABLE #tblOWPMatchFilter (OWPMatchId INT)
 
 	INSERT INTO #tblOWPMatchFilter
-	SELECT ml.ParentMatchId		
+	SELECT ml.ParentMatchId
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -258,7 +270,7 @@ BEGIN
 	
 	UNION
 	
-	SELECT ml.OWPMatchId		
+	SELECT ml.OWPMatchId
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -291,7 +303,6 @@ BEGIN
 				)
 			)
 
-	 
 	-- Return Matches info
 	SELECT ml.OWPMatchId
 		,ml.MatchNo
@@ -361,6 +372,20 @@ BEGIN
 	WHERE ml.OWPMatchId IN (
 			SELECT OWPMatchId
 			FROM #tblOWPMatchFilter
+			)
+		AND (
+			@UserId IS NULL
+			OR ml.OWPMatchId IN (
+				SELECT OWPMatchId
+				FROM #tblMatchIdsFilterByUserId
+				)
+			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
 			)
 	ORDER BY ml.EventDate
 		,ml.KickOffTime
