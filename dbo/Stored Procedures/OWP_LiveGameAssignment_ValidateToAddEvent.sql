@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToAddEvent] @EventDate DATE
 	,@KickOffTime TIME(7)
 	,@MatchStatus VARCHAR(10)
@@ -57,6 +58,12 @@ BEGIN
 
 	IF @ExistedMatchId IS NOT NULL
 	BEGIN
+		SELECT @ExistedMatchId = m.OWPMatchId
+		FROM dbo.MinorMatch AS mm WITH (NOLOCK)
+			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mm.ParentMatchId = m.OWPMatchId
+		WHERE mm.MinorMatchId = @ExistedMatchId
+			AND mm.MinorBettypeId IN (@MinorBettype_Specific15Mins, @MinorBettype_Specific10Mins, @MinorBettype_Specific15MinsNoOfCorners, @MinorBettype_Specific15MinsTotalBooking)
+
 		SELECT @ErrCode = 1
 			,@ErrMsg = 'This match is existing, please check it !'
 

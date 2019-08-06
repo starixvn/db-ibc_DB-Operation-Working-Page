@@ -359,6 +359,7 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_GetBettypeForTradingInfo.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_GetInfoSiteMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_GetSpecialEventTemplate.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_AddMatchSetting_xtest.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
