@@ -13,6 +13,7 @@ AS
 	20190619@Kane.Le: Initial SP - [Feature: #114614]
 	20190712@Tyler.Dang: Add MaxbetCN88 and SpreadCN88 Live Game Assignment - [Feature: #116791]
 	20190716@Kane.Le: Filter with MinorBetType - [Feature: #116791]
+	20190806@Kane.Le: Filter with MatchStatus - [Feature: #117227]
 */
 BEGIN
 	SET NOCOUNT ON
