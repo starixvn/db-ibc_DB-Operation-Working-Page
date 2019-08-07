@@ -21,3 +21,19 @@ UPDATE dbo.MinorMatchTemplateSetting
 SET League = REPLACE(rtrim(ltrim(League)), CHAR(13) + CHAR(10), '')
 	,Home = REPLACE(rtrim(ltrim(Home)), CHAR(13) + CHAR(10), '')
 	,Away = REPLACE(rtrim(ltrim(Away)), CHAR(13) + CHAR(10), '')
+	
+UPDATE dbo.MinorBettype
+SET [Order] = 1
+WHERE MinorBettypeId = -3
+
+UPDATE dbo.MinorBettype
+SET [Order] = 2
+WHERE MinorBettypeId = -4
+
+UPDATE dbo.MinorBettype
+SET [Order] = 3
+WHERE MinorBettypeId = -6
+
+UPDATE dbo.MinorBettype
+SET [Order] = 4
+WHERE MinorBettypeId = -7

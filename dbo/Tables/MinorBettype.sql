@@ -6,8 +6,11 @@
     [Alias]              VARCHAR (10)   NULL,
     [IsActive]           BIT            NULL,
     [IsMinorBettype]     BIT            NULL,
+    [Order]              INT            NULL,
     CONSTRAINT [PK_MinorBettype] PRIMARY KEY CLUSTERED ([MinorBettypeId] DESC)
 );
+
+
 
 
 
