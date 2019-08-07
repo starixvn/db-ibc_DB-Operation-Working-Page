@@ -50,10 +50,10 @@ BEGIN
 		,@OWPAwayTeamId INT
 		,@EventDateTime DATETIME
 
-	SELECT @EventDateTime = CAST(@EventDate AS DATETIME) + CAST(@KickOffTime AS DATETIME)
-
 	IF (@KickOffTime < '12:00')
-		SELECT @EventDateTime = DATEADD(DAY, 1, @EventDateTime)
+		SELECT @EventDate = DATEADD(DAY, 1, @EventDate)
+
+	SELECT @EventDateTime = CAST(@EventDate AS DATETIME) + CAST(@KickOffTime AS DATETIME)
 
 	SELECT @OWPLeagueId = OWPLeagueId
 	FROM dbo.OWPLeague AS l WITH (NOLOCK)

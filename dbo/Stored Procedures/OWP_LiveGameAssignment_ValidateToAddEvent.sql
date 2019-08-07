@@ -71,7 +71,7 @@ BEGIN
 
 		RETURN
 	END
-
+	
 	IF @MatchNo <> ''
 		AND EXISTS (
 			SELECT 1
@@ -83,6 +83,8 @@ BEGIN
 	BEGIN
 		SELECT @ErrCode = 1
 			,@ErrMsg = 'The Match No. is used. Please choose another one.'
+			
+		RETURN
 	END
 
 	-- determine minor match
