@@ -43,7 +43,6 @@ BEGIN
 		,@MinorBettype_AwaySingleTeamOUOfCorners INT = - 95
 		,@MinorBettype_HomePenShootOut INT = - 98
 		,@MinorBettype_AwayPenShootOut INT = - 99
-		
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 
@@ -65,29 +64,27 @@ BEGIN
 		FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 			INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mm.ParentMatchId = m.OWPMatchId
 		WHERE mm.MinorMatchId = @ExistedMatchId
-			AND mm.MinorBettypeId IN (@MinorBettype_Specific15Mins, @MinorBettype_Specific10Mins, @MinorBettype_Specific15MinsNoOfCorners, @MinorBettype_Specific15MinsTotalBooking)
+			AND mm.MinorBettypeId IN (@MinorBettype_Specific15Mins, @MinorBettype_Specific10Mins, @MinorBettype_Specific15MinsNoOfCorners, @MinorBettype_Specific15MinsTotalBooking, @MinorBettype_FastMarket, @MinorBettype_AllInOne)
 
 		SELECT @ErrCode = 1
 			,@ErrMsg = 'This match is existing, please check it !'
 
 		RETURN
 	END
-	IF @MatchNo <> ''
-	BEGIN
-	SELECT @ExistedMatchId = m.OWPMatchId
-	FROM dbo.OWPMatch AS m WITH (NOLOCK)		 
-	WHERE m.MatchNo = @MatchNo		 
-		AND m.EventDateTime BETWEEN @FromDate
-			AND @ToDate
-	END
-	IF @ExistedMatchId IS NOT NULL
-	BEGIN		 
-		SELECT @ExistedMatchId = NULL,
-			 @ErrCode = 1
-			,@ErrMsg = 'The Match No. is used. Please choose another one.'
 
-		RETURN
+	IF @MatchNo <> ''
+		AND EXISTS (
+			SELECT 1
+			FROM dbo.OWPMatch AS m WITH (NOLOCK)
+			WHERE m.MatchNo = @MatchNo
+				AND m.EventDateTime BETWEEN @FromDate
+					AND @ToDate
+			)
+	BEGIN
+		SELECT @ErrCode = 1
+			,@ErrMsg = 'The Match No. is used. Please choose another one.'
 	END
+
 	-- determine minor match
 	CREATE TABLE #tblRuleChecking (
 		MinorBettypeId INT
