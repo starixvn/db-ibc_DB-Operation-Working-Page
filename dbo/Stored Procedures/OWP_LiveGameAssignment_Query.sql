@@ -1,6 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_Query] @EventDate DATE
+﻿CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_Query] @EventDate DATE
 	,@Username NVARCHAR(30) = NULL
 	,@MatchStatusIds NVARCHAR(100) = NULL
 AS
@@ -97,7 +95,7 @@ BEGIN
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
-		,Website NVARCHAR(1000)
+		,Website1 NVARCHAR(1000)
 		,Website2 NVARCHAR(1000)
 		,Website3 NVARCHAR(1000)
 		,Website4 NVARCHAR(1000)
@@ -126,7 +124,7 @@ BEGIN
 		,[Round]
 		,OutSide
 		,Remark
-		,Website
+		,Website1
 		,Website2
 		,Website3
 		,Website4
@@ -355,7 +353,7 @@ BEGIN
 		,ml.[Round]
 		,ml.OutSide
 		,ml.Remark
-		,ml.Website
+		,ml.Website1
 		,ml.Website2
 		,ml.Website3
 		,ml.Website4
