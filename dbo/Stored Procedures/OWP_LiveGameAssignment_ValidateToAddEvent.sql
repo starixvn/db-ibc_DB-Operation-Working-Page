@@ -4,6 +4,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToAddEvent] @EventDate DA
 	,@KickOffTime TIME(7)
 	,@MatchStatus VARCHAR(10)
 	,@LeagueName NVARCHAR(500)
+	,@MatchNo NVARCHAR(50) = ''
 	,@HomeName NVARCHAR(200)
 	,@AwayName NVARCHAR(200)
 	,@MatchSettingBettypeIds VARCHAR(100) = ''
@@ -20,6 +21,7 @@ AS
 
  Revisions:
 	20190724@Leo.Vo: Initial SP - [Feature: #117461]
+	20190807@Kane.Le: Prevent duplicate MatchNo - [Feature: #117227]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -41,6 +43,7 @@ BEGIN
 		,@MinorBettype_AwaySingleTeamOUOfCorners INT = - 95
 		,@MinorBettype_HomePenShootOut INT = - 98
 		,@MinorBettype_AwayPenShootOut INT = - 99
+		
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 
@@ -69,7 +72,22 @@ BEGIN
 
 		RETURN
 	END
+	IF @MatchNo <> ''
+	BEGIN
+	SELECT @ExistedMatchId = m.OWPMatchId
+	FROM dbo.OWPMatch AS m WITH (NOLOCK)		 
+	WHERE m.MatchNo = @MatchNo		 
+		AND m.EventDateTime BETWEEN @FromDate
+			AND @ToDate
+	END
+	IF @ExistedMatchId IS NOT NULL
+	BEGIN		 
+		SELECT @ExistedMatchId = NULL,
+			 @ErrCode = 1
+			,@ErrMsg = 'The Match No. is used. Please choose another one.'
 
+		RETURN
+	END
 	-- determine minor match
 	CREATE TABLE #tblRuleChecking (
 		MinorBettypeId INT
