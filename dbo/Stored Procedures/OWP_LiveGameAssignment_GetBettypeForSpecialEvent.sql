@@ -23,5 +23,5 @@ BEGIN
 		AND mb.ParentBettypeId IS NULL
 		AND mb.MinorBettypeId NOT IN (- 1, - 2, - 5, - 8)
 		AND mm.MinorBettypeId IS NULL
-	ORDER BY (CASE WHEN mb.[Order] IS NULL THEN 9999999 ELSE mb.[Order] END) ASC, mb.MinorBettypeName ASC
+	ORDER BY (CASE WHEN mb.[SortOrder] IS NULL THEN 9999999 ELSE mb.[SortOrder] END) ASC, mb.MinorBettypeName ASC
 END
