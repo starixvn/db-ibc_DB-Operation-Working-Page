@@ -13,6 +13,8 @@ AS
 	20190619@Kane.Le: Initial SP - [Feature: #114614]
 	20190712@Tyler.Dang: Add MaxbetCN88 and SpreadCN88 Live Game Assignment - [Feature: #116791]
 	20190716@Kane.Le: Filter with MinorBetType - [Feature: #116791]
+	20190806@Kane.Le: Filter with MatchStatus - [Feature: #117227]
+	20190807@Kane.Le: Return Website1 - [Feature: #117227]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -96,7 +98,7 @@ BEGIN
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
-		,Website NVARCHAR(1000)
+		,Website1 NVARCHAR(1000)
 		,Website2 NVARCHAR(1000)
 		,Website3 NVARCHAR(1000)
 		,Website4 NVARCHAR(1000)
@@ -125,7 +127,7 @@ BEGIN
 		,[Round]
 		,OutSide
 		,Remark
-		,Website
+		,Website1
 		,Website2
 		,Website3
 		,Website4
@@ -200,6 +202,13 @@ BEGIN
 			@UserId IS NULL
 			OR u.UserId = @UserId
 			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 	
 	UNION
 	
@@ -216,14 +225,19 @@ BEGIN
 			@UserId IS NULL
 			OR u.UserId = @UserId
 			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
+			)
 
 	-- SELECT * FROM #owpMatchListByDate
-	CREATE TABLE #tblOWPMatchFilter (
-		OWPMatchId INT	
-		)
+	CREATE TABLE #tblOWPMatchFilter (OWPMatchId INT)
 
 	INSERT INTO #tblOWPMatchFilter
-	SELECT ml.ParentMatchId		
+	SELECT ml.ParentMatchId
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -258,7 +272,7 @@ BEGIN
 	
 	UNION
 	
-	SELECT ml.OWPMatchId		
+	SELECT ml.OWPMatchId
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -291,7 +305,6 @@ BEGIN
 				)
 			)
 
-	 
 	-- Return Matches info
 	SELECT ml.OWPMatchId
 		,ml.MatchNo
@@ -343,7 +356,7 @@ BEGIN
 		,ml.[Round]
 		,ml.OutSide
 		,ml.Remark
-		,ml.Website
+		,ml.Website1
 		,ml.Website2
 		,ml.Website3
 		,ml.Website4
@@ -361,6 +374,20 @@ BEGIN
 	WHERE ml.OWPMatchId IN (
 			SELECT OWPMatchId
 			FROM #tblOWPMatchFilter
+			)
+		AND (
+			@UserId IS NULL
+			OR ml.OWPMatchId IN (
+				SELECT OWPMatchId
+				FROM #tblMatchIdsFilterByUserId
+				)
+			)
+		AND (
+			@MatchStatusIds IS NULL
+			OR ml.MatchStatus IN (
+				SELECT [Value]
+				FROM @tblRefResourceMatchStatus
+				)
 			)
 	ORDER BY ml.EventDate
 		,ml.KickOffTime
