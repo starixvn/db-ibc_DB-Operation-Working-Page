@@ -10,6 +10,7 @@ DB: bodb_OWP
 Revisions:
 	20181221@Raymond.Le: Initial SP - [Redmine: #106196]
 	20190306@Leo.Vo: Change condition - [Redmine: #109560]
+	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -17,6 +18,11 @@ BEGIN
 	DECLARE @LASection INT
 		,@FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
+		,@NullLevelId INT
+	
+	SELECT @NullLevelId = MAX(ResourceId) + 1
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'UserLevel'
 
 	SELECT @LASection = ResourceId
 	FROM dbo.RefResource WITH (NOLOCK)
@@ -35,14 +41,13 @@ BEGIN
 		,SpeakChinese
 		)
 	SELECT UserId
-		,[Level]
+		,ISNULL([Level], @NullLevelId)
 		,CASE 
 			WHEN LocationCode = 'CTI' THEN 1
 			ELSE 0
 			END
 	FROM dbo.[User] WITH (NOLOCK)
-	WHERE [Level] IS NOT NULL
-		AND LocationCode IS NOT NULL
+	WHERE LocationCode IS NOT NULL
 		AND SectionId = @LASection
 
 	SELECT UserId
