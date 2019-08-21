@@ -32,3 +32,45 @@ VALUES (
 	)
 
 GO
+
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
+	92
+	,4
+	,28
+	,2
+	,'OWP_LiveDetail_MatchInfo_Update'
+	,'OWP_LiveDetail_MatchInfo_Update'
+	,'<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row item="MatchStatus" alias="ms" /><row item="InfoSiteMatchId" alias="ifi" /><row item="Remark" alias="rm" /><row item="IsSelected" alias="is" /><row item="SelectedBy" alias="sb" /><row item="Round" alias="rd" /><row item="IsSoloMatch" alias="sl" /><row item="Venue" alias="vn" /><row item="Division" alias="ds" /><row item="Market" alias="mk" /><row item="OtherTime" alias="ot" /><row item="Website1" alias="ws1" /><row item="Website2" alias="ws2" /><row item="Website3" alias="ws3" /><row item="Website4" alias="ws4" /></root>'
+	)
+
+GO
+
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
+	93
+	,4
+	,28
+	,2
+	,'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
+	,'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
+	,'<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row item="MatchStatus" alias="ms" /></root>'
+	)
+
+GO
