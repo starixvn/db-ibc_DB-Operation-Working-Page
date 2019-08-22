@@ -159,3 +159,22 @@ VALUES (
 
 GO
 
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
+	97
+	,4
+	,28
+	,2
+	,'OWP_LiveDetail_UpdateTradingInfo'
+	,'OWP_LiveDetail_UpdateTradingInfo'
+	,'<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row item="NoOfHDPId" alias="hdp" /><row item="MatchOfferIds" alias="mo" /></root>'
+	)
+GO

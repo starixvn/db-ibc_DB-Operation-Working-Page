@@ -363,6 +363,7 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_AddMatchRecommendOddsDetail.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_AddMatchRecommendOdds.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_EditMainMatchToMinorMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_UpdateTradingInfo.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
