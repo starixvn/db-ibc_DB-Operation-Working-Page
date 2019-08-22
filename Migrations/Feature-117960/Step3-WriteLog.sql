@@ -74,3 +74,25 @@ VALUES (
 	)
 
 GO
+
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
+	96
+	,4
+	,28
+	,2
+	,'OWP_LiveDetail_Update_ProviderInfo'
+	,'OWP_LiveDetail_Update_ProviderInfo'
+	,'<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row item="TVCode" alias="tv" /><row item="Channel" alias="ch" /><row item="WatchBet" alias="wb" /><row item="Provider" alias="pv" /><row item="Runner" alias="rn" /><row item="Phone" alias="ph" /><row item="Agent" alias="ag" /></root>'
+	)
+
+GO
+
