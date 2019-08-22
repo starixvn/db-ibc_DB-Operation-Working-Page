@@ -43,6 +43,27 @@ INSERT INTO dbo.LogAction (
 	,[LogItems]
 	)
 VALUES (
+	91
+	,4
+	,28
+	,2
+	,'OWP_MatchSetting_Create'
+	,'OWP_MatchSetting_Create'
+	,'<root><xml path="r/z" /><row item="Bettype" alias="bttype" /><row item="Maxbet" alias="mbet" /><row item="Spread" alias="spread" /><row item="MaxbetCN88" alias="mbetCN88" /><row item="SpreadCN88" alias="sCN88" /></root>'
+	)
+
+GO
+
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
 	92
 	,4
 	,28
@@ -71,6 +92,48 @@ VALUES (
 	,'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
 	,'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
 	,'<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row item="MatchStatus" alias="ms" /></root>'
+	)
+
+GO
+
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
+	94
+	,4
+	,28
+	,2
+	,'OWP_MatchSetting_Delete'
+	,'OWP_MatchSetting_Delete'
+	,'<root><xml path="r/z" /><row item="Bettype" alias="bttype" /><row item="Maxbet" alias="mbet" /><row item="Spread" alias="spread" /><row item="MaxbetCN88" alias="mbetCN88" /><row item="SpreadCN88" alias="sCN88" /></root>'
+	)
+
+GO
+
+INSERT INTO dbo.LogAction (
+	ActionId
+	,ModuleId
+	,[ModuleObjectId]
+	,[ActionTypeId]
+	,[ActionName]
+	,[SPName]
+	,[LogItems]
+	)
+VALUES (
+	95
+	,4
+	,28
+	,2
+	,'OWP_MatchSetting_Update'
+	,'OWP_MatchSetting_Update'
+	,'<root><xml path="r/z" /><row item="Bettype" alias="bttype" /><row item="Maxbet" alias="mbet" /><row item="Spread" alias="spread" /><row item="MaxbetCN88" alias="mbetCN88" /><row item="SpreadCN88" alias="sCN88" /></root>'
 	)
 
 GO
