@@ -47,6 +47,7 @@ Revisions:
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
+	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -996,10 +997,14 @@ BEGIN
 		INNER JOIN #tblMatchSetting AS ms ON mf.OWPMatchId = ms.OWPMatchId
 
 	-- Return Match Notes
+	DECLARE @TimeZoneGMT8 INT = 8;
 	SELECT mn.OWPMatchId
+		,u.Username
 		,mn.Note
+		,DATEADD(HH, @TimeZoneGMT8, (DATEADD(hh, DATEDIFF(hh, GETDATE(), GETUTCDATE()), mn.CreatedDate))) AS LastUpdated
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN dbo.MatchNote AS mn WITH (NOLOCK) ON mf.OWPMatchId = mn.OWPMatchId
+		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON mn.CreatedBy = u.UserId
 	WHERE mf.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 		OR mf.MinorBettypeId IS NULL
 	ORDER BY mn.CreatedDate DESC

@@ -15,6 +15,7 @@ AS
 	20190716@Kane.Le: Filter with MinorBetType - [Feature: #116791]
 	20190806@Kane.Le: Filter with MatchStatus - [Feature: #117227]
 	20190807@Kane.Le: Return Website1 - [Feature: #117227]
+	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -462,11 +463,13 @@ BEGIN
 			)
 
 	-- Return notes
+	DECLARE @TimeZoneGMT8 INT = 8;
 	SELECT mn.OWPMatchId
 		,mn.MatchNoteId
 		,mn.Note
 		,mn.CreatedBy AS UserId
 		,u.Username
+		,DATEADD(HH, @TimeZoneGMT8, (DATEADD(hh, DATEDIFF(hh, GETDATE(), GETUTCDATE()), mn.CreatedDate))) AS LastUpdated
 	FROM dbo.MatchNote AS mn WITH (NOLOCK)
 	INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON mn.OWPMatchId = ml.OWPMatchId
 	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON mn.CreatedBy = u.UserId

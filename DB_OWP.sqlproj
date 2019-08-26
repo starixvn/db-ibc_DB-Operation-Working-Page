@@ -364,6 +364,19 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_AddMatchRecommendOdds.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_EditMainMatchToMinorMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_UpdateTradingInfo.sql" />
+    <Build Include="dbo\Functions\OWP_GetCurrentMatchLiveStatus_1.sql" />
+    <Build Include="dbo\Functions\fnc_GetMessageTemplateByCode.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_ValidateToEditEvent.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_GetSpecialEventTemplate_ByName.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_EditSingleMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_EditMainMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_ValidateInfoSiteMatchId.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_ProviderInfo.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchSetting_Update.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchSetting_GetById.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchSetting_Delete.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchSetting_Create.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

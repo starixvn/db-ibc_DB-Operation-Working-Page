@@ -21,6 +21,7 @@ AS
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
+	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 
 */
 BEGIN
@@ -612,19 +613,25 @@ BEGIN
 		,MaxbetCN88
 		,SpreadCN88
 	FROM #tblMatchSetting WITH (NOLOCK)
-
+	
 	-- Return Match Notes
+	DECLARE @TimeZoneGMT8 INT = 8;
 	SELECT mn.OWPMatchId
+		,u.Username
 		,mn.Note
 		,(CASE 
 			WHEN mnu.IsViewed IS NULL
 				OR mnu.IsViewed = 0 THEN 0
 			ELSE 1 END
 			) AS IsViewed
+			,DATEADD(HH, @TimeZoneGMT8, (DATEADD(hh, DATEDIFF(hh, GETDATE(), GETUTCDATE()), mn.CreatedDate))) AS LastUpdated
 	FROM dbo.MatchNote AS mn WITH (NOLOCK)
 		INNER JOIN #tblTodayMatch AS ml WITH (NOLOCK) ON mn.OWPMatchId = ml.OWPMatchId
-		LEFT JOIN dbo.MatchNoteUser AS mnu WITH (NOLOCK) ON mn.MatchNoteId = mnu.MatchNoteId
+		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON mn.CreatedBy = u.UserId
+		LEFT JOIN dbo.MatchNoteUser AS mnu WITH (NOLOCK) ON mn.MatchNoteId = mnu.MatchNoteId		
 		AND mnu.UserId = @UserId
+		
+		 
 	WHERE ml.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 		OR ml.MinorBettypeId IS NULL
 	ORDER BY (CASE 

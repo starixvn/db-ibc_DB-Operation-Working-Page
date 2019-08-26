@@ -31,7 +31,7 @@ BEGIN
 		,mi.IsSoloMatch
 		,mi.Division
 		,mi.Venue
-		,(om.EventDate + om.OtherTime) AS OtherTime
+		,om.OtherTime
 		,r.Value AS LeagueCategoryName
 		,om.InfoSiteMatchId
 		,mi.MatchStatus
@@ -39,8 +39,10 @@ BEGIN
 		,mi.Website2
 		,mi.Website3
 		,mi.Website4
+		,minor.MinorBettypeId
 		,minor.ParentMatchId
 		,main.MatchStatus AS ParentMatchStatus
+		,@OWPMatchId AS OWPMatchId
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON minor.MinorMatchId = om.OWPMatchId
 		LEFT JOIN dbo.MatchInfo AS main WITH (NOLOCK) ON main.OWPMatchId = minor.ParentMatchId
