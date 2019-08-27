@@ -1,8 +1,4 @@
-﻿-- =============================================
--- Author:		<Author,,Name>
--- Create date: <Create Date,,>
--- Description:	<Description,,>
--- =============================================
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_ValidateInfoSiteMatchId]
 	-- Add the parameters for the stored procedure here
 	@InfoSiteMatchId INT
@@ -11,6 +7,9 @@ AS
 Created: 20190820@Tyler.Dang
 Task : Validate InfoSiteMatchId is existed or not
 DB: bodb_OWP
+
+Revisions:
+	20190820@Tyler.Dang: InitialSP - [Redmine: #118566]
 */
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

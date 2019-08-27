@@ -365,7 +365,6 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_EditMainMatchToMinorMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_UpdateTradingInfo.sql" />
     <Build Include="dbo\Functions\OWP_GetCurrentMatchLiveStatus_1.sql" />
-    <Build Include="dbo\Functions\fnc_GetMessageTemplateByCode.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_ValidateToEditEvent.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_GetSpecialEventTemplate_ByName.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_EditSingleMatch.sql" />

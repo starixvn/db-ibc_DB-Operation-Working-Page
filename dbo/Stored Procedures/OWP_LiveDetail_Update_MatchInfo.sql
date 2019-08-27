@@ -1,4 +1,4 @@
-﻿
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_MatchInfo] @ActorId INT
 	,@SessionId NVARCHAR(100)
 	,@OWPMatchId INT
@@ -23,6 +23,9 @@ AS
 Created: 20190820@Tyler.Dang
 Task : Update MatchInfo section Edit Event  
 DB: bodb_OWP
+
+Revisions:
+	20190820@Tyler.Dang: InitialSP - [Redmine: #118566]
 */
 BEGIN
 	SET NOCOUNT ON

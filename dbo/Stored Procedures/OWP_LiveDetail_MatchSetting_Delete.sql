@@ -187,7 +187,8 @@ BEGIN
 				BEGIN
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
-					FROM dbo.fnc_GetMessageTemplateByCode('EditMaxbetCN88') AS mt
+					FROM MessageTemplate AS mt WITH (NOLOCK)
+					WHERE mt.MsgTemplateCode='EditMaxbetCN88'
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
@@ -214,7 +215,8 @@ BEGIN
 				BEGIN
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
-					FROM dbo.fnc_GetMessageTemplateByCode('EditSpread') AS mt
+					FROM MessageTemplate AS mt WITH (NOLOCK)
+					WHERE mt.MsgTemplateCode='EditSpread'
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
@@ -241,7 +243,8 @@ BEGIN
 				BEGIN
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
-					FROM dbo.fnc_GetMessageTemplateByCode('EditSpreadCN88') AS mt
+					FROM MessageTemplate AS mt WITH (NOLOCK)
+					WHERE mt.MsgTemplateCode='EditSpreadCN88'
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)

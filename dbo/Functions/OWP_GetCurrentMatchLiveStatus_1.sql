@@ -1,4 +1,5 @@
-﻿CREATE FUNCTION [dbo].[OWP_GetCurrentMatchLiveStatus]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
+CREATE FUNCTION [dbo].[OWP_GetCurrentMatchLiveStatus]
 (
 	@EventDate DATETIME
 	,@KickOffTime TIME
@@ -9,7 +10,11 @@ AS
  Created: Tyler.Dang@20190814
  Task : Specify Live status (In-play, Completed or Live)
  DB: bodb_OWP
+
+ Revisions:
+	20190814@Tyler.Dang: InitialSP - [Redmine: #118563]
 */
+
 BEGIN
 	DECLARE	@str_Live NVARCHAR(15) = 'Live'
 			,@str_Inplay NVARCHAR(15) = 'In-play'
