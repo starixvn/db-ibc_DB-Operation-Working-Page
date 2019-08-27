@@ -194,13 +194,7 @@ BEGIN
 
 		SET @LoopCounter = @LoopCounter + 1
 	END
-
-	SELECT *
-	FROM @tblSpecialEventTemplate
-
-	SELECT *
-	FROM @tblOWPMatchByEventDate
-
+ 
 	-- check match is duplicated
 	SELECT @ExistedMatchId = m.OWPMatchId
 	FROM @tblOWPMatchByEventDate AS m
@@ -236,6 +230,8 @@ BEGIN
 			JOIN @tblSpecialEventTemplate t ON m.LeagueName = t.LeagueName
 				AND m.HomeName = t.HomeName
 				AND m.AwayName = t.AwayName
+				AND m.MatchNo = @MatchNo
+				
 			)
 	BEGIN
 		SELECT @ErrCode = 1
