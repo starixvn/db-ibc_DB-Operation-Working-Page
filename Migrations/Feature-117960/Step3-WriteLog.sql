@@ -9,6 +9,9 @@
 -- 1. Write Log
 --------------------------------
 
+USE [bodb_OWP]
+GO
+
 INSERT INTO dbo.ModuleObject (ModuleObjectId, ModuleObjectName, ModuleId)
 VALUES (28, 'Edit Event', 4)
 

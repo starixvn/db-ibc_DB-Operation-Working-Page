@@ -175,7 +175,6 @@ BEGIN
 					FROM dbo.fnc_GetMessageTemplateByCode('EditMaxbet') AS mt
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
-					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplateChangeMatchSetting(@MessageTemplate,@Bettype,@OldMaxbet,@Maxbet)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@Maxbet,''))
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldMaxbet,''))
@@ -201,7 +200,7 @@ BEGIN
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
 					FROM dbo.fnc_GetMessageTemplateByCode('EditMaxbetCN88') AS mt
-					
+			
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@MaxbetCN88,''))

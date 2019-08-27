@@ -93,6 +93,7 @@ BEGIN
 
 		UPDATE dbo.OWPMatch
 		SET OWPLeagueId = @OWPLeagueId
+		WHERE OWPMatchId = @OWPMatchId
 
 		-- send message
 		SET @HasChange = 1
@@ -126,6 +127,7 @@ BEGIN
 
 		UPDATE dbo.OWPMatch
 		SET OWPHomeId = @OWPHomeTeamId
+		WHERE OWPMatchId = @OWPMatchId
 
 		SET @HasChange = 1
 	END
@@ -147,7 +149,8 @@ BEGIN
 		END
 
 		UPDATE dbo.OWPMatch
-		SET OWPHomeId = @OWPAwayTeamId
+		SET OWPAwayId = @OWPAwayTeamId
+		WHERE OWPMatchId = @OWPMatchId
 
 		SET @HasChange = 1
 	END

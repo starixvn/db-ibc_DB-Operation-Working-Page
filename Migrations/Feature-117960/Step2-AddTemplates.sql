@@ -1,4 +1,4 @@
-USE [bodb_OWP_DEV]
+USE [bodb_OWP]
 GO
 
 INSERT INTO [dbo].[MessageTemplate]

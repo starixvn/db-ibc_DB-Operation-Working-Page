@@ -58,7 +58,7 @@ BEGIN
 		END
 	
 	-- send message
-	--IF (dbo.[fnc_IsMatchInTimeRange](@MatchId) = 1)
+	IF (dbo.[fnc_IsMatchInTimeRange](@MatchId) = 1)
 		BEGIN
 			DECLARE @UserReceivedAssigneeMessageMatchInfo TVP_INT,
 				@UserReceivedWatcherMessageMatchInfo TVP_INT,
