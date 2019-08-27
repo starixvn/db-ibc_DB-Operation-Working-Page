@@ -194,7 +194,7 @@ BEGIN
 
 		SET @LoopCounter = @LoopCounter + 1
 	END
- 
+
 	-- check match is duplicated
 	SELECT @ExistedMatchId = m.OWPMatchId
 	FROM @tblOWPMatchByEventDate AS m
@@ -231,7 +231,10 @@ BEGIN
 				AND m.HomeName = t.HomeName
 				AND m.AwayName = t.AwayName
 				AND m.MatchNo = @MatchNo
-				
+			WHERE m.OWPMatchId <> @OWPMatchId
+				AND m.LeagueName = @LeagueName
+				AND m.HomeName = @HomeName
+				AND m.AwayName = @AwayName
 			)
 	BEGIN
 		SELECT @ErrCode = 1
@@ -256,191 +259,6 @@ BEGIN
 	SELECT @OldParentMatchId = mn.ParentMatchId
 	FROM dbo.MinorMatch AS mn WITH (NOLOCK)
 	WHERE mn.ParentMatchId = @OWPMatchId
-
-	IF @OldParentMatchId IS NOT NULL
-	BEGIN
-		IF EXISTS (
-				SELECT 1
-				FROM dbo.MinorMatch AS m WITH (NOLOCK)
-				WHERE m.ParentMatchId = @OldParentMatchId
-					AND m.MinorBettypeId NOT IN (
-						- 1
-						,- 2
-						,- 88
-						,- 89
-						)
-				)
-		BEGIN
-			SELECT @ErrCode = 1
-				,@ErrMsg = 'This match is existing minor match, please check it !'
-
-			RETURN
-		END
-
-		-- determine minor match
-		CREATE TABLE #tblRuleChecking (
-			MinorBettypeId INT
-			,IsFalse INT
-			)
-
-		INSERT INTO #tblRuleChecking (
-			MinorBettypeId
-			,IsFalse
-			)
-		SELECT mmd.MinorBettypeId
-			,CASE 
-				WHEN mmd.[Condition] = 1
-					AND mmd.Field = 1
-					AND @LeagueName LIKE '%' + mmd.[Value] + '%'
-					THEN 0
-				WHEN mmd.[Condition] = 2
-					AND mmd.Field = 1
-					AND @LeagueName NOT LIKE '%' + mmd.[Value] + '%'
-					THEN 0
-				WHEN mmd.[Condition] = 1
-					AND mmd.Field = 2
-					AND @HomeName LIKE '%' + mmd.[Value] + '%'
-					THEN 0
-				WHEN mmd.[Condition] = 2
-					AND mmd.Field = 2
-					AND @HomeName NOT LIKE '%' + mmd.[Value] + '%'
-					THEN 0
-				WHEN mmd.[Condition] = 1
-					AND mmd.Field = 3
-					AND @AwayName LIKE '%' + mmd.[Value] + '%'
-					THEN 0
-				WHEN mmd.[Condition] = 2
-					AND mmd.Field = 3
-					AND @AwayName NOT LIKE '%' + mmd.[Value] + '%'
-					THEN 0
-				ELSE 1
-				END
-		FROM dbo.MinorMatchDetemination AS mmd WITH (NOLOCK)
-		WHERE mmd.Field IN (
-				1
-				,2
-				,3
-				)
-
-		SELECT @MinorBettypeId = MinorBettypeId
-		FROM #tblRuleChecking WITH (NOLOCK)
-		GROUP BY MinorBettypeId
-		HAVING SUM(IsFalse) = 0
-
-		DROP TABLE #tblRuleChecking
-
-		IF @MinorBettypeId IS NOT NULL
-		BEGIN
-			DECLARE @LeagueChars INT
-				,@HomeChars INT
-				,@AwayChars INT
-
-			SELECT @LeagueChars = MAX(CASE mmd.Field
-						WHEN 4
-							THEN CAST(mmd.Value AS INT)
-						END)
-				,@HomeChars = MAX(CASE mmd.Field
-						WHEN 5
-							THEN CAST(mmd.Value AS INT)
-						END)
-				,@AwayChars = MAX(CASE mmd.Field
-						WHEN 6
-							THEN CAST(mmd.Value AS INT)
-						END)
-			FROM dbo.MinorMatchDetemination AS mmd WITH (NOLOCK)
-			WHERE mmd.MinorBettypeId = @MinorBettypeId
-				AND mmd.Field IN (
-					4
-					,5
-					,6
-					)
-
-			IF LEN(@LeagueName) > @LeagueChars
-				AND LEN(@HomeName) > @HomeChars
-				AND LEN(@AwayName) > @AwayChars
-			BEGIN
-				IF @MinorBettypeId NOT IN (
-						1111
-						,1112
-						,1113
-						) -- ignore Hard code Single team bettype
-				BEGIN
-					SELECT @ParentMatchId = m.OWPMatchId
-					FROM dbo.OWPMatch AS m WITH (NOLOCK)
-					INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-					INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-					INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-					WHERE m.EventDateTime BETWEEN @FromDate
-							AND @ToDate
-						AND l.OWPLeagueName = RTRIM(LEFT(@LeagueName, LEN(@LeagueName) - @LeagueChars))
-						AND h.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
-						AND a.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars))
-				END
-				ELSE
-				BEGIN
-					DECLARE @SingleTeamType SMALLINT
-
-					SELECT @ParentMatchId = m.OWPMatchId
-						,@SingleTeamType = CASE 
-							WHEN h.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
-								AND h.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars))
-								THEN 1
-							ELSE 2
-							END
-					FROM dbo.OWPMatch AS m WITH (NOLOCK)
-					INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-					INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-					INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-					WHERE m.EventDateTime BETWEEN @FromDate
-							AND @ToDate
-						AND l.OWPLeagueName = RTRIM(LEFT(@LeagueName, LEN(@LeagueName) - @LeagueChars))
-						AND (
-							(
-								h.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
-								AND h.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars))
-								)
-							OR (
-								a.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
-								AND a.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars))
-								)
-							)
-
-					SELECT @MinorBettypeId = CASE @MinorBettypeId
-							WHEN 1111
-								THEN CASE @SingleTeamType
-										WHEN 1
-											THEN @MinorBettype_HomeSingleTeamOU
-										WHEN 2
-											THEN @MinorBettype_AwaySingleTeamOU
-										END
-							WHEN 1112
-								THEN CASE @SingleTeamType
-										WHEN 1
-											THEN @MinorBettype_HomeSingleTeamOUOfCorners
-										WHEN 2
-											THEN @MinorBettype_AwaySingleTeamOUOfCorners
-										END
-							WHEN 1113
-								THEN CASE @SingleTeamType
-										WHEN 1
-											THEN @MinorBettype_HomePenShootOut
-										WHEN 2
-											THEN @MinorBettype_AwayPenShootOut
-										END
-							END
-				END
-			END
-		END
-
-		IF @OldParentMatchId = @ParentMatchId
-			SELECT @ParentMatchId = NULL
-				,@MinorBettypeId = NULL
-
-		SELECT @ErrCode = 0
-			,@ErrMsg = ''
-
-		RETURN
-	END
 
 	-- determine minor match
 	SELECT @ParentMatchId = NULL
