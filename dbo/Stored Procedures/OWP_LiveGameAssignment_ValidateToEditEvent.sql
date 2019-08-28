@@ -265,7 +265,7 @@ BEGIN
 	WHERE mn.ParentMatchId = @OWPMatchId
 
 	IF @OldParentMatchId IS NOT NULL
-	BEGIN		 
+	BEGIN
 		-- determine minor match
 		CREATE TABLE #tblRuleChecking (
 			MinorBettypeId INT
@@ -421,9 +421,8 @@ BEGIN
 			END
 		END
 
-		 
-
-		IF @ParentMatchId = 0			OR @OldParentMatchId = @ParentMatchId
+		IF @ParentMatchId = 0
+			OR @OldParentMatchId = @ParentMatchId
 		BEGIN
 			SELECT @ParentMatchId = NULL
 				,@MinorBettypeId = NULL
@@ -435,11 +434,33 @@ BEGIN
 		END
 		ELSE
 		BEGIN
-			
-			SELECT @ErrCode = 1
-				,@ErrMsg = 'This match is existing minor match, please check it !'
+			DECLARE @IsExistMinorMatch INT
+
+			SELECT @IsExistMinorMatch = 1
+			FROM @tblSpecialEventTemplate mm
+			WHERE mm.MinorBettypeId NOT IN (
+					@MinorBettype_Specific15Mins
+					,@MinorBettype_Specific10Mins
+					,@MinorBettype_FastMarket
+					,@MinorBettype_AllInOne
+					)
+				AND mm.MinorBettypeId = @MinorBettypeId			
+
+			IF @IsExistMinorMatch IS NOT NULL
+			BEGIN
+				SELECT @ErrCode = 1
+					,@ErrMsg = 'This match is existing minor match, please check it !'
+					,@ParentMatchId = @ParentMatchId
+					,@MinorBettypeId = @MinorBettypeId
+
+				RETURN
+			END
+
+			SELECT @ErrCode = 0
+				,@ErrMsg = ''
 				,@ParentMatchId = @ParentMatchId
 				,@MinorBettypeId = @MinorBettypeId
+
 			RETURN
 		END
 	END
