@@ -27,7 +27,7 @@ Revisions:
 BEGIN
 	IF(@BettypeId IN (1,3,5,7,8,15))
 		BEGIN
-			DELETE FROM MatchSetting
+			DELETE FROM dbo.MatchSetting
 			WHERE OWPMatchId=@MatchId AND Bettype=@BettypeId
 			
 			SELECT TOP 1 @Maxbet=ms.Maxbet,
@@ -39,52 +39,68 @@ BEGIN
 			
 			SET @MatchIdUseLog=@MatchId
 		END
+	-- Xmin/FM of main match
 	IF(@MinorBettypeId = 0 AND @BettypeId IN (-1,-88))
 		BEGIN
-			DECLARE @minorMatchId INT
-			
-			SELECT TOP 1 @minorMatchId = mm.MinorMatchId
-			FROM MinorMatch AS mm WITH (NOLOCK)
-			WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId = @BettypeId
+			CREATE TABLE #tblMinorMatch(MinorMatchId INT)
+			IF(@BettypeId=-1)
+				BEGIN
+					INSERT INTO #tblMinorMatch(MinorMatchId)
+					SELECT mm.MinorMatchId
+					FROM MinorMatch AS mm WITH (NOLOCK)
+					WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId IN(-1, -2)
+				END
+			ELSE
+				BEGIN
+					INSERT INTO #tblMinorMatch(MinorMatchId)
+					SELECT mm.MinorMatchId
+					FROM MinorMatch AS mm WITH (NOLOCK)
+					WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId =-88
+				END
 			
 			SELECT TOP 1 @Maxbet=ms.Maxbet,
 				@Spread=ms.Spread,
 				@MaxbetCN88=ms.MaxbetCN88,
 				@SpreadCN88=ms.SpreadCN88
+			FROM MatchSetting AS ms WITH(NOLOCK)INNER JOIN #tblMinorMatch AS tblMm WITH(NOLOCK)
+				ON tblMm.MinorMatchId = ms.OWPMatchId
+			
+			DELETE FROM dbo.MatchSetting
+			FROM #tblMinorMatch AS tblMm WITH(NOLOCK) INNER JOIN MatchSetting AS mm WITH(NOLOCK)
+				ON tblMm.MinorMatchId=mm.OWPMatchId
+			
+			SELECT TOP 1 @MatchIdUseLog = tblMm.MinorMatchId
+			FROM #tblMinorMatch AS tblMm WITH(NOLOCK)
+			SET @ParentmatchIdUseLog=@MatchId
+			DROP TABLE #tblMinorMatch
+		END
+	-- Xmin number of coner/total booking
+	IF(@MinorBettypeId <> 0 AND @BettypeId = -1)
+		BEGIN
+			DECLARE @parentMatchId INT,
+				@minorMatchId INT
+				
+			SELECT TOP 1 @parentMatchId = mm.ParentMatchId
+			FROM MinorMatch AS mm WITH (NOLOCK)
+			WHERE mm.MinorMatchId=@MatchId
+				
+			SELECT TOP 1 @minorMatchId= mm.MinorMatchId
+			FROM MinorMatch AS mm WITH (NOLOCK)
+			WHERE mm.ParentMatchId=@parentMatchId AND mm.MinorBettypeId IN (-5, -8)
+			
+			SELECT TOP 1 @Maxbet=ms.Maxbet,
+					@Spread=ms.Spread,
+					@MaxbetCN88=ms.MaxbetCN88,
+					@SpreadCN88=ms.SpreadCN88
 			FROM MatchSetting AS ms WITH(NOLOCK)
 			WHERE ms.OWPMatchId=@minorMatchId
 			
-			DELETE FROM MatchSetting
+			DELETE FROM dbo.MatchSetting
 			WHERE OWPMatchId=@minorMatchId
 			
 			SET @MatchIdUseLog=@minorMatchId
 			SET @ParentmatchIdUseLog=@MatchId
 		END
-	IF(@MinorBettypeId <> 0 AND @BettypeId = -1)
-	BEGIN
-		DECLARE @parentMatchId INT
-			
-		SELECT TOP 1 @parentMatchId = mm.ParentMatchId
-		FROM MinorMatch AS mm WITH (NOLOCK)
-		WHERE mm.MinorMatchId=@MatchId
-			
-		SELECT TOP 1 @minorMatchId= mm.MinorMatchId
-		FROM MinorMatch AS mm WITH (NOLOCK)
-		WHERE mm.ParentMatchId=@parentMatchId AND mm.MinorBettypeId IN (-5, -8)
-		
-		SELECT TOP 1 @Maxbet=ms.Maxbet,
-				@Spread=ms.Spread,
-				@MaxbetCN88=ms.MaxbetCN88,
-				@SpreadCN88=ms.SpreadCN88
-		FROM MatchSetting AS ms WITH(NOLOCK)
-		WHERE ms.OWPMatchId=@minorMatchId
-		
-		DELETE MatchSetting
-		WHERE OWPMatchId=@minorMatchId
-		
-		SET @MatchIdUseLog=@minorMatchId
-		SET @ParentmatchIdUseLog=@MatchId
-	END
 	
 	-- send message
 	IF (dbo.[fnc_IsMatchInTimeRange](@MatchId) = 1)

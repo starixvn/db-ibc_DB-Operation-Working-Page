@@ -29,18 +29,41 @@ BEGIN
 	
 	IF(@BettypeId IN (1,3,5,7,8,15))
 		BEGIN
-			INSERT INTO MatchSetting(OWPMatchId,Bettype,Maxbet,Spread,MaxbetCN88, SpreadCN88)
+			INSERT INTO dbo.MatchSetting(OWPMatchId,Bettype,Maxbet,Spread,MaxbetCN88, SpreadCN88)
 			VALUES(@MatchId,@BettypeId,@Maxbet,@Spread,@MaxbetCN88,@SpreadCN88)
 		END
+	-- main match Xmins/FM
 	IF(@MinorBettypeId = 0 AND @BettypeId IN (-1,-88))
 		BEGIN
-			SELECT TOP 1 @minorMatchId = mm.MinorMatchId
-			FROM MinorMatch AS mm WITH (NOLOCK)
-			WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId = @BettypeId
-						
-			INSERT INTO MatchSetting(OWPMatchId,Bettype,Maxbet,Spread,MaxbetCN88, SpreadCN88)
-			VALUES(@minorMatchId,1,@Maxbet,@Spread,@MaxbetCN88,@SpreadCN88)
+			CREATE TABLE #tblMinorMatch(MinorMatchId INT)
+			
+			IF(@BettypeId=-1)
+				BEGIN
+					INSERT INTO #tblMinorMatch(MinorMatchId)
+					SELECT mm.MinorMatchId
+					FROM MinorMatch AS mm WITH (NOLOCK)
+					WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId IN (-1, -2)
+				END
+			ELSE
+				BEGIN
+					INSERT INTO #tblMinorMatch(MinorMatchId)
+					SELECT mm.MinorMatchId
+					FROM MinorMatch AS mm WITH (NOLOCK)
+					WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId =-88
+				END
+				
+			INSERT INTO dbo.MatchSetting(OWPMatchId,Bettype,Maxbet,Spread,MaxbetCN88, SpreadCN88)
+			SELECT tblMm.MinorMatchId,
+				1,
+				@Maxbet,
+				@Spread,
+				@MaxbetCN88,
+				@SpreadCN88
+			FROM #tblMinorMatch AS tblMm WITH (NOLOCK)
+			
+			DROP TABLE #tblMinorMatch
 		END
+	--Minor match NumberOfConner/TotalBooking
 	IF(@MinorBettypeId <> 0 AND @BettypeId =-1)
 		BEGIN
 			DECLARE @parentMatchId INT
@@ -53,7 +76,7 @@ BEGIN
 			FROM MinorMatch AS mm WITH (NOLOCK)
 			WHERE mm.ParentMatchId=@parentMatchId AND mm.MinorBettypeId IN (-5, -8)
 			
-			INSERT INTO MatchSetting(OWPMatchId,Bettype,Maxbet,Spread,MaxbetCN88, SpreadCN88)
+			INSERT INTO dbo.MatchSetting(OWPMatchId,Bettype,Maxbet,Spread,MaxbetCN88, SpreadCN88)
 			VALUES(@minorMatchId,1,@Maxbet,@Spread,@MaxbetCN88,@SpreadCN88)
 		END
 	

@@ -40,31 +40,51 @@ BEGIN
 			FROM MatchSetting AS mm WITH(NOLOCK)
 			WHERE mm.OWPMatchId=@MatchId AND mm.Bettype=@BettypeId
 		
-			DELETE FROM MatchSetting
+			DELETE FROM dbo.MatchSetting
 			WHERE OWPMatchId=@MatchId AND Bettype=@BettypeId
 			
-			INSERT INTO MatchSetting(OWPMatchId,Bettype,Maxbet,MaxbetCN88,Spread,SpreadCN88)
+			INSERT INTO dbo.MatchSetting(OWPMatchId,Bettype,Maxbet,MaxbetCN88,Spread,SpreadCN88)
 			VALUES(@MatchId,@BettypeId,@Maxbet,@MaxbetCN88,@Spread,@SpreadCN88)
 		END
 	-- Main match
 	IF(@MinorBettypeId = 0 AND @BettypeId IN (-1,-88))
 		BEGIN
-			SELECT TOP 1 @minorMatchId = mm.MinorMatchId
-			FROM MinorMatch AS mm WITH (NOLOCK)
-			WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId = @BettypeId
+			CREATE TABLE #tblMinorMatch(MinorMatchId INT)
+			IF(@BettypeId = -1)
+				BEGIN
+					INSERT INTO #tblMinorMatch(MinorMatchId)
+					SELECT mm.MinorMatchId
+					FROM MinorMatch AS mm WITH (NOLOCK)
+					WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId IN (-1, -2)
+				END
+			ELSE
+				BEGIN
+					INSERT INTO #tblMinorMatch(MinorMatchId)
+					SELECT mm.MinorMatchId
+					FROM MinorMatch AS mm WITH (NOLOCK)
+					WHERE mm.ParentMatchId = @MatchId AND mm.MinorBettypeId =-88
+				END
 			
 			SELECT TOP 1 @OldMaxbet= mm.Maxbet,
 				@OldSpread=mm.Spread,
 				@OldMaxbetCN88=mm.MaxbetCN88,
 				@OldSpreadCN88=mm.SpreadCN88
-			FROM MatchSetting AS mm WITH(NOLOCK)
-			WHERE mm.OWPMatchId=@minorMatchId
+			FROM MatchSetting AS mm WITH(NOLOCK)INNER JOIN #tblMinorMatch AS tblMm WITH(NOLOCK)
+				ON mm.OWPMatchId=tblMm.MinorMatchId
 			
-			DELETE FROM MatchSetting
-			WHERE OWPMatchId=@minorMatchId
+			DELETE FROM dbo.MatchSetting
+			FROM MatchSetting AS mm WITH(NOLOCK)INNER JOIN #tblMinorMatch AS tblMm WITH(NOLOCK)
+				ON mm.OWPMatchId=tblMm.MinorMatchId
 			
-			INSERT INTO MatchSetting(OWPMatchId,Bettype,Maxbet,MaxbetCN88,Spread,SpreadCN88)
-			VALUES(@MatchId,@BettypeId,@Maxbet,@MaxbetCN88,@Spread,@SpreadCN88)
+			INSERT INTO dbo.MatchSetting(OWPMatchId,Bettype,Maxbet,MaxbetCN88,Spread,SpreadCN88)
+			SELECT tblMm.MinorMatchId,
+				1,
+				@Maxbet,
+				@MaxbetCN88,
+				@Spread,
+				@SpreadCN88
+			FROM #tblMinorMatch AS tblMm WITH(NOLOCK)
+			DROP TABLE #tblMinorMatch
 		END
 		
 		
@@ -86,10 +106,10 @@ BEGIN
 			FROM MatchSetting AS mm WITH(NOLOCK)
 			WHERE mm.OWPMatchId=@minorMatchId
 			
-			DELETE FROM MatchSetting
+			DELETE FROM dbo.MatchSetting
 			WHERE OWPMatchId=@minorMatchId
 			
-			INSERT INTO MatchSetting(OWPMatchId,Bettype,Maxbet,MaxbetCN88,Spread,SpreadCN88)
+			INSERT INTO dbo.MatchSetting(OWPMatchId,Bettype,Maxbet,MaxbetCN88,Spread,SpreadCN88)
 			VALUES(@MatchId,@Bettype,@Maxbet,@MaxbetCN88,@Spread,@SpreadCN88)
 		END
 	
