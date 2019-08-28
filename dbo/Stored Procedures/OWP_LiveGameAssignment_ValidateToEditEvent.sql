@@ -195,6 +195,10 @@ BEGIN
 		SET @LoopCounter = @LoopCounter + 1
 	END
 
+	SET @MinorBettypeId = 0;
+	SET @ParentMatchId = 0;
+	SET @MinorMatchId = 0;
+
 	-- check match is duplicated
 	SELECT @ExistedMatchId = m.OWPMatchId
 	FROM @tblOWPMatchByEventDate AS m
@@ -224,6 +228,19 @@ BEGIN
 		RETURN
 	END
 
+	IF @MatchNo <> ''
+		AND EXISTS (
+			SELECT 1
+			FROM @tblOWPMatchByEventDate AS m
+			WHERE m.MatchNo = @MatchNo
+			)
+	BEGIN
+		SELECT @ErrCode = 1
+			,@ErrMsg = 'The Match No. is used. Please choose another one.'
+
+		RETURN
+	END
+
 	IF EXISTS (
 			SELECT 1
 			FROM @tblOWPMatchByEventDate AS m
@@ -243,42 +260,12 @@ BEGIN
 		RETURN
 	END
 
-	IF @MatchNo <> ''
-		AND EXISTS (
-			SELECT 1
-			FROM @tblOWPMatchByEventDate AS m
-			WHERE m.MatchNo = @MatchNo
-			)
-	BEGIN
-		SELECT @ErrCode = 1
-			,@ErrMsg = 'The Match No. is used. Please choose another one.'
-
-		RETURN
-	END
-
 	SELECT @OldParentMatchId = mn.ParentMatchId
 	FROM dbo.MinorMatch AS mn WITH (NOLOCK)
 	WHERE mn.ParentMatchId = @OWPMatchId
+
 	IF @OldParentMatchId IS NOT NULL
-	BEGIN
-		IF EXISTS (
-				SELECT 1
-				FROM dbo.MinorMatch AS m WITH (NOLOCK)
-				WHERE m.ParentMatchId = @OldParentMatchId
-					AND m.MinorBettypeId NOT IN (
-						- 1
-						,- 2
-						,- 88
-						,- 89
-						)
-				)
-		BEGIN
-			SELECT @ErrCode = 1
-				,@ErrMsg = 'This match is existing minor match, please check it !'
-
-			RETURN
-		END
-
+	BEGIN		 
 		-- determine minor match
 		CREATE TABLE #tblRuleChecking (
 			MinorBettypeId INT
@@ -434,18 +421,32 @@ BEGIN
 			END
 		END
 
-		IF @OldParentMatchId = @ParentMatchId
+		 
+
+		IF @ParentMatchId = 0			OR @OldParentMatchId = @ParentMatchId
+		BEGIN
 			SELECT @ParentMatchId = NULL
 				,@MinorBettypeId = NULL
 
-		SELECT @ErrCode = 0
-			,@ErrMsg = ''
+			SELECT @ErrCode = 0
+				,@ErrMsg = ''
 
-		RETURN
+			RETURN
+		END
+		ELSE
+		BEGIN
+			
+			SELECT @ErrCode = 1
+				,@ErrMsg = 'This match is existing minor match, please check it !'
+				,@ParentMatchId = @ParentMatchId
+				,@MinorBettypeId = @MinorBettypeId
+			RETURN
+		END
 	END
 
-	-- determine minor match
+	---- determine minor match
 	SELECT @ParentMatchId = NULL
+		,@MinorBettypeId = NULL
 		,@ErrCode = 0
 		,@ErrMsg = ''
 END
