@@ -89,7 +89,7 @@ BEGIN
 		
 		
 		-- TotalBooking & Number Of Conner
-	IF(@MinorBettypeId <> 0 AND @BettypeId = -1)
+	IF(@MinorBettypeId <> 0 AND @BettypeId IN (-5, -8))
 		BEGIN	
 			SELECT TOP 1 @parentMatchId = mm.ParentMatchId
 			FROM MinorMatch AS mm WITH (NOLOCK)
@@ -97,7 +97,7 @@ BEGIN
 				
 			SELECT TOP 1 @minorMatchId= mm.MinorMatchId
 			FROM MinorMatch AS mm WITH (NOLOCK)
-			WHERE mm.ParentMatchId=@parentMatchId AND mm.MinorBettypeId IN (-5, -8)
+			WHERE mm.ParentMatchId=@parentMatchId AND mm.MinorBettypeId = @BettypeId
 			
 			SELECT TOP 1 @OldMaxbet= mm.Maxbet,
 				@OldSpread=mm.Spread,
@@ -110,7 +110,7 @@ BEGIN
 			WHERE OWPMatchId=@minorMatchId
 			
 			INSERT INTO dbo.MatchSetting(OWPMatchId,Bettype,Maxbet,MaxbetCN88,Spread,SpreadCN88)
-			VALUES(@MatchId,@Bettype,@Maxbet,@MaxbetCN88,@Spread,@SpreadCN88)
+			VALUES(@minorMatchId,1,@Maxbet,@MaxbetCN88,@Spread,@SpreadCN88)
 		END
 	
 	-- send message

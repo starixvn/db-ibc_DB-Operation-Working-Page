@@ -35,7 +35,7 @@ BEGIN
 			WHERE mm.MinorBettypeId IN (-1,-88)AND mm.ParentMatchId=@MatchId
 			
 			INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread, MaxbetCN88, SpreadCN88)
-			SELECT tblMm.BettypeId,
+			SELECT DISTINCT tblMm.BettypeId,
 				ms.Maxbet,
 				ms.Spread,
 				ms.MaxbetCN88,
@@ -44,22 +44,42 @@ BEGIN
 				ON tblMm.MatchId=ms.OWPMatchId
 		END
 	ELSE 
-		BEGIN 
-			IF EXISTS(SELECT 1
-				FROM MinorMatch as mm WITH (NOLOCK)
-				WHERE mm.MinorMatchId=@MatchId
-					AND mm.MinorBettypeId IN(-3,-6))
-				BEGIN
-					DECLARE @parentMatchId INT
+		BEGIN
+			DECLARE @parentMatchId INT
 					SELECT TOP 1 @parentMatchId = mm.ParentMatchId
 					FROM MinorMatch AS mm WITH (NOLOCK)
 					WHERE mm.MinorMatchId=@MatchId	
 					
+			IF EXISTS(SELECT 1
+				FROM MinorMatch as mm WITH (NOLOCK)
+				WHERE mm.MinorMatchId=@MatchId
+					AND mm.MinorBettypeId = -3)
+				BEGIN
 					INSERT INTO #tblMinorMatch(MatchId, BettypeId)
 					SELECT mm.MinorMatchId, mm.MinorBettypeId
 					FROM MinorMatch AS mm WITH (NOLOCK)
 					WHERE mm.ParentMatchId=@parentMatchId
-								AND mm.MinorBettypeId IN (-5, -8)
+								AND mm.MinorBettypeId = -5
+					
+					INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread, MaxbetCN88, SpreadCN88)
+					SELECT DISTINCT tblMm.BettypeId,
+						ms.Maxbet,
+						ms.Spread,
+						ms.MaxbetCN88,
+						ms.SpreadCN88
+					FROM MatchSetting AS ms WITH (NOLOCK) INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK)
+						ON tblMm.MatchId=ms.OWPMatchId
+				END
+				
+			IF EXISTS(SELECT 1
+				FROM MinorMatch as mm WITH (NOLOCK)
+				WHERE mm.MinorMatchId=@MatchId AND mm.MinorBettypeId =-6)
+				BEGIN
+					INSERT INTO #tblMinorMatch(MatchId, BettypeId)
+					SELECT mm.MinorMatchId, mm.MinorBettypeId
+					FROM MinorMatch AS mm WITH (NOLOCK)
+					WHERE mm.ParentMatchId=@parentMatchId
+								AND mm.MinorBettypeId =-8
 					
 					INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread, MaxbetCN88, SpreadCN88)
 					SELECT DISTINCT tblMm.BettypeId,

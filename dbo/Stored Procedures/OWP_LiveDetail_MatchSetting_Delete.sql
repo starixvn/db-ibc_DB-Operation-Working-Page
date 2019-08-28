@@ -25,6 +25,7 @@ Revisions:
 */
 
 BEGIN
+	CREATE TABLE #tblMinorMatch(MinorMatchId INT)
 	IF(@BettypeId IN (1,3,5,7,8,15))
 		BEGIN
 			DELETE FROM dbo.MatchSetting
@@ -42,7 +43,6 @@ BEGIN
 	-- Xmin/FM of main match
 	IF(@MinorBettypeId = 0 AND @BettypeId IN (-1,-88))
 		BEGIN
-			CREATE TABLE #tblMinorMatch(MinorMatchId INT)
 			IF(@BettypeId=-1)
 				BEGIN
 					INSERT INTO #tblMinorMatch(MinorMatchId)
@@ -72,36 +72,39 @@ BEGIN
 			SELECT TOP 1 @MatchIdUseLog = tblMm.MinorMatchId
 			FROM #tblMinorMatch AS tblMm WITH(NOLOCK)
 			SET @ParentmatchIdUseLog=@MatchId
-			DROP TABLE #tblMinorMatch
 		END
 	-- Xmin number of coner/total booking
-	IF(@MinorBettypeId <> 0 AND @BettypeId = -1)
+	IF(@MinorBettypeId <> 0 AND @BettypeId IN (-5, -8))
 		BEGIN
-			DECLARE @parentMatchId INT,
-				@minorMatchId INT
-				
+			DECLARE @parentMatchId INT
+			
 			SELECT TOP 1 @parentMatchId = mm.ParentMatchId
 			FROM MinorMatch AS mm WITH (NOLOCK)
 			WHERE mm.MinorMatchId=@MatchId
-				
-			SELECT TOP 1 @minorMatchId= mm.MinorMatchId
+			
+			INSERT INTO #tblMinorMatch(MinorMatchId)
+			SELECT mm.MinorMatchId
 			FROM MinorMatch AS mm WITH (NOLOCK)
-			WHERE mm.ParentMatchId=@parentMatchId AND mm.MinorBettypeId IN (-5, -8)
+			WHERE mm.ParentMatchId=@parentMatchId AND mm.MinorBettypeId = @BettypeId
 			
 			SELECT TOP 1 @Maxbet=ms.Maxbet,
 					@Spread=ms.Spread,
 					@MaxbetCN88=ms.MaxbetCN88,
 					@SpreadCN88=ms.SpreadCN88
-			FROM MatchSetting AS ms WITH(NOLOCK)
-			WHERE ms.OWPMatchId=@minorMatchId
+			FROM MatchSetting AS ms WITH(NOLOCK) INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK)
+				ON ms.OWPMatchId=tblMm.MinorMatchId
 			
 			DELETE FROM dbo.MatchSetting
-			WHERE OWPMatchId=@minorMatchId
+			FROM MatchSetting AS ms WITH(NOLOCK) INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK)
+				ON ms.OWPMatchId=tblMm.MinorMatchId
 			
-			SET @MatchIdUseLog=@minorMatchId
+			SELECT @MatchIdUseLog= ms.OWPMatchId
+			FROM MatchSetting AS ms WITH(NOLOCK) INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK)
+				ON ms.OWPMatchId=tblMm.MinorMatchId
+
 			SET @ParentmatchIdUseLog=@MatchId
 		END
-	
+	DROP TABLE #tblMinorMatch
 	-- send message
 	IF (dbo.[fnc_IsMatchInTimeRange](@MatchId) = 1)
 		BEGIN
