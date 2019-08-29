@@ -184,7 +184,7 @@ BEGIN
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', '')
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @Maxbet)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @Maxbet/1000 + 'K')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
@@ -212,7 +212,7 @@ BEGIN
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', '')
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @MaxbetCN88)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @MaxbetCN88/1000 + 'K')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
@@ -240,7 +240,7 @@ BEGIN
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', '')
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @Spread)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @Spread*100 +'%')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
@@ -268,7 +268,7 @@ BEGIN
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', '')
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @SpreadCN88)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', @SpreadCN88*100 +'%')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate

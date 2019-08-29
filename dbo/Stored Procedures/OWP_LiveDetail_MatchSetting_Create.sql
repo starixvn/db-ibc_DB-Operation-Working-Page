@@ -164,7 +164,7 @@ BEGIN
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @Maxbet)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @Maxbet/1000 + 'K')
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', '')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
@@ -192,7 +192,7 @@ BEGIN
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @MaxbetCN88)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @MaxbetCN88/1000 + 'K')
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', '')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
@@ -220,7 +220,7 @@ BEGIN
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @Spread)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @Spread * 100 +'%')
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', '')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
@@ -248,7 +248,7 @@ BEGIN
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @SpreadCN88)
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', @SpreadCN88*100 + '%')
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', '')
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId

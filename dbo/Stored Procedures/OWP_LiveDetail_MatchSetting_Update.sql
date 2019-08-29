@@ -190,15 +190,28 @@ BEGIN
 			
 			IF(@OldMaxbet<>@Maxbet)
 				BEGIN
+					DECLARE @MaxbetFormatK VARCHAR(20)=NULL,
+						@OldMaxbetFormatK VARCHAR(20)=NULL
+						
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
 					FROM MessageTemplate AS mt WITH (NOLOCK)
 					WHERE mt.MsgTemplateCode='EditMaxbet'
 					
+					IF(@Maxbet<>NULL)
+						BEGIN
+							SET @MaxbetFormatK=@Maxbet/1000 + 'K'
+						END
+					IF(@OldMaxbet<>NULL)
+						BEGIN
+							SET @OldMaxbetFormatK=@OldMaxbet/1000 + 'K'
+						END
+					
+					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@Maxbet,''))
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldMaxbet,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@MaxbetFormatK,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldMaxbetFormatK,''))
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
@@ -218,15 +231,27 @@ BEGIN
 				END
 			IF(@OldMaxbetCN88<>@MaxbetCN88)
 				BEGIN
+					DECLARE @MaxbetCN88FormatK VARCHAR(20)=NULL,
+						@OldMaxbetCN88FormatK VARCHAR(20)=NULL
+						
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
 					FROM MessageTemplate AS mt WITH (NOLOCK)
 					WHERE mt.MsgTemplateCode='EditMaxbetCN88'
 			
+					IF(@MaxbetCN88<>NULL)
+						BEGIN
+							SET @MaxbetCN88FormatK=@MaxbetCN88/1000 + 'K'
+						END
+					IF(@OldMaxbetCN88<>NULL)
+						BEGIN
+							SET @OldMaxbetCN88FormatK=@OldMaxbetCN88/1000 + 'K'
+						END
+						
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@MaxbetCN88,''))
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldMaxbetCN88,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@MaxbetCN88FormatK,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldMaxbetCN88FormatK,''))
 					
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
@@ -247,15 +272,27 @@ BEGIN
 				END
 			IF(@OldSpread<>@Spread)
 				BEGIN
+					DECLARE @SpreadFormatK VARCHAR(20)=NULL,
+						@OldSpreadFormatK VARCHAR(20)=NULL
+						
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
 					FROM MessageTemplate AS mt WITH (NOLOCK)
 					WHERE mt.MsgTemplateCode='EditSpread'
 					
+					IF(@Spread<>NULL)
+						BEGIN
+							SET @SpreadFormatK=@Spread*100 + '%'
+						END
+					IF(@OldSpread<>NULL)
+						BEGIN
+							SET @OldSpreadFormatK=@OldSpread*100 + '%'
+						END
+					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@Spread,''))
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpread,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@SpreadFormatK,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpreadFormatK,''))
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
@@ -275,15 +312,27 @@ BEGIN
 				END
 			IF(@OldSpreadCN88<>@SpreadCN88)
 				BEGIN
+					DECLARE @SpreadCN88FormatK VARCHAR(20)=NULL,
+						@OldSpreadCN88FormatK VARCHAR(20)=NULL
+						
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
 					FROM MessageTemplate AS mt WITH (NOLOCK)
 					WHERE mt.MsgTemplateCode='EditSpreadCN88'
 					
+					IF(@SpreadCN88<>NULL)
+						BEGIN
+							SET @SpreadCN88FormatK=@SpreadCN88*100 + '%'
+						END
+					IF(@OldSpreadCN88<>NULL)
+						BEGIN
+							SET @OldSpreadCN88FormatK=@OldSpreadCN88*100 + '%'
+						END
+						
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@SpreadCN88,''))
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpreadCN88,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@SpreadCN88FormatK,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpreadCN88FormatK,''))
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
