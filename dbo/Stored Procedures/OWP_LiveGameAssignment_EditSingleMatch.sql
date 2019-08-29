@@ -99,7 +99,8 @@ BEGIN
 		SET @HasChange = 1
 	END
 
-	IF @OldMatchNo <> @MatchNo
+	IF @MatchNo IS NOT NULL
+		AND @OldMatchNo <> @MatchNo
 	BEGIN
 		UPDATE dbo.OWPMatch
 		SET MatchNo = @MatchNo

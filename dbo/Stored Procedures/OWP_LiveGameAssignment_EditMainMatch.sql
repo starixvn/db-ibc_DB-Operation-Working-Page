@@ -95,8 +95,8 @@ BEGIN
 	SET @MaxRowCount = 0;
 
 	SELECT @MaxRowCount = COUNT(*)
-	FROM @tblSpecialEventTemplate
-
+	FROM @tblSpecialEventTemplate	 
+	 
 	WHILE (@LoopCounter <= @MaxRowCount)
 	BEGIN
 		SELECT @LeagueName = LeagueName
@@ -105,20 +105,21 @@ BEGIN
 			,@OWPMatchId = MinorMatchId
 		FROM @tblSpecialEventTemplate
 		WHERE @LoopCounter = RowNumber
-
+		 
 		EXEC dbo.OWP_LiveGameAssignment_EditSingleMatch @OWPMatchId = @OWPMatchId
 			,@LeagueName = @LeagueName
 			,@HomeName = @HomeName
 			,@AwayName = @AwayName
+			,@MatchNo = NULL
 			,@SessionId = @SessionId
 			,@ActorId = @ActorId
 			,@KickOffTime = @KickOffTime
 			,@ErrCode = @ErrCode OUTPUT
 			,@ErrMsg = @ErrMsg OUTPUT
-
+			 
 		SET @LoopCounter = @LoopCounter + 1
 	END
-
+	 
 	SELECT @ErrCode = 0
 		,@ErrMsg = 'The event has been edited successfully!'
 END
