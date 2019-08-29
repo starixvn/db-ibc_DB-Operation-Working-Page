@@ -41,6 +41,7 @@ BEGIN
 		,ParentMatchId INT
 		,MinorBettypeId INT
 		,MinorMatchId INT
+		,MatchNo NVARCHAR(50)
 		)
 	DECLARE @tblMinorBettypeId TABLE (
 		RowNumber INT IDENTITY
@@ -63,7 +64,7 @@ BEGIN
 		,@MinorMatchId INT
 		,@RowNumber INT
 
-	SELECT @MaxRowCount = COUNT(*)
+	SELECT @MaxRowCount = COUNT(RowNumber)
 	FROM @tblMinorBettypeId
 
 	WHILE (@LoopCounter <= @MaxRowCount)
@@ -86,6 +87,11 @@ BEGIN
 		SET ParentMatchId = @ParentMatchId
 			,MinorBettypeId = @MinorBettypeId
 			,MinorMatchId = @MinorMatchId
+			,MatchNo = (
+				SELECT TOP 1 o.MatchNo
+				FROM dbo.OWPMatch AS o WITH (NOLOCK)
+				WHERE o.OWPMatchId = @MinorMatchId
+				)
 		WHERE @LoopCounter = RowNumber
 
 		SET @LoopCounter = @LoopCounter + 1
@@ -94,32 +100,33 @@ BEGIN
 	SET @LoopCounter = 1
 	SET @MaxRowCount = 0;
 
-	SELECT @MaxRowCount = COUNT(*)
-	FROM @tblSpecialEventTemplate	 
-	 
+	SELECT @MaxRowCount = COUNT(RowNumber)
+	FROM @tblSpecialEventTemplate
+
 	WHILE (@LoopCounter <= @MaxRowCount)
 	BEGIN
 		SELECT @LeagueName = LeagueName
 			,@HomeName = HomeName
 			,@AwayName = AwayName
 			,@OWPMatchId = MinorMatchId
+			,@MatchNo = MatchNo
 		FROM @tblSpecialEventTemplate
 		WHERE @LoopCounter = RowNumber
-		 
+
 		EXEC dbo.OWP_LiveGameAssignment_EditSingleMatch @OWPMatchId = @OWPMatchId
 			,@LeagueName = @LeagueName
 			,@HomeName = @HomeName
 			,@AwayName = @AwayName
-			,@MatchNo = NULL
+			,@MatchNo = @MatchNo
 			,@SessionId = @SessionId
 			,@ActorId = @ActorId
 			,@KickOffTime = @KickOffTime
 			,@ErrCode = @ErrCode OUTPUT
 			,@ErrMsg = @ErrMsg OUTPUT
-			 
+
 		SET @LoopCounter = @LoopCounter + 1
 	END
-	 
+
 	SELECT @ErrCode = 0
 		,@ErrMsg = 'The event has been edited successfully!'
 END

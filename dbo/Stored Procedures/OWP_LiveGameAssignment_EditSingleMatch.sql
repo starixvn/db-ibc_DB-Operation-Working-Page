@@ -237,7 +237,7 @@ BEGIN
 			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 			WHERE mt.MsgTemplateCode = 'EditLeague'
 
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldOWPLeagueName)
+			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldOWPLeagueName)
 
 			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 				,@MessageContent = @MessageTemplate
@@ -269,7 +269,7 @@ BEGIN
 			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 			WHERE mt.MsgTemplateCode = 'EditTeam'
 
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<Match.No>', @MatchNo), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldValue)
+			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldValue)
 
 			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 				,@MessageContent = @MessageTemplate
@@ -302,7 +302,7 @@ BEGIN
 			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 			WHERE mt.MsgTemplateCode = 'EditKOTime'
 
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldValue), '<New>', @NewValue)
+			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldValue), '<New>', @NewValue)
 
 			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 				,@MessageContent = @MessageTemplate

@@ -90,25 +90,6 @@ BEGIN
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 
-	-- check match is existed
-	IF EXISTS (
-			SELECT 1
-			FROM dbo.OWPMatch AS m WITH (NOLOCK)
-			WHERE m.OWPMatchId = @OWPMatchId
-				AND @OldOWPHomeName = @HomeName
-				AND @OldOWPAwayName = @AwayName
-				AND @OldMatchNo = @MatchNo
-				AND @OldKickOffTime = @KickOffTime
-				AND m.EventDateTime BETWEEN @FromDate
-					AND @ToDate
-			)
-	BEGIN
-		SELECT @ErrCode = 1
-			,@ErrMsg = 'This match is not existing, please check it !'
-
-		RETURN
-	END
-
 	DECLARE @tblOWPMatchByEventDate TABLE (
 		RowNumber INT IDENTITY
 		,OWPMatchId INT
