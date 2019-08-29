@@ -272,8 +272,8 @@ BEGIN
 				END
 			IF(@OldSpread<>@Spread)
 				BEGIN
-					DECLARE @SpreadFormatK VARCHAR(20)=NULL,
-						@OldSpreadFormatK VARCHAR(20)=NULL
+					DECLARE @SpreadFormatPercent VARCHAR(20)=NULL,
+						@OldSpreadFormatPercent VARCHAR(20)=NULL
 						
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
@@ -282,17 +282,17 @@ BEGIN
 					
 					IF(@Spread<>NULL)
 						BEGIN
-							SET @SpreadFormatK=@Spread*100 + '%'
+							SET @SpreadFormatPercent=@Spread*100 + '%'
 						END
 					IF(@OldSpread<>NULL)
 						BEGIN
-							SET @OldSpreadFormatK=@OldSpread*100 + '%'
+							SET @OldSpreadFormatPercent=@OldSpread*100 + '%'
 						END
 					
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@SpreadFormatK,''))
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpreadFormatK,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@SpreadFormatPercent,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpreadFormatPercent,''))
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
@@ -312,8 +312,8 @@ BEGIN
 				END
 			IF(@OldSpreadCN88<>@SpreadCN88)
 				BEGIN
-					DECLARE @SpreadCN88FormatK VARCHAR(20)=NULL,
-						@OldSpreadCN88FormatK VARCHAR(20)=NULL
+					DECLARE @SpreadCN88FormatPercent VARCHAR(20)=NULL,
+						@OldSpreadCN88FormatPercent VARCHAR(20)=NULL
 						
 					SELECT @MessageTemplate=mt.MsgTemplateContent,
 						@MessageTypeId=mt.MsgTemplateId
@@ -322,17 +322,17 @@ BEGIN
 					
 					IF(@SpreadCN88<>NULL)
 						BEGIN
-							SET @SpreadCN88FormatK=@SpreadCN88*100 + '%'
+							SET @SpreadCN88FormatPercent=@SpreadCN88*100 + '%'
 						END
 					IF(@OldSpreadCN88<>NULL)
 						BEGIN
-							SET @OldSpreadCN88FormatK=@OldSpreadCN88*100 + '%'
+							SET @OldSpreadCN88FormatPercent=@OldSpreadCN88*100 + '%'
 						END
 						
 					SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate,@MatchId,@UserId)
 					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Bettype>', @Bettype)
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@SpreadCN88FormatK,''))
-					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpreadCN88FormatK,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<New>', ISNULL(@SpreadCN88FormatPercent,''))
+					SET @MessageTemplate = REPLACE(@MessageTemplate,'<Old>', ISNULL(@OldSpreadCN88FormatPercent,''))
 					
 					EXEC dbo.OWP_MessageInsert @UserId = @UserId
 					,@MessageContent = @MessageTemplate
