@@ -39,6 +39,8 @@ BEGIN
 		,@OldLeagueName NVARCHAR(500)
 		,@OldHomeName NVARCHAR(200)
 		,@OldAwayName NVARCHAR(200)
+		,@OldMatchStatus NVARCHAR(15)
+		,@ParentMatchStatus NVARCHAR(15)
 		,@EditLeagueMessageTemplate NVARCHAR(1000)
 		,@EditLeagueMessageTemplateId INT
 		,@EditTeamMessageTemplate NVARCHAR(1000)
@@ -117,6 +119,14 @@ BEGIN
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON h.OWPTeamId = m.OWPHomeId
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON a.OWPTeamId = m.OWPAwayId
 	WHERE OWPMatchId = @OWPMatchId
+	
+	SELECT @OldMatchStatus = MatchStatus
+	FROM dbo.MatchInfo WITH (NOLOCK)
+	WHERE OWPMatchId = @OWPMatchId
+	
+	SELECT @ParentMatchStatus = MatchStatus
+	FROM dbo.MatchInfo WITH (NOLOCK)
+	WHERE OWPMatchId = @ParentMatchId
 
 	-- create league, match if not existed
 	DECLARE @LeagueId INT
@@ -176,6 +186,12 @@ BEGIN
 		,EventDateTime = @EventDateTime
 	FROM dbo.OWPMatch AS m WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
+	
+	-- update match status
+	IF @OldMatchStatus <> @ParentMatchStatus
+	BEGIN
+		EXEC dbo.OWP_LiveDetail_MatchInfo_UpdateMatchStatus @UserId=@ActorId, @SessionId=@SessionId, @OWPMatchId=@OWPMatchId, @MatchStatus=@ParentMatchStatus
+	END
 
 	-- create new MinorMatch
 	INSERT INTO dbo.MinorMatch (
