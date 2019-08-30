@@ -158,9 +158,20 @@ BEGIN
 
 	IF @OldKickOffTime <> @KickOffTime
 	BEGIN
+		DECLARE @EventDate DATETIME
+			,@EventDateTime DATETIME
+
+		SELECT @EventDate = EventDate
+		FROM dbo.OWPMatch WITH (NOLOCK)
+		WHERE OWPMatchId = @OWPMatchId
+
+		SELECT @EventDateTime = CAST(@EventDate AS DATETIME) + CAST(@KickOffTime AS DATETIME)
+
 		UPDATE dbo.OWPMatch
 		SET MatchNo = @MatchNo
+			,EventDate = @EventDate
 			,KickOffTime = @KickOffTime
+			,EventDateTime = @EventDateTime
 		WHERE OWPMatchId = @OWPMatchId
 
 		SET @HasChange = 1
