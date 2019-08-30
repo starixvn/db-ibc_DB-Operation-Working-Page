@@ -41,10 +41,10 @@ BEGIN
 		,@OldAwayName NVARCHAR(200)
 		,@OldMatchStatus NVARCHAR(15)
 		,@ParentMatchStatus NVARCHAR(15)
-		,@EditLeagueMessageTemplate NVARCHAR(1000)
-		,@EditLeagueMessageTemplateId INT
-		,@EditTeamMessageTemplate NVARCHAR(1000)
-		,@EditTeamMessageTemplateId INT
+		,@EditMatchNoMessageTemplate NVARCHAR(1000)
+		,@EditMatchNoMessageTemplateId INT
+		,@EditMatchMessageTemplate NVARCHAR(1000)
+		,@EditMatchMessageTemplateId INT
 		,@MessageDeleteAssignmentId INT
 		,@MessageDeleteAssignment NVARCHAR(500)
 		,@MessageDeleteOtherAssignmentId INT
@@ -67,6 +67,14 @@ BEGIN
 		,@AssigneeLAUpdatedNotificationSettingId INT = 10
 		,@WatcherTraderUpdatedNotificationSettingId INT = 6 -- watcher
 		,@WatcherLAUpdatedNotificationSettingId INT = 12
+		,@MatchIsInTimeRange BIT = 0
+		,@ParentMatchIsInTimeRange BIT = 0
+		
+	SELECT @MatchIsInTimeRange = 1
+	WHERE dbo.fnc_IsMatchInTimeRange(@OWPMatchId) = 1
+	
+	SELECT @ParentMatchIsInTimeRange = 1
+	WHERE dbo.fnc_IsMatchInTimeRange(@ParentMatchId) = 1
 
 	CREATE TABLE #tblAssignee (UserId INT)
 	
@@ -94,22 +102,6 @@ BEGIN
 		,MessageTypeId INT
 		)
 
-	-- store current assignee
-	INSERT INTO #tblAssignee (UserId)
-	SELECT DISTINCT a.UserId
-	FROM (
-		SELECT @OWPMatchId AS OWPMatchId
-		
-		UNION
-		SELECT mm.MinorMatchId AS OWPMatchId
-		FROM dbo.MinorMatch AS mm WITH (NOLOCK)
-		WHERE mm.ParentMatchId = @OWPMatchId
-		) AS m
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
-		AND mi.MatchStatus = 'Live'
-		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
-		AND a.UserId IS NOT NULL
-	
 	SELECT @OldMatchNo = MatchNo
 		,@OldLeagueName = l.OWPLeagueName
 		,@OldHomeName = h.OWPTeamName
@@ -187,11 +179,101 @@ BEGIN
 	FROM dbo.OWPMatch AS m WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
 	
-	-- update match status
-	IF @OldMatchStatus <> @ParentMatchStatus
+	SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
+	
+	
+	-- send message for match no, league, team changed, match status change
+	IF @MatchIsInTimeRange = 1
 	BEGIN
-		EXEC dbo.OWP_LiveDetail_MatchInfo_UpdateMatchStatus @UserId=@ActorId, @SessionId=@SessionId, @OWPMatchId=@OWPMatchId, @MatchStatus=@ParentMatchStatus
+		INSERT INTO #tblAssignee (UserId)
+		SELECT DISTINCT a.UserId
+		FROM (
+			SELECT @OWPMatchId AS OWPMatchId
+			
+			UNION
+			SELECT mm.MinorMatchId AS OWPMatchId
+			FROM dbo.MinorMatch AS mm WITH (NOLOCK)
+			WHERE mm.ParentMatchId = @OWPMatchId
+			) AS m
+			INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+			AND mi.MatchStatus = 'Live'
+			INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+			AND a.UserId IS NOT NULL
+			
+		SELECT @EditMatchMessageTemplateId = MsgTemplateId
+			,@EditMatchMessageTemplate = MsgTemplateContent
+		FROM dbo.MessageTemplate WITH (NOLOCK)
+		WHERE MsgTemplateCode = 'EditMatch'
+		
+		DECLARE @MessageContent NVARCHAR(MAX)
+			
+		INSERT INTO @tblAssigneeReceiver (Id)
+		SELECT a.UserId
+		FROM #tblAssignee AS a
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @AssigneeMatchInfoNotificationSettingId
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			AND nsm.UserId = a.UserId
+		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+		
+		INSERT INTO @tblWatcherReceiver (Id)
+		SELECT DISTINCT w.UserId
+		FROM #tblAssignee AS a
+			INNER JOIN dbo.[User] AS u ON a.UserId = u.UserId
+			INNER JOIN (
+				SELECT w.UserId
+					,u.SectionId
+				FROM dbo.fnc_GetWatcherToSendMessage(@WatcherMatchInfoNotificationSettingId) AS w
+					INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
+				) AS w ON u.SectionId = w.SectionId
+		WHERE NOT EXISTS (
+			SELECT 1
+			FROM @tblAssigneeReceiver AS ur
+			WHERE ur.Id = w.UserId
+		)
+		
+		PRINT 'send message for match changed'
+		
+		SELECT @MessageContent = REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(
+										@EditMatchMessageTemplate,
+										'<Match.No>', CASE WHEN @MatchNo = '' THEN '' ELSE '#' + @MatchNo END),
+									'<League>', @LeagueName),
+								'<Event>', @HomeName + ' -vs- ' + @AwayName),
+							'<User>', @ActorName),
+						'<OldMatch.No>',@OldMatchNo),
+					'<OldLeague>',@OldLeagueName),
+				'<OldEvent>',@OldHomeName + ' -vs- ' + @OldAwayName)
+				
+		EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+			,@MessageContent = @MessageContent
+			,@MessageType = @EditMatchMessageTemplateId
+			,@MessageTo = @tblAssigneeReceiver
+			,@IsImportant = 1
+			,@IsWatcher = 0
+			,@SessionId = @SessionId
+			
+		EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+			,@MessageContent = @MessageContent
+			,@MessageType = @EditMatchMessageTemplateId
+			,@MessageTo = @tblWatcherReceiver
+			,@IsImportant = 0
+			,@IsWatcher = 1
+			,@SessionId = @SessionId
+			
+			
+		-- update match status & send message
+		IF @OldMatchStatus <> @ParentMatchStatus
+		BEGIN
+			EXEC dbo.OWP_LiveDetail_MatchInfo_UpdateMatchStatus @UserId=@ActorId, @SessionId=@SessionId, @OWPMatchId=@OWPMatchId, @MatchStatus=@ParentMatchStatus
+		END
+		
 	END
+	
 
 	-- create new MinorMatch
 	INSERT INTO dbo.MinorMatch (
@@ -309,18 +391,8 @@ BEGIN
 	FROM dbo.Assignment AS a WITH (ROWLOCK)
 		INNER JOIN @tblRemoveMatch AS rm ON a.OWPMatchId = rm.OWPMatchId
 	
-	IF dbo.fnc_IsMatchInTimeRange(@OWPMatchId) = 1
+	IF @MatchIsInTimeRange = 1 AND @ParentMatchStatus NOT IN ('Cancel', 'Postponed', 'Postponed')
 	BEGIN
-		SELECT @EditLeagueMessageTemplateId = MsgTemplateId
-			,@EditLeagueMessageTemplate = MsgTemplateContent
-		FROM dbo.MessageTemplate WITH (NOLOCK)
-		WHERE MsgTemplateCode = 'EditLeague'
-
-		SELECT @EditTeamMessageTemplateId = MsgTemplateId
-			,@EditTeamMessageTemplate = MsgTemplateContent
-		FROM dbo.MessageTemplate WITH (NOLOCK)
-		WHERE MsgTemplateCode = 'EditTeam'
-		
 		SELECT @MessageDeleteAssignment = mt.MsgTemplateContent
 			,@MessageDeleteAssignmentId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate mt WITH (NOLOCK)
@@ -356,97 +428,7 @@ BEGIN
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditSpreadCN88'
 		
-		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
-		
-		DECLARE @MessageContent NVARCHAR(MAX)
 			
-		INSERT INTO @tblAssigneeReceiver (Id)
-		SELECT a.UserId
-		FROM #tblAssignee AS a
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @AssigneeMatchInfoNotificationSettingId
-			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = a.UserId
-		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-		
-		INSERT INTO @tblWatcherReceiver (Id)
-		SELECT DISTINCT w.UserId
-		FROM #tblAssignee AS a
-			INNER JOIN dbo.[User] AS u ON a.UserId = u.UserId
-			INNER JOIN (
-				SELECT w.UserId
-					,u.SectionId
-				FROM dbo.fnc_GetWatcherToSendMessage(@WatcherMatchInfoNotificationSettingId) AS w
-					INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
-				) AS w ON u.SectionId = w.SectionId
-		WHERE NOT EXISTS (
-			SELECT 1
-			FROM @tblAssigneeReceiver AS ur
-			WHERE ur.Id = w.UserId
-		)
-		
-		-- send message for league changed
-		PRINT 'send message for league changed'
-		
-		SELECT @MessageContent = REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								@EditLeagueMessageTemplate,
-								'<Match.No>', CASE WHEN @MatchNo = '' THEN '' ELSE '#' + @MatchNo END),
-							'<League>', @LeagueName),
-						'<Event>', @HomeName + ' -vs- ' + @AwayName),
-					'<User>', @ActorName),
-				'<Old>',@OldLeagueName)
-				
-		EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-			,@MessageContent = @MessageContent
-			,@MessageType = @EditLeagueMessageTemplateId
-			,@MessageTo = @tblAssigneeReceiver
-			,@IsImportant = 1
-			,@IsWatcher = 0
-			,@SessionId = @SessionId
-			
-		EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-			,@MessageContent = @MessageContent
-			,@MessageType = @EditLeagueMessageTemplateId
-			,@MessageTo = @tblWatcherReceiver
-			,@IsImportant = 0
-			,@IsWatcher = 1
-			,@SessionId = @SessionId
-		
-		-- send message for team changed
-		PRINT 'send message for team changed'
-		
-		SELECT @MessageContent = REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								@EditTeamMessageTemplate,
-								'<Match.No>', CASE WHEN @MatchNo = '' THEN '' ELSE '#' + @MatchNo END), 
-							'<League>',@LeagueName),
-						'<Event>',@HomeName + ' -vs- ' + @AwayName),
-					'<User>', @ActorName),
-				'<Old>',@OldHomeName + ' -vs- ' + @OldAwayName)
-		
-		EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-			,@MessageContent = @MessageContent
-			,@MessageType = @EditTeamMessageTemplateId
-			,@MessageTo = @tblAssigneeReceiver
-			,@IsImportant = 1
-			,@IsWatcher = 0
-			,@SessionId = @SessionId
-			
-		EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-			,@MessageContent = @MessageContent
-			,@MessageType = @EditTeamMessageTemplateId
-			,@MessageTo = @tblWatcherReceiver
-			,@IsImportant = 0
-			,@IsWatcher = 1
-			,@SessionId = @SessionId
-			
-		-- send message for invalid assignment removed
 		PRINT 'send message for invalid assignment removed'
 		
 		INSERT INTO #tblMessage (
@@ -872,7 +854,7 @@ BEGIN
 		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 	END
 	
-	IF dbo.fnc_IsMatchInTimeRange(@ParentMatchId) = 1
+	IF @ParentMatchIsInTimeRange = 1
 	BEGIN
 		-- load assignee for parent match
 		TRUNCATE TABLE #tblAssignee

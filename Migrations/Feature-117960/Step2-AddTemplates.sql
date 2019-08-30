@@ -61,3 +61,14 @@ INSERT INTO [dbo].[MessageTemplate]
            ,1)
 GO
 
+INSERT INTO [dbo].[MessageTemplate]
+           ([MsgTemplateId]
+		   ,[MsgTemplateCode]
+           ,[MsgTemplateContent]
+           ,[SystemMessageType])
+     VALUES
+           (40
+		   ,'EditMatch'
+           ,'Was updated match: <Match.No> - <League> - <Event> updated by <User>, previous: [ <OldMatch.No> - <OldLeague> - <OldEvent> ]'
+           ,1)
+GO
