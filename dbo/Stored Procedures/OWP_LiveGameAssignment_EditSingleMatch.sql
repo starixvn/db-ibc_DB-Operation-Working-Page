@@ -8,6 +8,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_EditSingleMatch] @OWPMatchId INT
 	,@KickOffTime TIME(7)
 	,@ActorId INT = NULL
 	,@SessionId VARCHAR(50) = NULL
+	,@MinorBettypeId INT = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(MAX) = '' OUTPUT
 AS
@@ -38,10 +39,12 @@ BEGIN
 		,@OldMatchNo NVARCHAR(200)
 		,@Xml XML
 		-- send message by condition date
-		,@EditLeagueMessageTemplate NVARCHAR(1000)
-		,@EditLeagueMessageTemplateId INT
-		,@EditTeamMessageTemplate NVARCHAR(1000)
-		,@EditTeamMessageTemplateId INT
+		,@MinorBettype_FastMarket INT = - 88
+		,@MinorBettype_AllInOne INT = - 89
+		,@MinorBettype_Specific15Mins INT = - 1
+		,@MinorBettype_Specific10Mins INT = - 2
+		,@MinorBettype_Specific15MinsNoOfCorners INT = - 5
+		,@MinorBettype_Specific15MinsTotalBooking INT = - 8
 		,@UserReceivedAssigneeMessageMatchInfo TVP_INT
 		,@UserReceivedWatcherMessageMatchInfo TVP_INT
 		-- Notification Setting
@@ -179,6 +182,17 @@ BEGIN
 
 	-- send message
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+		AND (
+			@MinorBettypeId IS NULL
+			OR @MinorBettypeId NOT IN (
+				@MinorBettype_FastMarket
+				,@MinorBettype_AllInOne
+				,@MinorBettype_Specific15Mins
+				,@MinorBettype_Specific10Mins
+				,@MinorBettype_Specific15MinsNoOfCorners
+				,@MinorBettype_Specific15MinsTotalBooking
+				)
+			)
 		AND @HasChange = 1
 	BEGIN
 		CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
@@ -241,47 +255,14 @@ BEGIN
 
 		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
-		IF @OldOWPLeagueName <> @LeagueName
+		SELECT @MessageTemplate = mt.MsgTemplateContent
+			,@MessageTypeId = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'EditMatch'
+
+		SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<OldMatch.No>', @OldMatchNo), '<OldLeague>', @OldOWPLeagueName), '<OldEvent>', @OldOWPHomeName + ' -vs- ' + @OldOWPAwayName);		 
+		IF @MessageTemplate IS NOT NULL
 		BEGIN
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditLeague'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldOWPLeagueName)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		IF (
-				@OldOWPHomeName <> @HomeName
-				OR @OldOWPAwayName <> @AwayName
-				)
-		BEGIN
-			SELECT @OldValue = @OldOWPHomeName + ' -vs- ' + @OldOWPAwayName
-				,@NewValue = @HomeName + ' -vs- ' + @AwayName
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditTeam'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldValue)
-
 			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
 				,@MessageContent = @MessageTemplate
 				,@MessageType = @MessageTypeId
@@ -314,22 +295,24 @@ BEGIN
 			WHERE mt.MsgTemplateCode = 'EditKOTime'
 
 			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<Old>', @OldValue), '<New>', @NewValue)
+			IF @MessageTemplate IS NOT NULL
+			BEGIN
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
 
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
+				EXEC dbo.OWP_MessageInsert @UserId = @ActorId
+					,@MessageContent = @MessageTemplate
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
+					,@SessionId = @SessionId
+			END
 		END
 
 		DROP TABLE #tblAllAssigneeOfMatch

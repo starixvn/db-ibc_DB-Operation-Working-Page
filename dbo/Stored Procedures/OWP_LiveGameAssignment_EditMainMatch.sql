@@ -62,6 +62,7 @@ BEGIN
 		,@MinorBettypeId INT
 		,@ParentMatchId INT
 		,@MinorMatchId INT
+	 
 		,@RowNumber INT
 
 	SELECT @MaxRowCount = COUNT(RowNumber)
@@ -110,6 +111,7 @@ BEGIN
 			,@AwayName = AwayName
 			,@OWPMatchId = MinorMatchId
 			,@MatchNo = MatchNo
+			,@MinorBettypeId = MinorBettypeId
 		FROM @tblSpecialEventTemplate
 		WHERE @LoopCounter = RowNumber
 
@@ -121,6 +123,7 @@ BEGIN
 			,@SessionId = @SessionId
 			,@ActorId = @ActorId
 			,@KickOffTime = @KickOffTime
+			,@MinorBettypeId = @MinorBettypeId
 			,@ErrCode = @ErrCode OUTPUT
 			,@ErrMsg = @ErrMsg OUTPUT
 
