@@ -20,18 +20,13 @@ AS
 	20190813@Kane.Le: Initial SP - [Feature: #117960]	
 */
 BEGIN
-	SET NOCOUNT ON
+	SET NOCOUNT ON;
 
 	DECLARE @EventDate DATE
 		,@ExistedMatchId INT
 		,@OldParentMatchId INT
-		,@MatchSettingBettype_XMin INT = - 1001
-		,@MatchSettingBettype_FastMarket INT = - 1003
-		,@MatchSettingBettype_AllInOne INT = - 1004
 		,@MinorBettype_FastMarket INT = - 88
 		,@MinorBettype_AllInOne INT = - 89
-		,@MinorBettype_TotalBooking INT = - 6
-		,@MinorBettype_NoOfCorner INT = - 3
 		,@MinorBettype_Specific15Mins INT = - 1
 		,@MinorBettype_Specific10Mins INT = - 2
 		,@MinorBettype_Specific15MinsNoOfCorners INT = - 5
@@ -44,52 +39,20 @@ BEGIN
 		,@MinorBettype_AwayPenShootOut INT = - 99
 		,@OWPLeagueId INT
 		,@OWPHomeTeamId INT
-		,@OWPAwayTeamId INT
-		,@OldKickOffTime TIME
-		,@OldOWPLeagueName NVARCHAR(500)
-		,@OldOWPHomeName NVARCHAR(200)
-		,@OldOWPAwayName NVARCHAR(200)
-		,@OldMatchNo NVARCHAR(200)
+		,@OWPAwayTeamId INT;
 
 	SELECT @OWPLeagueId = m.OWPLeagueId
 		,@OWPHomeTeamId = m.OWPHomeId
 		,@OWPAwayTeamId = m.OWPAwayId
-		,@OldMatchNo = m.MatchNo
-		,@OldKickOffTime = m.KickOffTime
 	FROM dbo.OWPMatch AS m WITH (NOLOCK)
-	WHERE m.OWPMatchId = @OWPMatchId
-
-	SELECT @OldOWPLeagueName = l.OWPLeagueName
-	FROM dbo.OWPLeague AS l WITH (NOLOCK)
-	WHERE l.OWPLeagueId = @OWPLeagueId
-
-	SELECT @OldOWPHomeName = l.OWPTeamName
-	FROM dbo.OWPTeam AS l WITH (NOLOCK)
-	WHERE l.OWPTeamId = @OWPHomeTeamId
-
-	SELECT @OldOWPAwayName = l.OWPTeamName
-	FROM dbo.OWPTeam AS l WITH (NOLOCK)
-	WHERE l.OWPTeamId = @OWPAwayTeamId
-
-	IF @OldOWPLeagueName = @LeagueName
-		AND @OldOWPHomeName = @HomeName
-		AND @OldOWPAwayName = @AwayName
-		AND @OldMatchNo = @MatchNo
-		AND @OldKickOffTime = @KickOffTime
-	BEGIN
-		SELECT @ErrCode = - 1
-			,@ErrMsg = 'Event information has no change!'
-
-		RETURN
-	END
+	WHERE m.OWPMatchId = @OWPMatchId;
 
 	SELECT @EventDate = EventDate
 	FROM dbo.OWPMatch AS m WITH (NOLOCK)
-	WHERE m.OWPMatchId = @OWPMatchId
+	WHERE m.OWPMatchId = @OWPMatchId;
 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
-
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59');
 	DECLARE @tblOWPMatchByEventDate TABLE (
 		RowNumber INT IDENTITY
 		,OWPMatchId INT
@@ -97,7 +60,7 @@ BEGIN
 		,HomeName NVARCHAR(200)
 		,AwayName NVARCHAR(200)
 		,MatchNo NVARCHAR(50)
-		)
+		);
 	DECLARE @tblSpecialEventTemplate TABLE (
 		RowNumber INT IDENTITY
 		,LeagueName NVARCHAR(500)
@@ -106,13 +69,13 @@ BEGIN
 		,ParentMatchId INT
 		,MinorBettypeId INT
 		,MinorMatchId INT
-		)
+		);
 	DECLARE @tblMinorBettypeId TABLE (
 		RowNumber INT IDENTITY
 		,MinorMatchId INT
 		,MinorBettypeId INT
 		,ParentMatchId INT
-		)
+		);
 
 	INSERT INTO @tblOWPMatchByEventDate (
 		OWPMatchId
@@ -132,22 +95,22 @@ BEGIN
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
 	WHERE m.OWPMatchId <> @OWPMatchId
 		AND m.EventDateTime BETWEEN @FromDate
-			AND @ToDate
+			AND @ToDate;
 
 	INSERT INTO @tblMinorBettypeId
 	SELECT mm.MinorMatchId
 		,mm.MinorBettypeId
 		,mm.ParentMatchId
 	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
-	WHERE ParentMatchId = @OWPMatchId
+	WHERE ParentMatchId = @OWPMatchId;
 
 	DECLARE @LoopCounter INT = 1
 		,@MaxRowCount INT
 		,@MinorMatchId INT
-		,@RowNumber INT
+		,@RowNumber INT;
 
 	SELECT @MaxRowCount = COUNT(*)
-	FROM @tblMinorBettypeId
+	FROM @tblMinorBettypeId;
 
 	WHILE (@LoopCounter <= @MaxRowCount)
 	BEGIN
@@ -155,7 +118,7 @@ BEGIN
 			,@ParentMatchId = ParentMatchId
 			,@MinorMatchId = MinorMatchId
 		FROM @tblMinorBettypeId
-		WHERE @LoopCounter = RowNumber
+		WHERE @LoopCounter = RowNumber;
 
 		INSERT INTO @tblSpecialEventTemplate (
 			LeagueName
@@ -165,16 +128,16 @@ BEGIN
 		EXEC [dbo].[OWP_LiveGameAssignment_GetSpecialEventTemplate_ByName] @LeagueName
 			,@HomeName
 			,@AwayName
-			,@MinorBettypeId
+			,@MinorBettypeId;
 
 		UPDATE @tblSpecialEventTemplate
 		SET ParentMatchId = @ParentMatchId
 			,MinorBettypeId = @MinorBettypeId
 			,MinorMatchId = @MinorMatchId
-		WHERE @LoopCounter = RowNumber
+		WHERE @LoopCounter = RowNumber;
 
-		SET @LoopCounter = @LoopCounter + 1
-	END
+		SET @LoopCounter = @LoopCounter + 1;
+	END;
 
 	SET @MinorBettypeId = 0;
 	SET @ParentMatchId = 0;
@@ -186,7 +149,7 @@ BEGIN
 	WHERE m.OWPMatchId <> @OWPMatchId
 		AND m.LeagueName = @LeagueName
 		AND m.HomeName = @HomeName
-		AND m.AwayName = @AwayName
+		AND m.AwayName = @AwayName;
 
 	IF @ExistedMatchId IS NOT NULL
 	BEGIN
@@ -201,13 +164,13 @@ BEGIN
 				,@MinorBettype_Specific15MinsTotalBooking
 				,@MinorBettype_FastMarket
 				,@MinorBettype_AllInOne
-				)
+				);
 
 		SELECT @ErrCode = 1
-			,@ErrMsg = 'This match is existing, please check it !'
+			,@ErrMsg = 'This match is existing, please check it !';
 
-		RETURN
-	END
+		RETURN;
+	END;
 
 	IF @MatchNo <> ''
 		AND EXISTS (
@@ -217,10 +180,10 @@ BEGIN
 			)
 	BEGIN
 		SELECT @ErrCode = 1
-			,@ErrMsg = 'The Match No. is used. Please choose another one.'
+			,@ErrMsg = 'The Match No. is used. Please choose another one.';
 
-		RETURN
-	END
+		RETURN;
+	END;
 
 	IF EXISTS (
 			SELECT 1
@@ -236,14 +199,14 @@ BEGIN
 			)
 	BEGIN
 		SELECT @ErrCode = 1
-			,@ErrMsg = 'This match is existing, please check it !'
+			,@ErrMsg = 'This match is existing, please check it !';
 
-		RETURN
-	END
+		RETURN;
+	END;
 
 	SELECT @OldParentMatchId = mn.ParentMatchId
 	FROM dbo.MinorMatch AS mn WITH (NOLOCK)
-	WHERE mn.ParentMatchId = @OWPMatchId
+	WHERE mn.ParentMatchId = @OWPMatchId;
 
 	IF @OldParentMatchId IS NOT NULL
 	BEGIN
@@ -251,7 +214,7 @@ BEGIN
 		CREATE TABLE #tblRuleChecking (
 			MinorBettypeId INT
 			,IsFalse INT
-			)
+			);
 
 		INSERT INTO #tblRuleChecking (
 			MinorBettypeId
@@ -290,20 +253,20 @@ BEGIN
 				1
 				,2
 				,3
-				)
+				);
 
 		SELECT @MinorBettypeId = MinorBettypeId
 		FROM #tblRuleChecking WITH (NOLOCK)
 		GROUP BY MinorBettypeId
-		HAVING SUM(IsFalse) = 0
+		HAVING SUM(IsFalse) = 0;
 
-		DROP TABLE #tblRuleChecking
+		DROP TABLE #tblRuleChecking;
 
 		IF @MinorBettypeId IS NOT NULL
 		BEGIN
 			DECLARE @LeagueChars INT
 				,@HomeChars INT
-				,@AwayChars INT
+				,@AwayChars INT;
 
 			SELECT @LeagueChars = MAX(CASE mmd.Field
 						WHEN 4
@@ -323,7 +286,7 @@ BEGIN
 					4
 					,5
 					,6
-					)
+					);
 
 			IF LEN(@LeagueName) > @LeagueChars
 				AND LEN(@HomeName) > @HomeChars
@@ -344,11 +307,11 @@ BEGIN
 							AND @ToDate
 						AND l.OWPLeagueName = RTRIM(LEFT(@LeagueName, LEN(@LeagueName) - @LeagueChars))
 						AND h.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
-						AND a.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars))
-				END
+						AND a.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars));
+				END;
 				ELSE
 				BEGIN
-					DECLARE @SingleTeamType SMALLINT
+					DECLARE @SingleTeamType SMALLINT;
 
 					SELECT @ParentMatchId = m.OWPMatchId
 						,@SingleTeamType = CASE 
@@ -373,7 +336,7 @@ BEGIN
 								a.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
 								AND a.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars))
 								)
-							)
+							);
 
 					SELECT @MinorBettypeId = CASE @MinorBettypeId
 							WHEN 1111
@@ -397,25 +360,25 @@ BEGIN
 										WHEN 2
 											THEN @MinorBettype_AwayPenShootOut
 										END
-							END
-				END
-			END
-		END
+							END;
+				END;
+			END;
+		END;
 
 		IF @ParentMatchId = 0
 			OR @OldParentMatchId = @ParentMatchId
 		BEGIN
 			SELECT @ParentMatchId = NULL
-				,@MinorBettypeId = NULL
+				,@MinorBettypeId = NULL;
 
 			SELECT @ErrCode = 0
-				,@ErrMsg = ''
+				,@ErrMsg = '';
 
-			RETURN
-		END
+			RETURN;
+		END;
 		ELSE
 		BEGIN
-			DECLARE @IsExistMinorMatch INT
+			DECLARE @IsExistMinorMatch INT;
 
 			SELECT @IsExistMinorMatch = 1
 			FROM @tblSpecialEventTemplate mm
@@ -425,30 +388,30 @@ BEGIN
 					,@MinorBettype_FastMarket
 					,@MinorBettype_AllInOne
 					)
-				AND mm.MinorBettypeId = @MinorBettypeId			
+				AND mm.MinorBettypeId = @MinorBettypeId;
 
 			IF @IsExistMinorMatch IS NOT NULL
 			BEGIN
 				SELECT @ErrCode = 1
 					,@ErrMsg = 'This match is existing minor match, please check it !'
 					,@ParentMatchId = @ParentMatchId
-					,@MinorBettypeId = @MinorBettypeId
+					,@MinorBettypeId = @MinorBettypeId;
 
-				RETURN
-			END
+				RETURN;
+			END;
 
 			SELECT @ErrCode = 0
 				,@ErrMsg = ''
 				,@ParentMatchId = @ParentMatchId
-				,@MinorBettypeId = @MinorBettypeId
+				,@MinorBettypeId = @MinorBettypeId;
 
-			RETURN
-		END
-	END
+			RETURN;
+		END;
+	END;
 
 	---- determine minor match
 	SELECT @ParentMatchId = NULL
 		,@MinorBettypeId = NULL
 		,@ErrCode = 0
-		,@ErrMsg = ''
-END
+		,@ErrMsg = '';
+END;
