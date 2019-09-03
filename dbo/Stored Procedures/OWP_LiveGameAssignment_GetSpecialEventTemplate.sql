@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_GetSpecialEventTemplate] @ParentMatchId INT
-	,@MinorBettypeId INT
+	,@MinorBettypeId INT = NULL
 AS
 /*
 Created: 20191724@Leo
@@ -41,5 +41,5 @@ BEGIN
 			ELSE REPLACE(ts.Away, '<name>', @AwayName)
 			END AS AwayName
 	FROM dbo.MinorMatchTemplateSetting AS ts WITH (NOLOCK)
-	WHERE ts.MinorBettypeId = @MinorBettypeId
+	WHERE @MinorBettypeId IS NULL OR ts.MinorBettypeId = @MinorBettypeId
 END
