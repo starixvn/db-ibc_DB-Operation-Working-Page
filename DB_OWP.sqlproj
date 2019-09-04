@@ -376,6 +376,7 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchSetting_GetById.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchSetting_Delete.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchSetting_Create.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_DetectMinorMatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

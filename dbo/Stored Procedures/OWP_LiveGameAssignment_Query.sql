@@ -366,12 +366,14 @@ BEGIN
 		,ml.MinorBettypeId
 		,ml.ParentMatchId
 		,ml.InfoSiteMatchId
+		,(CASE WHEN ml.InfoSiteMatchId IS NULL THEN NULL ELSE CASE WHEN im.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END END) AS IsInfoSiteLinked
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
 	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
-	LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
+	LEFT JOIN #tblNoOfHDPResource as ref ON ml.NoOfHDPId = ref.Id
+	LEFT JOIN dbo.InfoSiteMatch as im WITH (NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
 	WHERE ml.OWPMatchId IN (
 			SELECT OWPMatchId
 			FROM #tblOWPMatchFilter

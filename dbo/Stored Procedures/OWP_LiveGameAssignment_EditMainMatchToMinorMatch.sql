@@ -264,14 +264,13 @@ BEGIN
 			,@IsImportant = 0
 			,@IsWatcher = 1
 			,@SessionId = @SessionId
-			
-			
-		-- update match status & send message
-		IF @OldMatchStatus <> @ParentMatchStatus
-		BEGIN
-			EXEC dbo.OWP_LiveDetail_MatchInfo_UpdateMatchStatus @UserId=@ActorId, @SessionId=@SessionId, @OWPMatchId=@OWPMatchId, @MatchStatus=@ParentMatchStatus
-		END
-		
+	END
+	
+	
+	-- update match status & send message
+	IF @OldMatchStatus <> @ParentMatchStatus AND @ParentMatchStatus IN ('Cancel', 'Postponed', 'Suspended')
+	BEGIN
+		EXEC dbo.OWP_LiveDetail_MatchInfo_UpdateMatchStatus @UserId=@ActorId, @SessionId=@SessionId, @OWPMatchId=@OWPMatchId, @MatchStatus=@ParentMatchStatus
 	END
 	
 
