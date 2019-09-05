@@ -53,16 +53,16 @@ BEGIN
 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59');
-	DECLARE @tblOWPMatchByEventDate TABLE (
-		RowNumber INT IDENTITY
+	CREATE TABLE #tblOWPMatchByEventDate (
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,OWPMatchId INT
 		,LeagueName NVARCHAR(500)
 		,HomeName NVARCHAR(200)
 		,AwayName NVARCHAR(200)
 		,MatchNo NVARCHAR(50)
 		);
-	DECLARE @tblSpecialEventTemplate TABLE (
-		RowNumber INT IDENTITY
+	CREATE TABLE #tblSpecialEventTemplate (
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,LeagueName NVARCHAR(500)
 		,HomeName NVARCHAR(200)
 		,AwayName NVARCHAR(200)
@@ -71,13 +71,13 @@ BEGIN
 		,MinorMatchId INT
 		);
 	DECLARE @tblMinorBettypeId TABLE (
-		RowNumber INT IDENTITY
+	RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,MinorMatchId INT
 		,MinorBettypeId INT
 		,ParentMatchId INT
 		);
 
-	INSERT INTO @tblOWPMatchByEventDate (
+	INSERT INTO #tblOWPMatchByEventDate (
 		OWPMatchId
 		,LeagueName
 		,HomeName
@@ -120,7 +120,7 @@ BEGIN
 		FROM @tblMinorBettypeId
 		WHERE @LoopCounter = RowNumber;
 
-		INSERT INTO @tblSpecialEventTemplate (
+		INSERT INTO #tblSpecialEventTemplate (
 			LeagueName
 			,HomeName
 			,AwayName
@@ -130,7 +130,7 @@ BEGIN
 			,@AwayName
 			,@MinorBettypeId;
 
-		UPDATE @tblSpecialEventTemplate
+		UPDATE #tblSpecialEventTemplate
 		SET ParentMatchId = @ParentMatchId
 			,MinorBettypeId = @MinorBettypeId
 			,MinorMatchId = @MinorMatchId
@@ -145,7 +145,7 @@ BEGIN
 
 	-- check match is duplicated
 	SELECT @ExistedMatchId = m.OWPMatchId
-	FROM @tblOWPMatchByEventDate AS m
+	FROM #tblOWPMatchByEventDate AS m
 	WHERE m.OWPMatchId <> @OWPMatchId
 		AND m.LeagueName = @LeagueName
 		AND m.HomeName = @HomeName
@@ -169,13 +169,15 @@ BEGIN
 		SELECT @ErrCode = 1
 			,@ErrMsg = 'This match is existing, please check it !';
 
+			
+
 		RETURN;
 	END;
 
 	IF @MatchNo <> ''
 		AND EXISTS (
 			SELECT 1
-			FROM @tblOWPMatchByEventDate AS m
+			FROM #tblOWPMatchByEventDate AS m
 			WHERE m.MatchNo = @MatchNo
 			)
 	BEGIN
@@ -187,8 +189,8 @@ BEGIN
 
 	IF EXISTS (
 			SELECT 1
-			FROM @tblOWPMatchByEventDate AS m
-			JOIN @tblSpecialEventTemplate t ON m.LeagueName = t.LeagueName
+			FROM #tblOWPMatchByEventDate AS m
+			JOIN #tblSpecialEventTemplate t ON m.LeagueName = t.LeagueName
 				AND m.HomeName = t.HomeName
 				AND m.AwayName = t.AwayName
 				AND m.MatchNo = @MatchNo
@@ -381,7 +383,7 @@ BEGIN
 			DECLARE @IsExistMinorMatch INT;
 
 			SELECT @IsExistMinorMatch = 1
-			FROM @tblSpecialEventTemplate mm
+			FROM #tblSpecialEventTemplate mm
 			WHERE mm.MinorBettypeId NOT IN (
 					@MinorBettype_Specific15Mins
 					,@MinorBettype_Specific10Mins
@@ -409,6 +411,8 @@ BEGIN
 		END;
 	END;
 
+	DROP TABLE #tblOWPMatchByEventDate
+	DROP TABLE #tblSpecialEventTemplate
 	---- determine minor match
 	SELECT @ParentMatchId = NULL
 		,@MinorBettypeId = NULL

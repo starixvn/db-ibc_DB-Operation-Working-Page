@@ -18,7 +18,7 @@ BEGIN
 
 	DECLARE @Valid BIT
     -- Insert statements for procedure here
-	IF EXISTS (SELECT * FROM InfoSiteMatch WHERE InfoSiteMatchId = @InfoSiteMatchId)
+	IF EXISTS (SELECT 1 FROM InfoSiteMatch WITH (NOLOCK) WHERE InfoSiteMatchId = @InfoSiteMatchId)
 		SET @Valid = 1;
 	ELSE
 		SET @Valid = 0;

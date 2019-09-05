@@ -94,7 +94,7 @@ BEGIN
 			SET @OWPLeagueId = SCOPE_IDENTITY();
 		END
 
-		UPDATE dbo.OWPMatch
+		UPDATE dbo.OWPMatch WITH (UPDLOCK, ROWLOCK)
 		SET OWPLeagueId = @OWPLeagueId
 		WHERE OWPMatchId = @OWPMatchId
 
@@ -105,7 +105,7 @@ BEGIN
 	IF @MatchNo IS NOT NULL
 		AND @OldMatchNo <> @MatchNo
 	BEGIN
-		UPDATE dbo.OWPMatch
+		UPDATE dbo.OWPMatch WITH (UPDLOCK, ROWLOCK)
 		SET MatchNo = @MatchNo
 		WHERE OWPMatchId = @OWPMatchId
 
@@ -129,7 +129,7 @@ BEGIN
 			SET @OWPHomeTeamId = SCOPE_IDENTITY();
 		END
 
-		UPDATE dbo.OWPMatch
+		UPDATE dbo.OWPMatch WITH (UPDLOCK, ROWLOCK)
 		SET OWPHomeId = @OWPHomeTeamId
 		WHERE OWPMatchId = @OWPMatchId
 
@@ -152,7 +152,7 @@ BEGIN
 			SET @OWPAwayTeamId = SCOPE_IDENTITY();
 		END
 
-		UPDATE dbo.OWPMatch
+		UPDATE dbo.OWPMatch WITH (UPDLOCK, ROWLOCK)
 		SET OWPAwayId = @OWPAwayTeamId
 		WHERE OWPMatchId = @OWPMatchId
 
@@ -170,7 +170,7 @@ BEGIN
 
 		SELECT @EventDateTime = CAST(@EventDate AS DATETIME) + CAST(@KickOffTime AS DATETIME)
 
-		UPDATE dbo.OWPMatch
+		UPDATE dbo.OWPMatch WITH (ROWLOCK)
 		SET MatchNo = @MatchNo
 			,EventDate = @EventDate
 			,KickOffTime = @KickOffTime

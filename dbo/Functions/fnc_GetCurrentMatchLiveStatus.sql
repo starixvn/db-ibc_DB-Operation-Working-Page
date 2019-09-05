@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="1"></info>*/
-CREATE FUNCTION [dbo].[OWP_GetCurrentMatchLiveStatus]
+CREATE FUNCTION [dbo].[fnc_GetCurrentMatchLiveStatus]
 (
 	@EventDate DATETIME
 	,@KickOffTime TIME

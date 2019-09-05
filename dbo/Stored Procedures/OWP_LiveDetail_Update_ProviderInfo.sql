@@ -155,7 +155,7 @@ BEGIN
 
 	-- handle changes TVIds
 	DELETE
-	FROM dbo.MatchTelevision
+	FROM dbo.MatchTelevision WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
 
 	IF (ISNULL(@TVIds, '') != '')
@@ -171,7 +171,7 @@ BEGIN
 
 	-- handle changes OtherProvider
 	DELETE
-	FROM dbo.MatchOtherProvider
+	FROM dbo.MatchOtherProvider WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
 
 	IF (ISNULL(@OtherProviderIds, '') != '')
@@ -187,7 +187,7 @@ BEGIN
 
 	-- handle changes Provider
 	DELETE
-	FROM dbo.MatchProvider
+	FROM dbo.MatchProvider WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
 
 	IF (ISNULL(@ProviderIds, '') != '')
@@ -203,7 +203,7 @@ BEGIN
 
 	-- handle changes MatchAgent
 	DELETE
-	FROM dbo.MatchAgent
+	FROM dbo.MatchAgent WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
 
 	IF (ISNULL(@AgentIds, '') != '')

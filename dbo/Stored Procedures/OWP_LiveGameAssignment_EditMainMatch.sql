@@ -41,8 +41,8 @@ BEGIN
 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59');
-	DECLARE @tblOWPMatchByEventDate TABLE (
-		RowNumber INT IDENTITY
+	CREATE TABLE #tblOWPMatchByEventDate (
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,OWPMatchId INT
 		,LeagueName NVARCHAR(500)
 		,HomeName NVARCHAR(200)
@@ -52,7 +52,7 @@ BEGIN
 		,ParentMatchId INT
 		);
 
-	INSERT INTO @tblOWPMatchByEventDate (
+	INSERT INTO #tblOWPMatchByEventDate (
 		OWPMatchId
 		,LeagueName
 		,HomeName
@@ -77,8 +77,8 @@ BEGIN
 		AND m.EventDateTime BETWEEN @FromDate
 			AND @ToDate;
 
-	DECLARE @tblSpecialEventTemplate TABLE (
-		RowNumber INT IDENTITY
+	CREATE TABLE #tblSpecialEventTemplate (
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,LeagueName NVARCHAR(500)
 		,HomeName NVARCHAR(200)
 		,AwayName NVARCHAR(200)
@@ -87,8 +87,8 @@ BEGIN
 		,MinorMatchId INT
 		,MatchNo NVARCHAR(50)
 		)
-	DECLARE @tblSpecialEventTemplateMain TABLE (
-		RowNumber INT IDENTITY
+	CREATE TABLE #tblSpecialEventTemplateMain (
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,LeagueName NVARCHAR(500)
 		,HomeName NVARCHAR(200)
 		,AwayName NVARCHAR(200)
@@ -98,7 +98,7 @@ BEGIN
 		,MatchNo NVARCHAR(50)
 		)
 	DECLARE @tblSpecialEventTemplateMain2Minor TABLE (
-		RowNumber INT IDENTITY
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,LeagueName NVARCHAR(500)
 		,HomeName NVARCHAR(200)
 		,AwayName NVARCHAR(200)
@@ -108,7 +108,7 @@ BEGIN
 		,MatchNo NVARCHAR(50)
 		)
 	DECLARE @tblMinorBettypeId TABLE (
-		RowNumber INT IDENTITY
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,MinorMatchId INT
 		,MinorBettypeId INT
 		,ParentMatchId INT
@@ -141,7 +141,7 @@ BEGIN
 		FROM @tblMinorBettypeId
 		WHERE @LoopCounter = RowNumber
 
-		INSERT INTO @tblSpecialEventTemplate (
+		INSERT INTO #tblSpecialEventTemplate (
 			LeagueName
 			,HomeName
 			,AwayName
@@ -149,7 +149,7 @@ BEGIN
 		EXEC [dbo].[OWP_LiveGameAssignment_GetSpecialEventTemplate] @ParentMatchId = @OWPMatchId
 			,@MinorBettypeId = @MinorBettypeId
 
-		UPDATE @tblSpecialEventTemplate
+		UPDATE #tblSpecialEventTemplate
 		SET ParentMatchId = @ParentMatchId
 			,MinorBettypeId = @MinorBettypeId
 			,MinorMatchId = @MinorMatchId
@@ -163,7 +163,7 @@ BEGIN
 		SET @LoopCounter = @LoopCounter + 1
 	END
 
-	INSERT INTO @tblSpecialEventTemplateMain (
+	INSERT INTO #tblSpecialEventTemplateMain (
 		LeagueName
 		,HomeName
 		,AwayName
@@ -182,13 +182,13 @@ BEGIN
 		,m.AwayName
 		,m.OWPMatchId
 		,@OWPMatchId
-	FROM @tblOWPMatchByEventDate AS m
-	JOIN @tblSpecialEventTemplateMain AS t ON m.LeagueName = t.LeagueName
+	FROM #tblOWPMatchByEventDate AS m
+	JOIN #tblSpecialEventTemplateMain AS t ON m.LeagueName = t.LeagueName
 		AND m.HomeName = t.HomeName
 		AND m.AwayName = t.AwayName
 	WHERE NOT EXISTS (
 			SELECT 1
-			FROM @tblSpecialEventTemplate AS aa
+			FROM #tblSpecialEventTemplate AS aa
 			WHERE m.OWPMatchId = aa.MinorMatchId
 			)
 
@@ -237,7 +237,7 @@ BEGIN
 	SET @MaxRowCount = 0;
 
 	SELECT @MaxRowCount = COUNT(RowNumber)
-	FROM @tblSpecialEventTemplate
+	FROM #tblSpecialEventTemplate
 
 	WHILE (@LoopCounter <= @MaxRowCount)
 	BEGIN
@@ -247,7 +247,7 @@ BEGIN
 			,@OWPMatchId = MinorMatchId
 			,@MatchNo = MatchNo
 			,@MinorBettypeId = MinorBettypeId
-		FROM @tblSpecialEventTemplate
+		FROM #tblSpecialEventTemplate
 		WHERE @LoopCounter = RowNumber
 
 		EXEC dbo.OWP_LiveGameAssignment_EditSingleMatch @OWPMatchId = @OWPMatchId
@@ -265,6 +265,9 @@ BEGIN
 		SET @LoopCounter = @LoopCounter + 1
 	END
 
+	DROP TABLE #tblSpecialEventTemplateMain
+	DROP TABLE #tblSpecialEventTemplate
+	DROP TABLE #tblOWPMatchByEventDate
 	SELECT @ErrCode = 0
 		,@ErrMsg = 'The event has been edited successfully!'
 END

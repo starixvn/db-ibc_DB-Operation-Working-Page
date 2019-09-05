@@ -19,7 +19,7 @@ BEGIN
 	SET NOCOUNT ON
 
 	CREATE TABLE #tblMatchRecommendOdds (
-		RowNumber INT IDENTITY
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,MatchRecommendOddsId INT
 		,OWPMatchId INT
 		,UserId INT

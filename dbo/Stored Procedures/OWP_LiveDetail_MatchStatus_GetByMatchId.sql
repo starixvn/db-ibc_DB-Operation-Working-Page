@@ -35,7 +35,7 @@ BEGIN
 	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = @OWPMatchId
 	WHERE mi.OWPMatchId = @OWPMatchId
 
-	SELECT @MatchLiveStatus = [dbo].[OWP_GetCurrentMatchLiveStatus] (om.EventDate, om.KickOffTime)
+	SELECT @MatchLiveStatus = [dbo].[fnc_GetCurrentMatchLiveStatus] (om.EventDate, om.KickOffTime)
 	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = @OWPMatchId
 	WHERE mi.OWPMatchId = @OWPMatchId
