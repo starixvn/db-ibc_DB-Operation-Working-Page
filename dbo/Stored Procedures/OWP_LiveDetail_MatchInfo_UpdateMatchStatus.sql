@@ -17,11 +17,18 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20190822@yTyler.Dang: Write log - [Feature: #118566]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @OldMatchStatus NVARCHAR(15)
+	DECLARE @StartRun DATETIME
+		,@EndRun DATETIME
+		,@Duration INT
+		,@LogData NVARCHAR(MAX)
+		,@LogDataOld NVARCHAR(MAX)
+		,@Xml XML
+		,@OldMatchStatus NVARCHAR(15)
 		,@EventDateTime DATETIME
 		,@MatchName NVARCHAR(MAX)
 		,@MatchNo VARCHAR(50)
@@ -102,362 +109,399 @@ BEGIN
 			OR MinorBettypeName LIKE '%booking%'
 			)
 
-	BEGIN TRY
-		SELECT @OldMatchStatus = m.MatchStatus
-		FROM dbo.MatchInfo AS m WITH (NOLOCK)
-		WHERE m.OWPMatchId = @OWPMatchId
+	SELECT @OldMatchStatus = m.MatchStatus
+	FROM dbo.MatchInfo AS m WITH (NOLOCK)
+	WHERE m.OWPMatchId = @OWPMatchId
 
-		UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
-		SET MatchStatus = @MatchStatus
-		OUTPUT deleted.OWPMatchId
-			,deleted.MatchStatus
-		INTO #tblOldMatchInfo
-		WHERE OWPMatchId = @OWPMatchId
+	-- Log  
+	SET @StartRun = GETDATE()
+	
+	SET @Xml = (
+			SELECT info.OWPMatchId AS '@mt'
+				,info.MatchStatus AS '@ms'
+			FROM dbo.MatchInfo AS info WHERE info.OWPMatchId = @OWPMatchId
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+			 
+	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
-		-- Get Main match name 
-		SELECT @EventDateTime = om.EventDateTime
-			,@MatchName = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
-			,@MatchNo = CASE WHEN om.MatchNo = '' THEN '' ELSE '#' + om.MatchNo END
-			,@LeagueName = l.OWPLeagueName
-		FROM dbo.OWPMatch AS om WITH (NOLOCK)
-			INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
-			INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
-			INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON om.OWPLeagueId = l.OWPLeagueId
-		WHERE om.OWPMatchId = @OWPMatchId
+	UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
+	SET MatchStatus = @MatchStatus
+	OUTPUT deleted.OWPMatchId
+		,deleted.MatchStatus
+	INTO #tblOldMatchInfo
+	WHERE OWPMatchId = @OWPMatchId
 
-		IF @OldMatchStatus <> @MatchStatus
+	-- Get Main match name 
+	SELECT @EventDateTime = om.EventDateTime
+		,@MatchName = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+		,@MatchNo = CASE WHEN om.MatchNo = '' THEN '' ELSE '#' + om.MatchNo END
+		,@LeagueName = l.OWPLeagueName
+	FROM dbo.OWPMatch AS om WITH (NOLOCK)
+		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
+		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON om.OWPLeagueId = l.OWPLeagueId
+	WHERE om.OWPMatchId = @OWPMatchId
+
+	IF @OldMatchStatus <> @MatchStatus
+	BEGIN
+		-- send message by condition date
+		SELECT @FromTimeSendMessage = FromTime
+			,@ToTimeSendMessage = ToTime
+			,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
+			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
+		FROM dbo.fnc_GetDateTimeForTraderViewTime()
+		
+		SELECT @Username = dbo.fnc_GetUsernameByUserId(@UserId)
+
+		IF @MatchStatus = @str_Live
 		BEGIN
-			-- send message by condition date
-			SELECT @FromTimeSendMessage = FromTime
-				,@ToTimeSendMessage = ToTime
-				,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-				,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
-			FROM dbo.fnc_GetDateTimeForTraderViewTime()
+			UPDATE info WITH (ROWLOCK, UPDLOCK)
+			SET info.MatchStatus = @str_Live
+			FROM dbo.MatchInfo AS info
+				INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON info.OWPMatchId = minor.MinorMatchId
+				AND minor.MinorBettypeId IN (@Specific10Mins, @Specific15Mins, @FastMarket, @AllInOne)
 			
-			SELECT @Username = dbo.fnc_GetUsernameByUserId(@UserId)
 
-			IF @MatchStatus = @str_Live
-			BEGIN
-				UPDATE info WITH (ROWLOCK, UPDLOCK)
-				SET info.MatchStatus = @str_Live
-				FROM dbo.MatchInfo AS info
-					INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON info.OWPMatchId = minor.MinorMatchId
+			-- SEND message when on time range
+			SELECT @MessageInsertAssignment = mt.MsgTemplateContent
+				,@MessageInsertAssignmentId = mt.MsgTemplateId
+			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+			WHERE mt.MsgTemplateCode = 'AssignmentInsert'
+
+			SELECT @MessageInsertOtherAssignment = mt.MsgTemplateContent
+				,@MessageInsertOtherAssignmentId = mt.MsgTemplateId
+			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+			WHERE mt.MsgTemplateCode = 'OtherAssignmentInsert'
+
+			INSERT INTO #tblMessage (
+				UserId
+				,MessageContent
+				,MessageTypeId
+				,MinorBettypeId
+				,EventDateTime
+				)
+			SELECT asm.UserId
+				,REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(CASE 
+									WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignment
+									ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(asm.AssignmentNote, '#<user>', ''))))
+									END
+								,'<Event>', @MatchName)
+							,'<League>', @LeagueName)
+						,'<Match.No>', @MatchNo)
+					,'<Bettype>', asm.BettypeName)
+				,'<User>', @Username)
+				,CASE 
+					WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignmentId
+					ELSE @MessageInsertOtherAssignmentId
+					END
+				,asm.MinorBettypeId
+				,@EventDateTime
+			FROM (
+				SELECT a.UserId
+					,mibt.MinorBettypeName AS BettypeName
+					,a.AssignmentNote
+					,minor.MinorBettypeId
+				FROM dbo.Assignment AS a WITH (NOLOCK)
+					INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
+					INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON minor.MinorBettypeId = mibt.ParentBettypeId
+					AND a.Bettype = mibt.InheritedBettypeId
+				WHERE minor.ParentMatchId = @OWPMatchId
 					AND minor.MinorBettypeId IN (@Specific10Mins, @Specific15Mins, @FastMarket, @AllInOne)
+				
+				UNION
+				SELECT a.UserId
+					,bt.ShortName AS BettypeName
+					,a.AssignmentNote
+					,NULL AS MinorBettypeId
+				FROM dbo.Assignment AS a WITH (NOLOCK)
+					INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+					INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
+				WHERE m.OWPMatchId = @OWPMatchId
+				) AS asm
+				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyMyAssignmentUpdatedId
+				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+				AND nsm.UserId = asm.UserId
+			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 
-				-- SEND message when on time range
-				SELECT @MessageInsertAssignment = mt.MsgTemplateContent
-					,@MessageInsertAssignmentId = mt.MsgTemplateId
-				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-				WHERE mt.MsgTemplateCode = 'AssignmentInsert'
+			MERGE dbo.[Message] AS ms
+			USING (
+				SELECT m.UserId
+					,m.MessageContent
+					,m.MessageTypeId
+				FROM #tblMessage AS m
+				WHERE (
+						m.MinorBettypeId IS NULL
+						AND m.EventDateTime >= @FromTimeSendMessage
+						AND m.EventDateTime <= @ToTimeSendMessage
+						)
+					OR (
+						m.MinorBettypeId IS NOT NULL
+						AND 1 = (CASE 
+							WHEN EXISTS (
+									SELECT 1
+									FROM #tblCornerBookingBetTypes
+									WHERE MinorBettypeId = m.MinorBettypeId
+									) THEN CASE 
+									WHEN m.EventDateTime >= @FromTimeSendMessageSpecialBettype
+										AND m.EventDateTime <= @ToTimeSendMessageSpecialBettype THEN 1
+									ELSE 0
+									END
+							ELSE CASE 
+									WHEN m.EventDateTime >= @FromTimeSendMessage
+										AND m.EventDateTime <= @ToTimeSendMessage THEN 1
+									ELSE 0
+									END END
+							)
+						)
+				) AS msn ON 1 = 0
+			WHEN NOT MATCHED THEN
+					INSERT (
+						MessageContent
+						,CreatedBy
+						,IsImportant
+						,MessageType
+						)
+					VALUES (
+						msn.MessageContent
+						,@UserId
+						,1
+						,msn.MessageTypeId
+						)
+			OUTPUT inserted.MessageId
+				,msn.UserId
+				,@SessionId
+			INTO dbo.MessageUser(MessageId, UserId, SessionId);
+		END
+		ELSE
+		BEGIN
+			-- Update status of minor match
+			UPDATE info WITH (ROWLOCK, UPDLOCK)
+			SET info.MatchStatus = @MatchStatus
+			OUTPUT deleted.OWPMatchId
+				,deleted.MatchStatus
+			INTO #tblOldMatchInfo
+			FROM dbo.MatchInfo AS info
+				INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON info.OWPMatchId = minor.MinorMatchId
+			WHERE minor.ParentMatchId = @OWPMatchId
 
-				SELECT @MessageInsertOtherAssignment = mt.MsgTemplateContent
-					,@MessageInsertOtherAssignmentId = mt.MsgTemplateId
-				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-				WHERE mt.MsgTemplateCode = 'OtherAssignmentInsert'
+			-- Logging
+			SET @Xml = (
+			SELECT OWPMatchId AS '@mt'
+				,MatchStatus AS '@ms'
+			FROM #tblOldMatchInfo WITH (NOLOCK)
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+			 
+			SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
-				INSERT INTO #tblMessage (
-					UserId
-					,MessageContent
-					,MessageTypeId
-					,MinorBettypeId
-					,EventDateTime
+			SELECT @MessageMatchStatus = mt.MsgTemplateContent
+				,@MessageMatchStatusId = mt.MsgTemplateId
+			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+			WHERE mt.MsgTemplateCode = 'MatchStatus'
+
+			SELECT @MessageMinorMatchStatus = mt.MsgTemplateContent
+				,@MessageMinorMatchStatusId = mt.MsgTemplateId
+			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+			WHERE mt.MsgTemplateCode = 'MinorMatchStatus'
+
+			-- get all assignee in match (include main + minor)
+			INSERT INTO #tblAllAssigneeOfMatch (UserId)
+			SELECT a.UserId
+			FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
+
+			-- get list users received ASSIGNEE message update Match Info
+			INSERT INTO @UserReceivedAssigneeMessageMatchInfo (Id)
+			SELECT a.UserId
+			FROM #tblAllAssigneeOfMatch AS a
+				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeMatchInfoUpdatedId
+				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+				AND nsm.UserId = a.UserId
+			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+
+			-- get all SectionMemberOfUserReceivedWatcher
+			INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
+				MemberId
+				,UserReceivedWatcherId
+				)
+			SELECT ISNULL(mem.UserId, r.UserId)
+				,r.UserId
+			FROM (
+				SELECT w.UserId
+					,u.SectionId
+				FROM dbo.fnc_GetWatcherToSendMessage(@NotifyWatcherMatchInfoUpdatedId) AS w
+					LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
+				) AS r
+				LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId
+				AND mem.SectionId IS NOT NULL
+
+			-- get list users received Watcher message update Recommend Odds
+			INSERT INTO @UserReceivedWatcherMessageMatchInfo (Id)
+			SELECT DISTINCT sm.UserReceivedWatcherId
+			FROM #tblAllAssigneeOfMatch AS a
+				INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
+			WHERE NOT EXISTS (
+					-- ignore user received Assignee message
+					SELECT 1
+					FROM @UserReceivedAssigneeMessageMatchInfo AS ur
+					WHERE ur.Id = sm.UserReceivedWatcherId
 					)
-				SELECT asm.UserId
-					,REPLACE(
+					
+			-- Get message content
+			INSERT INTO #tbChangeMatchStatusMessage (
+				OWPMatchId
+				,MinorBettypeId
+				,MessageContent
+				,MessageTypeId
+				)
+			SELECT asm.OWPMatchId
+				,asm.MinorBettypeId
+				,REPLACE(
+					REPLACE(
 						REPLACE(
 							REPLACE(
 								REPLACE(
 									REPLACE(CASE 
-										WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignment
-										ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(asm.AssignmentNote, '#<user>', ''))))
-										END
+											WHEN asm.MinorBettypeId IS NULL THEN @MessageMatchStatus
+											ELSE @MessageMinorMatchStatus
+											END
 									,'<Event>', @MatchName)
-								,'<League>', @LeagueName)
-							,'<Match.No>', @MatchNo)
-						,'<Bettype>', asm.BettypeName)
-					,'<User>', @Username)
-					,CASE 
-						WHEN asm.AssignmentNote IS NULL THEN @MessageInsertAssignmentId
-						ELSE @MessageInsertOtherAssignmentId
-						END
-					,asm.MinorBettypeId
-					,@EventDateTime
-				FROM (
-					SELECT a.UserId
-						,mibt.MinorBettypeName AS BettypeName
-						,a.AssignmentNote
-						,minor.MinorBettypeId
-					FROM dbo.Assignment AS a WITH (NOLOCK)
-						INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
-						INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON minor.MinorBettypeId = mibt.ParentBettypeId
-						AND a.Bettype = mibt.InheritedBettypeId
-					WHERE minor.ParentMatchId = @OWPMatchId
-						AND minor.MinorBettypeId IN (@Specific10Mins, @Specific15Mins, @FastMarket, @AllInOne)
-					
-					UNION
-					SELECT a.UserId
-						,bt.ShortName AS BettypeName
-						,a.AssignmentNote
-						,NULL AS MinorBettypeId
-					FROM dbo.Assignment AS a WITH (NOLOCK)
-						INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
-						INNER JOIN dbo.MajorBettype AS bt WITH (NOLOCK) ON a.Bettype = bt.BettypeId
-					WHERE m.OWPMatchId = @OWPMatchId
-					) AS asm
-					LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyMyAssignmentUpdatedId
-					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-					AND nsm.UserId = asm.UserId
-				WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-
-				MERGE dbo.[Message] AS ms
-				USING (
-					SELECT m.UserId
-						,m.MessageContent
-						,m.MessageTypeId
-					FROM #tblMessage AS m
-					WHERE (
-							m.MinorBettypeId IS NULL
-							AND m.EventDateTime >= @FromTimeSendMessage
-							AND m.EventDateTime <= @ToTimeSendMessage
-							)
-						OR (
-							m.MinorBettypeId IS NOT NULL
-							AND 1 = (CASE 
-								WHEN EXISTS (
-										SELECT 1
-										FROM #tblCornerBookingBetTypes
-										WHERE MinorBettypeId = m.MinorBettypeId
-										) THEN CASE 
-										WHEN m.EventDateTime >= @FromTimeSendMessageSpecialBettype
-											AND m.EventDateTime <= @ToTimeSendMessageSpecialBettype THEN 1
-										ELSE 0
-										END
-								ELSE CASE 
-										WHEN m.EventDateTime >= @FromTimeSendMessage
-											AND m.EventDateTime <= @ToTimeSendMessage THEN 1
-										ELSE 0
-										END END
-								)
-							)
-					) AS msn ON 1 = 0
-				WHEN NOT MATCHED THEN
-						INSERT (
-							MessageContent
-							,CreatedBy
-							,IsImportant
-							,MessageType
-							)
-						VALUES (
-							msn.MessageContent
-							,@UserId
-							,1
-							,msn.MessageTypeId
-							)
-				OUTPUT inserted.MessageId
-					,msn.UserId
-					,@SessionId
-				INTO dbo.MessageUser(MessageId, UserId, SessionId);
-			END
-			ELSE
-			BEGIN
-				-- Update status of minor match
-				UPDATE info WITH (ROWLOCK, UPDLOCK)
-				SET info.MatchStatus = @MatchStatus
-				OUTPUT deleted.OWPMatchId
-					,deleted.MatchStatus
-				INTO #tblOldMatchInfo
-				FROM dbo.MatchInfo AS info
-					INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON info.OWPMatchId = minor.MinorMatchId
+								,'<Match.No>', @MatchNo)
+							,'<League>', @LeagueName)
+						,'<Bettype>', ISNULL(asm.BettypeName, ''))
+					,'<Status>', info.MatchStatus)
+				,'<User>', @Username)
+				,(CASE 
+					WHEN asm.MinorBettypeId IS NULL THEN @MessageMatchStatusId
+					ELSE @MessageMinorMatchStatusId END
+					)
+			FROM (
+				SELECT DISTINCT minor.MinorMatchId AS OWPMatchId --Minor match
+					,mibt.MinorBettypeName AS BettypeName
+					,minor.MinorBettypeId
+					,@EventDateTime AS EventDateTime
+				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
+					INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON minor.MinorBettypeId = mibt.MinorBettypeId
 				WHERE minor.ParentMatchId = @OWPMatchId
-
-				SELECT @MessageMatchStatus = mt.MsgTemplateContent
-					,@MessageMatchStatusId = mt.MsgTemplateId
-				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-				WHERE mt.MsgTemplateCode = 'MatchStatus'
-
-				SELECT @MessageMinorMatchStatus = mt.MsgTemplateContent
-					,@MessageMinorMatchStatusId = mt.MsgTemplateId
-				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-				WHERE mt.MsgTemplateCode = 'MinorMatchStatus'
-
-				-- get all assignee in match (include main + minor)
-				INSERT INTO #tblAllAssigneeOfMatch (UserId)
-				SELECT a.UserId
-				FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
-
-				-- get list users received ASSIGNEE message update Match Info
-				INSERT INTO @UserReceivedAssigneeMessageMatchInfo (Id)
-				SELECT a.UserId
-				FROM #tblAllAssigneeOfMatch AS a
-					LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeMatchInfoUpdatedId
-					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-					AND nsm.UserId = a.UserId
-				WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-
-				-- get all SectionMemberOfUserReceivedWatcher
-				INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
-					MemberId
-					,UserReceivedWatcherId
+					AND minor.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
+				
+				UNION
+				SELECT DISTINCT pmm.MinorMatchId AS OWPMatchId --Minor match @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking
+					,mibt.MinorBettypeName AS BettypeName
+					,pmm.MinorBettypeId
+					,@EventDateTime AS EventDateTime
+				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
+					LEFT JOIN dbo.MinorMatch AS pmm WITH (NOLOCK) ON pmm.ParentMatchId = @OWPMatchId
+					AND pmm.MinorBettypeId = (CASE 
+						WHEN minor.MinorBettypeId = @Specific15MinsNoOfCorners THEN @NoOfCorners
+						ELSE @TotalBooking END
+						)
+					INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON mibt.MinorBettypeId = pmm.MinorBettypeId
+				WHERE minor.ParentMatchId = @OWPMatchId
+					AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
+				
+				UNION -- Parent match
+				SELECT @OWPMatchId
+					,NULL AS BettypeName
+					,NULL AS MinorBettypeId
+					,@EventDateTime AS EventDateTime
+				) AS asm
+				INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON asm.OWPMatchId = info.OWPMatchId
+				LEFT JOIN #tblOldMatchInfo AS oldinfo ON asm.OWPMatchId = oldinfo.OWPMatchId
+			WHERE info.MatchStatus <> oldinfo.MatchStatus -- NOTE: (to send message to match has diff status)
+				AND (
+					(
+						asm.MinorBettypeId IS NULL
+						AND asm.EventDateTime >= @FromTimeSendMessage
+						AND asm.EventDateTime <= @ToTimeSendMessage
+						)
+					OR (
+						asm.MinorBettypeId IS NOT NULL
+						AND 1 = (CASE 
+							WHEN EXISTS (
+									SELECT 1
+									FROM #tblCornerBookingBetTypes
+									WHERE MinorBettypeId = asm.MinorBettypeId
+									) THEN CASE 
+									WHEN asm.EventDateTime >= @FromTimeSendMessageSpecialBettype
+										AND asm.EventDateTime <= @ToTimeSendMessageSpecialBettype THEN 1
+									ELSE 0
+									END
+							ELSE CASE 
+									WHEN asm.EventDateTime >= @FromTimeSendMessage
+										AND asm.EventDateTime <= @ToTimeSendMessage THEN 1
+									ELSE 0
+									END END
+							)
+						)
 					)
-				SELECT ISNULL(mem.UserId, r.UserId)
-					,r.UserId
-				FROM (
-					SELECT w.UserId
-						,u.SectionId
-					FROM dbo.fnc_GetWatcherToSendMessage(@NotifyWatcherMatchInfoUpdatedId) AS w
-						LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
-					) AS r
-					LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId
-					AND mem.SectionId IS NOT NULL
 
-				-- get list users received Watcher message update Recommend Odds
-				INSERT INTO @UserReceivedWatcherMessageMatchInfo (Id)
-				SELECT DISTINCT sm.UserReceivedWatcherId
-				FROM #tblAllAssigneeOfMatch AS a
-					INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
-				WHERE NOT EXISTS (
-						-- ignore user received Assignee message
-						SELECT 1
-						FROM @UserReceivedAssigneeMessageMatchInfo AS ur
-						WHERE ur.Id = sm.UserReceivedWatcherId
-						)
-						
-				-- Get message content
-				INSERT INTO #tbChangeMatchStatusMessage (
-					OWPMatchId
-					,MinorBettypeId
-					,MessageContent
-					,MessageTypeId
-					)
-				SELECT asm.OWPMatchId
-					,asm.MinorBettypeId
-					,REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(
-										REPLACE(CASE 
-												WHEN asm.MinorBettypeId IS NULL THEN @MessageMatchStatus
-												ELSE @MessageMinorMatchStatus
-												END
-										,'<Event>', @MatchName)
-									,'<Match.No>', @MatchNo)
-								,'<League>', @LeagueName)
-							,'<Bettype>', ISNULL(asm.BettypeName, ''))
-						,'<Status>', info.MatchStatus)
-					,'<User>', @Username)
-					,(CASE 
-						WHEN asm.MinorBettypeId IS NULL THEN @MessageMatchStatusId
-						ELSE @MessageMinorMatchStatusId END
-						)
-				FROM (
-					SELECT DISTINCT minor.MinorMatchId AS OWPMatchId --Minor match
-						,mibt.MinorBettypeName AS BettypeName
-						,minor.MinorBettypeId
-						,@EventDateTime AS EventDateTime
-					FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-						INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON minor.MinorBettypeId = mibt.MinorBettypeId
-					WHERE minor.ParentMatchId = @OWPMatchId
-						AND minor.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
-					
-					UNION
-					SELECT DISTINCT pmm.MinorMatchId AS OWPMatchId --Minor match @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking
-						,mibt.MinorBettypeName AS BettypeName
-						,pmm.MinorBettypeId
-						,@EventDateTime AS EventDateTime
-					FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-						LEFT JOIN dbo.MinorMatch AS pmm WITH (NOLOCK) ON pmm.ParentMatchId = @OWPMatchId
-						AND pmm.MinorBettypeId = (CASE 
-							WHEN minor.MinorBettypeId = @Specific15MinsNoOfCorners THEN @NoOfCorners
-							ELSE @TotalBooking END
-							)
-						INNER JOIN dbo.MinorBettype AS mibt WITH (NOLOCK) ON mibt.MinorBettypeId = pmm.MinorBettypeId
-					WHERE minor.ParentMatchId = @OWPMatchId
-						AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
-					
-					UNION -- Parent match
-					SELECT @OWPMatchId
-						,NULL AS BettypeName
-						,NULL AS MinorBettypeId
-						,@EventDateTime AS EventDateTime
-					) AS asm
-					INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON asm.OWPMatchId = info.OWPMatchId
-					LEFT JOIN #tblOldMatchInfo AS oldinfo ON asm.OWPMatchId = oldinfo.OWPMatchId
-				WHERE info.MatchStatus <> oldinfo.MatchStatus -- NOTE: (to send message to match has diff status)
-					AND (
-						(
-							asm.MinorBettypeId IS NULL
-							AND asm.EventDateTime >= @FromTimeSendMessage
-							AND asm.EventDateTime <= @ToTimeSendMessage
-							)
-						OR (
-							asm.MinorBettypeId IS NOT NULL
-							AND 1 = (CASE 
-								WHEN EXISTS (
-										SELECT 1
-										FROM #tblCornerBookingBetTypes
-										WHERE MinorBettypeId = asm.MinorBettypeId
-										) THEN CASE 
-										WHEN asm.EventDateTime >= @FromTimeSendMessageSpecialBettype
-											AND asm.EventDateTime <= @ToTimeSendMessageSpecialBettype THEN 1
-										ELSE 0
-										END
-								ELSE CASE 
-										WHEN asm.EventDateTime >= @FromTimeSendMessage
-											AND asm.EventDateTime <= @ToTimeSendMessage THEN 1
-										ELSE 0
-										END END
-								)
-							)
-						)
+			DECLARE @TotalMessage INT
+				,@LoopId INT = 1
+				,@MessageContent NVARCHAR(2000)
+				,@MessageTypeId INT
 
-				DECLARE @TotalMessage INT
-					,@LoopId INT = 1
-					,@MessageContent NVARCHAR(2000)
-					,@MessageTypeId INT
+			SELECT @TotalMessage = COUNT(1)
+			FROM #tbChangeMatchStatusMessage
 
-				SELECT @TotalMessage = COUNT(1)
+			WHILE @LoopId <= @TotalMessage
+			BEGIN
+				SELECT @MessageTypeId = MessageTypeId
+					,@MessageContent = MessageContent
 				FROM #tbChangeMatchStatusMessage
+				WHERE Id = @LoopId
 
-				WHILE @LoopId <= @TotalMessage
-				BEGIN
-					SELECT @MessageTypeId = MessageTypeId
-						,@MessageContent = MessageContent
-					FROM #tbChangeMatchStatusMessage
-					WHERE Id = @LoopId
+				EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+					,@MessageContent = @MessageContent
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
+					,@IsImportant = 1
+					,@IsWatcher = 0
+					,@SessionId = @SessionId
+					,@ErrCode = @ErrCode OUTPUT
+					,@ErrMsg = @ErrMsg OUTPUT
 
-					EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
-						,@MessageContent = @MessageContent
-						,@MessageType = @MessageTypeId
-						,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
-						,@IsImportant = 1
-						,@IsWatcher = 0
-						,@SessionId = @SessionId
-						,@ErrCode = @ErrCode OUTPUT
-						,@ErrMsg = @ErrMsg OUTPUT
+				EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
+					,@MessageContent = @MessageContent
+					,@MessageType = @MessageTypeId
+					,@MessageTo = @UserReceivedWatcherMessageMatchInfo
+					,@IsImportant = 0
+					,@IsWatcher = 1
+					,@SessionId = @SessionId
+					,@ErrCode = @ErrCode OUTPUT
+					,@ErrMsg = @ErrMsg OUTPUT
 
-					EXECUTE dbo.OWP_MessageInsert @UserId = @UserId
-						,@MessageContent = @MessageContent
-						,@MessageType = @MessageTypeId
-						,@MessageTo = @UserReceivedWatcherMessageMatchInfo
-						,@IsImportant = 0
-						,@IsWatcher = 1
-						,@SessionId = @SessionId
-						,@ErrCode = @ErrCode OUTPUT
-						,@ErrMsg = @ErrMsg OUTPUT
-
-					SET @LoopId = @LoopId + 1
-				END
+				SET @LoopId = @LoopId + 1
 			END
 		END
-	END TRY
+	END
 
-	BEGIN CATCH
-		SELECT @ErrMsg = 'Update Match Status failed!'
-			,@ErrCode = 1
+	-- For write log  
+	SET @Xml = (
+			SELECT info.OWPMatchId AS '@mt'
+				,info.MatchStatus AS '@ms'
+			FROM dbo.MatchInfo AS info WITH (NOLOCK)
+				INNER JOIN #tblOldMatchInfo AS mid WITH (NOLOCK) ON info.OWPMatchId = mid.OWPMatchId
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-		RETURN
-	END CATCH
+	EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+		,@SPName = 'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
+		,@LoggedDate = @StartRun
+		,@Duration = @Duration
+		,@ObjectId = @UserId
+		,@Data = @LogData
+		,@DataOld = @LogDataOld
 
 	DROP TABLE #tblMessage
 

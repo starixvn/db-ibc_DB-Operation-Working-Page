@@ -1,6 +1,6 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_MatchNote_GetByMatchId] 
-	@OWPMatchId INT
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_MatchNote_GetByMatchId] @OWPMatchId INT
 AS
 /*
 Created: 20180810@Leo
@@ -10,17 +10,20 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
+	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	SELECT   mn.MatchNoteId
-			,u.Username
-			,u.Nickname
-			,mn.Note
+	DECLARE @TimeZoneGMT8 INT = 8;
+
+	SELECT mn.MatchNoteId
+		,u.Username
+		,u.Nickname
+		,mn.Note
+		,DATEADD(HH, @TimeZoneGMT8, (DATEADD(hh, DATEDIFF(hh, GETDATE(), GETUTCDATE()), mn.CreatedDate))) AS LastUpdated
 	FROM dbo.MatchNote mn WITH (NOLOCK)
-	INNER JOIN dbo.[User] AS u WITH (NOLOCK)
-	ON mn.CreatedBy = u.UserId
+	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON mn.CreatedBy = u.UserId
 	WHERE mn.OWPMatchId = @OWPMatchId
 	ORDER BY [CreatedDate] DESC
 END

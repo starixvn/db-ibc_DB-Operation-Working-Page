@@ -8,11 +8,13 @@ AS
 
 Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
+	20190814@Tyler.Dang: Specify Live status (In-play, Completed or Live) - [Redmine: #118563]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @MatchStatus NVARCHAR(15)
+		,@MatchLiveStatus NVARCHAR(15)
 		-- Match Status
 		,@str_Live NVARCHAR(15) = 'Live'
 		,@str_Inplay NVARCHAR(15) = 'In-play'
@@ -28,14 +30,19 @@ BEGIN
 		IsSelected BIT
 	)
 
-	SELECT @MatchStatus = [dbo].[OWP_GetCurrentMatchStatus] (om.EventDate, om.KickOffTime, mi.MatchStatus)
+	SELECT @MatchStatus = mi.MatchStatus
+	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
+	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = @OWPMatchId
+	WHERE mi.OWPMatchId = @OWPMatchId
+
+	SELECT @MatchLiveStatus = [dbo].[fnc_GetCurrentMatchLiveStatus] (om.EventDate, om.KickOffTime)
 	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = @OWPMatchId
 	WHERE mi.OWPMatchId = @OWPMatchId
 
 	INSERT INTO #tblMatchStatusList (DisplayText, Value, IsSelected) 
-	VALUES 	(@str_Inplay, '', 0),
-			(@str_Completed, '', 0),
+	VALUES 	(@str_Inplay, @str_Inplay, 0),
+			(@str_Completed, @str_Completed, 0),
 			(@str_Live, @str_Live, 0),
 			(@str_Cancel, @str_Cancel, 0),
 			(@str_Postponed, @str_Postponed, 0),
@@ -46,26 +53,41 @@ BEGIN
 	SET IsSelected = 1
 	WHERE DisplayText = @MatchStatus
 		
-	IF (@MatchStatus IN (@str_Live, @str_Cancel, @str_Postponed, @str_Suspended))
+	IF (@MatchStatus IN (@str_Cancel, @str_Postponed, @str_Suspended))
 	BEGIN
+		UPDATE #tblMatchStatusList
+		SET IsDisplay = 1
+		WHERE DisplayText IN (@MatchLiveStatus, @str_Cancel, @str_Postponed, @str_Suspended)
+	END
+	ELSE IF (@MatchLiveStatus = @str_Inplay)
+	BEGIN
+		UPDATE #tblMatchStatusList
+		SET IsSelected = 1
+		WHERE DisplayText = @MatchLiveStatus
+		UPDATE #tblMatchStatusList
+		SET IsDisplay = 1
+		WHERE DisplayText IN (@str_Inplay, @str_Cancel, @str_Postponed, @str_Suspended)
+	END
+	ELSE IF (@MatchLiveStatus = @str_Completed)
+	BEGIN
+		UPDATE #tblMatchStatusList
+		SET IsSelected = 1
+		WHERE DisplayText = @MatchLiveStatus
+		UPDATE #tblMatchStatusList
+		SET IsDisplay = 1
+		WHERE DisplayText IN (@str_Completed, @str_Cancel, @str_Postponed, @str_Suspended)
+	END
+	ELSE IF (@MatchLiveStatus = @str_Live)
+	BEGIN
+		UPDATE #tblMatchStatusList
+		SET IsSelected = 1
+		WHERE DisplayText = @MatchLiveStatus
 		UPDATE #tblMatchStatusList
 		SET IsDisplay = 1
 		WHERE DisplayText IN (@str_Live, @str_Cancel, @str_Postponed, @str_Suspended)
 	END
-	ELSE IF (@MatchStatus = @str_Inplay)
-	BEGIN
-		UPDATE #tblMatchStatusList
-		SET IsDisplay = 1
-		WHERE DisplayText IN (@str_Inplay, @str_Live, @str_Cancel, @str_Postponed, @str_Suspended)
-	END
-	ELSE IF (@MatchStatus = @str_Completed)
-	BEGIN
-		UPDATE #tblMatchStatusList
-		SET IsDisplay = 1
-		WHERE DisplayText IN (@str_Completed, @str_Live, @str_Cancel, @str_Postponed, @str_Suspended)
-	END
 
-	SELECT ms.Value
+	SELECT ms.[Value]
 		,ms.DisplayText
 		,ms.IsSelected
 	FROM #tblMatchStatusList AS ms WITH (NOLOCK)

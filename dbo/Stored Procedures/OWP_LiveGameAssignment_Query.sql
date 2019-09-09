@@ -15,6 +15,7 @@ AS
 	20190716@Kane.Le: Filter with MinorBetType - [Feature: #116791]
 	20190806@Kane.Le: Filter with MatchStatus - [Feature: #117227]
 	20190807@Kane.Le: Return Website1 - [Feature: #117227]
+	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -365,12 +366,14 @@ BEGIN
 		,ml.MinorBettypeId
 		,ml.ParentMatchId
 		,ml.InfoSiteMatchId
+		,(CASE WHEN ml.InfoSiteMatchId IS NULL THEN NULL ELSE CASE WHEN im.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END END) AS IsInfoSiteLinked
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
 	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
-	LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
+	LEFT JOIN #tblNoOfHDPResource as ref ON ml.NoOfHDPId = ref.Id
+	LEFT JOIN dbo.InfoSiteMatch as im WITH (NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
 	WHERE ml.OWPMatchId IN (
 			SELECT OWPMatchId
 			FROM #tblOWPMatchFilter
@@ -462,11 +465,13 @@ BEGIN
 			)
 
 	-- Return notes
+	DECLARE @TimeZoneGMT8 INT = 8;
 	SELECT mn.OWPMatchId
 		,mn.MatchNoteId
 		,mn.Note
 		,mn.CreatedBy AS UserId
 		,u.Username
+		,DATEADD(HH, @TimeZoneGMT8, (DATEADD(hh, DATEDIFF(hh, GETDATE(), GETUTCDATE()), mn.CreatedDate))) AS LastUpdated
 	FROM dbo.MatchNote AS mn WITH (NOLOCK)
 	INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON mn.OWPMatchId = ml.OWPMatchId
 	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON mn.CreatedBy = u.UserId

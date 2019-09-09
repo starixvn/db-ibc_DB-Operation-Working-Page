@@ -10,6 +10,7 @@ Revisions:
 	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Get Column NoOfHDPId - [Redmine: #107257]
+	20190813@Tyler.Dang: Add more info to edit Event - [Redmine: #118562]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -28,12 +29,23 @@ BEGIN
 		,mi.NoOfHDPId
 		,mi.[Round]
 		,mi.IsSoloMatch
-		,mi.[Round]
 		,mi.Division
 		,mi.Venue
-		,(om.EventDate + om.OtherTime) AS OtherTime
+		,om.OtherTime
 		,r.Value AS LeagueCategoryName
+		,om.InfoSiteMatchId
+		,mi.MatchStatus
+		,mi.Website1
+		,mi.Website2
+		,mi.Website3
+		,mi.Website4
+		,minor.MinorBettypeId
+		,minor.ParentMatchId
+		,main.MatchStatus AS ParentMatchStatus
+		,@OWPMatchId AS OWPMatchId
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
+		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON minor.MinorMatchId = om.OWPMatchId
+		LEFT JOIN dbo.MatchInfo AS main WITH (NOLOCK) ON main.OWPMatchId = minor.ParentMatchId
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = om.OWPMatchId
 		LEFT JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON l.OWPLeagueId = om.OWPLeagueId
 		LEFT JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId

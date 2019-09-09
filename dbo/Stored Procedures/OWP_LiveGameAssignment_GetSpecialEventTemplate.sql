@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_GetSpecialEventTemplate] @ParentMatchId INT
-	,@MinorBettypeId INT
+	,@MinorBettypeId INT = NULL
 AS
 /*
 Created: 20191724@Leo
@@ -10,6 +10,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190724@Leo: Initial SP - [Feature: #117227]
+	20190905@Kane.Le: Allow @MinorBettypeId NULL - [Feature: #117960]
 */
 BEGIN
 	DECLARE @HomeSingleTeamOU INT = - 92
@@ -26,20 +27,39 @@ BEGIN
 		,@HomeName = h.OWPTeamName
 		,@AwayName = a.OWPTeamName
 	FROM dbo.OWPMatch AS m WITH (NOLOCK)
-		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
 	WHERE OWPMatchId = @ParentMatchId
 
 	SELECT REPLACE(ts.League, '<name>', @LeagueName) AS LeagueName
 		,CASE 
-			WHEN @MinorBettypeId IN (@AwaySingleTeamOU, @AwaySingleTeamOUOfCorners, @AwayPenShootOut) THEN REPLACE(ts.Home, '<name>', @AwayName)
+			WHEN @MinorBettypeId IN (
+					@AwaySingleTeamOU
+					,@AwaySingleTeamOUOfCorners
+					,@AwayPenShootOut
+					)
+				THEN REPLACE(ts.Home, '<name>', @AwayName)
 			ELSE REPLACE(ts.Home, '<name>', @HomeName)
 			END AS HomeName
 		,CASE 
-			WHEN @MinorBettypeId IN (@HomeSingleTeamOU, @HomeSingleTeamOUOfCorners, @HomePenShootOut) THEN REPLACE(ts.Away, '<name>', @HomeName)
+			WHEN @MinorBettypeId IN (
+					@HomeSingleTeamOU
+					,@HomeSingleTeamOUOfCorners
+					,@HomePenShootOut
+					)
+				THEN REPLACE(ts.Away, '<name>', @HomeName)
 			ELSE REPLACE(ts.Away, '<name>', @AwayName)
 			END AS AwayName
-	FROM dbo.MinorMatchTemplateSetting AS ts WITH (NOLOCK)
-	WHERE ts.MinorBettypeId = @MinorBettypeId
+	FROM (
+		SELECT ts.League, ts.Home, ts.Away
+		FROM dbo.MinorMatchTemplateSetting AS ts WITH (NOLOCK)
+		WHERE @MinorBettypeId IS NULL
+		
+		UNION ALL
+		
+		SELECT ts.League, ts.Home, ts.Away
+		FROM dbo.MinorMatchTemplateSetting AS ts WITH (NOLOCK)
+		WHERE ts.MinorBettypeId = @MinorBettypeId
+		) AS ts
 END

@@ -18,6 +18,7 @@ AS
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 	20190506@Leo.Vo: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190705@Carlos.Nguyen: Sync info site - [Redmine: #116479]
+	20190816@Leo.Vo: Update message content - [Feature: #117960]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -514,11 +515,13 @@ BEGIN
 			REPLACE(
 				REPLACE(
 					REPLACE(
-						@EditTeamMessageTemplate,
-						'<Match.No>',
-						CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END),
-					'<League>',le.OWPLeagueName),
-				'<Event>',nh.OWPTeamName + ' -vs- ' + na.OWPTeamName),
+						REPLACE(
+							@EditTeamMessageTemplate,
+							'<Match.No>',
+							CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END),
+						'<League>',le.OWPLeagueName),
+					'<Event>',nh.OWPTeamName + ' -vs- ' + na.OWPTeamName),
+				'<User>', 'InfoSite'),
 			'<Old>',oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName)AS MessageContent
 		,@EditTeamMessageTemplateId
 		,1
