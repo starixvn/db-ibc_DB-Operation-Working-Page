@@ -16,6 +16,7 @@ AS
 	20190806@Kane.Le: Filter with MatchStatus - [Feature: #117227]
 	20190807@Kane.Le: Return Website1 - [Feature: #117227]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
+	20190910@Leo.Vo: Include EventDateTime - [Feature: #119650]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -85,6 +86,7 @@ BEGIN
 		OWPMatchId INT
 		,MatchNo NVARCHAR(50)
 		,EventDate DATE
+		,EventDateTime DATETIME
 		,KickOffTime TIME(7)
 		,OtherTime TIME(7)
 		,OWPLeagueId INT
@@ -114,6 +116,7 @@ BEGIN
 		OWPMatchId
 		,MatchNo
 		,EventDate
+		,EventDateTime
 		,KickOffTime
 		,OtherTime
 		,OWPLeagueId
@@ -141,6 +144,7 @@ BEGIN
 	SELECT om.OWPMatchId
 		,om.MatchNo
 		,om.EventDate
+		,om.EventDateTime
 		,om.KickOffTime
 		,om.OtherTime
 		,om.OWPLeagueId
@@ -309,6 +313,7 @@ BEGIN
 	-- Return Matches info
 	SELECT ml.OWPMatchId
 		,ml.MatchNo
+		,ml.EventDateTime
 		,ml.KickOffTime
 		,ml.OtherTime
 		,l.OWPLeagueName AS League
