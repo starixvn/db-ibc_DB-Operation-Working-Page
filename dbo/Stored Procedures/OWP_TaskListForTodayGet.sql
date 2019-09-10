@@ -22,6 +22,7 @@ AS
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
+	20190910@Leo.Vo: Fix issue Fatal error 605 - [Feature: #119987]
 
 */
 BEGIN
@@ -51,7 +52,8 @@ BEGIN
 		,@CurrentDateTime DATETIME = DATEADD(HOUR, 12, GETDATE())
 
 	CREATE TABLE #tblMatchSetting (
-		OWPMatchId INT
+		Id INT IDENTITY(1,1) PRIMARY KEY CLUSTERED
+		,OWPMatchId INT
 		,LeagueId INT
 		,BettypeId INT
 		,MinorBettypeId INT
@@ -64,7 +66,8 @@ BEGIN
 		)
 
 	CREATE TABLE #tblParentMatchSetting (
-		OWPMatchId INT
+		Id INT IDENTITY(1,1) PRIMARY KEY CLUSTERED
+		,OWPMatchId INT
 		,LeagueId INT
 		,BettypeId INT
 		,Maxbet MONEY
@@ -73,7 +76,8 @@ BEGIN
 		)
 
 	CREATE TABLE #tblTodayMatch (
-		OWPMatchId INT
+		Id INT IDENTITY(1,1) PRIMARY KEY CLUSTERED
+		,OWPMatchId INT
 		,ParentMatchId INT
 		,MinorBettypeId INT
 		,IsMinorMatch BIT
