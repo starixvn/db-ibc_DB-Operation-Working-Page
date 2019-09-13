@@ -17,5 +17,5 @@ BEGIN
 		,AgentName
 	FROM dbo.Agent WITH (NOLOCK)
 	WHERE CHARINDEX(@Keyword, AgentName) > 0
-	ORDER BY CHARINDEX(@Keyword, AgentName)
+	ORDER BY CHARINDEX(@Keyword, AgentName), AgentName
 END

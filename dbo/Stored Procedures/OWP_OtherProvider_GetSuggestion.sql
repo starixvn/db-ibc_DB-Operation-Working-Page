@@ -17,5 +17,5 @@ BEGIN
 		,OtherProviderName
 	FROM dbo.[OtherProvider] WITH (NOLOCK)
 	WHERE CHARINDEX(@Keyword, OtherProviderName) > 0
-	ORDER BY CHARINDEX(@Keyword, OtherProviderName)
+	ORDER BY CHARINDEX(@Keyword, OtherProviderName), OtherProviderName
 END

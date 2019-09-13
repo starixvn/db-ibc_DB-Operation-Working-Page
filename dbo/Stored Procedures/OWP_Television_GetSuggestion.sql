@@ -18,5 +18,5 @@ BEGIN
 		,Color
 	FROM dbo.Television WITH (NOLOCK)
 	WHERE CHARINDEX(@Keyword, TVCode) > 0
-	ORDER BY CHARINDEX(@Keyword, TVCode)
+	ORDER BY CHARINDEX(@Keyword, TVCode), TVCode
 END
