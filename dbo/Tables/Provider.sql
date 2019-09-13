@@ -7,8 +7,8 @@
 
 
 
+
+
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [IX_Provider_ProviderName]
-    ON [dbo].[Provider]([ProviderName] ASC)
-    ON [OWP_Index];
+
 
