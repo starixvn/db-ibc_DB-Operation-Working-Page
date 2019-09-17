@@ -11,13 +11,14 @@ Revisions:
 	20181221@Raymond.Le: Initial SP - [Redmine: #106196]
 	20190306@Leo.Vo: Change condition - [Redmine: #109560]
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
+	20190917@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @LASection INT
 		,@FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '12:00:00')
 		,@NullLevelId INT
 	
 	SELECT @NullLevelId = MAX(ResourceId) + 1
@@ -60,10 +61,7 @@ BEGIN
 			WHEN ws.ShiftStartTime < @FromDate THEN @FromDate
 			ELSE ws.ShiftStartTime END
 			) AS ShiftStartTime
-		,(CASE 
-			WHEN ws.ShiftEndTime > @ToDate THEN @ToDate
-			ELSE ws.ShiftEndTime END
-			) AS ShiftEndTime
+		,ws.ShiftEndTime
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
 		INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON ws.ShiftId = c.ShiftId
 		AND c.IsTimeShift = 1
