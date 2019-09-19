@@ -9,6 +9,7 @@ AS
  Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
+	20190918@Tyler.Dang: Add xMins bet types automatically when doing Event Upload - [Redmine: #120492]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -47,13 +48,11 @@ BEGIN
 	FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IS NULL
-		AND (a.Trader15Mins <> '' OR a.OtherTraders15Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '' OR a.MaxBetXMins_CN88 <> '' OR a.SpreadXMins_CN88 <> '')
 	UNION ALL
 	SELECT -2, 2, a.RowNumber, a.MaxBetXMins, a.SpreadXMins, a.MaxBetXMins_CN88, a.SpreadXMins_CN88, a.Trader10Mins, a.OtherTraders10Mins
 	FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IS NULL
-		AND (a.Trader10Mins <> '' OR a.OtherTraders10Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '' OR a.MaxBetXMins_CN88 <> '' OR a.SpreadXMins_CN88 <> '')
 	UNION ALL
 	SELECT -88, 3, a.RowNumber, a.MaxBetFM, a.SpreadFM, a.MaxBetFM_CN88, a.SpreadFM_CN88, a.TraderFM, a.OtherTradersFM
 	FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
@@ -160,8 +159,6 @@ BEGIN
 		AND t.IsActive = 1
 	WHERE a.SessionId = @SessionId
 		AND a.MinorBettypeId IN (-3, -6)
-		AND (a.Trader15Mins <> '' OR a.OtherTraders15Mins IS NOT NULL OR a.MaxBetXMins <> '' OR a.SpreadXMins <> '' OR a.MaxBetXMins_CN88 <> '' OR a.SpreadXMins_CN88 <> '')
-
 
 	-- drop tables
 	DROP TABLE #tblMinorBettypeForMainMatch
