@@ -20,6 +20,7 @@ DB: bodb_OWP
 
 Revisions:    
 	20190820@Kane.Le: init SP - [Redmine: #117960]
+	20190823@Carlos.Nguyen: Prevent send notification - [Redmine: #120415]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -154,11 +155,12 @@ BEGIN
 	WHERE OWPMatchId = @OWPMatchId
 
 	-- handle changes TVIds
-	DELETE
+	
+DELETE
 	FROM dbo.MatchTelevision WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
-
 	IF (ISNULL(@TVIds, '') != '')
+	
 	BEGIN
 		INSERT INTO dbo.MatchTelevision (
 			OWPMatchId
@@ -170,11 +172,12 @@ BEGIN
 	END
 
 	-- handle changes OtherProvider
-	DELETE
+	
+DELETE
 	FROM dbo.MatchOtherProvider WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
-
 	IF (ISNULL(@OtherProviderIds, '') != '')
+	
 	BEGIN
 		INSERT INTO dbo.MatchOtherProvider (
 			OWPMatchId
@@ -186,11 +189,12 @@ BEGIN
 	END
 
 	-- handle changes Provider
-	DELETE
+	
+DELETE
 	FROM dbo.MatchProvider WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
-
 	IF (ISNULL(@ProviderIds, '') != '')
+	
 	BEGIN
 		INSERT INTO dbo.MatchProvider (
 			OWPMatchId
@@ -202,11 +206,12 @@ BEGIN
 	END
 
 	-- handle changes MatchAgent
-	DELETE
+	
+DELETE
 	FROM dbo.MatchAgent WITH (ROWLOCK)
 	WHERE OWPMatchId = @OWPMatchId
-
 	IF (ISNULL(@AgentIds, '') != '')
+	
 	BEGIN
 		INSERT INTO dbo.MatchAgent (
 			OWPMatchId
@@ -217,8 +222,30 @@ BEGIN
 		FROM dbo.strSplit(ISNULL(@AgentIds, ''), ',')
 	END
 
+	DECLARE
+		@MinorBettype_FastMarket INT = - 88
+		,@MinorBettype_AllInOne INT = - 89
+		,@MinorBettype_Specific15Mins INT = - 1
+		,@MinorBettype_Specific10Mins INT = - 2
+		,@MinorBettype_Specific15MinsNoOfCorners INT = - 5
+		,@MinorBettype_Specific15MinsTotalBooking INT = - 8
+		,@MinorBettypeId INT = NULL
+	
+	SET @MinorBettypeId = (SELECT TOP 1 MinorBettypeId FROM MinorMatch WHERE MinorMatchId = @OWPMatchId)
+	
 	-- send message edit if in time range
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
+		AND (
+			@MinorBettypeId IS NULL
+			OR @MinorBettypeId NOT IN (
+				@MinorBettype_FastMarket
+				,@MinorBettype_AllInOne
+				,@MinorBettype_Specific15Mins
+				,@MinorBettype_Specific10Mins
+				,@MinorBettype_Specific15MinsNoOfCorners
+				,@MinorBettype_Specific15MinsTotalBooking
+				)
+			)
 	BEGIN
 		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
