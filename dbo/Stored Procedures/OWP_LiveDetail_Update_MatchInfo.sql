@@ -802,7 +802,13 @@ BEGIN
 		END
 	END
 
-	-- For write log  
+	-- For write log
+	DECLARE @LoggedNewMarketIds NVARCHAR(100)
+	-- Get MarketIds
+	SELECT @LoggedNewMarketIds = COALESCE(@LoggedNewMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
+	FROM dbo.MatchMarket WITH (NOLOCK)
+	WHERE OWPMatchId = @OWPMatchId
+
 	SET @Xml = (
 			SELECT info.Remark AS '@rm'
 				,info.IsSoloMatch AS '@sl'
@@ -815,8 +821,10 @@ BEGIN
 				,info.Website3 AS '@ws3'
 				,info.Website4 AS '@ws4'
 				,om.InfoSiteMatchId AS '@ifi'
+				,@LoggedNewMarketIds AS '@mk'
 			FROM dbo.MatchInfo AS info WITH (NOLOCK)
 			LEFT JOIN OWPMatch AS om WITH (NOLOCK) ON info.OWPMatchId = om.OWPMatchId
+			JOIN MatchMarket AS mm WITH (NOLOCK) ON info.OWPMatchId = mm.OWPMatchId
 			WHERE @OWPMatchId = info.OWPMatchId
 			FOR XML PATH('z')
 				,ROOT('r')

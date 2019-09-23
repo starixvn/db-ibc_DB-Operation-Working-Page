@@ -38,13 +38,6 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	/*
-	SELECT @EventDate = EventDate
-	FROM dbo.AssignmentUploading AS m WITH (NOLOCK)
-	WHERE m.SessionId = @SessionId;
-
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
-	*/
 	-- upload
 	IF LEN(@SessionId) > 0
 	BEGIN
@@ -58,7 +51,6 @@ BEGIN
 				FROM dbo.AssignmentUploading WITH (NOLOCK)
 				WHERE SessionId = @SessionId
 					AND RowNumber <> data.RowNumber
-					-- AND EventDate = data.EventDate
 					AND InfoSiteMatchId = data.InfoSiteMatchId
 					AND ISNULL(InfoSiteMatchId, '') <> ''
 				) AS RowNumbers
@@ -71,7 +63,6 @@ BEGIN
 				AND ISNULL(InfoSiteMatchId, '') <> ''
 			) AS data
 
-		-- SELECT * FROM #tblCombineDuplicateInfoSiteId
 		-- result
 		SELECT @SessionId
 			,RowNumber
