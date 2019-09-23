@@ -17,7 +17,6 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_MatchInfo] @ActorId INT
 	,@Website4 NVARCHAR(1000) = ''
 	,@MatchStatus NVARCHAR(15)
 	,@IsSelected BIT = 0
-	,@RelevantUpdateProps NVARCHAR(500) = ''
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -142,12 +141,6 @@ BEGIN
 		,NotificationSettingId INT
 		)
 	
-	CREATE TABLE #tblRelevantMatches (
-		OWPMatchId INT,
-		IsUpdated BIT DEFAULT (0),
-		Id INT IDENTITY(1,1) PRIMARY KEY
-		)
-
 	-- save old value
 	SELECT @OldMarketIds = COALESCE(@OldMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
 	FROM dbo.MatchMarket WITH (NOLOCK)
@@ -234,98 +227,8 @@ BEGIN
 		FROM dbo.strSplit(ISNULL(@MarketIds, ''), ',')
 	END
 
-	IF(LEN(@RelevantUpdateProps) > 0)
-	BEGIN
-		-- Find relevant matches
-		INSERT INTO #tblRelevantMatches (OWPMatchId) EXEC [dbo].[OWP_Find_RelevantMatches] @OWPMatchId
-
-		DECLARE @rowStart INT = 1
-
-		WHILE (@rowStart <= (SELECT COUNT(*) FROM #tblRelevantMatches))
-		BEGIN
-			DECLARE @matchToUpdate INT = (SELECT OWPMatchId FROM #tblRelevantMatches WHERE @rowStart = Id)
-
-			DECLARE @relevantRound NVARCHAR(2000) = ''
-				,@relevantDivision NVARCHAR(2000) = ''
-				,@relevantVenue NVARCHAR(100) = ''
-				,@relevantOtherTime DATETIME = NULL
-				,@relevantMarketIds NVARCHAR(100) = ''
-				,@relevantWebsite1 NVARCHAR(1000) = ''
-				,@relevantWebsite2 NVARCHAR(1000) = ''
-				,@relevantWebsite3 NVARCHAR(1000) = ''
-				,@relevantWebsite4 NVARCHAR(1000) = ''
-				,@relevantIsSelected BIT = 0
-				,@relevantInfoSiteMatchId INT = NULL
-				,@relevantRemark NVARCHAR(2000) = ''
-				,@relevantIsSoloMatch BIT = 0
-				,@relevantMatchStatus NVARCHAR(15)
-
-			SELECT @relevantRound =[Round]
-				,@relevantDivision = Division
-				,@relevantVenue = Venue
-				,@relevantWebsite1 = Website1
-				,@relevantWebsite2 = Website2
-				,@relevantWebsite3 = Website3
-				,@relevantWebsite4 = Website4
-				,@relevantIsSelected = IsSelected
-				,@relevantMatchStatus = MatchStatus
-				,@relevantIsSoloMatch = IsSoloMatch
-				,@relevantRemark = Remark
-			FROM DBO.MatchInfo
-			WHERE OWPMatchId = @matchToUpdate
-
-			SELECT @relevantOtherTime = OtherTime
-				,@relevantInfoSiteMatchId = InfoSiteMatchId
-			FROM DBO.OWPMatch
-			WHERE OWPMatchId = @matchToUpdate
-
-			SELECT @relevantMarketIds = COALESCE(@relevantMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
-			FROM dbo.MatchMarket WITH (NOLOCK)
-			WHERE OWPMatchId = @matchToUpdate
-
-			IF CHARINDEX('Round', @RelevantUpdateProps) > 0
-				SET @relevantRound = @Round
-			IF CHARINDEX('Division', @RelevantUpdateProps) > 0
-				SET @relevantDivision = @Division
-			IF CHARINDEX('Venue', @RelevantUpdateProps) > 0
-				SET @relevantVenue = @Venue
-			IF CHARINDEX('Website1', @RelevantUpdateProps) > 0
-				SET @relevantWebsite1 = @Website1
-			IF CHARINDEX('Website2', @RelevantUpdateProps) > 0
-				SET @relevantWebsite2 = @Website2
-			IF CHARINDEX('Website3', @RelevantUpdateProps) > 0
-				SET @relevantWebsite3 = @Website3
-			IF CHARINDEX('Website4', @RelevantUpdateProps) > 0
-				SET @relevantWebsite4 = @Website4
-			IF CHARINDEX('OtherTime', @RelevantUpdateProps) > 0
-				SET @relevantOtherTime = @OtherTime
-			IF CHARINDEX('Markets', @RelevantUpdateProps) > 0
-				SET @relevantMarketIds = @MarketIds
-
-			EXEC [dbo].[OWP_LiveDetail_Update_MatchInfo] @ActorId = @ActorId
-				,@SessionId = @SessionId
-				,@OWPMatchId = @matchToUpdate
-				,@Round = @relevantRound
-				,@Division = @relevantDivision
-				,@Venue = @relevantVenue
-				,@OtherTime = @relevantOtherTime
-				,@MarketIds = @relevantMarketIds
-				,@Website1 = @relevantWebsite1
-				,@Website2 = @relevantWebsite2
-				,@Website3 = @relevantWebsite3
-				,@Website4 = @relevantWebsite4
-				,@IsSelected = @relevantIsSelected
-				,@MatchStatus = @relevantMatchStatus
-				,@InfoSiteMatchId = @relevantInfoSiteMatchId
-				,@IsSoloMatch = @relevantIsSoloMatch
-				,@Remark = @relevantRemark
-			SET @rowStart = @rowStart + 1
-		END
-	END
-	
-	SET @MinorBettypeId = (SELECT TOP 1 MinorBettypeId FROM MinorMatch WHERE MinorMatchId = @OWPMatchId)
-
 	-- send message edit if in time range
+	SET @MinorBettypeId = (SELECT TOP 1 MinorBettypeId FROM MinorMatch WHERE MinorMatchId = @OWPMatchId)
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 		AND (
 			@MinorBettypeId IS NULL
@@ -848,6 +751,4 @@ BEGIN
 	DROP TABLE #tblAllAssigneeOfMatch
 
 	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
-
-	DROP TABLE #tblRelevantMatches
 END

@@ -18,6 +18,7 @@ Revisions:
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20190822@yTyler.Dang: Write log - [Feature: #118566]
+	20190924@Tyler.Dang: Update relevant matchs - [Redmine: #120496]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -67,85 +68,85 @@ BEGIN
 		,@UserReceivedWatcherMessageMatchInfo TVP_INT
 		,@Username VARCHAR(30)
 
-	CREATE TABLE #tblMessage (
-		UserId INT
-		,MessageContent NVARCHAR(MAX)
-		,MessageTypeId INT
-		,MinorBettypeId INT
-		,EventDateTime DATETIME
-		)
-
-	CREATE TABLE #tblOldMatchInfo (
-		OWPMatchId INT
-		,MatchStatus NVARCHAR(15)
-		)
-
-	CREATE TABLE #tbChangeMatchStatusMessage (
-		Id INT IDENTITY(1, 1)
-		,OWPMatchId INT
-		,MinorBettypeId INT
-		,MessageContent NVARCHAR(2000)
-		,MessageTypeId INT
-		)
-
-	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
-
-	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
-		MemberId INT
-		,UserReceivedWatcherId INT
-		)
-
-	-- list of minor bettypes Corner & Booking but not 15 mins
-	CREATE TABLE #tblCornerBookingBetTypes (MinorBettypeId INT NOT NULL)
-
-	INSERT INTO #tblCornerBookingBetTypes
-	SELECT MinorBettypeId
-	FROM dbo.MinorBettype WITH (NOLOCK)
-	WHERE ParentBetTypeId IS NULL
-		AND IsActive = 1
-		AND MinorBettypeName NOT LIKE '%15 mins%'
-		AND (
-			MinorBettypeName LIKE '%corner%'
-			OR MinorBettypeName LIKE '%booking%'
-			)
-
 	SELECT @OldMatchStatus = m.MatchStatus
-	FROM dbo.MatchInfo AS m WITH (NOLOCK)
-	WHERE m.OWPMatchId = @OWPMatchId
-
-	-- Log  
-	SET @StartRun = GETDATE()
-	
-	SET @Xml = (
-			SELECT info.OWPMatchId AS '@mt'
-				,info.MatchStatus AS '@ms'
-			FROM dbo.MatchInfo AS info WHERE info.OWPMatchId = @OWPMatchId
-			FOR XML PATH('z')
-				,ROOT('r')
-			)
-			 
-	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-
-	UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
-	SET MatchStatus = @MatchStatus
-	OUTPUT deleted.OWPMatchId
-		,deleted.MatchStatus
-	INTO #tblOldMatchInfo
-	WHERE OWPMatchId = @OWPMatchId
-
-	-- Get Main match name 
-	SELECT @EventDateTime = om.EventDateTime
-		,@MatchName = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
-		,@MatchNo = CASE WHEN om.MatchNo = '' THEN '' ELSE '#' + om.MatchNo END
-		,@LeagueName = l.OWPLeagueName
-	FROM dbo.OWPMatch AS om WITH (NOLOCK)
-		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
-		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
-		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON om.OWPLeagueId = l.OWPLeagueId
-	WHERE om.OWPMatchId = @OWPMatchId
+		FROM dbo.MatchInfo AS m WITH (NOLOCK)
+		WHERE m.OWPMatchId = @OWPMatchId
 
 	IF @OldMatchStatus <> @MatchStatus
 	BEGIN
+		CREATE TABLE #tblMessage (
+			UserId INT
+			,MessageContent NVARCHAR(MAX)
+			,MessageTypeId INT
+			,MinorBettypeId INT
+			,EventDateTime DATETIME
+			)
+
+		CREATE TABLE #tblOldMatchInfo (
+			OWPMatchId INT
+			,MatchStatus NVARCHAR(15)
+			)
+
+		CREATE TABLE #tbChangeMatchStatusMessage (
+			Id INT IDENTITY(1, 1)
+			,OWPMatchId INT
+			,MinorBettypeId INT
+			,MessageContent NVARCHAR(2000)
+			,MessageTypeId INT
+			)
+
+		CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
+
+		CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
+			MemberId INT
+			,UserReceivedWatcherId INT
+			)
+
+		-- list of minor bettypes Corner & Booking but not 15 mins
+		CREATE TABLE #tblCornerBookingBetTypes (MinorBettypeId INT NOT NULL)
+
+		INSERT INTO #tblCornerBookingBetTypes
+		SELECT MinorBettypeId
+		FROM dbo.MinorBettype WITH (NOLOCK)
+		WHERE ParentBetTypeId IS NULL
+			AND IsActive = 1
+			AND MinorBettypeName NOT LIKE '%15 mins%'
+			AND (
+				MinorBettypeName LIKE '%corner%'
+				OR MinorBettypeName LIKE '%booking%'
+				)
+
+		-- Log  
+		SET @StartRun = GETDATE()
+	
+		SET @Xml = (
+				SELECT info.OWPMatchId AS '@mt'
+					,info.MatchStatus AS '@ms'
+				FROM dbo.MatchInfo AS info WHERE info.OWPMatchId = @OWPMatchId
+				FOR XML PATH('z')
+					,ROOT('r')
+				)
+			 
+		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+
+		UPDATE dbo.MatchInfo WITH (ROWLOCK, UPDLOCK)
+		SET MatchStatus = @MatchStatus
+		OUTPUT deleted.OWPMatchId
+			,deleted.MatchStatus
+		INTO #tblOldMatchInfo
+		WHERE OWPMatchId = @OWPMatchId
+
+		-- Get Main match name 
+		SELECT @EventDateTime = om.EventDateTime
+			,@MatchName = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+			,@MatchNo = CASE WHEN om.MatchNo = '' THEN '' ELSE '#' + om.MatchNo END
+			,@LeagueName = l.OWPLeagueName
+		FROM dbo.OWPMatch AS om WITH (NOLOCK)
+			INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
+			INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
+			INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON om.OWPLeagueId = l.OWPLeagueId
+		WHERE om.OWPMatchId = @OWPMatchId
+	
 		-- send message by condition date
 		SELECT @FromTimeSendMessage = FromTime
 			,@ToTimeSendMessage = ToTime
@@ -480,38 +481,38 @@ BEGIN
 				SET @LoopId = @LoopId + 1
 			END
 		END
+
+		-- For write log  
+		SET @Xml = (
+				SELECT info.OWPMatchId AS '@mt'
+					,info.MatchStatus AS '@ms'
+				FROM dbo.MatchInfo AS info WITH (NOLOCK)
+					INNER JOIN #tblOldMatchInfo AS mid WITH (NOLOCK) ON info.OWPMatchId = mid.OWPMatchId
+				FOR XML PATH('z')
+					,ROOT('r')
+				)
+		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+		SET @EndRun = GETDATE()
+		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+		EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+			,@SPName = 'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
+			,@LoggedDate = @StartRun
+			,@Duration = @Duration
+			,@ObjectId = @UserId
+			,@Data = @LogData
+			,@DataOld = @LogDataOld
+
+		DROP TABLE #tblMessage
+
+		DROP TABLE #tblOldMatchInfo
+
+		DROP TABLE #tblCornerBookingBetTypes
+
+		DROP TABLE #tbChangeMatchStatusMessage
+
+		DROP TABLE #tblAllAssigneeOfMatch
+
+		DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 	END
-
-	-- For write log  
-	SET @Xml = (
-			SELECT info.OWPMatchId AS '@mt'
-				,info.MatchStatus AS '@ms'
-			FROM dbo.MatchInfo AS info WITH (NOLOCK)
-				INNER JOIN #tblOldMatchInfo AS mid WITH (NOLOCK) ON info.OWPMatchId = mid.OWPMatchId
-			FOR XML PATH('z')
-				,ROOT('r')
-			)
-	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-	SET @EndRun = GETDATE()
-	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-	EXEC dbo.OWP_WriteLog @CreatorId = @UserId
-		,@SPName = 'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
-		,@LoggedDate = @StartRun
-		,@Duration = @Duration
-		,@ObjectId = @UserId
-		,@Data = @LogData
-		,@DataOld = @LogDataOld
-
-	DROP TABLE #tblMessage
-
-	DROP TABLE #tblOldMatchInfo
-
-	DROP TABLE #tblCornerBookingBetTypes
-
-	DROP TABLE #tbChangeMatchStatusMessage
-
-	DROP TABLE #tblAllAssigneeOfMatch
-
-	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 END
