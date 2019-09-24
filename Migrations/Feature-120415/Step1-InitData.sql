@@ -24,13 +24,18 @@ VALUES (31
 	,1
 	,'Duplicate InfoSiteID of matches: row <content>'
 	,'OWP_ValidationRule_CheckRuleNumber31')
+	,(32
+	,'Duplicate MatchNo. of matches'
+	,1
+	,1
+	,1
+	,'Duplicate MatchNo. of matches: row <content>'
+	,'OWP_ValidationRule_CheckRuleNumber32')
 	
 INSERT INTO dbo.FunctionRule(FunctionId
 	,RuleId
 	,[Order])
-VALUES (3
-	,31
-	,31
-	)
-
+VALUES (3,31,31),
+	(3,33,32)
+	
 GO
