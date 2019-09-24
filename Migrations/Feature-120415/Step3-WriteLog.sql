@@ -1,7 +1,7 @@
 /*
-	Created: Kane.Le
-	Date: 20190814
-	Task: [Redmine: #117960]
+	Created: Carlos.Nguyen
+	Date: 20190924
+	Task: [Redmine: #120415]
 	DB: bodb_OWP
 */
 
