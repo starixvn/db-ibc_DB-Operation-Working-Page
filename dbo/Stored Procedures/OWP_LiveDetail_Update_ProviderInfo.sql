@@ -750,7 +750,7 @@ DELETE
 					,@OldChannel AS '@ch'
 					,@OldWB AS '@wb'
 					,@OldProviderIds AS '@pv'					
-					,'' AS '@rn'
+					,@OldOtherProviderIds AS '@opv'
 					,@OldPhone AS '@ph'
 					,@OldAgentIds AS '@ag'
 				FOR XML PATH('z')
@@ -764,7 +764,7 @@ DELETE
 					,@Channel AS '@ch'
 					,@WB AS '@wb'
 					,@ProviderIds AS '@pv'
-					,'' AS '@rn'					
+					,@OtherProviderIds AS '@opv'					
 					,@Phone AS '@ph'
 					,@AgentIds AS '@ag'
 				FOR XML PATH('z')
