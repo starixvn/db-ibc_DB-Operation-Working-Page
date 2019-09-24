@@ -10,4 +10,27 @@ UPDATE dbo.ValidationRule WITH (ROWLOCK)
 SET IsActive = 0
 WHERE RuleResultType <> 1
 
+INSERT INTO dbo.ValidationRule(RuleId
+	,RuleName
+	,IsActive
+	,RuleResultType
+	,Category
+	,MessageFormat
+	,SPName)
+VALUES (31
+	,'Duplicate InfoSiteID of matches'
+	,1
+	,1
+	,1
+	,'Duplicate InfoSiteID of matches: row <content>'
+	,'OWP_ValidationRule_CheckRuleNumber31')
+	
+INSERT INTO dbo.FunctionRule(FunctionId
+	,RuleId
+	,[Order])
+VALUES (3
+	,31
+	,31
+	)
+
 GO
