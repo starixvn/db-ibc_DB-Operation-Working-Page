@@ -727,7 +727,6 @@ BEGIN
 				,@LoggedNewMarketIds AS '@mk'
 			FROM dbo.MatchInfo AS info WITH (NOLOCK)
 			LEFT JOIN OWPMatch AS om WITH (NOLOCK) ON info.OWPMatchId = om.OWPMatchId
-			JOIN MatchMarket AS mm WITH (NOLOCK) ON info.OWPMatchId = mm.OWPMatchId
 			WHERE @OWPMatchId = info.OWPMatchId
 			FOR XML PATH('z')
 				,ROOT('r')

@@ -58,11 +58,11 @@ BEGIN
 		,@newWebsite2 = Website2
 		,@newWebsite3 = Website3
 		,@newWebsite4 = Website4
-	FROM DBO.MatchInfo
+	FROM DBO.MatchInfo WITH (NOLOCK)
 	WHERE OWPMatchId = @OWPMatchId
 
 	SELECT @newOtherTime = OtherTime
-	FROM DBO.OWPMatch
+	FROM DBO.OWPMatch WITH (NOLOCK)
 	WHERE OWPMatchId = @OWPMatchId
 
 	SELECT @newMarketIds = ISNULL(STUFF((
@@ -77,9 +77,9 @@ BEGIN
 
 	DECLARE @rowStart INT = 1
 
-	WHILE (@rowStart <= (SELECT COUNT(*) FROM #tblRelevantMatches))
+	WHILE (@rowStart <= (SELECT COUNT(OWPMatchId) FROM #tblRelevantMatches))
 	BEGIN
-		DECLARE @matchToUpdate INT = (SELECT OWPMatchId FROM #tblRelevantMatches WHERE @rowStart = Id)
+		DECLARE @matchToUpdate INT = (SELECT OWPMatchId FROM #tblRelevantMatches WITH (NOLOCK) WHERE @rowStart = Id)
 
 		-- Save Old Values
 		SELECT @relevantRound =[Round]
@@ -93,12 +93,12 @@ BEGIN
 			,@relevantMatchStatus = MatchStatus
 			,@relevantIsSoloMatch = IsSoloMatch
 			,@relevantRemark = Remark
-		FROM DBO.MatchInfo
+		FROM DBO.MatchInfo WITH (NOLOCK)
 		WHERE OWPMatchId = @matchToUpdate
 
 		SELECT @relevantOtherTime = OtherTime
 			,@relevantInfoSiteMatchId = InfoSiteMatchId
-		FROM DBO.OWPMatch
+		FROM DBO.OWPMatch WITH (NOLOCK)
 		WHERE OWPMatchId = @matchToUpdate
 
 		SELECT @relevantMarketIds = ISNULL(STUFF((

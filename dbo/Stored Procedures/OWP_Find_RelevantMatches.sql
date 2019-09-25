@@ -14,21 +14,37 @@ BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @isMainMatch BIT = 0
-	IF exists (SELECT TOP 1 * FROM dbo.MinorMatch WHERE ParentMatchId = @OWPMatchId)
+
+	IF EXISTS (
+			SELECT 1
+			FROM dbo.MinorMatch WITH (NOLOCK)
+			WHERE ParentMatchId = @OWPMatchId
+			)
 	BEGIN
 		SET @isMainMatch = 1
 	END
 
-	IF(@isMainMatch = 1)
+	IF (@isMainMatch = 1)
 	BEGIN
-		SELECT MinorMatchId FROM dbo.MinorMatch WHERE ParentMatchId = @OWPMatchId
+		SELECT MinorMatchId
+		FROM dbo.MinorMatch WITH (NOLOCK)
+		WHERE ParentMatchId = @OWPMatchId
 	END
 	ELSE
 	BEGIN
-		SELECT MinorMatchId FROM dbo.MinorMatch 
-			WHERE MinorMatchId <> @OWPMatchId AND ParentMatchId = (SELECT TOP 1 ParentMatchId FROM dbo.MinorMatch WHERE MinorMatchId = @OWPMatchId)
-		UNION 
-		SELECT TOP 1 ParentMatchId FROM dbo.MinorMatch 
-			WHERE MinorMatchId = @OWPMatchId
+		SELECT MinorMatchId
+		FROM dbo.MinorMatch WITH (NOLOCK)
+		WHERE MinorMatchId <> @OWPMatchId
+			AND ParentMatchId = (
+				SELECT TOP 1 ParentMatchId
+				FROM dbo.MinorMatch WITH (NOLOCK)
+				WHERE MinorMatchId = @OWPMatchId
+				)
+		
+		UNION
+		
+		SELECT TOP 1 ParentMatchId
+		FROM dbo.MinorMatch WITH (NOLOCK)
+		WHERE MinorMatchId = @OWPMatchId
 	END
 END
