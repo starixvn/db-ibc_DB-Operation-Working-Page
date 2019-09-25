@@ -3810,6 +3810,13 @@ BEGIN
 			UserId INT NOT NULL
 			,OWPMatchId INT NOT NULL
 			);
+
+		DELETE #tblAssignmentLog
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM dbo.MinorMatch mn
+				WHERE #tblAssignmentLog.OWPMatchId = mn.ParentMatchId
+				)
 			--Deleting duplicate values
 			;
 
