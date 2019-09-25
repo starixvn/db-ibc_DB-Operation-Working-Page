@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveDetail_RemoveMatch] @ActorId INT
+CREATE PROCEDURE [dbo].[OWP_LiveDetail_DeselectMatch] @ActorId INT
 	,@SessionId VARCHAR(50)
 	,@OWPMatchId INT
 	,@ErrCode INT = 0 OUTPUT
@@ -16,6 +16,13 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
+	
+	DECLARE @StartRun DATETIME
+		,@EndRun DATETIME
+		,@Duration INT
+		,@LogData NVARCHAR(MAX)
+		,@LogDataOld NVARCHAR(MAX)
+		,@Xml XML
 
 	DECLARE @ParentMatchId INT
 		,@MinorBettypeId INT
@@ -23,15 +30,23 @@ BEGIN
 		,@TotalBooking INT = - 6
 		,@Specific15MinsNoOfCorners INT = - 5
 		,@Specific15MinsTotalBooking INT = - 8
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
+		,@FastMarket INT = - 88
+		,@AllInOne INT = - 89
 		,@MessageDeleteAssignmentId INT
 		,@MessageDeleteAssignment NVARCHAR(500)
 		,@MessageDeleteOtherAssignmentId INT
 		,@MessageDeleteOtherAssignment NVARCHAR(500)
+		,@MessageChangeOfAssignmentId INT
+		,@MessageChangeOfAssignment NVARCHAR(500)
 		,@ActorName NVARCHAR(30)
 		,@IsMatchInTimeRange BIT = dbo.[fnc_IsMatchInTimeRange](@OWPMatchId)
 		,@MyAssignmentUpdatedNotificationSettingId INT = 1 -- assignee
 		,@WatcherTraderUpdatedNotificationSettingId INT = 6 -- watcher
 		,@WatcherLAUpdatedNotificationSettingId INT = 12
+		
+	SET @StartRun = GETDATE()
 
 	CREATE TABLE #tblRemoveMatchRecommendOddsIds (MatchRecommendOddsId INT)
 
@@ -43,6 +58,12 @@ BEGIN
 		,OWPLeagueId INT
 		,OWPHomeId INT
 		,OWPAwayId INT
+		)
+		
+	CREATE TABLE #tblRemoveMinorMatch (
+		MinorMatchId INT
+		,MinorBettypeId INT
+		,ParentMatchId INT
 		)
 
 	CREATE TABLE #tblRemoveMatchInfo (
@@ -56,6 +77,11 @@ BEGIN
 		,AssignmentType TINYINT
 		,UserId INT
 		,AssignmentNote NVARCHAR(200)
+		)
+		
+	CREATE TABLE #tblAssignee (
+		OWPMatchId INT
+		,UserId INT
 		)
 		
 	CREATE TABLE #tblMessage (
@@ -181,6 +207,19 @@ BEGIN
 	INTO #tblRemoveMatch(OWPMatchId, MatchNo, OWPLeagueId, OWPHomeId, OWPAwayId)
 	FROM dbo.OWPMatch AS t WITH (ROWLOCK)
 		INNER JOIN #tblRemoveMatchIds AS m ON m.OWPMatchId = t.OWPMatchId
+		
+	-- remove minor match
+	DELETE t
+	OUTPUT deleted.MinorMatchId
+		,deleted.MinorBettypeId
+		,deleted.ParentMatchId
+	INTO #tblRemoveMinorMatch (
+		MinorMatchId
+		,MinorBettypeId
+		,ParentMatchId
+	)
+	FROM dbo.MinorMatch AS t WITH (ROWLOCK)
+	INNER JOIN #tblRemoveMatch AS m ON t.MinorMatchId = m.OWPMatchId
 
 	-- remove assignment
 	DELETE t
@@ -198,17 +237,28 @@ BEGIN
 	BEGIN
 		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 		
+		INSERT INTO #tblAssignee (
+			OWPMatchId
+			,UserId
+		)
+		SELECT DISTINCT CASE WHEN mm.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking) THEN mm.ParentMatchId ELSE ass.OWPMatchId END
+			,ass.UserId
+		FROM #tblRemoveAssignment AS ass
+		INNER JOIN #tblRemoveMatchInfo AS mi ON ass.OWPMatchId = mi.OWPMatchId
+		LEFT JOIN #tblRemoveMinorMatch AS mm ON mm.MinorMatchId = mi.OWPMatchId
+		WHERE UserId IS NOT NULL AND mi.MatchStatus = 'Live'
+		
 		SELECT @MessageDeleteAssignment = mt.MsgTemplateContent
 			,@MessageDeleteAssignmentId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'AssignmentDelete'
-
-		SELECT @MessageDeleteOtherAssignment = mt.MsgTemplateContent
-			,@MessageDeleteOtherAssignmentId = mt.MsgTemplateId
-		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-		WHERE mt.MsgTemplateCode = 'OtherAssignmentDelete'
 		
-		-- create message content
+		SELECT @MessageChangeOfAssignment = mt.MsgTemplateContent
+			,@MessageChangeOfAssignmentId = mt.MsgTemplateId
+		FROM dbo.MessageTemplate mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
+		
+		-- create message content for assignee
 		INSERT INTO #tblMessage (
 			MessageContent
 			,MessageTypeId
@@ -218,29 +268,20 @@ BEGIN
 				REPLACE(
 					REPLACE(
 						REPLACE(
-							REPLACE(CASE 
-									WHEN ass.AssignmentType = 1 THEN @MessageDeleteAssignment
-									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(ass.AssignmentNote, '#<user>', ''))))
-									END
+							REPLACE(@MessageDeleteAssignment
 							,'<Event>', h.OWPTeamName + ' -vs- ' + a.OWPTeamName)
 						,'<Bettype>', '')
 					,'<League>', l.OWPLeagueName)
 				,'<Match.No>', CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END)
 			,'<User>', @ActorName)
-			,CASE 
-				WHEN ass.AssignmentType = 1 THEN @MessageDeleteAssignmentId
-				ELSE @MessageDeleteOtherAssignmentId
-				END
+			,@MessageDeleteAssignmentId
 			,ass.UserId
-		FROM #tblRemoveAssignment AS ass
+		FROM #tblAssignee AS ass
 			INNER JOIN #tblRemoveMatch AS m ON ass.OWPMatchId = m.OWPMatchId
-			INNER JOIN #tblRemoveMatchInfo AS mi ON mi.OWPMatchId = m.OWPMatchId
 			INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
 			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-		WHERE mi.MatchStatus = 'Live'
 		
-		-- send message to user has assignment removed
 		INSERT INTO #tblAssigneeMessage (
 			MessageContent
 			,MessageTypeId
@@ -278,6 +319,34 @@ BEGIN
 			,@SessionId
 		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 		
+		TRUNCATE TABLE #tblMessage
+				INSERT INTO #tblMessage (
+			MessageContent
+			,MessageTypeId
+			,UserId
+			)
+		SELECT REPLACE(
+				REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(@MessageChangeOfAssignment, '<New>', '')
+									,'<Old>', u.Username)
+							,'<Event>', h.OWPTeamName + ' -vs- ' + a.OWPTeamName)
+						,'<Bettype>', '')
+					,'<League>', l.OWPLeagueName)
+				,'<Match.No>', CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END)
+			,'<User>', @ActorName)
+			,@MessageChangeOfAssignmentId
+			,ass.UserId
+		FROM #tblAssignee AS ass
+			INNER JOIN #tblRemoveMatch AS m ON ass.OWPMatchId = m.OWPMatchId
+			INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+			INNER JOIN dbo.[User] As u WITH (NOLOCK) ON u.UserId = ass.UserId
+		
 		INSERT INTO #tblWatcherMessage (
 			MessageContent
 			,MessageTypeId
@@ -288,8 +357,8 @@ BEGIN
 			,ass.UserId
 		FROM #tblMessage AS m
 		CROSS JOIN (SELECT DISTINCT w.UserId
-			FROM #tblAssignee AS a
-				INNER JOIN dbo.[User] AS u ON a.UserId = u.UserId
+			FROM #tblMessage AS m
+				INNER JOIN dbo.[User] AS u ON m.UserId = u.UserId
 				INNER JOIN (
 					SELECT w.UserId
 						,u.SectionId
@@ -322,23 +391,42 @@ BEGIN
 					,@ActorId
 					,0
 					,msn.MessageTypeId
-					,0
+					,1
 					)
 		OUTPUT inserted.MessageId
 			,msn.UserId
 			,@SessionId
 		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 	END
+	
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+	EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+		,@SPName = 'OWP_LiveDetail_DeselectMatch'
+		,@LoggedDate = @StartRun
+		,@Duration = @Duration
+		,@ObjectId = @OWPMatchId
+		,@Data = NULL
+		,@DataOld = NULL
 
 	DROP TABLE #tblRemoveMatchRecommendOddsIds
 
 	DROP TABLE #tblRemoveMatchIds
 
 	DROP TABLE #tblRemoveMatch
+	
+	DROP TABLE #tblRemoveMinorMatch
 
 	DROP TABLE #tblRemoveMatchInfo
 
 	DROP TABLE #tblRemoveAssignment
 	
 	DROP TABLE #tblMessage
+	
+	DROP TABLE #tblAssigneeMessage
+	
+	DROP TABLE #tblWatcherMessage
+	
+	DROP TABLE #tblAssignee
 END

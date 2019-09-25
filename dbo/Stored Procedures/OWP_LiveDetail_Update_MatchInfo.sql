@@ -49,13 +49,14 @@ BEGIN
 	WHERE m.OWPMatchId = @OWPMatchId;
 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '11:59:59')
 
 	IF @InfoSiteMatchId IS NOT NULL
 		AND EXISTS (
 			SELECT 1
 			FROM dbo.OWPMatch AS m WITH (NOLOCK)
 			WHERE m.InfoSiteMatchId = @InfoSiteMatchId
-				AND m.EventDateTime >= @FromDate
+				AND m.EventDateTime BETWEEN @FromDate AND @ToDate
 				AND m.OWPMatchId <> @OWPMatchId
 			)
 	BEGIN
@@ -142,9 +143,12 @@ BEGIN
 		)
 	
 	-- save old value
-	SELECT @OldMarketIds = COALESCE(@OldMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
-	FROM dbo.MatchMarket WITH (NOLOCK)
-	WHERE OWPMatchId = @OWPMatchId
+	SELECT @OldMarketIds = ISNULL(STUFF((
+			SELECT ', ' + CAST(MarketId AS NVARCHAR)
+			FROM dbo.MatchMarket WITH (NOLOCK)
+			WHERE OWPMatchId = @OWPMatchId
+			FOR XML PATH('')
+			), 1, 2, ''), '')
 
 	SELECT @OldRemark = m.Remark
 		,@OldIsSoloMatch = m.IsSoloMatch
@@ -708,9 +712,12 @@ BEGIN
 	-- For write log
 	DECLARE @LoggedNewMarketIds NVARCHAR(100)
 	-- Get MarketIds
-	SELECT @LoggedNewMarketIds = COALESCE(@LoggedNewMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
-	FROM dbo.MatchMarket WITH (NOLOCK)
-	WHERE OWPMatchId = @OWPMatchId
+	SELECT @LoggedNewMarketIds = ISNULL(STUFF((
+			SELECT ', ' + CAST(MarketId AS NVARCHAR)
+			FROM dbo.MatchMarket WITH (NOLOCK)
+			WHERE OWPMatchId = @OWPMatchId
+			FOR XML PATH('')
+			), 1, 2, ''), '')
 
 	SET @Xml = (
 			SELECT info.Remark AS '@rm'

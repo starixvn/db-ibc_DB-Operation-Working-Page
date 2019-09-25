@@ -381,12 +381,12 @@
     <Build Include="dbo\Stored Procedures\OWP_OtherProvider_GetSuggestion.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Agent_GetSuggestion.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_ProviderInfoRelaventMatch.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_RemoveMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Get_InfoMatchRelative.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Find_RelevantMatches.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber32.sql" />    
+    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber32.sql" />
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber31.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_RelevantMatchesMatchInfo.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_DeselectMatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
