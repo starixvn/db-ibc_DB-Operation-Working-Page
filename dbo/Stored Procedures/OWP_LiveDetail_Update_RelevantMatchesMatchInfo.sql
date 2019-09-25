@@ -46,8 +46,8 @@ BEGIN
 		,@newWebsite4 NVARCHAR(1000) = ''
 
 	CREATE TABLE #tblRelevantMatches (
-		OWPMatchId INT,
-		Id INT IDENTITY(1,1) PRIMARY KEY
+		Id INT IDENTITY PRIMARY KEY CLUSTERED
+		,OWPMatchId INT
 		)
 
 	-- Get New Values
@@ -76,8 +76,10 @@ BEGIN
 	INSERT INTO #tblRelevantMatches (OWPMatchId) EXEC [dbo].[OWP_Find_RelevantMatches] @OWPMatchId
 
 	DECLARE @rowStart INT = 1
+		,@maxRowCount INT
 
-	WHILE (@rowStart <= (SELECT COUNT(OWPMatchId) FROM #tblRelevantMatches))
+	SELECT @maxRowCount = COUNT(OWPMatchId) FROM #tblRelevantMatches
+	WHILE (@rowStart <= @maxRowCount)
 	BEGIN
 		DECLARE @matchToUpdate INT = (SELECT OWPMatchId FROM #tblRelevantMatches WITH (NOLOCK) WHERE @rowStart = Id)
 
