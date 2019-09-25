@@ -3749,6 +3749,11 @@ BEGIN
 				)
 
 		-- Remove deselect and send message
+		--SELECT * FROM #tblOldOWPMatch
+		 
+		--SELECT * FROM #tblExistedMatch
+		 
+
 		DELETE
 		FROM #tblMatchInTimeRange
 
@@ -3811,12 +3816,22 @@ BEGIN
 			,OWPMatchId INT NOT NULL
 			);
 
-		DELETE #tblAssignmentLog
+		DELETE FROM #tblAssignmentLog
 		WHERE NOT EXISTS (
 				SELECT 1
 				FROM dbo.MinorMatch mn
 				WHERE #tblAssignmentLog.OWPMatchId = mn.ParentMatchId
 				)
+
+		DELETE FROM #tblAssignmentLog
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblRemoveMatch mn
+				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
+				)
+ 
+
+		 
 			--Deleting duplicate values
 			;
 
@@ -3859,6 +3874,7 @@ BEGIN
 			,@MessageTypeId
 			,1
 		FROM #tblAssignmentLog AS l
+		INNER JOIN #tblRemoveMatch AS rm ON l.OWPMatchId = rm.OWPMatchId
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = m.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = m.OWPAwayId
@@ -3894,6 +3910,8 @@ BEGIN
 			,inserted.MessageType
 		INTO #tblMessageDeselected(OWPMatchId, [MessageId], MessageTypeId);
 
+		 
+
 		-- insert MessageUser assignee
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
@@ -3924,14 +3942,6 @@ BEGIN
 		OUTPUT m.OldUserId
 			,m.OWPMatchId
 		INTO #tblAssigneeReceiver(UserId, OWPMatchId);
-
-		DELETE
-		FROM #tblAssignmentLog
-		WHERE EXISTS (
-				SELECT 1
-				FROM #tblAssigneeReceiver AS r
-				WHERE #tblAssignmentLog.OldUserId = r.UserId
-				)
 
 		-- insert MessageUser watcher
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu

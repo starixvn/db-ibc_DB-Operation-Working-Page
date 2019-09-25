@@ -33,8 +33,7 @@ BEGIN
 		,@NewOtherProviderIds NVARCHAR(100)
 		,@NewProviderIds NVARCHAR(100)
 		,@NewAgentIds NVARCHAR(100)
-		,@ParentMatchId INT
-
+	
 	CREATE TABLE #tblMatchIdRelative (
 		Id INT IDENTITY PRIMARY KEY CLUSTERED
 		,MatchId INT
