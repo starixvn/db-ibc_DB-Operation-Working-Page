@@ -534,6 +534,7 @@ BEGIN
 		,OldUserId INT
 		,OldUsername NVARCHAR(30)
 		,OldAssignmentNote NVARCHAR(200)
+		,OWPParentMatchId INT NULL
 		)
 
 	CREATE TABLE #tblAssignmentInTimeRange (
@@ -3748,8 +3749,6 @@ BEGIN
 					AND ig.MessageTypeId = m.MessageTypeId
 				)
 
-	 
-		 
 		DELETE
 		FROM #tblMatchInTimeRange
 
@@ -3812,6 +3811,41 @@ BEGIN
 			,OWPMatchId INT NOT NULL
 			);
 
+		UPDATE l
+		SET l.OWPMatchId = mm.ParentMatchId
+		FROM #tblAssignmentLog AS l
+		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON l.OWPMatchId = mm.MinorMatchId
+		WHERE mm.MinorBettypeId IN (
+				@FastMarket
+				,@AllInOne
+				,@Specific10Mins
+				,@Specific15Mins
+				)
+
+		UPDATE l
+		SET l.OWPMatchId = (
+				SELECT MinorMatchId
+				FROM dbo.MinorMatch WITH (NOLOCK)
+				WHERE ParentMatchId = mm.ParentMatchId
+					AND (
+						(
+							mm.MinorBettypeId = @Specific15MinsNoOfCorners
+							AND MinorBettypeId = @NoOfCorners
+							)
+						OR (
+							mm.MinorBettypeId = @Specific15MinsTotalBooking
+							AND MinorBettypeId = @TotalBooking
+							)
+						)
+				)
+		FROM #tblAssignmentLog AS l
+		INNER JOIN dbo.OWPMatch AS o WITH (NOLOCK) ON l.OWPMatchId = o.OWPMatchId
+		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON l.OWPMatchId = mm.MinorMatchId
+		WHERE mm.MinorBettypeId IN (
+				@Specific15MinsNoOfCorners
+				,@Specific15MinsTotalBooking
+				)
+
 		DELETE
 		FROM #tblAssignmentLog
 		WHERE NOT EXISTS (
@@ -3820,7 +3854,7 @@ BEGIN
 				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
 				)
 
-	 
+		
 			--Deleting duplicate values
 			;
 
@@ -3871,7 +3905,6 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
 		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
 		WHERE l.[Action] = 'DELETE'
-			 
 			--Deleting duplicate values
 			;
 
@@ -3889,8 +3922,6 @@ BEGIN
 		DELETE o
 		FROM TableBWithRowID o
 		WHERE RowID > 1
-
-	 
 
 		--INNER JOIN dbo.OWPLeague AS ol WITH(NOLOCK) ON ol.OWPLeagueId = l.OldOWPLeagueId;
 		-- insert Message assignee
@@ -3917,7 +3948,9 @@ BEGIN
 			,inserted.MessageId
 			,inserted.MessageType
 		INTO #tblMessageDeselected(OWPMatchId, [MessageId], MessageTypeId);
- 
+
+		
+
 		-- insert MessageUser assignee
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
@@ -3948,8 +3981,6 @@ BEGIN
 		OUTPUT m.OldUserId
 			,m.OWPMatchId
 		INTO #tblAssigneeReceiver(UserId, OWPMatchId);
-
-		 
 
 		-- insert MessageUser watcher
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
