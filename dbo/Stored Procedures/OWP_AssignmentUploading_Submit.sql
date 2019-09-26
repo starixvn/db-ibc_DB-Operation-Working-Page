@@ -3748,12 +3748,8 @@ BEGIN
 					AND ig.MessageTypeId = m.MessageTypeId
 				)
 
-		-- Remove deselect and send message
-		--SELECT * FROM #tblOldOWPMatch
+	 
 		 
-		--SELECT * FROM #tblExistedMatch
-		 
-
 		DELETE
 		FROM #tblMatchInTimeRange
 
@@ -3816,22 +3812,15 @@ BEGIN
 			,OWPMatchId INT NOT NULL
 			);
 
-		DELETE FROM #tblAssignmentLog
-		WHERE NOT EXISTS (
-				SELECT 1
-				FROM dbo.MinorMatch mn
-				WHERE #tblAssignmentLog.OWPMatchId = mn.ParentMatchId
-				)
-
-		DELETE FROM #tblAssignmentLog
+		DELETE
+		FROM #tblAssignmentLog
 		WHERE NOT EXISTS (
 				SELECT 1
 				FROM #tblRemoveMatch mn
 				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
 				)
- 
 
-		 
+	 
 			--Deleting duplicate values
 			;
 
@@ -3882,7 +3871,26 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
 		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
 		WHERE l.[Action] = 'DELETE'
-			AND l.AssignmentType = 1
+			 
+			--Deleting duplicate values
+			;
+
+		WITH TableBWithRowID
+		AS (
+			SELECT ROW_NUMBER() OVER (
+					PARTITION BY OWPMatchId
+					,MessageContent ORDER BY OWPMatchId
+						,MessageContent
+					) AS RowID
+				,OWPMatchId
+				,MessageContent
+			FROM #tblMessageTemplateForDeselected
+			)
+		DELETE o
+		FROM TableBWithRowID o
+		WHERE RowID > 1
+
+	 
 
 		--INNER JOIN dbo.OWPLeague AS ol WITH(NOLOCK) ON ol.OWPLeagueId = l.OldOWPLeagueId;
 		-- insert Message assignee
@@ -3909,9 +3917,7 @@ BEGIN
 			,inserted.MessageId
 			,inserted.MessageType
 		INTO #tblMessageDeselected(OWPMatchId, [MessageId], MessageTypeId);
-
-		 
-
+ 
 		-- insert MessageUser assignee
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
@@ -3943,6 +3949,8 @@ BEGIN
 			,m.OWPMatchId
 		INTO #tblAssigneeReceiver(UserId, OWPMatchId);
 
+		 
+
 		-- insert MessageUser watcher
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
@@ -3956,6 +3964,11 @@ BEGIN
 				AND nsm.UserId = ass.OldUserId
 			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 				AND ass.[Action] = 'DELETE'
+				AND NOT EXISTS (
+					SELECT 1
+					FROM #tblAssigneeReceiver
+					WHERE #tblAssigneeReceiver.UserId = ass.OldUserId
+					)
 			) AS m
 			ON 1 = 0
 		WHEN NOT MATCHED
