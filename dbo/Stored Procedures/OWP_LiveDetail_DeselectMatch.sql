@@ -255,6 +255,8 @@ BEGIN
 		SELECT DISTINCT CASE mm.MinorBettypeId
 						WHEN @Specific15MinsNoOfCorners THEN @NoOfCornersMinorMatchId 
 						WHEN @Specific15MinsTotalBooking THEN @TotalBookingMinorMatchId
+						WHEN @Specific15Mins THEN mm.ParentMatchId
+						WHEN @Specific10Mins THEN mm.ParentMatchId
 						WHEN @FastMarket THEN mm.ParentMatchId
 						WHEN @AllInOne THEN mm.ParentMatchId
 						ELSE ass.OWPMatchId END
