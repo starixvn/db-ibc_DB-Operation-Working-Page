@@ -237,11 +237,27 @@ BEGIN
 	BEGIN
 		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 		
+		DECLARE @NoOfCornersMinorMatchId INT
+			,@TotalBookingMinorMatchId INT
+			
+		SELECT @NoOfCornersMinorMatchId = MinorMatchId
+		FROM #tblRemoveMinorMatch
+		WHERE ParentMatchId = @ParentMatchId AND MinorBettypeId = @NoOfCorners
+		
+		SELECT @TotalBookingMinorMatchId = MinorMatchId
+		FROM #tblRemoveMinorMatch
+		WHERE ParentMatchId = @ParentMatchId AND MinorBettypeId = @TotalBooking
+		
 		INSERT INTO #tblAssignee (
 			OWPMatchId
 			,UserId
 		)
-		SELECT DISTINCT CASE WHEN mm.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking) THEN mm.ParentMatchId ELSE ass.OWPMatchId END
+		SELECT DISTINCT CASE mm.MinorBettypeId
+						WHEN @Specific15MinsNoOfCorners THEN @NoOfCornersMinorMatchId 
+						WHEN @Specific15MinsTotalBooking THEN @TotalBookingMinorMatchId
+						WHEN @FastMarket THEN mm.ParentMatchId
+						WHEN @AllInOne THEN mm.ParentMatchId
+						ELSE ass.OWPMatchId END
 			,ass.UserId
 		FROM #tblRemoveAssignment AS ass
 		INNER JOIN #tblRemoveMatchInfo AS mi ON ass.OWPMatchId = mi.OWPMatchId
