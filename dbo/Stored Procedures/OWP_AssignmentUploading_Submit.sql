@@ -3799,6 +3799,12 @@ BEGIN
 			,MessageTypeId INT NOT NULL
 			);
 
+		CREATE TABLE #tblMessageDeselectedWatcher (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			);
+
 		CREATE TABLE #tblMessageTemplateForDeselected (
 			OWPMatchId INT NOT NULL
 			,MessageContent NVARCHAR(MAX) NOT NULL
@@ -3853,8 +3859,6 @@ BEGIN
 				FROM #tblRemoveMatch mn
 				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
 				)
-
-		
 			--Deleting duplicate values
 			;
 
@@ -3876,8 +3880,8 @@ BEGIN
 		FROM TableBWithRowID o
 		WHERE RowID > 1
 
-		DECLARE @AssigneeMatchInfoNotificationSettingId INT = 5
-			,@WatcherMatchInfoNotificationSettingId INT = 9
+		DECLARE @AssigneeMatchInfoNotificationSettingId INT = 1
+			,@WatcherMatchInfoNotificationSettingId INT = 6
 		DECLARE @MessageTemplate NVARCHAR(1000)
 			,@MessageTypeId INT
 
@@ -3901,7 +3905,6 @@ BEGIN
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = m.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = m.OWPAwayId
- 
 		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
 		WHERE l.[Action] = 'DELETE'
 			--Deleting duplicate values
@@ -3948,8 +3951,6 @@ BEGIN
 			,inserted.MessageType
 		INTO #tblMessageDeselected(OWPMatchId, [MessageId], MessageTypeId);
 
-		
-
 		-- insert MessageUser assignee
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
@@ -3981,24 +3982,99 @@ BEGIN
 			,m.OWPMatchId
 		INTO #tblAssigneeReceiver(UserId, OWPMatchId);
 
-		-- insert MessageUser watcher
+		DELETE
+		FROM #tblMessageTemplateForDeselected
+
+		SELECT @MessageTemplate = mt.MsgTemplateContent
+			,@MessageTypeId = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
+
+		INSERT INTO #tblMessageTemplateForDeselected (
+			OWPMatchId
+			,MessageContent
+			,MessageTypeId
+			,IsImportant
+			)
+		SELECT l.OWPMatchId
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Old>', l.OldUsername), '<New>', ''), '<Match.No>', CASE 
+								WHEN m.MatchNo = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<Bettype>', ''), '<League>', le.OWPLeagueName), '<Event>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
+			,@MessageTypeId
+			,1
+		FROM #tblAssignmentLog AS l
+		INNER JOIN #tblRemoveMatch AS rm ON l.OWPMatchId = rm.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = m.OWPHomeId
+		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = m.OWPAwayId
+		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
+		WHERE l.[Action] = 'DELETE'
+			--Deleting duplicate values
+			;
+
+		WITH TableBWithRowID
+		AS (
+			SELECT ROW_NUMBER() OVER (
+					PARTITION BY OWPMatchId
+					,MessageContent ORDER BY OWPMatchId
+						,MessageContent
+					) AS RowID
+				,OWPMatchId
+				,MessageContent
+			FROM #tblMessageTemplateForDeselected
+			)
+		DELETE o
+		FROM TableBWithRowID o
+		WHERE RowID > 1
+
+		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
+		USING #tblMessageTemplateForDeselected AS m
+			ON 1 = 0
+		WHEN NOT MATCHED
+			THEN
+				INSERT (
+					MessageContent
+					,CreatedBy
+					,IsImportant
+					,MessageType
+					,IsWatcher
+					)
+				VALUES (
+					m.MessageContent
+					,0
+					,m.IsImportant
+					,m.MessageTypeId
+					,0
+					)
+		OUTPUT m.OWPMatchId
+			,inserted.MessageId
+			,inserted.MessageType
+		INTO #tblMessageDeselectedWatcher(OWPMatchId, [MessageId], MessageTypeId);
+
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
 			SELECT m.MessageId
-				,m.OWPMatchId
-				,ass.OldUserId
-			FROM #tblMessageDeselected AS m
-			INNER JOIN #tblAssignmentLog AS ass ON m.OWPMatchId = ass.OWPMatchId
-			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @WatcherMatchInfoNotificationSettingId
-			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-				AND nsm.UserId = ass.OldUserId
-			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-				AND ass.[Action] = 'DELETE'
-				AND NOT EXISTS (
-					SELECT 1
-					FROM #tblAssigneeReceiver
-					WHERE #tblAssigneeReceiver.UserId = ass.OldUserId
-					)
+				,m.MessageTypeId
+				,ass.UserId
+			FROM #tblMessageDeselectedWatcher AS m
+			CROSS JOIN (
+				SELECT DISTINCT w.UserId
+				FROM #tblAssignmentLog AS m
+				INNER JOIN dbo.[User] AS u ON m.OldUserId = u.UserId
+				INNER JOIN (
+					SELECT w.UserId
+						,u.SectionId
+					FROM dbo.fnc_GetWatcherToSendMessage(@WatcherMatchInfoNotificationSettingId) AS w
+					INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
+					) AS w ON u.SectionId = w.SectionId
+				WHERE NOT EXISTS (
+						SELECT 1
+						FROM #tblAssigneeReceiver AS ur
+						WHERE ur.UserId = w.UserId
+						)
+				) AS ass
 			) AS m
 			ON 1 = 0
 		WHEN NOT MATCHED
@@ -4010,7 +4086,7 @@ BEGIN
 					)
 				VALUES (
 					m.MessageId
-					,m.OldUserId
+					,m.UserId
 					,@SessionId
 					);
 
@@ -4084,6 +4160,8 @@ BEGIN
 	END CATCH
 
 	--drop tables
+	DROP TABLE #tblMessageDeselectedWatcher
+
 	DROP TABLE #tblAssigneeReceiver
 
 	DROP TABLE #tblMatchOffer
