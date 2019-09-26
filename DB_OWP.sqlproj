@@ -191,7 +191,6 @@
     <Build Include="dbo\Stored Procedures\OWP_MatchNoteUser_Insert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchNoteInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchListDetailsGet.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_MatchInfo_UpdateIsSelected.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_UpdateRecommendOdds.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_UpdateMatchNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_InsertRecommendOdds.sql" />

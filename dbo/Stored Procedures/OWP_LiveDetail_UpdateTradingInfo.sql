@@ -344,7 +344,7 @@ BEGIN
 		,@SPName = 'OWP_LiveDetail_UpdateTradingInfo'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
-		,@ObjectId = @ActorId
+		,@ObjectId = @OWPMatchId
 		,@Data = @NewData
 		,@DataOld = @OldData
 		

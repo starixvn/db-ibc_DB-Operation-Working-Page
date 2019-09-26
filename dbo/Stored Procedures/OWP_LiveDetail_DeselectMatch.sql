@@ -423,8 +423,8 @@ BEGIN
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
 		,@ObjectId = @OWPMatchId
-		,@Data = NULL
-		,@DataOld = NULL
+		,@Data = '<r><z is="0"/></r>'
+		,@DataOld = '<r><z is="1"/></r>'
 
 	DROP TABLE #tblRemoveMatchRecommendOddsIds
 

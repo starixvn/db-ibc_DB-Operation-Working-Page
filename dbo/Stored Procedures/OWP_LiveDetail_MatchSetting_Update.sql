@@ -390,7 +390,7 @@ BEGIN
 		,@SPName = 'OWP_MatchSetting_Update'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
-		,@ObjectId = @UserId
+		,@ObjectId = @MatchId
 		,@Data = @LogData
 		,@DataOld = @LogDataOld
 END

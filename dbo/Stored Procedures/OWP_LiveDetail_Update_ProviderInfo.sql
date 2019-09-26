@@ -778,7 +778,7 @@ DELETE
 			,@SPName = 'OWP_LiveDetail_Update_ProviderInfo'
 			,@LoggedDate = @StartRun
 			,@Duration = @Duration
-			,@ObjectId = @ActorId
+			,@ObjectId = @OWPMatchId
 			,@Data = @NewData
 			,@DataOld = @OldData
 	END

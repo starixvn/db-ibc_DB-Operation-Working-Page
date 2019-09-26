@@ -76,15 +76,6 @@ BEGIN
 	IF @ErrCode <> 0
 		RETURN
 
-	EXEC [dbo].[OWP_MatchInfo_UpdateIsSelected] @ActorId
-		,@OWPMatchId
-		,@IsSelected
-		,@ErrCode OUTPUT
-		,@ErrMsg OUTPUT
-
-	IF @ErrCode <> 0
-		RETURN
-
 	DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
 		,@Duration INT
@@ -746,7 +737,7 @@ BEGIN
 		,@SPName = 'OWP_LiveDetail_Update_MatchInfo'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
-		,@ObjectId = @ActorId
+		,@ObjectId = @OWPMatchId
 		,@Data = @LogData
 		,@DataOld = @LogDataOld
 

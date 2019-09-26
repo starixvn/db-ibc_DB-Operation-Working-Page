@@ -311,7 +311,7 @@ BEGIN
 			,@SPName = 'OWP_MatchSetting_Delete'
 			,@LoggedDate = @StartRun
 			,@Duration = @Duration
-			,@ObjectId = @UserId
+			,@ObjectId = @MatchId
 			,@Data = @LogData
 			,@DataOld = ''
 END

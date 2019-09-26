@@ -354,7 +354,7 @@ BEGIN
 			,@SPName = 'OWP_LiveGameAssignment_EditSingleMatch'
 			,@LoggedDate = @StartRun
 			,@Duration = @Duration
-			,@ObjectId = @ActorId
+			,@ObjectId = @OWPMatchId
 			,@Data = @LogData
 			,@DataOld = @LogDataOld
 	END

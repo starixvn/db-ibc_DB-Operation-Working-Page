@@ -32,7 +32,7 @@ VALUES (
 	,2
 	,'OWP_LiveDetail_DeselectMatch'
 	,'OWP_LiveDetail_DeselectMatch'
-	,''
+	,'<root><xml path="r/z" /><row item="IsSelected" alias="is" /></root>'
 	)
 	
 GO

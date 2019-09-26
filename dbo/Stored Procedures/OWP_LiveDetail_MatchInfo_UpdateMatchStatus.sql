@@ -499,7 +499,7 @@ BEGIN
 			,@SPName = 'OWP_LiveDetail_MatchInfo_UpdateMatchStatus'
 			,@LoggedDate = @StartRun
 			,@Duration = @Duration
-			,@ObjectId = @UserId
+			,@ObjectId = @OWPMatchId
 			,@Data = @LogData
 			,@DataOld = @LogDataOld
 
