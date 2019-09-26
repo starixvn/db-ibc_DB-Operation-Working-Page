@@ -3893,7 +3893,7 @@ BEGIN
 			,IsImportant
 			)
 		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Match.No>', ISNULL(m.MatchNo, '')), '<Bettype>', ''), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName) AS MessageContent
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Match.No>', ISNULL(m.MatchNo, '')), '<Bettype>', ''), '<League>', le.OWPLeagueName), '<Event>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
 			,@MessageTypeId
 			,1
 		FROM #tblAssignmentLog AS l
@@ -3901,8 +3901,7 @@ BEGIN
 		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON l.OWPMatchId = m.OWPMatchId
 		INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = m.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = m.OWPAwayId
-		INNER JOIN dbo.OWPTeam AS nh WITH (NOLOCK) ON nh.OWPTeamId = m.OWPHomeId
-		INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
+ 
 		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
 		WHERE l.[Action] = 'DELETE'
 			--Deleting duplicate values
