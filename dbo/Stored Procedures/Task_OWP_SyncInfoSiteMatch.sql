@@ -682,7 +682,12 @@ BEGIN
 								WHEN ISNULL(m.MatchNo, '') = ''
 									THEN ''
 								ELSE '#' + m.MatchNo
-								END), '<League>', le.OWPLeagueName), '<Event>', nh.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<OldMatch.No>', m.MatchNo), '<OldLeague>', ole.OldOWPLeagueName), '<OldEvent>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
+								END), '<League>', le.OWPLeagueName), '<Event>', nh.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<OldMatch.No>', 
+								CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<OldLeague>', ole.OldOWPLeagueName), '<OldEvent>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
