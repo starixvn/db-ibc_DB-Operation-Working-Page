@@ -698,7 +698,7 @@ BEGIN
 	INNER JOIN dbo.OWPTeam AS nh WITH (NOLOCK) ON nh.OWPTeamId = m.OWPHomeId
 	INNER JOIN dbo.OWPTeam AS na WITH (NOLOCK) ON na.OWPTeamId = m.OWPAwayId
 	INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
-	INNER JOIN #tblLeagueLog AS ole WITH (NOLOCK) ON ole.OldOWPLeagueId = m.OWPLeagueId
+	INNER JOIN #tblLeagueLog AS ole WITH (NOLOCK) ON ole.OWPMatchId = m.OWPMatchId
 
 	-- TV
 	SELECT @MessageTemplate = mt.MsgTemplateContent
