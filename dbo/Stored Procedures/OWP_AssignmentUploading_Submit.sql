@@ -1193,10 +1193,12 @@ BEGIN
 				)
 
 		--Set MatchNo empty on matches same upload time but not uploaded
+		/*
 		UPDATE ma
 		SET ma.MatchNo = ''
 		FROM dbo.OWPMatch AS ma WITH (ROWLOCK)
 		INNER JOIN #tblRemoveMatch AS rm WITH (NOLOCK) ON ma.OWPMatchId = rm.OWPMatchId
+		*/
 
 		--list of old MatchInfo of existed matches
 		INSERT INTO #tblOldMatchInfo (

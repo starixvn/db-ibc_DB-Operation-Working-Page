@@ -260,7 +260,15 @@ BEGIN
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditMatch'
 
-		SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', ISNULL(@MatchNo, '')), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<OldMatch.No>', @OldMatchNo), '<OldLeague>', @OldOWPLeagueName), '<OldEvent>', @OldOWPHomeName + ' -vs- ' + @OldOWPAwayName);		 
+		SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>',
+		
+		CASE 
+								WHEN ISNULL(@MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + @MatchNo
+								END
+		 
+		 ), '<League>', @LeagueName), '<Event>', @HomeName + ' -vs- ' + @AwayName), '<OldMatch.No>', @OldMatchNo), '<OldLeague>', @OldOWPLeagueName), '<OldEvent>', @OldOWPHomeName + ' -vs- ' + @OldOWPAwayName);		 
 		IF @MessageTemplate IS NOT NULL
 		BEGIN
 			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
