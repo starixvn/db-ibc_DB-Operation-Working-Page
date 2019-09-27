@@ -3897,7 +3897,11 @@ BEGIN
 			,IsImportant
 			)
 		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Match.No>', ISNULL(m.MatchNo, '')), '<Bettype>', ''), '<League>', le.OWPLeagueName), '<Event>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Match.No>',  CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<Bettype>', ''), '<League>', le.OWPLeagueName), '<Event>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
 			,@MessageTypeId
 			,1
 		FROM #tblAssignmentLog AS l
@@ -3998,7 +4002,7 @@ BEGIN
 			)
 		SELECT l.OWPMatchId
 			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Old>', l.OldUsername), '<New>', ''), '<Match.No>', CASE 
-								WHEN m.MatchNo = ''
+								WHEN ISNULL(m.MatchNo, '') = ''
 									THEN ''
 								ELSE '#' + m.MatchNo
 								END), '<Bettype>', ''), '<League>', le.OWPLeagueName), '<Event>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
