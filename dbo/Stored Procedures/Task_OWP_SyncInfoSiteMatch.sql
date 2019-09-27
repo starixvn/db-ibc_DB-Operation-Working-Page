@@ -678,7 +678,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', ISNULL(m.MatchNo, '')), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<OldMatch.No>', m.MatchNo), '<OldLeague>', ole.OldOWPLeagueName), '<OldEvent>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<OldMatch.No>', m.MatchNo), '<OldLeague>', ole.OldOWPLeagueName), '<OldEvent>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -704,7 +708,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldTV), '<New>', r.NewTV) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldTV), '<New>', r.NewTV) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -728,7 +736,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldAgent), '<New>', r.NewAgent) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldAgent), '<New>', r.NewAgent) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -752,7 +764,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldRound), '<New>', r.NewRound) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldRound), '<New>', r.NewRound) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -775,7 +791,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldDivision), '<New>', r.NewDivision) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>',CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldDivision), '<New>', r.NewDivision) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -798,7 +818,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldChannel), '<New>', r.NewChannel) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldChannel), '<New>', r.NewChannel) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -821,7 +845,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWB), '<New>', r.NewWB) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWB), '<New>', r.NewWB) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -844,7 +872,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite1), '<New>', r.NewWebsite1) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite1), '<New>', r.NewWebsite1) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -867,7 +899,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite2), '<New>', r.NewWebsite2) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite2), '<New>', r.NewWebsite2) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -890,7 +926,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite3), '<New>', r.NewWebsite3) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite3), '<New>', r.NewWebsite3) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
@@ -913,7 +953,11 @@ BEGIN
 		,IsImportant
 		)
 	SELECT l.OWPMatchId
-		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', m.MatchNo), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite4), '<New>', r.NewWebsite4) AS MessageContent
+		,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', 'InfoSite'), '<Match.No>', CASE 
+								WHEN ISNULL(m.MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + m.MatchNo
+								END), '<League>', le.OWPLeagueName), '<Event>', na.OWPTeamName + ' -vs- ' + na.OWPTeamName), '<Old>', r.OldWebsite4), '<New>', r.NewWebsite4) AS MessageContent
 		,@MessageTypeId
 		,1
 	FROM #tblTeamLog AS l
