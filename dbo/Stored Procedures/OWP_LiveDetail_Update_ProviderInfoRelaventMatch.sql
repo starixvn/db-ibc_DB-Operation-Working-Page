@@ -163,6 +163,7 @@ BEGIN
 			,@OtherProviderIdsCurrent
 			,@ProviderIdsCurrent
 			,@AgentIdsCurrent
+			,0
 
 		SET @rowStart = @rowStart + 1
 	END

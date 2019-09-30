@@ -10,6 +10,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo] @ActorId INT
 	,@OtherProviderIds NVARCHAR(100) = ''
 	,@ProviderIds NVARCHAR(100) = ''
 	,@AgentIds NVARCHAR(100) = ''
+	,@CanWriteLog BIT = 1
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -743,44 +744,45 @@ DELETE
 		END
 	END
 
+	IF(@CanWriteLog=1)
 		BEGIN
-		SET @Xml = (
-				SELECT @OWPMatchId AS '@mt'
-					,@OldTVIds AS '@tv'
-					,@OldChannel AS '@ch'
-					,@OldWB AS '@wb'
-					,@OldProviderIds AS '@pv'					
-					,@OldOtherProviderIds AS '@opv'
-					,@OldPhone AS '@ph'
-					,@OldAgentIds AS '@ag'
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @OldData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')		 
+			SET @Xml = (
+					SELECT @OWPMatchId AS '@mt'
+						,@OldTVIds AS '@tv'
+						,@OldChannel AS '@ch'
+						,@OldWB AS '@wb'
+						,@OldProviderIds AS '@pv'					
+						,@OldOtherProviderIds AS '@opv'
+						,@OldPhone AS '@ph'
+						,@OldAgentIds AS '@ag'
+					FOR XML PATH('z')
+						,ROOT('r')
+					)
+			SET @OldData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')		 
 
-		SET @Xml = (
-				SELECT @OWPMatchId AS '@mt'
-					,@TVIds AS '@tv'
-					,@Channel AS '@ch'
-					,@WB AS '@wb'
-					,@ProviderIds AS '@pv'
-					,@OtherProviderIds AS '@opv'					
-					,@Phone AS '@ph'
-					,@AgentIds AS '@ag'
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @NewData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+			SET @Xml = (
+					SELECT @OWPMatchId AS '@mt'
+						,@TVIds AS '@tv'
+						,@Channel AS '@ch'
+						,@WB AS '@wb'
+						,@ProviderIds AS '@pv'
+						,@OtherProviderIds AS '@opv'					
+						,@Phone AS '@ph'
+						,@AgentIds AS '@ag'
+					FOR XML PATH('z')
+						,ROOT('r')
+					)
+			SET @NewData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+			SET @EndRun = GETDATE()
+			SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-		EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
-			,@SPName = 'OWP_LiveDetail_Update_ProviderInfo'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @OWPMatchId
-			,@Data = @NewData
-			,@DataOld = @OldData
+			EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+				,@SPName = 'OWP_LiveDetail_Update_ProviderInfo'
+				,@LoggedDate = @StartRun
+				,@Duration = @Duration
+				,@ObjectId = @OWPMatchId
+				,@Data = @NewData
+				,@DataOld = @OldData
 	END
 
 	SELECT @ErrMsg = 'The event has been edited successfully!.'
