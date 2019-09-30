@@ -386,6 +386,8 @@
     <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber31.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_RelevantMatchesMatchInfo.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_DeselectMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_OtherInfo.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_MatchStatus.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
