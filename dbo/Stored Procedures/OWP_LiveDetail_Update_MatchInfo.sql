@@ -87,29 +87,9 @@ BEGIN
 		,@OldWebsite2 NVARCHAR(1000)
 		,@OldWebsite3 NVARCHAR(1000)
 		,@OldWebsite4 NVARCHAR(1000)
+		,@OldMatchStatus NVARCHAR(15)
 		
-	-- Log  
-	SET @StartRun = GETDATE()
-	SET @Xml = (
-			SELECT @OldRemark AS '@rm'
-				,@OldIsSoloMatch AS '@sl'
-				,@OldRound AS '@rd'
-				,@OldDivision AS '@ds'
-				,@OldVenue AS '@vn'
-				,@OldOtherTime AS '@ot'
-				,@OldWebsite1 AS '@ws1'
-				,@OldWebsite2 AS '@ws2'
-				,@OldWebsite3 AS '@ws3'
-				,@OldWebsite4 AS '@ws4'
-				,@OldInfoSiteMatchId AS '@ifi'
-				,@OldMarketIds AS '@mk'
-			FROM dbo.MatchInfo AS info
-			WHERE info.OWPMatchId = @OWPMatchId
-			FOR XML PATH('z')
-				,ROOT('r')
-			)
-	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-	
+	-- Log 
 	-- save old value
 	SELECT @OldMarketIds = ISNULL(STUFF((
 			SELECT ', ' + CAST(MarketId AS NVARCHAR)
@@ -129,9 +109,32 @@ BEGIN
 		,@OldWebsite3 = m.Website3
 		,@OldWebsite4 = m.Website4
 		,@OldInfoSiteMatchId = om.InfoSiteMatchId
+		,@OldMatchStatus = m.MatchStatus
 	FROM dbo.MatchInfo m WITH (NOLOCK)
 	LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 	WHERE m.OWPMatchId = @OWPMatchId
+
+	SET @StartRun = GETDATE()
+	SET @Xml = (
+			SELECT @OldRemark AS '@rm'
+				,@OldIsSoloMatch AS '@sl'
+				,@OldRound AS '@rd'
+				,@OldDivision AS '@ds'
+				,@OldVenue AS '@vn'
+				,@OldOtherTime AS '@ot'
+				,@OldWebsite1 AS '@ws1'
+				,@OldWebsite2 AS '@ws2'
+				,@OldWebsite3 AS '@ws3'
+				,@OldWebsite4 AS '@ws4'
+				,@OldInfoSiteMatchId AS '@ifi'
+				,@OldMarketIds AS '@mk'
+				,@OldMatchStatus AS '@ms'
+			FROM dbo.MatchInfo AS info
+			WHERE info.OWPMatchId = @OWPMatchId
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 	
 	DECLARE @FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
@@ -363,6 +366,7 @@ BEGIN
 				,info.Website4 AS '@ws4'
 				,om.InfoSiteMatchId AS '@ifi'
 				,@LoggedNewMarketIds AS '@mk'
+				,info.MatchStatus AS '@ms'
 			FROM dbo.MatchInfo AS info WITH (NOLOCK)
 			LEFT JOIN OWPMatch AS om WITH (NOLOCK) ON info.OWPMatchId = om.OWPMatchId
 			WHERE @OWPMatchId = info.OWPMatchId
