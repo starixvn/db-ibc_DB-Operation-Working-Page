@@ -367,6 +367,15 @@ BEGIN
 				,om.InfoSiteMatchId AS '@ifi'
 				,@LoggedNewMarketIds AS '@mk'
 				,info.MatchStatus AS '@ms'
+				,@IsUpdateDivision AS '@iuds'
+				,@IsUpdateMarkets AS '@iumk'
+				,@IsUpdateOtherTime AS '@iuot'
+				,@IsUpdateRound AS '@iurd'
+				,@IsUpdateVenue AS '@iuvn'
+				,@IsUpdateWebsite1 AS '@iuws1'
+				,@IsUpdateWebsite2 AS '@iuws2'
+				,@IsUpdateWebsite3 AS '@iuws3'
+				,@IsUpdateWebsite4 AS '@iuws4'
 			FROM dbo.MatchInfo AS info WITH (NOLOCK)
 			LEFT JOIN OWPMatch AS om WITH (NOLOCK) ON info.OWPMatchId = om.OWPMatchId
 			WHERE @OWPMatchId = info.OWPMatchId

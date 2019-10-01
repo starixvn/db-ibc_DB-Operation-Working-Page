@@ -17,7 +17,7 @@ SET LogItems='<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row i
 WHERE ActionId=96
 
 UPDATE dbo.LogAction WITH (ROWLOCK)
-SET LogItems = '<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row item="MatchStatus" alias="ms" /><row item="InfoSiteMatchId" alias="ifi" /><row item="Remark" alias="rm" /><row item="Round" alias="rd" /><row item="IsSoloMatch" alias="sl" /><row item="Venue" alias="vn" /><row item="Division" alias="ds" /><row item="Market" alias="mk" /><row item="OtherTime" alias="ot" /><row item="Website1" alias="ws1" /><row item="Website2" alias="ws2" /><row item="Website3" alias="ws3" /><row item="Website4" alias="ws4" /></root>' 
+SET LogItems = '<root><xml path="r/z" /><row item="OWPMatchId" alias="mt" /><row item="MatchStatus" alias="ms" /><row item="InfoSiteMatchId" alias="ifi" /><row item="Remark" alias="rm" /><row item="Round" alias="rd" /><row item="IsUpdateRound" alias="iurd" /><row item="IsSoloMatch" alias="sl" /><row item="Venue" alias="vn" /><row item="IsUpdateVenue" alias="iuvn" /><row item="Division" alias="ds" /><row item="IsUpdateDivision" alias="iuds" /><row item="Market" alias="mk" /><row item="IsUpdateMarkets" alias="iumk" /><row item="OtherTime" alias="ot" /><row item="IsUpdateOtherTime" alias="iuot" /><row item="Website1" alias="ws1" /><row item="IsUpdateWebsite1" alias="iuws1" /><row item="Website2" alias="ws2" /><row item="IsUpdateWebsite2" alias="iuws2" /><row item="Website3" alias="ws3" /><row item="IsUpdateWebsite3" alias="iuws3" /><row item="Website4" alias="ws4" /><row item="IsUpdateWebsite4" alias="iuws4" /></root>' 
 WHERE SPName = 'OWP_LiveDetail_Update_MatchInfo'
 
 INSERT INTO dbo.LogAction (
