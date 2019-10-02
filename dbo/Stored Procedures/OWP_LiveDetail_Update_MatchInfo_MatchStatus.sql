@@ -36,8 +36,6 @@ BEGIN
 		,@MessageInsertOtherAssignmentId INT
 		,@MessageMatchStatus NVARCHAR(MAX)
 		,@MessageMatchStatusId INT
-		,@MessageMinorMatchStatus NVARCHAR(MAX)
-		,@MessageMinorMatchStatusId INT
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
 		,@FastMarket INT = - 88
@@ -49,40 +47,61 @@ BEGIN
 		,@NotifyMyAssignmentUpdatedId INT = 1
 		,@NotifyAssigneeMatchInfoUpdatedId SMALLINT = 5
 		,@NotifyWatcherMatchInfoUpdatedId SMALLINT = 9
-		,@UserReceivedAssigneeMessageMatchInfo TVP_INT
-		,@UserReceivedWatcherMessageMatchInfo TVP_INT
 		,@ActorName VARCHAR(30)
-	
+
 	-- build relevant matches
-	CREATE TABLE #tblRelevantMatches (
-		OWPMatchId INT
+	DECLARE @tblRelevantMatches TABLE (
+		OWPMatchId INT PRIMARY KEY CLUSTERED
 		,MinorBettypeId INT
+		,MinorBettypeName NVARCHAR(100)
 		)
-	INSERT INTO #tblRelevantMatches (OWPMatchId, MinorBettypeId)
-	VALUES (@OWPMatchId, @MinorBettypeId)
 	
+	INSERT INTO @tblRelevantMatches (OWPMatchId, MinorBettypeId)
+	VALUES (@OWPMatchId, @MinorBettypeId)
+
 	IF @ParentMatchId IS NULL
 	BEGIN
-		INSERT INTO #tblRelevantMatches (OWPMatchId, MinorBettypeId)
-		SELECT MinorMatchId, MinorBettypeId
-		FROM dbo.MinorMatch WITH (NOLOCK)
-		WHERE ParentMatchId = @OWPMatchId AND MinorBettypeId IN (@FastMarket, @AllInOne, @Specific10Mins, @Specific15Mins)
+		INSERT INTO @tblRelevantMatches (
+			OWPMatchId
+			,MinorBettypeId
+			,MinorBettypeName
+			)
+		SELECT mm.MinorMatchId
+			,mm.MinorBettypeId
+			,mb.MinorBettypeName
+		FROM dbo.MinorMatch AS mm WITH (NOLOCK)
+		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mm.MinorBettypeId = mb.MinorBettypeId
+		WHERE ParentMatchId = @OWPMatchId AND mm.MinorBettypeId IN (@FastMarket, @AllInOne, @Specific10Mins, @Specific15Mins)
 	END
 	ELSE
 	BEGIN
 		IF @MinorBettypeId = @NoOfCorners
 		BEGIN
-			INSERT INTO #tblRelevantMatches (OWPMatchId, MinorBettypeId)
-			SELECT MinorMatchId, MinorBettypeId
-			FROM dbo.MinorMatch WITH (NOLOCK)
-			WHERE ParentMatchId = @ParentMatchId AND MinorBettypeId = @Specific15MinsNoOfCorners
+			INSERT INTO @tblRelevantMatches (
+				OWPMatchId
+				,MinorBettypeId
+				,MinorBettypeName
+				)
+			SELECT mm.MinorMatchId
+				,mm.MinorBettypeId
+				,mb.MinorBettypeName
+			FROM dbo.MinorMatch AS mm WITH (NOLOCK)
+			CROSS JOIN dbo.MinorBettype AS mb WITH (NOLOCK)
+			WHERE mm.ParentMatchId = @ParentMatchId AND mm.MinorBettypeId = @Specific15MinsNoOfCorners AND mb.MinorBettypeId = @Specific15Mins
 		END
 		ELSE IF @MinorBettypeId = @TotalBooking
 		BEGIN
-			INSERT INTO #tblRelevantMatches (OWPMatchId, MinorBettypeId)
-			SELECT MinorMatchId, MinorBettypeId
-			FROM dbo.MinorMatch WITH (NOLOCK)
-			WHERE ParentMatchId = @ParentMatchId AND MinorBettypeId = @TotalBooking
+			INSERT INTO @tblRelevantMatches (
+				OWPMatchId
+				,MinorBettypeId
+				,MinorBettypeName
+				)
+			SELECT mm.MinorMatchId
+				,mm.MinorBettypeId
+				,mb.MinorBettypeName
+			FROM dbo.MinorMatch AS mm WITH (NOLOCK)
+			CROSS JOIN dbo.MinorBettype AS mb WITH (NOLOCK)
+			WHERE mm.ParentMatchId = @ParentMatchId AND mm.MinorBettypeId = @TotalBooking AND mb.MinorBettypeId = @Specific15Mins
 		END
 	END
 	
@@ -90,7 +109,7 @@ BEGIN
 	UPDATE mi
 	SET MatchStatus = @MatchStatus
 	FROM dbo.MatchInfo AS mi WITH (ROWLOCK)
-	INNER JOIN #tblRelevantMatches AS m ON mi.OWPMatchId = m.OWPMatchId
+	INNER JOIN @tblRelevantMatches AS m ON mi.OWPMatchId = m.OWPMatchId
 
 	CREATE TABLE #tblMessage (
 		UserId INT
@@ -155,14 +174,14 @@ BEGIN
 								,'<Event>', @EventName)
 							, '<League>', @LeagueName)
 						,'<Match.No>', @MatchNo)
-					,'<Bettype>', mb.ShortName)
+					,'<Bettype>', ISNULL(m.MinorBettypeName, mb.ShortName))
 				,'<User>', @ActorName)
 				,CASE 
 					WHEN a.AssignmentType = 1 THEN @MessageInsertAssignmentId
 					ELSE @MessageInsertOtherAssignmentId
 					END
 			FROM dbo.Assignment AS a WITH (NOLOCK)
-				INNER JOIN #tblRelevantMatches AS m ON a.OWPMatchId = m.OWPMatchId
+				INNER JOIN @tblRelevantMatches AS m ON a.OWPMatchId = m.OWPMatchId
 				INNER JOIN dbo.MajorBettype AS mb ON mb.BettypeId = a.Bettype
 			
 			MERGE dbo.[Message] AS ms
@@ -304,8 +323,6 @@ BEGIN
 			INTO dbo.MessageUser(MessageId, UserId, SessionId);
 		END
 	END
-
-	DROP TABLE #tblRelevantMatches
 
 	DROP TABLE #tblMessage
 	
