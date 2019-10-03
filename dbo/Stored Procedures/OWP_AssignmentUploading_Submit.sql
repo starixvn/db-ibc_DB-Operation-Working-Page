@@ -2830,7 +2830,7 @@ BEGIN
 									WHEN a.AssignmentType = 1
 										THEN @MessageDeleteAssignment
 									ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.OldAssignmentNote, '#<user>', ''))))
-									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', a.MatchNo), '<User>', @Username)
+									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>',a.MatchNo), '<User>', '#'+@Username)
 			,CASE 
 				WHEN a.AssignmentType = 1
 					THEN @MessageDeleteAssignmentId
@@ -2858,7 +2858,7 @@ BEGIN
 									WHEN a.AssignmentType = 1
 										THEN @MessageInsertAssignment
 									ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
-									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', a.MatchNo), '<User>', @Username)
+									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>',a.MatchNo), '<User>', '#'+@Username)
 			,CASE 
 				WHEN a.AssignmentType = 1
 					THEN @MessageInsertAssignmentId
@@ -3073,6 +3073,7 @@ BEGIN
 										ELSE ''
 										END), '<Event>', a.EventName), '<User>', @Username), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', a.MatchNo)
 		FROM #tblAssignmentInTimeRange AS a
+
 
 		-- assignee message change assignment
 		MERGE INTO dbo.[Message] WITH (ROWLOCK)
