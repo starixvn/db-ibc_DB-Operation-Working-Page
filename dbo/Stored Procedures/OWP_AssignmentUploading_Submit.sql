@@ -2900,7 +2900,7 @@ BEGIN
 							WHEN m.MatchNo = ''
 								THEN ''
 							ELSE '#' + m.MatchNo
-							END), '<League>', l.OWPLeagueName), '<User>', @Username)
+							END), '<League>', l.OWPLeagueName), '<User>', '#'+@Username)
 			,CASE 
 				WHEN al.MinorBettypeId IS NULL
 					THEN @MessageMatchStatusId
@@ -3342,7 +3342,7 @@ BEGIN
 			)
 		SELECT m.OWPMatchId
 			,@MessageEditMaxbetId AS MessageTypeId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditMaxbet, '<User>', @Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditMaxbet, '<User>', '#'+@Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
 									WHEN mb.MinorBettypeId IS NULL
 										THEN mjb.ShortName
 									WHEN mm.MinorBettypeId = @Specific15Mins
@@ -3371,7 +3371,7 @@ BEGIN
 		
 		SELECT m.OWPMatchId
 			,@MessageEditMaxbetCN88Id AS MessageTypeId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditMaxbetCN88, '<User>', @Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditMaxbetCN88, '<User>', '#'+@Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
 									WHEN mb.MinorBettypeId IS NULL
 										THEN mjb.ShortName
 									WHEN mm.MinorBettypeId = @Specific15Mins
@@ -3400,7 +3400,7 @@ BEGIN
 		
 		SELECT m.OWPMatchId
 			,@MessageEditSpreadId AS MessageTypeId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditSpread, '<User>', @Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditSpread, '<User>', '#'+@Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
 									WHEN mb.MinorBettypeId IS NULL
 										THEN mjb.ShortName
 									WHEN mm.MinorBettypeId = @Specific15Mins
@@ -3429,7 +3429,7 @@ BEGIN
 		
 		SELECT m.OWPMatchId
 			,@MessageEditSpreadCN88Id AS MessageTypeId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditSpreadCN88, '<User>', @Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageEditSpreadCN88, '<User>', '#'+@Username), '<Event>', pm.Home + ' -vs- ' + pm.Away), '<Bettype>', CASE 
 									WHEN mb.MinorBettypeId IS NULL
 										THEN mjb.ShortName
 									WHEN mm.MinorBettypeId = @Specific15Mins
@@ -3581,7 +3581,7 @@ BEGIN
 			)
 		SELECT tr.OWPMatchId
 			,tr.MessageTypeId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mt.MsgTemplateContent, '<User>', @Username), '<Event>', home.OWPTeamName + ' -vs- ' + away.OWPTeamName), '<Old>', tr.OldValue), '<New>', tr.NewValue), '<League>', l.OWPLeagueName), '<Match.No>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mt.MsgTemplateContent, '<User>', '#'+@Username), '<Event>', home.OWPTeamName + ' -vs- ' + away.OWPTeamName), '<Old>', tr.OldValue), '<New>', tr.NewValue), '<League>', l.OWPLeagueName), '<Match.No>', CASE 
 					WHEN om.MatchNo = ''
 						THEN ''
 					ELSE '#' + om.MatchNo
@@ -3899,7 +3899,7 @@ BEGIN
 			,IsImportant
 			)
 		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Match.No>',  CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', '#'+@Username), '<Match.No>',  CASE 
 								WHEN ISNULL(m.MatchNo, '') = ''
 									THEN ''
 								ELSE '#' + m.MatchNo
@@ -4003,7 +4003,7 @@ BEGIN
 			,IsImportant
 			)
 		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @Username), '<Old>', l.OldUsername), '<New>', ''), '<Match.No>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', '#'+@Username), '<Old>', l.OldUsername), '<New>', ''), '<Match.No>', CASE 
 								WHEN ISNULL(m.MatchNo, '') = ''
 									THEN ''
 								ELSE '#' + m.MatchNo
@@ -4078,7 +4078,7 @@ BEGIN
 				WHERE NOT EXISTS (
 						SELECT 1
 						FROM #tblAssigneeReceiver AS ur
-						WHERE ur.UserId = w.UserId
+						WHERE ur.UserId = w.UserId AND ur.OWPMatchId = m.OWPMatchId
 						)
 				) AS ass
 			) AS m
