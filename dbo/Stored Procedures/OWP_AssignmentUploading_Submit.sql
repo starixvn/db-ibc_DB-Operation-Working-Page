@@ -4004,7 +4004,7 @@ BEGIN
 			,IsImportant
 			)
 		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', '#'+@Username), '<Old>', l.OldUsername), '<New>', ''), '<Match.No>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', '#'+@Username), '<Old>', '#'+l.OldUsername), '<New>', ''), '<Match.No>', CASE 
 								WHEN ISNULL(m.MatchNo, '') = ''
 									THEN ''
 								ELSE '#' + m.MatchNo
