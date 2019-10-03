@@ -4076,11 +4076,13 @@ BEGIN
 					FROM dbo.fnc_GetWatcherToSendMessage(@WatcherMatchInfoNotificationSettingId) AS w
 					INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
 					) AS w ON u.SectionId = w.SectionId
+					/*
 				WHERE NOT EXISTS (
 						SELECT 1
 						FROM #tblAssigneeReceiver AS ur
 						WHERE ur.UserId = w.UserId AND ur.OWPMatchId = m.OWPMatchId
 						)
+						*/
 				) AS ass
 			) AS m
 			ON 1 = 0
