@@ -7,7 +7,7 @@ AS
 /*
 Created: 20190920@Leo.Vo
 Task : Remove match
-DB: bodb_OWP
+DB: bodb_OWP#
 
 Revisions:
 	20190920@Leo.Vo: InitialSP - [Redmine: #120496]
@@ -70,36 +70,37 @@ BEGIN
 		,UserId INT
 		,AssignmentNote NVARCHAR(200)
 		)
-		
-	CREATE TABLE #tblAssignee (
-		OWPMatchId INT
-		,UserId INT
+	
+	CREATE TABLE #tblMessage (
+		MessageContent NVARCHAR(MAX)
+		,MessageTypeId INT
 		)
 		
-	CREATE TABLE #tblWatcher (
-		OWPMatchId INT
+	CREATE TABLE #tblAssigneeMessageIds (
+		MessageId INT
+	)
+	
+	CREATE TABLE #tblAssigneeMessageUser (
+		MessageId INT
 		,UserId INT
 	)
+	
+	CREATE TABLE #tblWatcherMessageIds (
+		MessageId INT
+	)
 		
-	CREATE TABLE #tblMessage (
+	CREATE TABLE #tblUserMessage (
 		UserId INT
-		,OWPMatchId INT
 		,MessageContent NVARCHAR(MAX)
 		,MessageTypeId INT
 		)
 		
-	CREATE TABLE #tblAssigneeMessage (
+	CREATE TABLE #tblAssigneeReceivingNotification (
 		UserId INT
-		,OWPMatchId INT
-		,MessageContent NVARCHAR(MAX)
-		,MessageTypeId INT
 		)
-		
-	CREATE TABLE #tblWatcherMessage (
+	
+	CREATE TABLE #tblWatcherReceivingNotification (
 		UserId INT
-		,OWPMatchId INT
-		,MessageContent NVARCHAR(MAX)
-		,MessageTypeId INT
 		)
 
 	SELECT @ParentMatchId = ParentMatchId
@@ -240,6 +241,11 @@ BEGIN
 		FROM dbo.MessageTemplate mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'AssignmentDelete'
 		
+		SELECT @MessageDeleteOtherAssignment = mt.MsgTemplateContent
+			,@MessageDeleteOtherAssignmentId = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'OtherAssignmentDelete'
+		
 		SELECT @MessageChangeOfAssignment = mt.MsgTemplateContent
 			,@MessageChangeOfAssignmentId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate mt WITH (NOLOCK)
@@ -256,10 +262,21 @@ BEGIN
 		FROM @tblRemoveMinorMatch
 		WHERE ParentMatchId = @ParentMatchId AND MinorBettypeId = @TotalBooking
 		
-		INSERT INTO #tblAssignee (
+		DECLARE @tblAssignment TABLE (
+			OWPMatchId INT
+			,AssignmentType TINYINT
+			,UserId INT
+			,AssignmentNote NVARCHAR(200)
+			,LeagueName NVARCHAR(500)
+			,EventName NVARCHAR(500)
+			,MatchNo NVARCHAR(100)
+		)
+		
+		INSERT INTO @tblAssignment (
 			OWPMatchId
+			,AssignmentType
 			,UserId
-
+			,AssignmentNote
 		)
 		SELECT DISTINCT CASE mm.MinorBettypeId
 						WHEN @Specific15MinsNoOfCorners THEN @NoOfCornersMinorMatchId 
@@ -269,56 +286,57 @@ BEGIN
 						WHEN @FastMarket THEN mm.ParentMatchId
 						WHEN @AllInOne THEN mm.ParentMatchId
 						ELSE ass.OWPMatchId END
+			,ass.AssignmentType
 			,ass.UserId
+			,ass.AssignmentNote
 		FROM #tblRemoveAssignment AS ass
 		INNER JOIN @tblRemoveMatchInfo AS mi ON ass.OWPMatchId = mi.OWPMatchId
 		LEFT JOIN @tblRemoveMinorMatch AS mm ON mm.MinorMatchId = mi.OWPMatchId
-		WHERE UserId IS NOT NULL AND mi.MatchStatus = 'Live'
+		WHERE mi.MatchStatus = 'Live'
 		
-		-- create message content for assignee
-		INSERT INTO #tblMessage (
+		UPDATE ass
+		SET ass.MatchNo = CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END
+			,ass.EventName = h.OWPTeamName + ' -vs- ' + a.OWPTeamName
+			,ass.LeagueName = l.OWPLeagueName
+		FROM @tblAssignment AS ass
+		INNER JOIN @tblRemoveMatch AS m ON ass.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+		
+		-- create message content for assignment removed
+		INSERT INTO #tblUserMessage (
 			MessageContent
 			,MessageTypeId
 			,UserId
-			,OWPMatchId
 			)
 		SELECT REPLACE(
 				REPLACE(
 					REPLACE(
 						REPLACE(
-							REPLACE(@MessageDeleteAssignment
-							,'<Event>', h.OWPTeamName + ' -vs- ' + a.OWPTeamName)
+							REPLACE(CASE 
+									WHEN ass.AssignmentType = 1 THEN @MessageDeleteAssignment
+									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(ass.AssignmentNote, '#<user>', ''))))
+									END
+							,'<Event>', ass.EventName)
 						,'<Bettype>', '')
-					,'<League>', l.OWPLeagueName)
-				,'<Match.No>', CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END)
+					,'<League>', ass.LeagueName)
+				,'<Match.No>', ass.MatchNo)
 			,'<User>', @ActorName)
-			,@MessageDeleteAssignmentId
+			,CASE 
+				WHEN ass.AssignmentType = 1 THEN @MessageDeleteAssignmentId
+				ELSE @MessageDeleteOtherAssignmentId
+				END
 			,ass.UserId
-			,ass.OWPMatchId
-		FROM #tblAssignee AS ass
-			INNER JOIN @tblRemoveMatch AS m ON ass.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-		
-		INSERT INTO #tblAssigneeMessage (
-			MessageContent
-			,MessageTypeId
-			,UserId
-			,OWPMatchId
-		)
-		SELECT m.MessageContent
-			,m.MessageTypeId
-			,m.UserId
-			,m.OWPMatchId
-		FROM #tblMessage AS m
+		FROM @tblAssignment AS ass
 		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyMyAssignmentUpdatedId
 		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = m.UserId
-		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-		
+			AND nsm.UserId = ass.UserId
+		WHERE ass.UserId IS NOT NULL
+			AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+
 		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-		USING #tblAssigneeMessage AS m ON 1 = 0
+		USING #tblUserMessage AS m ON 1 = 0
 		WHEN NOT MATCHED THEN
 				INSERT (
 					MessageContent
@@ -339,14 +357,10 @@ BEGIN
 			,@SessionId
 		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 		
-		TRUNCATE TABLE #tblMessage
-		
-		-- create message content for watcher
+		-- create message content for assignment updated
 		INSERT INTO #tblMessage (
 			MessageContent
 			,MessageTypeId
-			,UserId
-			,OWPMatchId
 		)
 		SELECT REPLACE(
 				REPLACE(
@@ -355,86 +369,150 @@ BEGIN
 							REPLACE(
 								REPLACE(
 									REPLACE(@MessageChangeOfAssignment, '<New>', '')
-									,'<Old>', '#' + u.Username)
-							,'<Event>', h.OWPTeamName + ' -vs- ' + a.OWPTeamName)
+									,'<Old>', CASE 
+										WHEN ass.AssignmentType = 1 THEN '#' + u.Username
+										ELSE RTRIM(LTRIM(REPLACE(ass.AssignmentNote, '#<user>', CASE WHEN u.UserId IS NULL THEN '' ELSE '#' + u.Username END)))
+										END)
+							,'<Event>', ass.EventName)
 						,'<Bettype>', '')
-					,'<League>', l.OWPLeagueName)
-				,'<Match.No>', CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END)
+					,'<League>', ass.LeagueName)
+				,'<Match.No>', ass.MatchNo)
 			,'<User>', @ActorName)
 			,@MessageChangeOfAssignmentId
-			,ass.UserId
-			,ass.OWPMatchId
-		FROM #tblAssignee AS ass
-			INNER JOIN @tblRemoveMatch AS m ON ass.OWPMatchId = m.OWPMatchId
-			INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-			INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-			INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-			INNER JOIN dbo.[User] AS u ON ass.UserId = u.UserId
+		FROM @tblAssignment AS ass
+		LEFT JOIN dbo.[User] AS u ON ass.UserId = u.UserId
+		
+		SELECT @ParentMatchId = ISNULL(@ParentMatchId, @OWPMatchId)
+		
+		INSERT INTO #tblAssigneeReceivingNotification (
+			UserId
+			)
+		SELECT ass.UserId
+		FROM (
+			SELECT a.UserId
+			FROM (
+				SELECT @ParentMatchId AS OWPMatchId
+				
+				UNION
+				
+				SELECT MinorMatchId AS OWPMatchId
+				FROM dbo.MinorMatch WITH (NOLOCK)
+				WHERE ParentMatchId = @ParentMatchId
+				) AS m
+			INNER JOIN dbo.Assignment AS a ON m.OWPMatchId = a.OWPMatchId
+			WHERE a.UserId IS NOT NULL
 			
-		INSERT INTO #tblWatcher (
-			OWPMatchId
-			,UserId
+			UNION
+			
+			SELECT ass.UserId
+			FROM @tblAssignment AS ass
+			WHERE ass.UserId IS NOT NULL
+		) AS ass
+		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeTraderUpdatedId
+		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+			AND nsm.UserId = ass.UserId
+		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+		
+		IF EXISTS(
+			SELECT 1
+			FROM #tblAssigneeReceivingNotification
+			)
+		BEGIN
+			INSERT INTO dbo.[Message] (
+				MessageContent
+				,CreatedBy
+				,IsImportant
+				,MessageType
+				,IsWatcher
+				)
+			OUTPUT inserted.MessageId
+			INTO #tblAssigneeMessageIds(MessageId)
+			SELECT m.MessageContent
+				,@ActorId
+				,0
+				,m.MessageTypeId
+				,0
+			FROM #tblMessage AS m
+			
+			INSERT INTO dbo.MessageUser (
+				MessageId
+				,UserId
+				,SessionId
+				)
+			OUTPUT inserted.MessageId, inserted.UserId
+			INTO #tblAssigneeMessageUser (MessageId, UserId)
+			SELECT m.MessageId
+				,u.UserId
+				,@SessionId
+			FROM #tblAssigneeMessageIds AS m
+			CROSS JOIN #tblAssigneeReceivingNotification AS u
+		END
+		
+		-- create message content for watcher
+		INSERT INTO #tblWatcherReceivingNotification (
+			UserId
 		)
-		SELECT DISTINCT ass.OWPMatchId
-			,u2.UserId
-		FROM #tblAssignee AS ass
+		SELECT DISTINCT u2.UserId
+		FROM @tblAssignment AS ass
 		INNER JOIN dbo.[User] AS u1 ON ass.UserId = u1.UserId
 		INNER JOIN dbo.[User] AS u2 ON u1.SectionId = u2.SectionId
 		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyWatcherTraderUpdatedId
 		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
 			AND nsm.UserId = u2.UserId
 		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+			AND NOT EXISTS (
+				SELECT 1
+				FROM #tblAssigneeReceivingNotification AS u
+				WHERE ass.UserId = u.UserId
+			)
 		
-		INSERT INTO #tblWatcherMessage (
-			MessageContent
-			,MessageTypeId
-			,UserId
-			,OWPMatchId
-		)
-		SELECT DISTINCT m.MessageContent
-			,m.MessageTypeId
-			,w.UserId
-			,m.OWPMatchId
-		FROM #tblMessage AS m
-		CROSS JOIN #tblWatcher AS w
-
-		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-		USING (
-			SELECT m.UserId
-				,m.MessageContent
+		IF EXISTS(
+			SELECT 1
+			FROM #tblWatcherReceivingNotification
+			)
+		BEGIN
+			INSERT INTO dbo.[Message] (
+				MessageContent
+				,CreatedBy
+				,IsImportant
+				,MessageType
+				,IsWatcher
+				)
+			OUTPUT inserted.MessageId
+			INTO #tblWatcherMessageIds (MessageId)
+			SELECT m.MessageContent
+				,@ActorId
+				,0
 				,m.MessageTypeId
-			FROM #tblWatcherMessage AS m
-			) AS msn ON 1 = 0
-		WHEN NOT MATCHED THEN
-				INSERT (
-					MessageContent
-					,CreatedBy
-					,IsImportant
-					,MessageType
-					,IsWatcher
-					)
-				VALUES (
-					msn.MessageContent
-					,@ActorId
-					,0
-					,msn.MessageTypeId
-					,1
-					)
-		OUTPUT inserted.MessageId
-			,msn.UserId
-			,@SessionId
-		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
+				,1
+			FROM #tblMessage AS m
+			
+			INSERT INTO dbo.MessageUser (
+				MessageId
+				,UserId
+				,SessionId
+				)
+			SELECT m.MessageId
+				,u.UserId
+				,@SessionId
+			FROM #tblWatcherMessageIds AS m
+			CROSS JOIN #tblWatcherReceivingNotification AS u
+		END
 	END
 
 	DROP TABLE #tblRemoveAssignment
 	
+	DROP TABLE #tblUserMessage
+	
 	DROP TABLE #tblMessage
 	
-	DROP TABLE #tblAssigneeMessage
+	DROP TABLE #tblAssigneeMessageIds
 	
-	DROP TABLE #tblWatcherMessage
+	DROP TABLE #tblWatcherMessageIds
 	
-	DROP TABLE #tblAssignee
+	DROP TABLE #tblAssigneeMessageUser
 	
-	DROP TABLE #tblWatcher
+	DROP TABLE #tblAssigneeReceivingNotification
+	
+	DROP TABLE #tblWatcherReceivingNotification
 END

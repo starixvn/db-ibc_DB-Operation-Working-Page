@@ -34,6 +34,8 @@ BEGIN
 
 	DECLARE @NotifyAssigneeProviderInfoUpdatedId INT = 11
 		,@NotifyWatcherProviderInfoUpdatedId INT = 13
+		,@NotifyAssigneeMatchInfoUpdatedId INT = 5
+		,@NotifyWatcherMatchInfoUpdatedId INT = 9
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
 		,@FastMarket INT = - 88
@@ -306,23 +308,24 @@ BEGIN
 			,TemplateCode NVARCHAR(50)
 		)
 		
+		DECLARE @tblMessage TABLE (
+			MessageContent NVARCHAR(MAX)
+			,MessageTypeId INT
+		)
+		
+		-- send message notification for provider info
 		INSERT INTO @tblMessageChangeLog (
 			OldValue
 			,NewValue
 			,TemplateCode
 		)
-		VALUES (@OldTV, @NewTV, 'EditTV')
-			,(@OldProvider, @NewProvider, 'EditProvider')
+		VALUES (@OldProvider, @NewProvider, 'EditProvider')
 			,(@OldOtherProvider, @NewOtherProvider, 'EditOtherProvider')
 			,(@OldAgent, @NewAgent, 'EditAgent')
 			,(@OldChannel, @NewChannel, 'EditChannel')
 			,(@OldWB, @NewWB, 'EditWB')
 			,(@OldPhone, @NewPhone, 'EditPhone')
 		
-		DECLARE @tblMessage TABLE (
-			MessageContent NVARCHAR(MAX)
-			,MessageTypeId INT
-		)
 		INSERT INTO @tblMessage (
 			MessageTypeId
 			,MessageContent
@@ -414,6 +417,135 @@ BEGIN
 				FROM @tblMessage AS m
 				CROSS JOIN #tblWatcher AS a
 				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyWatcherProviderInfoUpdatedId
+				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+					AND nsm.UserId = a.UserId
+				) AS msn ON 1 = 0
+			WHEN NOT MATCHED THEN
+					INSERT (
+						MessageContent
+						,CreatedBy
+						,IsImportant
+						,MessageType
+						,IsWatcher
+						)
+					VALUES (
+						msn.MessageContent
+						,@ActorId
+						,0
+						,msn.MessageTypeId
+						,1
+						)
+			OUTPUT inserted.MessageId
+				,msn.UserId
+				,@SessionId
+			INTO dbo.MessageUser(MessageId, UserId, SessionId);
+		
+		END
+		
+		-- send message notification for match info
+		DELETE FROM @tblMessageChangeLog
+		INSERT INTO @tblMessageChangeLog (
+			OldValue
+			,NewValue
+			,TemplateCode
+		)
+		VALUES (@OldTV, @NewTV, 'EditTV')
+
+		DELETE FROM @tblMessage		
+		INSERT INTO @tblMessage (
+			MessageTypeId
+			,MessageContent
+		)
+		SELECT mt.MsgTemplateId
+			,REPLACE(
+					REPLACE(
+						REPLACE(
+							REPLACE(
+								REPLACE(
+									REPLACE(mt.MsgTemplateContent, '<User>', @ActorName)
+								,'<Match.No>', @MatchNo)
+							,'<League>', @LeagueName)
+						,'<Event>', @EventName)
+					,'<Old>', l.OldValue)
+				,'<New>', l.NewValue)
+		FROM @tblMessageChangeLog AS l
+		INNER JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON l.TemplateCode = mt.MsgTemplateCode
+		WHERE l.OldValue <> l.NewValue
+		
+		IF EXISTS (
+			SELECT 1
+			FROM @tblMessage
+			)
+		BEGIN
+			TRUNCATE TABLE #tblAssignee
+			INSERT INTO #tblAssignee (UserId)
+			SELECT DISTINCT a.UserId
+			FROM dbo.Assignment AS a WITH (NOLOCK)
+			INNER JOIN (SELECT MinorMatchId AS OWPMatchId
+				FROM dbo.MinorMatch WITH (NOLOCK)
+				WHERE ParentMatchId = ISNULL(@ParentMatchId, @OWPMatchId)
+				UNION
+				SELECT @OWPMatchId  AS OWPMatchId) AS m ON a.OWPMatchId = m.OWPMatchId
+			WHERE a.UserId IS NOT NULL
+			
+			TRUNCATE TABLE #tblAssigneeRecevingNotification
+			INSERT INTO #tblAssigneeRecevingNotification (UserId)
+			SELECT a.UserId
+			FROM #tblAssignee AS a
+			LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeMatchInfoUpdatedId
+			LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+				AND nsm.UserId = a.UserId
+			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+
+			MERGE dbo.[Message] AS ms
+			USING (
+				SELECT a.UserId
+					,m.MessageContent
+					,m.MessageTypeId
+				FROM @tblMessage AS m
+				CROSS JOIN #tblAssigneeRecevingNotification AS a
+				) AS msn ON 1 = 0
+			WHEN NOT MATCHED THEN
+					INSERT (
+						MessageContent
+						,CreatedBy
+						,IsImportant
+						,MessageType
+						)
+					VALUES (
+						msn.MessageContent
+						,@ActorId
+						,0
+						,msn.MessageTypeId
+						)
+			OUTPUT inserted.MessageId
+				,msn.UserId
+				,@SessionId
+			INTO dbo.MessageUser(MessageId, UserId, SessionId);
+			
+			TRUNCATE TABLE #tblWatcher
+			INSERT INTO #tblWatcher (UserId)
+			SELECT DISTINCT u.UserId
+			FROM dbo.[User] AS u WITH (NOLOCK)
+			WHERE EXISTS (
+				SELECT 1
+				FROM #tblAssignee AS a
+				INNER JOIN dbo.[User] AS u2 ON a.UserId = u2.UserId
+				WHERE u2.SectionId = u.SectionId
+			) AND NOT EXISTS (
+				SELECT 1
+				FROM #tblAssigneeRecevingNotification AS a
+				WHERE u.UserId = a.UserId
+			)
+			
+			MERGE dbo.[Message] AS ms
+			USING (
+				SELECT a.UserId
+					,m.MessageContent
+					,m.MessageTypeId
+				FROM @tblMessage AS m
+				CROSS JOIN #tblWatcher AS a
+				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyWatcherMatchInfoUpdatedId
 				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
 					AND nsm.UserId = a.UserId
 				) AS msn ON 1 = 0
