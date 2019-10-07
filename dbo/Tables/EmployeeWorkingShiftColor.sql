@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[EmployeeWorkingShiftColor] (
+﻿CREATE TABLE [dbo].[EmployeeWorkingShiftColor] (
     [ShiftId]     INT           IDENTITY (1, 1) NOT NULL,
     [ShiftCode]   NVARCHAR (50) NOT NULL,
     [Background]  VARCHAR (50)  CONSTRAINT [DF_EmployeeWorkingShiftColor_Background] DEFAULT ('') NOT NULL,
@@ -6,8 +6,11 @@ CREATE TABLE [dbo].[EmployeeWorkingShiftColor] (
     [StartTime]   TIME (7)      NULL,
     [EndTime]     TIME (7)      NULL,
     [IsTimeShift] BIT           NOT NULL,
+    [Extension]   INT           CONSTRAINT [DF_EmployeeWorkingShiftColor_Extension] DEFAULT ((0)) NULL,
     CONSTRAINT [PK_EmployeeWorkingShiftColor] PRIMARY KEY CLUSTERED ([ShiftId] ASC)
 );
+
+
 
 
 
@@ -24,8 +27,10 @@ GO
 
 GO
 CREATE UNIQUE NONCLUSTERED INDEX [IX_EmployeeWorkingShiftColor_TimeShift]
-    ON [dbo].[EmployeeWorkingShiftColor]([StartTime] ASC, [EndTime] ASC) WHERE ([IsTimeShift]=(1))
+    ON [dbo].[EmployeeWorkingShiftColor]([StartTime] ASC, [EndTime] ASC, [Extension] ASC) WHERE ([IsTimeShift]=(1))
     ON [OWP_Index];
+
+
 
 
 GO

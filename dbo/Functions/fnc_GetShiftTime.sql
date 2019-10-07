@@ -15,6 +15,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190520@Leo.Vo: Initial Func - [Redmine: #112737]
+	20191003@Tyler.Dang: Add REAL/ SPECIAL shift - [Redmine: #121438]
 */
 BEGIN
 	DECLARE @ShiftStartTime DATETIME
@@ -22,10 +23,14 @@ BEGIN
 		,@IsTimeShift BIT
 		,@StartTime TIME(7)
 		,@EndTime TIME(7)
+		,@Extension INT
+		,@REAL INT = 1
+		,@SPECIAL INT = 2
 
 	SELECT @IsTimeShift = c.IsTimeShift
 		,@StartTime = c.StartTime
 		,@EndTime = c.EndTime
+		,@Extension = c.Extension
 	FROM dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK)
 	WHERE c.ShiftId = @ShiftId
 
@@ -34,11 +39,19 @@ BEGIN
 		SELECT @ShiftStartTime = @ShiftDate + CAST(@StartTime AS DATETIME)
 			,@ShiftEndTime = @ShiftDate + CAST(@EndTime AS DATETIME)
 
-		IF DATEPART(HOUR, @StartTime) BETWEEN 1
-				AND 6
+		IF @Extension = @SPECIAL
 		BEGIN
 			SELECT @ShiftStartTime = DATEADD(DAY, 1, @ShiftStartTime)
 				,@ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)
+		END
+		ELSE IF @Extension <> @REAL
+		BEGIN
+			IF DATEPART(HOUR, @StartTime) BETWEEN 0
+				AND 6
+			BEGIN
+				SELECT @ShiftStartTime = DATEADD(DAY, 1, @ShiftStartTime)
+					,@ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)
+			END
 		END
 
 		IF @StartTime > @EndTime

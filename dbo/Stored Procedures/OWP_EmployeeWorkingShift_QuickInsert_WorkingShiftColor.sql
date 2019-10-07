@@ -6,6 +6,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QuickInsert_WorkingShiftColor] 
 	,@Color NVARCHAR(50)
 	,@StartTime TIME(7) = NULL
 	,@EndTime TIME(7) = NULL
+	,@Extension INT = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(2000) = NULL OUTPUT
 	,@ShiftId INT = 0 OUTPUT
@@ -26,6 +27,7 @@ AS
 	 20190312@Leo.Vo: Set ShiftCode empty if it is time shift - [Redmine: #109560]
 	 20190326@Leo.Vo: Change to handle error code - [Redmine: #110322]
 	 20190520@Leo.Vo: Write log - [Redmine: #113763]
+	 20191002@Kane.Le: Add Extension ((REAL), (SPECIAL))  = '' - [Redmine: #121272]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -52,6 +54,7 @@ BEGIN
 			@StartTime IS NOT NULL
 			AND StartTime = @StartTime
 			AND EndTime = @EndTime
+			AND Extension=@Extension
 			)
 
 	IF @ShiftId > 0
@@ -73,6 +76,7 @@ BEGIN
 			,StartTime
 			,EndTime
 			,IsTimeShift
+			,Extension
 			)
 		VALUES (CASE 
 				WHEN @StartTime IS NULL THEN UPPER(LTRIM(RTRIM(@ShiftCode)))
@@ -83,6 +87,7 @@ BEGIN
 			,@StartTime
 			,@EndTime
 			,@IsTimeShift
+			,@Extension
 			)
 
 		SELECT @ShiftId = @@IDENTITY
@@ -96,6 +101,7 @@ BEGIN
 					,@StartTime AS '@st'
 					,@EndTime AS '@et'
 					,@IsTimeShift AS '@its'
+					,@Extension AS '@ext'
 				FOR XML PATH('z')
 					,ROOT('r')
 				)
