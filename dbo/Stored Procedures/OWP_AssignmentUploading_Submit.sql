@@ -3804,6 +3804,20 @@ BEGIN
 			OWPMatchId INT NOT NULL
 			,MessageId INT NOT NULL
 			,MessageTypeId INT NOT NULL
+			,MessageContent NVARCHAR(MAX)
+			);
+
+		CREATE TABLE #tblMessageDeselectedAssignmentOfMyAssigned (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			,MessageContent NVARCHAR(MAX)
+			);
+
+		CREATE TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned (
+			SessionId NVARCHAR(50)
+			,MessageId INT NOT NULL
+			,UserId INT NOT NULL
 			);
 
 		CREATE TABLE #tblMessageTemplateForDeselected (
@@ -3912,9 +3926,7 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS oh WITH (NOLOCK) ON oh.OWPTeamId = m.OWPHomeId
 		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = m.OWPAwayId
 		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
-		WHERE l.[Action] = 'DELETE'
-			--Deleting duplicate values
-			;
+		WHERE l.[Action] = 'DELETE';
 
 		WITH TableBWithRowID
 		AS (
@@ -4057,29 +4069,89 @@ BEGIN
 		OUTPUT m.OWPMatchId
 			,inserted.MessageId
 			,inserted.MessageType
-		INTO #tblMessageDeselectedWatcher(OWPMatchId, [MessageId], MessageTypeId);
+			,inserted.MessageContent
+		INTO #tblMessageDeselectedAssignmentOfMyAssigned(OWPMatchId, [MessageId], MessageTypeId, MessageContent);
 
-		INSERT INTO dbo.MessageUser
-		WITH (ROWLOCK) (
-				MessageId
-				,UserId
-				,SessionId
-				)
-		SELECT m.MessageId
-			,ass.UserId
-			,@SessionId
-		FROM #tblMessageDeselectedWatcher AS m
-		CROSS JOIN (
-			SELECT DISTINCT u.UserId
-			FROM dbo.[User] AS u
-			INNER JOIN (
-				SELECT w.UserId
-					,u.SectionId
-				FROM dbo.fnc_GetWatcherToSendMessage(@TraderAssigmentOfMyAssignedMatchNotificationSettingId) AS w
-				INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
-				) AS w ON u.SectionId = w.SectionId
-			JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
-			) AS ass
+
+		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
+		USING (
+			SELECT m.MessageId
+				,ass.UserId
+			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
+			CROSS JOIN (
+				SELECT DISTINCT u.UserId
+				FROM dbo.[User] AS u
+				INNER JOIN (
+					SELECT DISTINCT nsm.UserId
+					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+					WHERE ns.NotificationSettingId = @TraderAssigmentOfMyAssignedMatchNotificationSettingId
+						AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+						AND ns.IsWatcher = 0
+					) AS n ON u.UserId = n.UserId
+				INNER JOIN (
+					SELECT u.SectionId
+					FROM dbo.[User] AS u
+					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
+					) AS l ON l.SectionId = u.SectionId
+				INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId = u.UserId
+				) AS ass
+			) AS m
+			ON 1 = 0
+		WHEN NOT MATCHED
+			THEN
+				INSERT (
+					MessageId
+					,UserId
+					,SessionId
+					)
+				VALUES (
+					m.MessageId
+					,m.UserId
+					,@SessionId
+					);
+
+		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
+		USING (
+			SELECT m.MessageId
+				,ass.UserId
+			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
+			CROSS JOIN (
+				SELECT DISTINCT u.UserId
+				FROM dbo.[User] AS u
+				INNER JOIN (
+					SELECT DISTINCT nsm.UserId
+					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+					WHERE ns.NotificationSettingId = @TraderAssigmentOfMyAssignedMatchNotificationSettingId
+						AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+						AND ns.IsWatcher = 0
+					) AS n ON u.UserId = n.UserId
+				INNER JOIN (
+					SELECT u.SectionId
+					FROM dbo.[User] AS u
+					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
+					) AS l ON l.SectionId = u.SectionId
+				INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId <> u.UserId
+				) AS ass
+			) AS m
+			ON 1 = 0
+		WHEN NOT MATCHED
+			THEN
+				INSERT (
+					MessageId
+					,UserId
+					,SessionId
+					)
+				VALUES (
+					m.MessageId
+					,m.UserId
+					,@SessionId
+					)
+		OUTPUT inserted.SessionId
+			,inserted.MessageId
+			,inserted.UserId
+		INTO #tblMessageUserDeselectedAssignmentOfMyAssigned(SessionId, [MessageId], UserId);
 
 		-- watcher
 		DELETE
@@ -4107,7 +4179,8 @@ BEGIN
 		OUTPUT m.OWPMatchId
 			,inserted.MessageId
 			,inserted.MessageType
-		INTO #tblMessageDeselectedWatcher(OWPMatchId, [MessageId], MessageTypeId);
+			,inserted.MessageContent
+		INTO #tblMessageDeselectedWatcher(OWPMatchId, [MessageId], MessageTypeId, MessageContent);
 
 		INSERT INTO dbo.MessageUser
 		WITH (ROWLOCK) (
@@ -4123,13 +4196,25 @@ BEGIN
 			SELECT DISTINCT u.UserId
 			FROM dbo.[User] AS u
 			INNER JOIN (
-				SELECT w.UserId
-					,u.SectionId
-				FROM dbo.fnc_GetWatcherToSendMessage(@WatcherMatchInfoNotificationSettingId) AS w
-				INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON w.UserId = u.UserId
-				) AS w ON u.SectionId = w.SectionId
-			JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
+				SELECT DISTINCT nsm.UserId
+				FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+				WHERE ns.NotificationSettingId = @WatcherMatchInfoNotificationSettingId
+					AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+					AND ns.IsWatcher = 1
+				) AS n ON u.UserId = n.UserId
+			INNER JOIN (
+				SELECT u.SectionId
+				FROM dbo.[User] AS u
+				JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
+				) AS l ON l.SectionId = u.SectionId
+			INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId <> u.UserId
 			) AS ass
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblMessageUserDeselectedAssignmentOfMyAssigned AS mu
+				WHERE mu.UserId = ass.UserId
+				)
 
 		--	SELECT * FROM #tblMatchInTimeRange
 		--	SELECT * FROM #tblMessageTemplateForDeseleced
@@ -4202,6 +4287,10 @@ BEGIN
 
 	--drop tables
 	DROP TABLE #tblMessageDeselectedWatcher
+
+	DROP TABLE #tblMessageDeselectedAssignmentOfMyAssigned
+
+	DROP TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned
 
 	DROP TABLE #tblAssigneeReceiver
 
