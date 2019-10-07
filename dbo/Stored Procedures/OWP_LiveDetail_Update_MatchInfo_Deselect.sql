@@ -460,11 +460,6 @@ BEGIN
 		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
 			AND nsm.UserId = u2.UserId
 		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-			AND NOT EXISTS (
-				SELECT 1
-				FROM #tblAssigneeReceivingNotification AS u
-				WHERE ass.UserId = u.UserId
-			)
 		
 		IF EXISTS(
 			SELECT 1
@@ -495,8 +490,16 @@ BEGIN
 			SELECT m.MessageId
 				,u.UserId
 				,@SessionId
-			FROM #tblWatcherMessageIds AS m
+			FROM #tblWatcherMessageIds AS mid
+			INNER JOIN dbo.[Message] AS m ON mid.MessageId = m.MessageId
 			CROSS JOIN #tblWatcherReceivingNotification AS u
+			WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblAssigneeMessageUser AS mu
+				INNER JOIN dbo.[Message] AS m2 ON mu.MessageId = m2.MessageId
+				WHERE mu.UserId = u.UserId
+					AND m2.MessageContent = m.MessageContent
+			)
 		END
 	END
 
