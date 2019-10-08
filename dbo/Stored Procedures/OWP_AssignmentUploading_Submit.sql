@@ -4073,43 +4073,7 @@ BEGIN
 		INTO #tblMessageDeselectedAssignmentOfMyAssigned(OWPMatchId, [MessageId], MessageTypeId, MessageContent);
 
 
-		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
-		USING (
-			SELECT m.MessageId
-				,ass.UserId
-			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
-			CROSS JOIN (
-				SELECT DISTINCT u.UserId
-				FROM dbo.[User] AS u
-				INNER JOIN (
-					SELECT DISTINCT nsm.UserId
-					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
-					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-					WHERE ns.NotificationSettingId = @TraderAssigmentOfMyAssignedMatchNotificationSettingId
-						AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-						AND ns.IsWatcher = 0
-					) AS n ON u.UserId = n.UserId
-				INNER JOIN (
-					SELECT u.SectionId
-					FROM dbo.[User] AS u
-					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
-					) AS l ON l.SectionId = u.SectionId
-				INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId = u.UserId
-				) AS ass
-			) AS m
-			ON 1 = 0
-		WHEN NOT MATCHED
-			THEN
-				INSERT (
-					MessageId
-					,UserId
-					,SessionId
-					)
-				VALUES (
-					m.MessageId
-					,m.UserId
-					,@SessionId
-					);
+		
 
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
@@ -4152,6 +4116,46 @@ BEGIN
 			,inserted.MessageId
 			,inserted.UserId
 		INTO #tblMessageUserDeselectedAssignmentOfMyAssigned(SessionId, [MessageId], UserId);
+
+
+		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
+		USING (
+			SELECT m.MessageId
+				,ass.UserId
+			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
+			CROSS JOIN (
+				SELECT DISTINCT u.UserId
+				FROM dbo.[User] AS u
+				INNER JOIN (
+					SELECT DISTINCT nsm.UserId
+					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
+					LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
+					WHERE ns.NotificationSettingId = @TraderAssigmentOfMyAssignedMatchNotificationSettingId
+						AND ISNULL(nsm.Value, ns.DefaultValue) = 'True'
+						AND ns.IsWatcher = 0
+					) AS n ON u.UserId = n.UserId
+				INNER JOIN (
+					SELECT u.SectionId
+					FROM dbo.[User] AS u
+					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
+					) AS l ON l.SectionId = u.SectionId
+				
+				) AS ass 
+				WHERE NOT EXISTS (SELECT 1 FROM #tblMessageUserDeselectedAssignmentOfMyAssigned AS ll WHERE ll.UserId=ass.UserId)
+			) AS m
+			ON 1 = 0
+		WHEN NOT MATCHED
+			THEN
+				INSERT (
+					MessageId
+					,UserId
+					,SessionId
+					)
+				VALUES (
+					m.MessageId
+					,m.UserId
+					,@SessionId
+					);
 
 		-- watcher
 		DELETE
