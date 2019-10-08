@@ -160,13 +160,13 @@ BEGIN
 	UPDATE im
 	SET im.OWPHomeId = t.OWPTeamId
 	FROM #tblInfoSiteMatch AS im
-	INNER JOIN dbo.OWPTeam AS t ON im.HomeName = t.OWPTeamName
+	INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.HomeName = t.OWPTeamName
 
 	-- update OWPAwayId
 	UPDATE im
 	SET im.OWPAwayId = t.OWPTeamId
 	FROM #tblInfoSiteMatch AS im
-	INNER JOIN dbo.OWPTeam AS t ON im.AwayName = t.OWPTeamName
+	INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.AwayName = t.OWPTeamName
 
 	-- insert new TV
 	TRUNCATE TABLE #tblTextList
@@ -176,11 +176,11 @@ BEGIN
 		,[Text]
 		)
 	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+		,CAST(RTRIM(LTRIM(d.Value)) AS NVARCHAR(100))
 	FROM #tblInfoSiteMatch AS im
-	CROSS APPLY dbo.fnc_SplitStrings(im.TV, ',') AS d
+	CROSS APPLY dbo.fnc_SplitString(im.TV, ',') AS d
 	WHERE im.TV <> ''
-		AND RTRIM(LTRIM(d.val)) <> ''
+		AND RTRIM(LTRIM(d.Value)) <> ''
 
 	TRUNCATE TABLE #tblDistinctTextList
 
@@ -227,11 +227,11 @@ BEGIN
 		,[Text]
 		)
 	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+		,CAST(RTRIM(LTRIM(d.Value)) AS NVARCHAR(100))
 	FROM #tblInfoSiteMatch AS im
-	CROSS APPLY dbo.fnc_SplitStrings(im.Agent, ',') AS d
+	CROSS APPLY dbo.fnc_SplitString(im.Agent, ',') AS d
 	WHERE im.Agent <> ''
-		AND RTRIM(LTRIM(d.val)) <> ''
+		AND RTRIM(LTRIM(d.Value)) <> ''
 
 	TRUNCATE TABLE #tblDistinctTextList
 

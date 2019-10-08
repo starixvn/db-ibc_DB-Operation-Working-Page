@@ -146,7 +146,7 @@ BEGIN
 		SELECT @OldTV = ISNULL(STUFF((
 			SELECT ', ' + tv.TVCode
 			FROM dbo.MatchTelevision AS mtv WITH (NOLOCK)
-			INNER JOIN dbo.Television AS tv ON mtv.TVId = tv.TVId
+			INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON mtv.TVId = tv.TVId
 			WHERE mtv.OWPMatchId = @OWPMatchId
 			FOR XML PATH('')
 			), 1, 2, ''), '')
@@ -154,7 +154,7 @@ BEGIN
 		SELECT @NewTV = ISNULL(STUFF((
 			SELECT ', ' + tv.TVCode
 			FROM @TVIds AS t
-			INNER JOIN dbo.Television AS tv ON t.Id = tv.TVId
+			INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON t.Id = tv.TVId
 			FOR XML PATH('')
 			), 1, 2, ''), '')
 			
@@ -178,7 +178,7 @@ BEGIN
 		SELECT @OldProvider = ISNULL(STUFF((
 			SELECT ', ' + p.ProviderName
 			FROM dbo.MatchProvider AS mp WITH (NOLOCK)
-			INNER JOIN dbo.Provider AS p ON mp.ProviderId = p.ProviderId
+			INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON mp.ProviderId = p.ProviderId
 			WHERE mp.OWPMatchId = @OWPMatchId
 			FOR XML PATH('')
 			), 1, 2, ''), '')
@@ -186,7 +186,7 @@ BEGIN
 		SELECT @NewProvider = ISNULL(STUFF((
 			SELECT ', ' + p.ProviderName
 			FROM @ProviderIds AS t
-			INNER JOIN dbo.Provider AS p ON t.Id = p.ProviderId
+			INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON t.Id = p.ProviderId
 			FOR XML PATH('')
 			), 1, 2, ''), '')
 			

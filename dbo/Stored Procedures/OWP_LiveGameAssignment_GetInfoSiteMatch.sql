@@ -57,12 +57,12 @@ BEGIN
 	DECLARE @tblTVIds TABLE (TVId INT)
 
 	INSERT INTO @tblAgentIds (AgentId)
-	SELECT val
-	FROM dbo.strSplit(@AgentIds, ',')
+	SELECT Value
+	FROM dbo.fnc_SplitString(@AgentIds, ',')
 
 	INSERT INTO @tblTVIds (TVId)
-	SELECT val
-	FROM dbo.strSplit(@TVIds, ',')
+	SELECT Value
+	FROM dbo.fnc_SplitString(@TVIds, ',')
 
 	SELECT CAST(EventDateTime AS TIME) [KOTime]
 		,LeagueName

@@ -133,8 +133,6 @@ BEGIN
 					,@OldInfoSiteMatchId AS '@ifi'
 					,@OldMarketIds AS '@mk'
 					,@OldMatchStatus AS '@ms'
-				FROM dbo.MatchInfo AS info
-				WHERE info.OWPMatchId = @OWPMatchId
 				FOR XML PATH('z')
 					,ROOT('r')
 				)

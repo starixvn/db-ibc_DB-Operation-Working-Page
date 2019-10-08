@@ -15,6 +15,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190821@Leo.Vo: initial - [Redmine: #117960]
+	20190927@Leo.Vo: Write log - [Feature: #120415]
 */
 BEGIN
 	SET NOCOUNT ON

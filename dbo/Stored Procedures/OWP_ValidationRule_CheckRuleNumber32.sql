@@ -81,7 +81,7 @@ BEGIN
 					ELSE ''
 					END
 				) AS [Message]
-		FROM #tblCombineDuplicateMatchNo WITH (NOLOCK)
+		FROM #tblCombineDuplicateMatchNo
 	END
 	ELSE -- edit
 	BEGIN

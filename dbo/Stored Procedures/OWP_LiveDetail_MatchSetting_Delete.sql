@@ -22,6 +22,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190819@Carlos: Initial SP - [Feature: #118856]
+	20190927@Leo.Vo: Write log - [Feature: #120415]
 */
 
 BEGIN

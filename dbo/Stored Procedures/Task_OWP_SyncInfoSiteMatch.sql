@@ -453,11 +453,11 @@ BEGIN
 		,TVId
 		)
 	SELECT m.OWPMatchId
-		,f.val
+		,f.Value
 	FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
 	INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
-	CROSS APPLY dbo.fnc_SplitStrings(im.TVIds, ',') AS f
+	CROSS APPLY dbo.fnc_SplitString(im.TVIds, ',') AS f
 	WHERE im.TVIds <> '';
 
 	DELETE t
@@ -508,11 +508,11 @@ BEGIN
 		,AgentId
 		)
 	SELECT m.OWPMatchId
-		,f.val
+		,f.Value
 	FROM #tblInfoSiteMatch AS im WITH (NOLOCK)
 	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON im.InfoSiteMatchId = om.InfoSiteMatchId
 	INNER JOIN #tblMatch AS m ON m.OWPMatchId = om.OWPMatchId
-	CROSS APPLY dbo.fnc_SplitStrings(im.AgentIds, ',') AS f
+	CROSS APPLY dbo.fnc_SplitString(im.AgentIds, ',') AS f
 	WHERE im.AgentIds <> '';
 
 	DELETE t

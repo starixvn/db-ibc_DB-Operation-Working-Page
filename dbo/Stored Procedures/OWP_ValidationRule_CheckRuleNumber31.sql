@@ -81,7 +81,7 @@ BEGIN
 					ELSE ''
 					END
 				) AS [Message]
-		FROM #tblCombineDuplicateInfoSiteId WITH (NOLOCK)
+		FROM #tblCombineDuplicateInfoSiteId
 	END
 	ELSE -- edit
 	BEGIN

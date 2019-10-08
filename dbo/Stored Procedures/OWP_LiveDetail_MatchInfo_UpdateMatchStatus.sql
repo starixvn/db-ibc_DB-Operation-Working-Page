@@ -150,7 +150,7 @@ BEGIN
 			)
 		SELECT info.OWPMatchId
 			,info.MatchStatus
-		FROM dbo.MatchInfo AS info
+		FROM dbo.MatchInfo AS info WITH (NOLOCK)
 		INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON info.OWPMatchId = minor.MinorMatchId
 			AND minor.MinorBettypeId IN (
 				@Specific10Mins
@@ -544,7 +544,7 @@ BEGIN
 			)
 		SELECT info.OWPMatchId
 			,info.MatchStatus
-		FROM dbo.MatchInfo AS info
+		FROM dbo.MatchInfo AS info WITH (NOLOCK)
 		INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON info.OWPMatchId = minor.MinorMatchId
 			AND minor.MinorBettypeId IN (
 				@Specific10Mins
