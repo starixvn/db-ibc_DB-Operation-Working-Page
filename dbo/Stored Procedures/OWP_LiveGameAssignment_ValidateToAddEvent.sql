@@ -5,6 +5,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToAddEvent] @EventDate DA
 	,@MatchStatus VARCHAR(10)
 	,@LeagueName NVARCHAR(500)
 	,@MatchNo NVARCHAR(50) = ''
+	,@InfoSiteMatchId INT = NULL
 	,@HomeName NVARCHAR(200)
 	,@AwayName NVARCHAR(200)
 	,@MatchSettingBettypeIds VARCHAR(100) = ''
@@ -22,6 +23,7 @@ AS
  Revisions:
 	20190724@Leo.Vo: Initial SP - [Feature: #117461]
 	20190807@Kane.Le: Prevent duplicate MatchNo - [Feature: #117227]
+	20190918@Kane.Le: Check duplicate InfoSiteID - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -45,6 +47,35 @@ BEGIN
 		,@MinorBettype_AwayPenShootOut INT = - 99
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
+
+		IF @MatchNo <> ''
+		AND EXISTS (
+			SELECT 1
+			FROM dbo.OWPMatch AS m WITH (NOLOCK)
+			WHERE m.MatchNo = @MatchNo
+				AND m.EventDateTime BETWEEN @FromDate
+					AND @ToDate
+			)
+	BEGIN
+		SELECT @ErrCode = 1
+			,@ErrMsg = 'The Match No. is used. Please choose another one.'
+			
+		RETURN
+	END
+
+		IF @InfoSiteMatchId IS NOT NULL
+		AND EXISTS (
+			SELECT 1
+			FROM dbo.OWPMatch AS m WITH (NOLOCK)
+			WHERE m.InfoSiteMatchId = @InfoSiteMatchId
+				AND m.EventDateTime >= @FromDate
+			)
+	BEGIN
+		SELECT @ErrCode = 2
+			,@ErrMsg = 'InfoSiteID is duplicating.'
+
+		RETURN
+	END
 
 	-- check match is existed
 	SELECT @ExistedMatchId = m.OWPMatchId
@@ -72,20 +103,7 @@ BEGIN
 		RETURN
 	END
 	
-	IF @MatchNo <> ''
-		AND EXISTS (
-			SELECT 1
-			FROM dbo.OWPMatch AS m WITH (NOLOCK)
-			WHERE m.MatchNo = @MatchNo
-				AND m.EventDateTime BETWEEN @FromDate
-					AND @ToDate
-			)
-	BEGIN
-		SELECT @ErrCode = 1
-			,@ErrMsg = 'The Match No. is used. Please choose another one.'
-			
-		RETURN
-	END
+
 
 	-- determine minor match
 	CREATE TABLE #tblRuleChecking (

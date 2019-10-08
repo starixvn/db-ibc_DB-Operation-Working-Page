@@ -19,6 +19,7 @@ AS
 
  Revisions:
 	20190816@Leo.Vo: Initial SP - [Feature: #117960]
+	20190927@Kane.Le: Update message MatchNo - [Feature: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -1015,7 +1016,11 @@ BEGIN
 						,'<New>', ms.Maxbet)
 					,'<Old>', '')
 				,'<League>', @LeagueName)
-			,'<Match.No>', @MatchNo) AS MessageContent
+			,'<Match.No>', CASE 
+								WHEN ISNULL(@MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + @MatchNo
+								END) AS MessageContent
 			,@MessageEditMaxbetId
 		FROM dbo.MatchSetting AS ms
 		INNER JOIN dbo.MajorBettype as mb ON ms.Bettype = mb.BettypeId
@@ -1036,7 +1041,11 @@ BEGIN
 						,'<New>', ms.MaxbetCN88)
 					,'<Old>', '')
 				,'<League>', @LeagueName)
-			,'<Match.No>', @MatchNo) AS MessageContent
+			,'<Match.No>', CASE 
+								WHEN ISNULL(@MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + @MatchNo
+								END) AS MessageContent
 			,@MessageEditMaxbetCN88Id
 		FROM dbo.MatchSetting AS ms
 		INNER JOIN dbo.MajorBettype as mb ON ms.Bettype = mb.BettypeId
@@ -1057,7 +1066,11 @@ BEGIN
 						,'<New>', ms.Spread)
 					,'<Old>', '')
 				,'<League>', @LeagueName)
-			,'<Match.No>', @MatchNo) AS MessageContent
+			,'<Match.No>', CASE 
+								WHEN ISNULL(@MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + @MatchNo
+								END) AS MessageContent
 			,@MessageEditSpreadId
 		FROM dbo.MatchSetting AS ms
 		INNER JOIN dbo.MajorBettype as mb ON ms.Bettype = mb.BettypeId
@@ -1078,7 +1091,11 @@ BEGIN
 						,'<New>', ms.SpreadCN88)
 					,'<Old>', '')
 				,'<League>', @LeagueName)
-			,'<Match.No>', @MatchNo) AS MessageContent
+			,'<Match.No>', CASE 
+								WHEN ISNULL(@MatchNo, '') = ''
+									THEN ''
+								ELSE '#' + @MatchNo
+								END) AS MessageContent
 			,@MessageEditSpreadCN88Id
 		FROM dbo.MatchSetting AS ms
 		INNER JOIN dbo.MajorBettype as mb ON ms.Bettype = mb.BettypeId

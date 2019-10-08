@@ -4,12 +4,19 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo] @ActorId INT
 	,@SessionId NVARCHAR(100)
 	,@OWPMatchId INT
 	,@Channel NVARCHAR(100) = ''
+	,@IsUpdateChannel BIT = 0
 	,@WB NVARCHAR(100) = ''
+	,@IsUpdateWB BIT = 0
 	,@Phone NVARCHAR(200) = ''
+	,@IsUpdatePhone BIT = 0
 	,@TVIds NVARCHAR(500) = ''
+	,@IsUpdateTVs BIT = 0
 	,@OtherProviderIds NVARCHAR(100) = ''
+	,@IsUpdateOtherProviders BIT = 0
 	,@ProviderIds NVARCHAR(100) = ''
+	,@IsUpdateProviders BIT = 0
 	,@AgentIds NVARCHAR(100) = ''
+	,@IsUpdateAgents BIT = 0
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -20,93 +27,38 @@ DB: bodb_OWP
 
 Revisions:    
 	20190820@Kane.Le: init SP - [Redmine: #117960]
+	20190823@Carlos.Nguyen: Prevent send notification - [Redmine: #120415]	
 */
 BEGIN
 	SET NOCOUNT ON
-
-	DECLARE @StartRun DATETIME = GETDATE()
+	
+	DECLARE @EventDateTime DATETIME
+		,@StartRun DATETIME = GETDATE()
 		,@EndRun DATETIME
 		,@Duration INT
-		,@OldData NVARCHAR(MAX)
-		,@NewData NVARCHAR(MAX)
+		,@LogData NVARCHAR(MAX)
+		,@LogDataOld NVARCHAR(MAX)
 		,@Xml XML
 		,@OldChannel NVARCHAR(100)
 		,@OldWB NVARCHAR(100)
 		,@OldPhone NVARCHAR(200)
-		,@OldRemark NVARCHAR(2000)
-		,@OldNoOfHDPId INT
-		,@OldIsSoloMatch BIT
-		,@OldRound NVARCHAR(2000)
-		,@OldDivision NVARCHAR(2000)
-		,@OldVenue NVARCHAR(100)
-		,@OldOtherTime TIME
 		,@OldTVIds NVARCHAR(500)
 		,@OldOtherProviderIds NVARCHAR(100)
 		,@OldProviderIds NVARCHAR(100)
 		,@OldAgentIds NVARCHAR(100)
-		
-		-- send message by condition date
-		,@UserReceivedAssigneeMessageMatchInfo TVP_INT
-		,@UserReceivedAssigneeMessageProviderInfo TVP_INT
-		,@UserReceivedWatcherMessageMatchInfo TVP_INT
-		,@UserReceivedWatcherMessageProviderInfo TVP_INT
-		,@MessageTemplate NVARCHAR(2000) = ''
-		,@MessageTypeId INT
-		,@ActorName NVARCHAR(30)
-		,@OldValue NVARCHAR(500)
-		,@NewValue NVARCHAR(500)
-		,@HomeTeamName NVARCHAR(200)
-		,@AwayTeamName NVARCHAR(200)
-		,@EventDateTime DATETIME
-		,@NewOtherTime TIME
-		,@CurrentDateTimeGMTplus8 DATETIME = DATEADD(HOUR, 12, GETDATE())
-		,@MatchNo VARCHAR(50)
-		,@League NVARCHAR(500)
-		-- Notification Setting
-		,@NotifyAssigneeMatchInfoUpdatedId INT = 5
-		,@NotifyAssigneeProviderInfoUpdatedId INT = 11
-		,@NotifyWatcherMatchInfoUpdatedId INT = 9
-		,@NotifyWatcherProviderInfoUpdatedId INT = 13
+		,@OldData NVARCHAR(MAX)
+		,@NewData NVARCHAR(MAX)
 
-	SET @StartRun = GETDATE()
-
-	CREATE TABLE #tblOldItem (
-		Id INT
-		,[Text] NVARCHAR(100)
-		)
-
-	CREATE TABLE #tblNewItem (
-		Id INT
-		,[Text] NVARCHAR(100)
-		)
-
-	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)
-
-	CREATE TABLE #tblSectionMemberOfUserReceivedWatcher (
-		MemberId INT
-		,UserReceivedWatcherId INT
-		,NotificationSettingId INT
-		)
-
-	--BEGIN TRY
-
-	-- save old value 
+	SELECT @EventDateTime = EventDateTime
+	FROM dbo.OWPMatch AS m WITH (NOLOCK)
+	WHERE m.OWPMatchId = @OWPMatchId
+	
+	-- save old value
 	SELECT @OldChannel = m.Channel
 		,@OldWB = m.WB
 		,@OldPhone = m.Phone
-		,@OldRemark = m.Remark
-		,@OldNoOfHDPId = m.NoOfHDPId
-		,@OldIsSoloMatch = m.IsSoloMatch
-		,@OldRound = m.[Round]
-		,@OldDivision = m.Division
-		,@OldVenue = m.Venue
-		,@OldOtherTime = om.OtherTime
-	--,@OldTVIds = m.TVCode
-	--,@OldOtherProviderIds = m.OtherProvider
-	--,@OldProviderIds = m.[Provider]
-	--,@OldAgentIds = m.Agent
-	FROM dbo.MatchInfo m WITH (NOLOCK)
-	LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
+	FROM dbo.MatchInfo AS m WITH (NOLOCK)
+	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 	WHERE m.OWPMatchId = @OWPMatchId
 
 	SELECT @OldTVIds = ISNULL(STUFF((
@@ -136,634 +88,226 @@ BEGIN
 					WHERE OWPMatchId = @OWPMatchId
 					FOR XML PATH('')
 					), 1, 2, ''), '')
-
-	-- update new value
-	UPDATE dbo.MatchInfo
-	WITH (
-			ROWLOCK
-			,UPDLOCK
+	
+	SET @Xml = (
+			SELECT @OldTVIds AS '@tv'
+				,@OldChannel AS '@ch'
+				,@OldWB AS '@wb'
+				,@OldProviderIds AS '@pv'
+				,@OldOtherProviderIds AS '@opv'
+				,@OldPhone AS '@ph'
+				,@OldAgentIds AS '@ag'
+			FOR XML PATH('z')
+				,ROOT('r')
 			)
-
-	SET Channel = @Channel
-		,WB = @WB
-		,Phone = @Phone
-	--,OtherProvider = @OtherProviderIds
-	--,[Provider] = @ProviderIds
-	--,TVCode = @TVIds
-	--,Agent = @AgentIds
-	WHERE OWPMatchId = @OWPMatchId
-
-	-- handle changes TVIds
-	DELETE
-	FROM dbo.MatchTelevision WITH (ROWLOCK)
-	WHERE OWPMatchId = @OWPMatchId
-
-	IF (ISNULL(@TVIds, '') != '')
+	SET @OldData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	
+	DECLARE @FromTimeSendMessage DATETIME
+		,@ToTimeSendMessage DATETIME
+		,@FromTimeSendMessageSpecialBettype DATETIME
+		,@ToTimeSendMessageSpecialBettype DATETIME
+		,@ParentMatchId INT
+		,@MinorBettypeId INT
+		
+	SELECT @ParentMatchId = ParentMatchId
+		,@MinorBettypeId = MinorBettypeId
+	FROM dbo.MinorMatch WITH (NOLOCK)
+	WHERE MinorMatchId = @OWPMatchId
+	
+	SELECT @FromTimeSendMessage = FromTime
+		,@ToTimeSendMessage = ToTime
+		,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
+		,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
+	FROM dbo.fnc_GetDateTimeForTraderViewTime()
+	
+	DECLARE @tblRelevantMatches TABLE (
+		Id INT IDENTITY(1,1)
+		,OWPMatchId INT PRIMARY KEY CLUSTERED
+		,MinorBettypeId INT)
+	
+	DECLARE @MinorBettype_FastMarket INT = - 88
+		,@MinorBettype_AllInOne INT = - 89
+		,@MinorBettype_Specific15Mins INT = - 1
+		,@MinorBettype_Specific10Mins INT = - 2
+		,@MinorBettype_Specific15MinsNoOfCorners INT = - 5
+		,@MinorBettype_Specific15MinsTotalBooking INT = - 8
+		
+	INSERT INTO @tblRelevantMatches (
+		OWPMatchId
+		,MinorBettypeId
+	)
+	VALUES (@OWPMatchId, @MinorBettypeId)
+	
+	-- add relevant matches
+	IF @ParentMatchId IS NULL
 	BEGIN
-		INSERT INTO dbo.MatchTelevision (
+		INSERT INTO @tblRelevantMatches (
 			OWPMatchId
-			,TVId
-			)
-		SELECT @OWPMatchId
-			,val
-		FROM dbo.strSplit(ISNULL(@TVIds, ''), ',')
+			,MinorBettypeId
+		)
+		SELECT MinorMatchId
+			,MinorBettypeId
+		FROM dbo.MinorMatch WITH (NOLOCK)
+		WHERE ParentMatchId = @OWPMatchId AND MinorBettypeId NOT IN (
+			@MinorBettype_FastMarket
+			,@MinorBettype_AllInOne
+			,@MinorBettype_Specific10Mins
+			,@MinorBettype_Specific15Mins
+			,@MinorBettype_Specific15MinsNoOfCorners
+			,@MinorBettype_Specific15MinsTotalBooking)
 	END
-
-	-- handle changes OtherProvider
-	DELETE
-	FROM dbo.MatchOtherProvider WITH (ROWLOCK)
-	WHERE OWPMatchId = @OWPMatchId
-
-	IF (ISNULL(@OtherProviderIds, '') != '')
+	ELSE
 	BEGIN
-		INSERT INTO dbo.MatchOtherProvider (
+		INSERT INTO @tblRelevantMatches (
 			OWPMatchId
-			,OtherProviderId
-			)
-		SELECT @OWPMatchId
-			,val
-		FROM dbo.strSplit(ISNULL(@OtherProviderIds, ''), ',')
+			,MinorBettypeId
+		)
+		SELECT @ParentMatchId
+			,NULL
+		UNION
+		SELECT MinorMatchId
+			,MinorBettypeId
+		FROM dbo.MinorMatch WITH (NOLOCK)
+		WHERE ParentMatchId = @ParentMatchId AND MinorMatchId <> @OWPMatchId AND MinorBettypeId NOT IN (
+			@MinorBettype_FastMarket
+			,@MinorBettype_AllInOne
+			,@MinorBettype_Specific10Mins
+			,@MinorBettype_Specific15Mins
+			,@MinorBettype_Specific15MinsNoOfCorners
+			,@MinorBettype_Specific15MinsTotalBooking)
 	END
+	
+	DECLARE @Id INT
+		,@RelevantMatchId INT
+		,@RelevantMinorBettypeId INT
+		
+	-- list of minor bettypes Corner & Booking but not 15 mins
+	DECLARE @tblCornerBookingBetTypes TABLE (MinorBettypeId INT NOT NULL)
 
-	-- handle changes Provider
-	DELETE
-	FROM dbo.MatchProvider WITH (ROWLOCK)
-	WHERE OWPMatchId = @OWPMatchId
-
-	IF (ISNULL(@ProviderIds, '') != '')
-	BEGIN
-		INSERT INTO dbo.MatchProvider (
-			OWPMatchId
-			,ProviderId
+	INSERT INTO @tblCornerBookingBetTypes
+	SELECT MinorBettypeId
+	FROM dbo.MinorBettype WITH (NOLOCK)
+	WHERE ParentBetTypeId IS NULL
+		AND IsActive = 1
+		AND MinorBettypeName NOT LIKE '%15 mins%'
+		AND (
+			MinorBettypeName LIKE '%corner%'
+			OR MinorBettypeName LIKE '%booking%'
 			)
-		SELECT @OWPMatchId
-			,val
-		FROM dbo.strSplit(ISNULL(@ProviderIds, ''), ',')
-	END
-
-	-- handle changes MatchAgent
-	DELETE
-	FROM dbo.MatchAgent WITH (ROWLOCK)
-	WHERE OWPMatchId = @OWPMatchId
-
-	IF (ISNULL(@AgentIds, '') != '')
+			
+	DECLARE @tblTVIds TVP_INT
+	INSERT INTO @tblTVIds (
+		Id
+		)
+	SELECT Value
+	FROM dbo.fnc_SplitString(@TVIds, ',')
+	
+	DECLARE @tblProviderIds TVP_INT
+	INSERT INTO @tblProviderIds (
+		Id
+		)
+	SELECT Value
+	FROM dbo.fnc_SplitString(@ProviderIds, ',')
+	
+	DECLARE @tblOtherProviderIds TVP_INT
+	INSERT INTO @tblOtherProviderIds (
+		Id
+		)
+	SELECT Value
+	FROM dbo.fnc_SplitString(@OtherProviderIds, ',')
+	
+	DECLARE @tblAgentIds TVP_INT
+	INSERT INTO @tblAgentIds (
+		Id
+		)
+	SELECT Value
+	FROM dbo.fnc_SplitString(@AgentIds, ',')
+		
+	SET @Id = 1
+	WHILE 1=1
 	BEGIN
-		INSERT INTO dbo.MatchAgent (
-			OWPMatchId
-			,AgentId
-			)
-		SELECT @OWPMatchId
-			,val
-		FROM dbo.strSplit(ISNULL(@AgentIds, ''), ',')
-	END
-
-	-- send message edit if in time range
-	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
-	BEGIN
-		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
-
-		SELECT @HomeTeamName = home.OWPTeamName
-			,@AwayTeamName = away.OWPTeamName
-			,@EventDateTime = om.EventDateTime
-			,@MatchNo = CASE 
-				WHEN om.MatchNo = ''
-					THEN ''
-				ELSE '#' + om.MatchNo
-				END
-			,@League = ol.OWPLeagueName
-		FROM dbo.OWPMatch AS om WITH (NOLOCK)
-		LEFT JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
-		LEFT JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
-		LEFT JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON om.OWPLeagueId = ol.OWPLeagueId
-		WHERE om.OWPMatchId = @OWPMatchId
-
-		-- get all assignee in match (include main + minor)
-		INSERT INTO #tblAllAssigneeOfMatch (UserId)
-		SELECT a.UserId
-		FROM dbo.fnc_GetAllAssigneeOfMatch(@OWPMatchId) AS a
-
-		-- get list users received ASSIGNEE message update Match Info
-		INSERT INTO @UserReceivedAssigneeMessageMatchInfo (Id)
-		SELECT a.UserId
-		FROM #tblAllAssigneeOfMatch AS a
-		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeMatchInfoUpdatedId
-		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = a.UserId
-		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-
-		-- get list users received ASSIGNEE message update Provider Info
-		INSERT INTO @UserReceivedAssigneeMessageProviderInfo (Id)
-		SELECT a.UserId
-		FROM #tblAllAssigneeOfMatch AS a
-		LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyAssigneeProviderInfoUpdatedId
-		LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-			AND nsm.UserId = a.UserId
-		WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
-
-		-- get all SectionMemberOfUserReceivedWatcher
-		INSERT INTO #tblSectionMemberOfUserReceivedWatcher (
-			MemberId
-			,UserReceivedWatcherId
-			,NotificationSettingId
-			)
-		SELECT ISNULL(mem.UserId, r.UserId)
-			,r.UserId
-			,r.NotificationSettingId
-		FROM (
-			SELECT DISTINCT nm.UserId
-				,u.SectionId
-				,ns.NotificationSettingId
-			FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
-			INNER JOIN dbo.NotificationSettingMapping AS nm WITH (NOLOCK) ON ns.NotificationSettingId = nm.NotificationSettingId
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON nm.UserId = u.UserId
-			WHERE ns.IsWatcher = 1
-				AND nm.Value = 'True'
-				AND ns.NotificationSettingId IN (
-					@NotifyWatcherMatchInfoUpdatedId
-					,@NotifyWatcherProviderInfoUpdatedId
-					)
-			) AS r
-		LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId
-			AND mem.SectionId IS NOT NULL
-
-		-- get list users received WATCHER message change Match Info
-		INSERT INTO @UserReceivedWatcherMessageMatchInfo (Id)
-		SELECT DISTINCT sm.UserReceivedWatcherId
-		FROM #tblAllAssigneeOfMatch AS a
-		INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
-		WHERE sm.NotificationSettingId = @NotifyWatcherMatchInfoUpdatedId
-			AND NOT EXISTS (
-				-- ignore user received Assignee message
+		SELECT @RelevantMatchId = NULL
+			,@RelevantMinorBettypeId = NULL
+			
+		SELECT @RelevantMatchId = OWPMatchId
+			,@RelevantMinorBettypeId = MinorBettypeId
+		FROM @tblRelevantMatches
+		WHERE Id = @Id
+		
+		IF @RelevantMatchId IS NULL BREAK
+		
+		DECLARE @IsMatchInTimeRange BIT = CASE WHEN (@EventDateTime >= @FromTimeSendMessage AND @EventDateTime <= @ToTimeSendMessage)
+			OR ( @RelevantMinorBettypeId IS NOT NULL AND EXISTS (
 				SELECT 1
-				FROM @UserReceivedAssigneeMessageMatchInfo AS ur
-				WHERE ur.Id = sm.UserReceivedWatcherId
+				FROM @tblCornerBookingBetTypes
+				WHERE MinorBettypeId = @RelevantMinorBettypeId
+					AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
+					AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
 				)
-
-		-- get list users received WATCHER message change Provider Info
-		INSERT INTO @UserReceivedWatcherMessageProviderInfo (Id)
-		SELECT DISTINCT sm.UserReceivedWatcherId
-		FROM #tblAllAssigneeOfMatch AS a
-		INNER JOIN #tblSectionMemberOfUserReceivedWatcher AS sm ON sm.MemberId = a.UserId
-		WHERE sm.NotificationSettingId = @NotifyWatcherProviderInfoUpdatedId
-			AND NOT EXISTS (
-				-- ignore user received Assignee message
-				SELECT 1
-				FROM @UserReceivedAssigneeMessageProviderInfo AS ur
-				WHERE ur.Id = sm.UserReceivedWatcherId
-				)
-
-		-- Edit TV--
-		INSERT INTO #tblOldItem (
-			Id
-			,[Text]
-			)
-		SELECT tv.TVId
-			,tv.TVCode
-		FROM dbo.Television AS tv WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@OldTVIds, ',') AS f
-		WHERE tv.TVId = f.val
-
-		INSERT INTO #tblNewItem (
-			Id
-			,[Text]
-			)
-		SELECT tv.TVId
-			,tv.TVCode
-		FROM dbo.Television AS tv WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@TVIds, ',') AS f
-		WHERE tv.TVId = f.val
-
-		IF EXISTS (
-				SELECT Id
-				FROM #tblOldItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblNewItem
-				)
-			OR EXISTS (
-				SELECT Id
-				FROM #tblNewItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblOldItem
-				)
-		BEGIN
-			SELECT @OldValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblOldItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-				,@NewValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblNewItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditTV'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @League), '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName), '<Old>', @OldValue), '<New>', @NewValue)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		-- Edit Other Provider
-		TRUNCATE TABLE #tblOldItem
-
-		TRUNCATE TABLE #tblNewItem
-
-		INSERT INTO #tblOldItem (
-			Id
-			,[Text]
-			)
-		SELECT op.OtherProviderId
-			,op.OtherProviderName
-		FROM dbo.OtherProvider AS op WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@OldOtherProviderIds, ',') AS f
-		WHERE op.OtherProviderId = f.val
-
-		INSERT INTO #tblNewItem (
-			Id
-			,[Text]
-			)
-		SELECT op.OtherProviderId
-			,op.OtherProviderName
-		FROM dbo.OtherProvider AS op WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@OtherProviderIds, ',') AS f
-		WHERE op.OtherProviderId = f.val
-
-		IF EXISTS (
-				SELECT Id
-				FROM #tblOldItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblNewItem
-				)
-			OR EXISTS (
-				SELECT Id
-				FROM #tblNewItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblOldItem
-				)
-		BEGIN
-			SELECT @OldValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblOldItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-				,@NewValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblNewItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditOtherProvider'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @League), '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName), '<Old>', @OldValue), '<New>', @NewValue)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		-- Edit Provider
-		TRUNCATE TABLE #tblOldItem
-
-		TRUNCATE TABLE #tblNewItem
-
-		INSERT INTO #tblOldItem (
-			Id
-			,[Text]
-			)
-		SELECT p.ProviderId
-			,p.ProviderName
-		FROM dbo.[Provider] AS p WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@OldProviderIds, ',') AS f
-		WHERE p.ProviderId = f.val
-
-		INSERT INTO #tblNewItem (
-			Id
-			,[Text]
-			)
-		SELECT p.ProviderId
-			,p.ProviderName
-		FROM dbo.[Provider] AS p WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@ProviderIds, ',') AS f
-		WHERE p.ProviderId = f.val
-
-		IF EXISTS (
-				SELECT Id
-				FROM #tblOldItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblNewItem
-				)
-			OR EXISTS (
-				SELECT Id
-				FROM #tblNewItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblOldItem
-				)
-		BEGIN
-			SELECT @OldValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblOldItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-				,@NewValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblNewItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditProvider'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @League), '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName), '<Old>', @OldValue), '<New>', @NewValue)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		-- Edit Agent
-		TRUNCATE TABLE #tblOldItem
-
-		TRUNCATE TABLE #tblNewItem
-
-		INSERT INTO #tblOldItem (
-			Id
-			,[Text]
-			)
-		SELECT a.AgentId
-			,a.AgentName
-		FROM dbo.Agent AS a WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@OldAgentIds, ',') AS f
-		WHERE a.AgentId = f.val
-
-		INSERT INTO #tblNewItem (
-			Id
-			,[Text]
-			)
-		SELECT a.AgentId
-			,a.AgentName
-		FROM dbo.Agent AS a WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@AgentIds, ',') AS f
-		WHERE a.AgentId = f.val
-
-		IF EXISTS (
-				SELECT Id
-				FROM #tblOldItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblNewItem
-				)
-			OR EXISTS (
-				SELECT Id
-				FROM #tblNewItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblOldItem
-				)
-		BEGIN
-			SELECT @OldValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblOldItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-				,@NewValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblNewItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditAgent'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @League), '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName), '<Old>', @OldValue), '<New>', @NewValue)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		-- Edit Phone
-		IF @OldPhone <> @Phone
-			AND DATEDIFF(MINUTE, @CurrentDateTimeGMTplus8, @EventDateTime) <= 60
-		BEGIN
-			SELECT @OldValue = @OldPhone
-				,@NewValue = @Phone
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditPhone'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @League), '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName), '<Old>', @OldValue), '<New>', @NewValue)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		-- Edit Channel
-		IF @OldChannel <> @Channel
-		BEGIN
-			SELECT @OldValue = @OldChannel
-				,@NewValue = @Channel
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditChannel'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @League), '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName), '<Old>', @OldValue), '<New>', @NewValue)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		-- Edit WB
-		IF @OldWB <> @WB
-		BEGIN
-			SELECT @OldValue = @OldWB
-				,@NewValue = @WB
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditWB'
-
-			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', @MatchNo), '<League>', @League), '<Event>', @HomeTeamName + ' -vs- ' + @AwayTeamName), '<Old>', @OldValue), '<New>', @NewValue)
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @ActorId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageProviderInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
+			) THEN 1 ELSE 0 END
+			
+		DECLARE @RelevantIsUpdateTVs BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateTVs END)
+			,@RelevantIsUpdateChannel BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateChannel END)
+			,@RelevantIsUpdateWB BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateWB END)
+			,@RelevantIsUpdateProviders BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateProviders END)
+			,@RelevantIsUpdateOtherProviders BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateOtherProviders END)
+			,@RelevantIsUpdateAgents BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateAgents END)
+			,@RelevantIsUpdatePhone BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdatePhone END)
+		
+		EXEC dbo.OWP_LiveDetail_Update_ProviderInfo_Single @ActorId = @ActorId
+			,@SessionId = @SessionId
+			,@OWPMatchId = @RelevantMatchId
+			,@ParentMatchId = @ParentMatchId
+			,@MinorBettypeId = @RelevantMinorBettypeId
+			,@IsMatchInTimeRange = @IsMatchInTimeRange
+			,@TVIds = @tblTVIds
+			,@IsUpdateTVs = @RelevantIsUpdateTVs
+			,@Channel = @Channel
+			,@IsUpdateChannel = @RelevantIsUpdateChannel
+			,@WB = @WB
+			,@IsUpdateWB = @RelevantIsUpdateWB
+			,@Phone = @Phone
+			,@IsUpdatePhone = @RelevantIsUpdatePhone
+			,@ProviderIds = @tblProviderIds
+			,@IsUpdateProviders = @RelevantIsUpdateProviders
+			,@OtherProviderIds = @tblOtherProviderIds
+			,@IsUpdateOtherProviders = @RelevantIsUpdateOtherProviders
+			,@AgentIds = @tblAgentIds
+			,@IsUpdateAgents = @RelevantIsUpdateAgents
+		
+		SET @Id = @Id + 1
 	END
 
-		BEGIN
-		SET @Xml = (
-				SELECT @OWPMatchId AS '@mt'
-					,@OldTVIds AS '@tv'
-					,@OldChannel AS '@ch'
-					,@OldWB AS '@wb'
-					,@OldProviderIds AS '@pv'					
-					,'' AS '@rn'
-					,@OldPhone AS '@ph'
-					,@OldAgentIds AS '@ag'
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @OldData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')		 
+	SET @Xml = (
+			SELECT @TVIds AS '@tv'
+				,@IsUpdateTVs AS '@iutv'
+				,@Channel AS '@ch'
+				,@IsUpdateChannel AS '@iuch'
+				,@WB AS '@wb'
+				,@IsUpdateWB AS '@iuwb'
+				,@ProviderIds AS '@pv'
+				,@IsUpdateProviders AS '@iupv'
+				,@OtherProviderIds AS '@opv'
+				,@IsUpdateOtherProviders AS '@iuopv'
+				,@Phone AS '@ph'
+				,@IsUpdatePhone AS '@iuph'
+				,@AgentIds AS '@ag'
+				,@IsUpdateAgents AS '@iuag'
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @NewData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-		SET @Xml = (
-				SELECT @OWPMatchId AS '@mt'
-					,@TVIds AS '@tv'
-					,@Channel AS '@ch'
-					,@WB AS '@wb'
-					,@ProviderIds AS '@pv'
-					,'' AS '@rn'					
-					,@Phone AS '@ph'
-					,@AgentIds AS '@ag'
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @NewData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-
-		EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
-			,@SPName = 'OWP_LiveDetail_Update_ProviderInfo'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @ActorId
-			,@Data = @NewData
-			,@DataOld = @OldData
-	END
+	EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+		,@SPName = 'OWP_LiveDetail_Update_ProviderInfo'
+		,@LoggedDate = @StartRun
+		,@Duration = @Duration
+		,@ObjectId = @OWPMatchId
+		,@Data = @NewData
+		,@DataOld = @OldData
 
 	SELECT @ErrMsg = 'The event has been edited successfully!.'
 		,@ErrCode = 0
-
-	DROP TABLE #tblOldItem
-
-	DROP TABLE #tblNewItem
-
-	DROP TABLE #tblAllAssigneeOfMatch
-
-	DROP TABLE #tblSectionMemberOfUserReceivedWatcher
 END

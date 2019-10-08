@@ -191,7 +191,6 @@
     <Build Include="dbo\Stored Procedures\OWP_MatchNoteUser_Insert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchNoteInsert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchListDetailsGet.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_MatchInfo_UpdateIsSelected.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_UpdateRecommendOdds.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_UpdateMatchNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_InsertRecommendOdds.sql" />
@@ -380,6 +379,14 @@
     <Build Include="dbo\Stored Procedures\OWP_Provider_GetSuggestion.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OtherProvider_GetSuggestion.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Agent_GetSuggestion.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Get_InfoMatchRelative.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber32.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_ValidationRule_CheckRuleNumber31.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_MatchStatus.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_ProviderInfo_Single.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_Single.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_Deselect.sql" />
+    <Build Include="dbo\Functions\fnc_SplitString.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
 AS
 /*    
@@ -13,6 +14,7 @@ AS
 	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
 	20190108@Kane.Le: Update Field IsDeleted - [Redmine: #105574]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
+	20190918@Kane.Le: Update AgentIds - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -30,11 +32,6 @@ BEGIN
 		InfoSiteMatchId INT NOT NULL
 		,Id INT
 		,[Text] NVARCHAR(100) NOT NULL
-		)
-
-	CREATE TABLE #tblInfoSiteMatchTV (
-		OWPMatchId INT NOT NULL
-		,TVIds VARCHAR(200)
 		)
 
 	EXEC sp_xml_preparedocument @idoc OUTPUT
@@ -61,6 +58,7 @@ BEGIN
 		,[OWPHomeId] INT NULL
 		,[OWPAwayId] INT NULL
 		,[TVIds] VARCHAR(200) NULL
+		,AgentIds VARCHAR(200) NULL		
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -97,14 +95,31 @@ BEGIN
 		,[Website2]
 		,[Website3]
 		,[Website4]
-	FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([InfoSiteMatchId] [int], [EventDateTime] [datetime], [UpdatedTime] [datetime], [LeagueName] [nvarchar](500), [HomeName] [nvarchar](200), [AwayName] [nvarchar](200), [Round] [nvarchar](2000), [Division] [nvarchar](2000), [Agent] [nvarchar](2000), [LocalTV] [nvarchar](2000), [LiveTV] [nvarchar](100), [WatchBet] [nvarchar](100), [Website1] [nvarchar](1000), [Website2] [nvarchar](1000), [Website3] [nvarchar](1000), [Website4] [nvarchar](1000))
+	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
+			[InfoSiteMatchId] [int]
+			,[EventDateTime] [datetime]
+			,[UpdatedTime] [datetime]
+			,[LeagueName] [nvarchar](500)
+			,[HomeName] [nvarchar](200)
+			,[AwayName] [nvarchar](200)
+			,[Round] [nvarchar](2000)
+			,[Division] [nvarchar](2000)
+			,[Agent] [nvarchar](2000)
+			,[LocalTV] [nvarchar](2000)
+			,[LiveTV] [nvarchar](100)
+			,[WatchBet] [nvarchar](100)
+			,[Website1] [nvarchar](1000)
+			,[Website2] [nvarchar](1000)
+			,[Website3] [nvarchar](1000)
+			,[Website4] [nvarchar](1000)
+			)
 
 	EXEC sp_xml_removedocument @idoc
 
 	-- not process on existed records and no update
 	DELETE tism
 	FROM #tblInfoSiteMatch AS tism
-		INNER JOIN dbo.InfoSiteMatch AS dism WITH (NOLOCK) ON tism.InfoSiteMatchId = dism.InfoSiteMatchId
+	INNER JOIN dbo.InfoSiteMatch AS dism WITH (NOLOCK) ON tism.InfoSiteMatchId = dism.InfoSiteMatchId
 		AND tism.UpdatedTime = dism.UpdatedTime
 
 	-- insert new league
@@ -121,7 +136,7 @@ BEGIN
 	UPDATE im
 	SET im.OWPLeagueId = l.OWPLeagueId
 	FROM #tblInfoSiteMatch AS im
-		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON im.LeagueName = l.OWPLeagueName
+	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON im.LeagueName = l.OWPLeagueName
 
 	-- insert new team
 	INSERT INTO dbo.OWPTeam (OWPTeamName)
@@ -131,6 +146,7 @@ BEGIN
 		FROM #tblInfoSiteMatch AS im
 		
 		UNION
+		
 		SELECT im.AwayName AS TeamName
 		FROM #tblInfoSiteMatch AS im
 		) AS im
@@ -144,13 +160,13 @@ BEGIN
 	UPDATE im
 	SET im.OWPHomeId = t.OWPTeamId
 	FROM #tblInfoSiteMatch AS im
-		INNER JOIN dbo.OWPTeam AS t ON im.HomeName = t.OWPTeamName
+	INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.HomeName = t.OWPTeamName
 
 	-- update OWPAwayId
 	UPDATE im
 	SET im.OWPAwayId = t.OWPTeamId
 	FROM #tblInfoSiteMatch AS im
-		INNER JOIN dbo.OWPTeam AS t ON im.AwayName = t.OWPTeamName
+	INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.AwayName = t.OWPTeamName
 
 	-- insert new TV
 	TRUNCATE TABLE #tblTextList
@@ -160,11 +176,11 @@ BEGIN
 		,[Text]
 		)
 	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+		,CAST(RTRIM(LTRIM(d.Value)) AS NVARCHAR(100))
 	FROM #tblInfoSiteMatch AS im
-		CROSS APPLY dbo.fnc_SplitStrings(im.TV, ',') AS d
+	CROSS APPLY dbo.fnc_SplitString(im.TV, ',') AS d
 	WHERE im.TV <> ''
-		AND RTRIM(LTRIM(d.val)) <> ''
+		AND RTRIM(LTRIM(d.Value)) <> ''
 
 	TRUNCATE TABLE #tblDistinctTextList
 
@@ -191,11 +207,62 @@ BEGIN
 	UPDATE tl
 	SET tl.Id = tv.TVId
 	FROM #tblDistinctTextList AS tl
-		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tl.[Text] = tv.TVCode
+	INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tl.[Text] = tv.TVCode
 
 	-- update TVIds
 	UPDATE im
 	SET im.TVIds = STUFF((
+				SELECT ',' + CAST(Id AS VARCHAR(10))
+				FROM #tblDistinctTextList AS tl
+				WHERE tl.InfoSiteMatchId = im.InfoSiteMatchId
+				FOR XML PATH('')
+				), 1, 1, '')
+	FROM #tblInfoSiteMatch AS im
+
+	-- insert new Agent
+	TRUNCATE TABLE #tblTextList
+
+	INSERT INTO #tblTextList (
+		InfoSiteMatchId
+		,[Text]
+		)
+	SELECT im.InfoSiteMatchId
+		,CAST(RTRIM(LTRIM(d.Value)) AS NVARCHAR(100))
+	FROM #tblInfoSiteMatch AS im
+	CROSS APPLY dbo.fnc_SplitString(im.Agent, ',') AS d
+	WHERE im.Agent <> ''
+		AND RTRIM(LTRIM(d.Value)) <> ''
+
+	TRUNCATE TABLE #tblDistinctTextList
+
+	INSERT INTO #tblDistinctTextList (
+		InfoSiteMatchId
+		,[Text]
+		)
+	SELECT InfoSiteMatchId
+		,[Text]
+	FROM #tblTextList
+	GROUP BY InfoSiteMatchId
+		,[Text]
+	ORDER BY MIN(OrderId) ASC
+
+	INSERT INTO dbo.Agent(AgentName)
+	SELECT DISTINCT tl.[Text]
+	FROM #tblDistinctTextList AS tl
+	WHERE NOT EXISTS (
+			SELECT 1
+			FROM dbo.Agent WITH (NOLOCK)
+			WHERE AgentName = tl.[Text]
+			)
+
+	UPDATE tl
+	SET tl.Id = tv.AgentId
+	FROM #tblDistinctTextList AS tl
+	INNER JOIN dbo.Agent AS tv WITH (NOLOCK) ON tl.[Text] = tv.AgentName
+
+	-- update AgentIds
+	UPDATE im
+	SET im.AgentIds = STUFF((
 				SELECT ',' + CAST(Id AS VARCHAR(10))
 				FROM #tblDistinctTextList AS tl
 				WHERE tl.InfoSiteMatchId = im.InfoSiteMatchId
@@ -225,9 +292,12 @@ BEGIN
 			,[OWPHomeId]
 			,[OWPAwayId]
 			,[TVIds]
+			,[AgentIds]
 		FROM #tblInfoSiteMatch
-		) AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
-	WHEN MATCHED THEN
+		) AS s
+		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
+	WHEN MATCHED
+		THEN
 			UPDATE
 			SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
 				,t.[EventDateTime] = s.[EventDateTime]
@@ -249,8 +319,10 @@ BEGIN
 				,t.[OWPHomeId] = s.[OWPHomeId]
 				,t.[OWPAwayId] = s.[OWPAwayId]
 				,t.[TVIds] = s.[TVIds]
+				,t.[AgentIds] = s.[AgentIds]
 				,t.[IsDeleted] = 0
-	WHEN NOT MATCHED BY TARGET THEN
+	WHEN NOT MATCHED BY TARGET
+		THEN
 			INSERT (
 				[InfoSiteMatchId]
 				,[EventDateTime]
@@ -272,6 +344,7 @@ BEGIN
 				,[OWPHomeId]
 				,[OWPAwayId]
 				,[TVIds]
+				,[AgentIds]
 				,[IsDeleted]
 				)
 			VALUES (
@@ -295,6 +368,7 @@ BEGIN
 				,s.[OWPHomeId]
 				,s.[OWPAwayId]
 				,s.[TVIds]
+				,s.[AgentIds]
 				,0
 				);
 
@@ -303,6 +377,4 @@ BEGIN
 	DROP TABLE #tblTextList
 
 	DROP TABLE #tblDistinctTextList
-
-	DROP TABLE #tblInfoSiteMatchTV
 END

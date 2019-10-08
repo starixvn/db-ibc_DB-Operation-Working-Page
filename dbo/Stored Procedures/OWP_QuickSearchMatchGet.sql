@@ -4,6 +4,7 @@ CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
 	,@IsNumericKeywords BIT = 0
 	,@SelectTop INT = NULL
 	,@LastOWPMatchId INT = NULL
+	,@IsFullTimeView BIT = 0
 AS
 /*    
 Created: 20161005@Simon.Huynh    
@@ -20,6 +21,7 @@ Revisions:
   20181002@Raymond.Le: Fix overflow data type in RefResource
   20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
   20190521@Leo.Vo: Add Username value - [Feature: #113765]
+  20190920@Leo.Vo: Update permission - [Feature: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -50,8 +52,6 @@ BEGIN
 		,@LastBooking INT = - 91
 		,@FastMarket INT = - 88
 		,@AllInOne INT = - 89
-		,@LA_Section INT = 2
-		,@LG_Section INT = 3
 
 	--Initialize parameter
 	SELECT @FromTimeToGetData = (CASE 
@@ -69,13 +69,6 @@ BEGIN
 
 	SELECT @owpTodayFrom = @FromTimeForSpecialBettype
 		,@owpTodayTo = @ToTimeForSpecialBettype
-
-	--Create temp table		
-	CREATE TABLE #tblAssignedRoles (
-		RoleId INT
-		,SectionId INT
-		,SectionName NVARCHAR(50)
-		)
 
 	CREATE TABLE #tblAssignedMatches (OWPMatchId INT)
 
@@ -267,21 +260,6 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON away.OWPTeamId = om.OWPAwayId
 	WHERE sm.MinorBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
 
-	-- GET USER'S ASSIGNED FUNCTIONS
-	INSERT INTO #tblAssignedRoles (
-		RoleId
-		,SectionId
-		,SectionName
-		)
-	SELECT ur.RoleId
-		,u.SectionId
-		,rr.Value
-	FROM dbo.UserRole AS ur WITH (NOLOCK)
-		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON u.UserId = ur.UserId
-		INNER JOIN dbo.RefResource AS rr WITH (NOLOCK) ON rr.ResourceId = u.SectionId
-	WHERE ur.UserId = @UserId
-		AND rr.RefName = 'Section'
-
 	-- GET USER'S ASSIGNED MATCHES
 	INSERT INTO #tblAssignedMatches (OWPMatchId)
 	SELECT DISTINCT a.OWPMatchId
@@ -291,15 +269,7 @@ BEGIN
 	WHERE a.UserId = @UserId
 
 	-- FILTER RESULTS
-	IF EXISTS (
-			SELECT 1
-			FROM #tblAssignedRoles AS ar WITH (NOLOCK)
-			WHERE ar.RoleId = 1
-				AND (
-					ar.SectionId = @LA_Section
-					OR ar.SectionId = @LG_Section
-					)
-			)
+	IF @IsFullTimeView = 0
 	BEGIN
 		-- get events can view detail
 		INSERT INTO #tblFinalResults (
@@ -570,8 +540,6 @@ BEGIN
 	FROM #tblFinalResults AS fr WITH (NOLOCK)
 		INNER JOIN #tblOrderedResult AS ot WITH (NOLOCK) ON ot.OWPMatchId = fr.OWPMatchId
 	WHERE fr.AssigneeName IS NOT NULL
-
-	DROP TABLE #tblAssignedRoles
 
 	DROP TABLE #tblAssignedMatches
 
