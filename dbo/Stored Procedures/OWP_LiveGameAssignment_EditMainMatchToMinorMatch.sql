@@ -19,6 +19,7 @@ AS
 
  Revisions:
 	20190816@Leo.Vo: Initial SP - [Feature: #117960]
+	20190927@Kane.Le: Update message MatchNo - [Feature: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
