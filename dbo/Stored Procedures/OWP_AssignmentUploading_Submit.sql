@@ -4082,7 +4082,7 @@ BEGIN
 			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
 			CROSS JOIN (
 				SELECT DISTINCT u.UserId
-				FROM dbo.[User] AS u
+				FROM dbo.[User] AS u WITH (NOLOCK)
 				INNER JOIN (
 					SELECT DISTINCT nsm.UserId
 					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
@@ -4093,7 +4093,7 @@ BEGIN
 					) AS n ON u.UserId = n.UserId
 				INNER JOIN (
 					SELECT u.SectionId
-					FROM dbo.[User] AS u
+					FROM dbo.[User] AS u WITH (NOLOCK)
 					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
 					) AS l ON l.SectionId = u.SectionId
 				INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId <> u.UserId
@@ -4125,7 +4125,7 @@ BEGIN
 			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
 			CROSS JOIN (
 				SELECT DISTINCT u.UserId
-				FROM dbo.[User] AS u
+				FROM dbo.[User] AS u WITH (NOLOCK)
 				INNER JOIN (
 					SELECT DISTINCT nsm.UserId
 					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
@@ -4136,7 +4136,7 @@ BEGIN
 					) AS n ON u.UserId = n.UserId
 				INNER JOIN (
 					SELECT u.SectionId
-					FROM dbo.[User] AS u
+					FROM dbo.[User] AS u WITH (NOLOCK)
 					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
 					) AS l ON l.SectionId = u.SectionId
 				
@@ -4198,7 +4198,7 @@ BEGIN
 		FROM #tblMessageDeselectedWatcher AS m
 		CROSS JOIN (
 			SELECT DISTINCT u.UserId
-			FROM dbo.[User] AS u
+			FROM dbo.[User] AS u WITH (NOLOCK)
 			INNER JOIN (
 				SELECT DISTINCT nsm.UserId
 				FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
@@ -4209,7 +4209,7 @@ BEGIN
 				) AS n ON u.UserId = n.UserId
 			INNER JOIN (
 				SELECT u.SectionId
-				FROM dbo.[User] AS u
+				FROM dbo.[User] AS u WITH (NOLOCK)
 				JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
 				) AS l ON l.SectionId = u.SectionId
 			INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId <> u.UserId
