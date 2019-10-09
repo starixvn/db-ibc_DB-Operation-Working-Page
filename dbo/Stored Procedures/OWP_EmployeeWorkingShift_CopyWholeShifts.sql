@@ -25,8 +25,7 @@ BEGIN
 		,@LogData NVARCHAR(MAX)
 		,@LogDataOld NVARCHAR(MAX)
 		,@Xml XML
-		,@Extension_Normal INT = 1
-		,@Extension_Real INT = 1
+		,@Extension_Normal INT = 0
 		,@Extension_Special INT = 2
 
 	DECLARE @GetCurrentWeek INT

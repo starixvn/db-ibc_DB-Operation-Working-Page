@@ -37,6 +37,7 @@ AS
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20190924@Kane.Le: remove existing events deselected + notification - [Redmine: #116688]
+	20191003@Leo.Vo: Update lock hint - [Redmine: #121438]
 */
 BEGIN
 	SET NOCOUNT ON

@@ -27,7 +27,6 @@ BEGIN
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
 		,@Extension_Normal INT = 0
-		,@Extension_Real INT = 1
 		,@Extension_Special INT = 2
 
 	SET @StartRun = GETDATE()
