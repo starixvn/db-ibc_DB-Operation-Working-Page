@@ -308,6 +308,6 @@ BEGIN
 		,@Data = @NewData
 		,@DataOld = @OldData
 
-	SELECT @ErrMsg = 'The event has been edited successfully!.'
+	SELECT @ErrMsg = 'The event has been edited successfully!'
 		,@ErrCode = 0
 END
