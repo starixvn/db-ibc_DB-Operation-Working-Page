@@ -73,11 +73,11 @@ BEGIN
 			SELECT st.ShiftEndTime
 			FROM dbo.fnc_GetShiftTime(ws.ShiftDate, ws.ShiftId) AS st
 			)
-	FROM @tblWorkingShift AS ws	
-	INNER JOIN dbo.EmployeeWorkingShiftColor AS sc ON ws.ShiftId = sc.ShiftId
+	FROM @tblWorkingShift AS ws
+	INNER JOIN dbo.EmployeeWorkingShiftColor AS sc WITH (NOLOCK) ON ws.ShiftId = sc.ShiftId
 		AND sc.IsTimeShift = 1
 
-	MERGE dbo.EmployeeWorkingShift AS t1
+	MERGE INTO dbo.EmployeeWorkingShift WITH (ROWLOCK) AS t1
 	USING (
 		SELECT EmployeeId
 			,ShiftId
