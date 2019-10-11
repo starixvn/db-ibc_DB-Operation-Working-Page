@@ -15,6 +15,7 @@ AS
 Revisions:
 	20190215@Leo.Vo: Initial SP - [Redmine: #108723]
 	20190404@Leo.Vo: Add write log - [Redmine: #111068]
+	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -25,6 +26,8 @@ BEGIN
 		,@LogDataOld NVARCHAR(MAX)
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
+		,@Extension_Normal INT = 0
+		,@Extension_Special INT = 2
 
 	SET @StartRun = GETDATE()
 
@@ -107,6 +110,7 @@ BEGIN
 			,@ShiftDate DATE
 			,@TimezoneOffset INT = dbo.[fnc_GetWorkingShiftTimezoneOffset](@Actor)
 			,@ShiftStartHour INT
+			,@Extension INT
 
 		SET @DayOfTheWeek = 1
 
@@ -120,6 +124,7 @@ BEGIN
 				,@EndTime = c.EndTime
 				,@IsTimeShift = c.IsTimeShift
 				,@ShiftId = d.ShiftId
+				,@Extension = c.Extension
 			FROM dbo.EmployeeWorkingShiftDefault AS d WITH (NOLOCK)
 				INNER JOIN dbo.EmployeeWorkingShiftColor AS c WITH (NOLOCK) ON d.ShiftId = c.ShiftId
 			WHERE d.UserId = @EmployeeId
@@ -143,8 +148,7 @@ BEGIN
 
 					SET @ShiftStartHour = DATEPART(HOUR, @StartTime) + @TimezoneOffset / 60
 
-					IF @ShiftStartHour >= 1
-						AND @ShiftStartHour < 7
+					IF @Extension = @Extension_Special OR (@Extension = @Extension_Normal AND @ShiftStartHour >= 0 AND @ShiftStartHour <= 6)
 					BEGIN
 						SELECT @ShiftStartTime = DATEADD(DAY, 1, @ShiftStartTime)
 							,@ShiftEndTime = DATEADD(DAY, 1, @ShiftEndTime)

@@ -14,6 +14,7 @@ AS
 	 20190314@Leo.Vo: New working shift with OT - [Redmine: #109560]
 	 20190409@Kane.Le: Apply new rule StartTime >1 & StartTime <6 GMT 8 - [Redmine: #111068]
 	 20190520@Leo.Vo: Write log - [Redmine: #113763]
+	 20191002@Kane.Le: Add Extension ((REAL), (SPECIAL))  = '' - [Redmine: #121272]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -64,24 +65,19 @@ BEGIN
 	FROM @Data.nodes('Data/Row') AS M(C);
 
 	UPDATE ws
-	SET ws.ShiftStartTime = DATEADD(DAY, CASE 
-				WHEN DATEPART(HOUR, sc.StartTime) BETWEEN 1
-						AND 6 THEN 1
-				ELSE 0
-				END, ws.ShiftDate + CAST(sc.StartTime AS DATETIME))
-		,ws.ShiftEndTime = DATEADD(DAY, (CASE 
-				WHEN sc.StartTime > sc.EndTime THEN 1
-				ELSE 0 END
-				) + (CASE 
-				WHEN DATEPART(HOUR, sc.StartTime) BETWEEN 1
-						AND 6 THEN 1
-				ELSE 0 END
-				), ws.ShiftDate + CAST(sc.EndTime AS DATETIME))
+	SET ws.ShiftStartTime = (
+			SELECT st.ShiftStartTime
+			FROM dbo.fnc_GetShiftTime(ws.ShiftDate, ws.ShiftId) AS st
+			)
+		,ws.ShiftEndTime = (
+			SELECT st.ShiftEndTime
+			FROM dbo.fnc_GetShiftTime(ws.ShiftDate, ws.ShiftId) AS st
+			)
 	FROM @tblWorkingShift AS ws
-		INNER JOIN dbo.EmployeeWorkingShiftColor AS sc ON ws.ShiftId = sc.ShiftId
+	INNER JOIN dbo.EmployeeWorkingShiftColor AS sc WITH (NOLOCK) ON ws.ShiftId = sc.ShiftId
 		AND sc.IsTimeShift = 1
 
-	MERGE dbo.EmployeeWorkingShift AS t1
+	MERGE INTO dbo.EmployeeWorkingShift WITH (ROWLOCK) AS t1
 	USING (
 		SELECT EmployeeId
 			,ShiftId
@@ -89,15 +85,18 @@ BEGIN
 			,ShiftStartTime
 			,ShiftEndTime
 		FROM @tblWorkingShift
-		) AS t2 ON t1.EmployeeId = t2.EmployeeId
+		) AS t2
+		ON t1.EmployeeId = t2.EmployeeId
 			AND t1.ShiftDate = t2.ShiftDate
-	WHEN MATCHED THEN
+	WHEN MATCHED
+		THEN
 			UPDATE
 			SET t1.ShiftId = t2.ShiftId
 				,t1.ShiftStartTime = t2.ShiftStartTime
 				,t1.ShiftEndTime = t2.ShiftEndTime
 				,t1.RefShiftId = NULL
-	WHEN NOT MATCHED THEN
+	WHEN NOT MATCHED
+		THEN
 			INSERT (
 				EmployeeId
 				,ShiftId

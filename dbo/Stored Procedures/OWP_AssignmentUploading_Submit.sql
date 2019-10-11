@@ -37,6 +37,7 @@ AS
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20190924@Kane.Le: remove existing events deselected + notification - [Redmine: #116688]
+	20191003@Leo.Vo: Update lock hint - [Redmine: #121438]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -4082,7 +4083,7 @@ BEGIN
 			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
 			CROSS JOIN (
 				SELECT DISTINCT u.UserId
-				FROM dbo.[User] AS u
+				FROM dbo.[User] AS u WITH (NOLOCK)
 				INNER JOIN (
 					SELECT DISTINCT nsm.UserId
 					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
@@ -4093,7 +4094,7 @@ BEGIN
 					) AS n ON u.UserId = n.UserId
 				INNER JOIN (
 					SELECT u.SectionId
-					FROM dbo.[User] AS u
+					FROM dbo.[User] AS u WITH (NOLOCK)
 					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
 					) AS l ON l.SectionId = u.SectionId
 				INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId <> u.UserId
@@ -4125,7 +4126,7 @@ BEGIN
 			FROM #tblMessageDeselectedAssignmentOfMyAssigned AS m
 			CROSS JOIN (
 				SELECT DISTINCT u.UserId
-				FROM dbo.[User] AS u
+				FROM dbo.[User] AS u WITH (NOLOCK)
 				INNER JOIN (
 					SELECT DISTINCT nsm.UserId
 					FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
@@ -4136,7 +4137,7 @@ BEGIN
 					) AS n ON u.UserId = n.UserId
 				INNER JOIN (
 					SELECT u.SectionId
-					FROM dbo.[User] AS u
+					FROM dbo.[User] AS u WITH (NOLOCK)
 					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
 					) AS l ON l.SectionId = u.SectionId
 				
@@ -4198,7 +4199,7 @@ BEGIN
 		FROM #tblMessageDeselectedWatcher AS m
 		CROSS JOIN (
 			SELECT DISTINCT u.UserId
-			FROM dbo.[User] AS u
+			FROM dbo.[User] AS u WITH (NOLOCK)
 			INNER JOIN (
 				SELECT DISTINCT nsm.UserId
 				FROM dbo.NotificationSetting AS ns WITH (NOLOCK)
@@ -4209,7 +4210,7 @@ BEGIN
 				) AS n ON u.UserId = n.UserId
 			INNER JOIN (
 				SELECT u.SectionId
-				FROM dbo.[User] AS u
+				FROM dbo.[User] AS u WITH (NOLOCK)
 				JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
 				) AS l ON l.SectionId = u.SectionId
 			INNER JOIN #tblAssignmentLog AS ll ON ll.OldUserId <> u.UserId

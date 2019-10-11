@@ -14,24 +14,25 @@ AS
 Revisions:  
 	20190419@Lita.Tang: Initial SP - [Redmine: #111840]  
 	20190514@Lita.Tang: Save data to DB when pasting Default shift - [Redmine: #112737] 
+	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
 */
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @StartRun DATETIME
+	DECLARE @StartRun DATETIME = GETDATE()
 		,@EndRun DATETIME
 		,@Duration INT
 		,@LogData NVARCHAR(MAX)
 		,@LogDataOld NVARCHAR(MAX)
 		,@Xml XML
+		,@Extension_Normal INT = 0
+		,@Extension_Special INT = 2
 
-	SET @StartRun = GETDATE()
-	
 	DECLARE @GetCurrentWeek INT
 		,@GetNextWeek INT	
 		
 	SELECT @GetCurrentWeek = DATEPART(wk, GETUTCDATE())	
-	SELECT @GetNextWeek= DATEPART(wk,  DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @FromDate)) % 7, @FromDate))
+		,@GetNextWeek = DATEPART(wk,  DATEADD(dd, 0 - (@@DATEFIRST + 5 + DATEPART(dw, @FromDate)) % 7, @FromDate))
 
 	DECLARE @tblOldWorkingShift TABLE (
 		EmployeeId INT
@@ -48,6 +49,7 @@ BEGIN
 		,ShiftEndTime DATETIME
 		,ShiftId INT
 		,RefShiftId INT
+		,Extension INT
 		)
 
 	INSERT INTO @tblOldWorkingShift (
@@ -66,66 +68,97 @@ BEGIN
 		,ws.RefShiftId
 	FROM dbo.EmployeeWorkingShift AS ws WITH (NOLOCK)
 	WHERE ws.EmployeeId = @ToUserId
-		AND ws.ShiftDate BETWEEN @FromDate
-			AND @ToDate	
+		AND ws.ShiftDate BETWEEN @FromDate AND @ToDate	
 	
 	---If in future week
 	IF @GetNextWeek > @GetCurrentWeek
 	BEGIN
 		
 		--create table date 
-		declare @tblDays table (day_id int, [day] date)
+		DECLARE @tblDays TABLE (
+			day_id INT
+			,[day] DATE
+			);
 
-		;with cte_day as
-		(
-		select @fromdate as [day]
-		union all
-		select dateadd(day, 1, [day])
-		from cte_day
-		where [day] < @todate
-		)
-		insert into @tblDays (day_id, [day])
-		select
-		row_number () over (order by [day] asc)
-		,[day]
-
-		from cte_day
-		option (maxrecursion 0)
+		WITH cte_day
+		AS (
+			SELECT @fromdate AS [day]
+			
+			UNION ALL
+			SELECT dateadd(day, 1, [day])
+			FROM cte_day
+			WHERE [day] < @todate
+			)
+		INSERT INTO @tblDays (
+			day_id
+			,[day]
+			)
+		SELECT row_number() OVER (
+				ORDER BY [day] ASC
+				)
+			,[day]
+		FROM cte_day
+		OPTION (MAXRECURSION 0)
 
 		-- 
-		DECLARE @tmpDefault TABLE  (UserId INT, ShiftId INT, ShiftDate DATE )
-		INSERT INTO @tmpDefault (UserId,  ShiftId, ShiftDate)
-		SELECT @FromUserId 
-			, ISNULL(ds.ShiftId,0)
-			, d.day
-		FROM @tblDays AS d 
-		LEFT JOIN dbo.EmployeeWorkingShiftDefault as ds WITH(NOLOCK)
-				ON d.day_id = ds.DayOfTheWeek AND ds.UserId = @FromUserId 
+		DECLARE @tmpDefault TABLE (
+			UserId INT
+			,ShiftId INT
+			,ShiftDate DATE
+			)
+
+		INSERT INTO @tmpDefault (
+			UserId
+			,ShiftId
+			,ShiftDate
+			)
+		SELECT @FromUserId
+			,ISNULL(ds.ShiftId, 0)
+			,d.day
+		FROM @tblDays AS d
+			LEFT JOIN dbo.EmployeeWorkingShiftDefault AS ds WITH (NOLOCK) ON d.day_id = ds.DayOfTheWeek
+			AND ds.UserId = @FromUserId
+
 		-----
-		DECLARE @tmpWS TABLE (UserId INT, ShiftId INT, ShiftDate DATE, RefShiftId INT)
-		INSERT INTO @tmpWS (UserId, ShiftId, ShiftDate,RefShiftId)
+		DECLARE @tmpWS TABLE (
+			UserId INT
+			,ShiftId INT
+			,ShiftDate DATE
+			,RefShiftId INT
+			)
+
+		INSERT INTO @tmpWS (
+			UserId
+			,ShiftId
+			,ShiftDate
+			,RefShiftId
+			)
 		SELECT t.UserId
-		,ISNULL( ws.ShiftId, t.ShiftId)
-		,t.ShiftDate
-		, ISNULL(ws.RefShiftId,NULL ) 
-		FROM  @tmpDefault AS t 
-		LEFT JOIN dbo.EmployeeWorkingShift AS ws ON t.UserId = ws.EmployeeId AND t.ShiftDate = ws.ShiftDate
+			,ISNULL(ws.ShiftId, t.ShiftId)
+			,t.ShiftDate
+			,ISNULL(ws.RefShiftId, NULL)
+		FROM @tmpDefault AS t
+			LEFT JOIN dbo.EmployeeWorkingShift AS ws ON t.UserId = ws.EmployeeId
+			AND t.ShiftDate = ws.ShiftDate
+
 
 		--insert new data
 		INSERT INTO	@tblNewWorkingShift (
-		EmployeeId
-		,ShiftDate
-		,ShiftStartTime
-		,ShiftEndTime
-		,ShiftId
-		,RefShiftId
+			EmployeeId
+			,ShiftDate
+			,ShiftStartTime
+			,ShiftEndTime
+			,ShiftId
+			,RefShiftId
+			,Extension
 		)
 		SELECT @ToUserId
-		,t.ShiftDate
-		,t.ShiftDate + CAST(c.StartTime AS DATETIME)
-		,t.ShiftDate + CAST(c.EndTime AS DATETIME)
-		,t.ShiftId
-		,t.RefShiftId
+			,t.ShiftDate
+			,t.ShiftDate + CAST(c.StartTime AS DATETIME)
+			,t.ShiftDate + CAST(c.EndTime AS DATETIME)
+			,t.ShiftId
+			,t.RefShiftId
+			,c.Extension
 		FROM  @tmpWS AS t 
 		INNER JOIN dbo.EmployeeWorkingShiftColor AS c ON c.ShiftId = t.ShiftId
 
@@ -133,11 +166,11 @@ BEGIN
 		UPDATE @tblNewWorkingShift
 		SET ShiftStartTime = DATEADD(DAY, 1, ShiftStartTime)	
 			, ShiftEndTime = DATEADD(DAY, 1, ShiftEndTime)
-		WHERE DATEPART(HOUR, ShiftStartTime) BETWEEN 1 AND 6
+		WHERE Extension = @Extension_Special OR (Extension = @Extension_Normal AND DATEPART(HOUR, ShiftStartTime) BETWEEN 0 AND 6)
 
 		UPDATE @tblNewWorkingShift
 		SET ShiftEndTime = DATEADD(DAY, 1, ShiftEndTime)
-		WHERE DATEPART(HOUR, ShiftStartTime) >DATEPART(HOUR, ShiftEndTime)
+		WHERE ShiftStartTime > ShiftEndTime
 	END 
 	ELSE ----in current week
 	BEGIN 		

@@ -221,7 +221,6 @@
     <Build Include="dbo\Stored Procedures\OWP_EventInfo_GetByFilterId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EventInfo_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftColorUpd.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftColorIns.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_Upload.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_GetAllShift.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AssignmentUploading_Submit.sql" />
@@ -348,7 +347,6 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShiftDefault_QueryByUser.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryByUser.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ValidateBeforeDelete_WorkingShiftColor.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_DataExport.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_Query.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_ValidateToAddEvent.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveGameAssignment_AddMainMatch.sql" />
@@ -387,6 +385,7 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_Single.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_Deselect.sql" />
     <Build Include="dbo\Functions\fnc_SplitString.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetLA.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

@@ -12,6 +12,7 @@ Revisions:
 	20180917@Kane.Le: New structure of event assignment - [Redmine: #92868]
 	20190123@Leo.Vo: New schema of WS - [Redmine: #108206]
 	20190401@Kane.Le: Add Timezone GMT+7 To Iframe Weekly WS - [Redmine: #111068]
+	20191002@Kane.Le: Add Extension ((REAL), (SPECIAL))  = '' - [Redmine: #121272]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -42,6 +43,7 @@ BEGIN
 		,DATEADD(MINUTE, @Offset, StartTime) AS StartTime
 		,DATEADD(MINUTE, @Offset, EndTime) AS EndTime
 		,IsTimeShift
+		,Extension
 	FROM dbo.EmployeeWorkingShiftColor AS emp WITH (NOLOCK)
 	WHERE (
 		IsTimeShift = 1

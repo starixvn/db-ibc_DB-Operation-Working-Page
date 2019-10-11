@@ -12,6 +12,7 @@ Revisions:
 	20190409@Raymond.Le: Correct rule GMT+8 ShiftCode - [Redmine: #111068]
 	20190513@Leo.Vo: Change rule get default shift - [Redmine: #112737]
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
+	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -23,6 +24,8 @@ BEGIN
 		,@EndRun DATETIME
 		,@Duration INT
 		,@ActionId INT
+		,@Extension_Real INT = 1
+		,@Extension_Special INT = 2
 
 	SET @StartRun = GETDATE()
 	SET @CurrentDate = ISNULL(@CurrentDate, GETDATE())
@@ -39,6 +42,7 @@ BEGIN
 		,ShiftEndDate DATE
 		,ShiftEndTime DATETIME
 		,IsTimeShift BIT
+		,Extension INT
 		)
 
 	CREATE TABLE #tblInsertWorkingShift (
@@ -63,6 +67,7 @@ BEGIN
 		,ShiftStartTime
 		,ShiftEndTime
 		,IsTimeShift
+		,Extension
 		)
 	SELECT u.UserId
 		,ds.ShiftId
@@ -78,17 +83,22 @@ BEGIN
 		,sc.StartTime
 		,sc.EndTime
 		,sc.IsTimeShift
+		,sc.Extension
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN dbo.EmployeeWorkingShiftDefault AS ds WITH (NOLOCK) ON u.UserId = ds.UserId
 		LEFT JOIN dbo.EmployeeWorkingShiftColor AS sc WITH (NOLOCK) ON ds.ShiftId = sc.ShiftId
 
 	--Update shift start date
 	UPDATE ds WITH (ROWLOCK, UPDLOCK)
-	SET ds.ShiftStartDate = CASE 
-			WHEN DATEPART(HOUR, ds.ShiftStartTime) BETWEEN 1
+	SET ds.ShiftStartDate = CASE ds.Extension
+		WHEN @Extension_Real THEN ds.ShiftDate
+		WHEN @Extension_Special THEN DATEADD(DAY, 1, ds.ShiftDate)
+		ELSE CASE 
+			WHEN DATEPART(HOUR, ds.ShiftStartTime) BETWEEN 0
 					AND 6 THEN DATEADD(DAY, 1, ds.ShiftDate)
 			ELSE ds.ShiftDate
 			END
+		END
 	FROM #tblDefaultWorkingShift AS ds
 	WHERE ds.IsTimeShift = 1
 
