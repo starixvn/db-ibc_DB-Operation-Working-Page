@@ -25,6 +25,8 @@ Revisions:
 	20190426@Kane.Le: Remove space whene search username - [Redmine: #111840]
 	20190718@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
 	20190719@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
+	20191011@Kane.Le: Get User Group - [Redmine: #121765]
+	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -128,8 +130,10 @@ BEGIN
 		,u.LocationCode
 		,u.Pickup
 		,u.[Address]
-		,u.[Level]
+		,u.[Level]		
 		,ucl.[Value] AS 'LevelName'
+		,u.GroupId
+		,ugr.[Value] AS 'GroupName'
 		,u.IsSecondAccount
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
@@ -142,6 +146,8 @@ BEGIN
 		AND uc.RefName = 'UserCategory'
 		LEFT JOIN dbo.RefResource AS ucl WITH (NOLOCK) ON u.[Level] = ucl.ResourceId
 		AND ucl.RefName = 'UserLevel'
+		LEFT JOIN dbo.RefResource AS ugr WITH (NOLOCK) ON u.GroupId = ugr.ResourceId
+		AND ugr.RefName = 'UserGroup'
 		LEFT JOIN dbo.RefResource AS r WITH (NOLOCK) ON ur.RoleId = r.ResourceId
 		AND r.RefName = 'UserRole'
 	ORDER BY ul.RowNumber
