@@ -15,6 +15,7 @@ AS
 	20190108@Kane.Le: Update Field IsDeleted - [Redmine: #105574]
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 	20190918@Kane.Le: Update AgentIds - [Redmine: #120415]
+	20191014@Leo.Vo: Fix issue job failed - [Redmine: #121722]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -116,11 +117,11 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
-	-- not process on existed records and no update
+	-- not process on records deleted or not updated
 	DELETE tism
 	FROM #tblInfoSiteMatch AS tism
 	INNER JOIN dbo.InfoSiteMatch AS dism WITH (NOLOCK) ON tism.InfoSiteMatchId = dism.InfoSiteMatchId
-		AND tism.UpdatedTime = dism.UpdatedTime
+	WHERE tism.UpdatedTime = dism.UpdatedTime OR dism.IsDeleted = 1
 
 	-- insert new league
 	INSERT INTO dbo.OWPLeague (OWPLeagueName)
@@ -140,7 +141,7 @@ BEGIN
 
 	-- insert new team
 	INSERT INTO dbo.OWPTeam (OWPTeamName)
-	SELECT TeamName
+	SELECT im.TeamName
 	FROM (
 		SELECT im.HomeName AS TeamName
 		FROM #tblInfoSiteMatch AS im
@@ -170,19 +171,18 @@ BEGIN
 
 	-- insert new TV
 	TRUNCATE TABLE #tblTextList
+	TRUNCATE TABLE #tblDistinctTextList
 
 	INSERT INTO #tblTextList (
 		InfoSiteMatchId
 		,[Text]
 		)
 	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.Value)) AS NVARCHAR(100))
+		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR)
 	FROM #tblInfoSiteMatch AS im
-	CROSS APPLY dbo.fnc_SplitString(im.TV, ',') AS d
+	CROSS APPLY dbo.fnc_SplitStrings(im.TV, ',') AS d
 	WHERE im.TV <> ''
-		AND RTRIM(LTRIM(d.Value)) <> ''
-
-	TRUNCATE TABLE #tblDistinctTextList
+		AND RTRIM(LTRIM(d.val)) <> ''
 
 	INSERT INTO #tblDistinctTextList (
 		InfoSiteMatchId
@@ -209,7 +209,6 @@ BEGIN
 	FROM #tblDistinctTextList AS tl
 	INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tl.[Text] = tv.TVCode
 
-	-- update TVIds
 	UPDATE im
 	SET im.TVIds = STUFF((
 				SELECT ',' + CAST(Id AS VARCHAR(10))
@@ -221,19 +220,18 @@ BEGIN
 
 	-- insert new Agent
 	TRUNCATE TABLE #tblTextList
+	TRUNCATE TABLE #tblDistinctTextList
 
 	INSERT INTO #tblTextList (
 		InfoSiteMatchId
 		,[Text]
 		)
 	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.Value)) AS NVARCHAR(100))
+		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR)
 	FROM #tblInfoSiteMatch AS im
-	CROSS APPLY dbo.fnc_SplitString(im.Agent, ',') AS d
+	CROSS APPLY dbo.fnc_SplitStrings(im.Agent, ',') AS d
 	WHERE im.Agent <> ''
-		AND RTRIM(LTRIM(d.Value)) <> ''
-
-	TRUNCATE TABLE #tblDistinctTextList
+		AND RTRIM(LTRIM(d.val)) <> ''
 
 	INSERT INTO #tblDistinctTextList (
 		InfoSiteMatchId
@@ -260,7 +258,6 @@ BEGIN
 	FROM #tblDistinctTextList AS tl
 	INNER JOIN dbo.Agent AS tv WITH (NOLOCK) ON tl.[Text] = tv.AgentName
 
-	-- update AgentIds
 	UPDATE im
 	SET im.AgentIds = STUFF((
 				SELECT ',' + CAST(Id AS VARCHAR(10))
