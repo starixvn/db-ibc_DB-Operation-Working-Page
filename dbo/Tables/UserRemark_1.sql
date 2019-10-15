@@ -1,8 +1,10 @@
 ﻿CREATE TABLE [dbo].[UserRemark] (
     [UserId]   INT            NOT NULL,
     [Category] INT            NOT NULL,
-    [Remark]   NVARCHAR (200) NOT NULL
+    [Remark]   NVARCHAR (200) NULL
 );
+
+
 
 
 GO

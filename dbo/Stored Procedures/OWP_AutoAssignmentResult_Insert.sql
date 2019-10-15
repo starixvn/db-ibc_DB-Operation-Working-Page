@@ -17,6 +17,7 @@ DB: bodb_OWP
 Revisions:
 	20181221@Raymond.Le: Initial SP - [Redmine: #106196]
 	20190503@Leo.Vo: Save request when failure - [Redmine: #112737]
+	20191015@Kane.Le: update statusCode - [Redmine: #121765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -39,12 +40,14 @@ BEGIN
 			,[OWPMatchId]
 			,[Bettype]
 			,[UserId]
+			,[StatusCode]
 			)
 		SELECT @RequestId
 			,[OWPMatchId]
 			,[Bettype]
 			,NULLIF([UserId], '') AS [UserId]
-		FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([OWPMatchId] [int], [Bettype] [int], [UserId] [int])
+			,[StatusCode]
+		FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([OWPMatchId] [int], [Bettype] [int], [UserId] [int], [StatusCode] [int])
 
 		EXEC sp_xml_removedocument @idoc
 	END

@@ -10,7 +10,7 @@ USE bodb_OWP
 CREATE TABLE dbo.[UserRemark](
 	[UserId] [int] NOT NULL,
 	[Category] INT NOT NULL,
-	[Remark] [nvarchar](200) NOT NULL
+	[Remark] [nvarchar](200)
 )
 GO
 
@@ -39,10 +39,11 @@ CREATE TABLE dbo.[EmployeeWorkingShiftNote](
 	[CreatedBy] [int] NOT NULL,
 	[Note] [nvarchar](4000) NOT NULL,
 	[ShiftDate] [datetime] NOT NULL,
+	CONSTRAINT [PK_EmployeeWorkingShiftNoteId] PRIMARY KEY CLUSTERED ([EmployeeWorkingShiftNoteId] ASC)
 )
 GO
 
-CREATE UNIQUE NONCLUSTERED INDEX [IX_EmployeeWorkingShiftNote_UserId_ShiftDate] ON [dbo].[EmployeeWorkingShiftNote]
+CREATE NONCLUSTERED INDEX [IX_EmployeeWorkingShiftNote_UserId_ShiftDate] ON [dbo].[EmployeeWorkingShiftNote]
 (
 	[UserId] ASC,
 	[ShiftDate] ASC

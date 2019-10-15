@@ -238,7 +238,8 @@ BEGIN
 				)
 			)
 
-	-- SELECT * FROM #owpMatchListByDate
+	
+
 	CREATE TABLE #tblOWPMatchFilter (OWPMatchId INT)
 
 	INSERT INTO #tblOWPMatchFilter
@@ -309,6 +310,8 @@ BEGIN
 				FROM @tblRefResourceMatchStatus
 				)
 			)
+
+	 
 
 	-- Return Matches info
 	SELECT ml.OWPMatchId

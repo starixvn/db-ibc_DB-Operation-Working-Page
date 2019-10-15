@@ -36,14 +36,12 @@ BEGIN
 				,ROOT('r')
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-
-	IF @OldRemark IS NOT NULL
-	BEGIN
-		UPDATE dbo.UserRemark WITH (ROWLOCK)
-		SET Remark = @Remark
-		WHERE UserId = @UserId AND Category = @Category
-	END
-	ELSE
+	
+	UPDATE dbo.UserRemark WITH (ROWLOCK)
+	SET Remark = @Remark
+	WHERE UserId = @UserId AND Category = @Category
+	
+	IF @@ROWCOUNT = 0
 	BEGIN
 		INSERT INTO dbo.UserRemark (UserId, Category, Remark)
 		VALUES (@UserId, @Category, @Remark);
