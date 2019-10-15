@@ -66,154 +66,444 @@ BEGIN
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
 
+	CREATE TABLE #tblLogData (
+		[RowType] VARCHAR(20)
+		,[UserId] INT
+		,[FullName] NVARCHAR(100) NULL
+		,[Nickname] VARCHAR(30) NULL
+		,[EmployeeId] VARCHAR(30) NULL
+		,[Skype] VARCHAR(50) NULL
+		,[DepartmentId] SMALLINT NULL
+		,[SectionId] SMALLINT NULL
+		,[Extension] VARCHAR(30) NULL
+		,[Phone] VARCHAR(30) NULL
+		,[Email] VARCHAR(50) NULL
+		,[LocationCode] VARCHAR(10) NULL
+		,[CategoryId] SMALLINT NULL
+		,[Username] VARCHAR(30) NULL
+		,[Pickup] BIT NULL
+		,[Address] NVARCHAR(500) NULL
+		,[Level] INT NULL
+		,[RoleId] SMALLINT NULL
+		,[IsSecondAccount] BIT NOT NULL
+		,[GroupId] INT NULL
+		);
+
 	SET @StartRun = GETDATE()
 
 	--Old Data
-	/*
-		SET @Xml = (
-				SELECT ISNULL(ou.FullName, '') AS '@fn'
-					,ISNULL(ou.NickName, '') AS '@nn'
-					,ISNULL(ou.EmployeeId, '') AS '@eid'
-					,ISNULL(ou.CategoryId, 0) AS '@ca'
-					,ISNULL(ou.Extension, '') AS '@ex'
-					,ISNULL(ou.Phone, '') AS '@p'
-					,ISNULL(ou.Email, '') AS '@e'
-					,ISNULL(ou.Skype, '') AS '@s'
-					,ISNULL(ou.DepartmentId, 0) AS '@d'
-					,ISNULL(ou.SectionId, 0) AS '@sec'
-					,ISNULL(ou.GroupId, 0) AS '@grp'
-					,ISNULL(ur.RoleId, 0) AS '@r'
-					,ISNULL(ou.LocationCode, '') AS '@lo'
-					,ISNULL(ou.Pickup, '') AS '@pk'
-					,ISNULL(ou.[Address], '') AS '@ad'
-					,ISNULL(ou.[Level], '') AS '@lv'
-					,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
-				FROM [User] ou WITH (NOLOCK)
-				LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
-				WHERE ou.UserId = @UserId
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		*/
+	INSERT INTO #tblLogData (
+		[RowType]
+		,[UserId]
+		,[FullName]
+		,[Nickname]
+		,[EmployeeId]
+		,[Skype]
+		,[DepartmentId]
+		,[SectionId]
+		,[Extension]
+		,[Phone]
+		,[Email]
+		,[LocationCode]
+		,[CategoryId]
+		,[Username]
+		,[Pickup]
+		,[Address]
+		,[Level]
+		,[RoleId]
+		,[IsSecondAccount]
+		,[GroupId]
+		)
+	SELECT 'OLD'
+		,@UserId
+		,ou.FullName
+		,ou.Nickname
+		,ou.EmployeeId
+		,ou.Skype
+		,ou.DepartmentId
+		,ou.SectionId
+		,ou.Extension
+		,ou.Phone
+		,ou.Email
+		,ou.LocationCode
+		,ou.CategoryId
+		,ou.Username
+		,ou.Pickup
+		,ou.[Address]
+		,ou.[LEVEL]
+		,ur.RoleId
+		,ou.IsSecondAccount
+		,ou.GroupId
+	FROM [User] ou WITH (NOLOCK)
+	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
+	WHERE ou.UserId = @UserId
+	
+	UNION
+	
+	SELECT 'NEW'
+		,@UserId
+		,ou.FullName
+		,ou.Nickname
+		,ou.EmployeeId
+		,ou.Skype
+		,ou.DepartmentId
+		,ou.SectionId
+		,ou.Extension
+		,ou.Phone
+		,ou.Email
+		,ou.LocationCode
+		,ou.CategoryId
+		,ou.Username
+		,ou.Pickup
+		,ou.[Address]
+		,ou.[LEVEL]
+		,ur.RoleId
+		,ou.IsSecondAccount
+		,ou.GroupId
+	FROM [User] ou WITH (NOLOCK)
+	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
+	WHERE ou.UserId = @UserId
+
+	SET @Xml = (
+			SELECT ISNULL(ou.FullName, '') AS '@fn'
+				,ISNULL(ou.NickName, '') AS '@nn'
+				,ISNULL(ou.EmployeeId, '') AS '@eid'
+				,ISNULL(ou.CategoryId, 0) AS '@ca'
+				,ISNULL(ou.Extension, '') AS '@ex'
+				,ISNULL(ou.Phone, '') AS '@p'
+				,ISNULL(ou.Email, '') AS '@e'
+				,ISNULL(ou.Skype, '') AS '@s'
+				,ISNULL(ou.DepartmentId, 0) AS '@d'
+				,ISNULL(ou.SectionId, 0) AS '@sec'
+				,ISNULL(ou.GroupId, 0) AS '@grp'
+				,ISNULL(ou.RoleId, 0) AS '@r'
+				,ISNULL(ou.LocationCode, '') AS '@lo'
+				,ISNULL(ou.Pickup, '') AS '@pk'
+				,ISNULL(ou.[Address], '') AS '@ad'
+				,ISNULL(ou.[Level], '') AS '@lv'
+				,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
+			FROM #tblLogData AS ou
+			WHERE ou.RowType = 'OLD'
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+
 	--Update
 	IF @ColumnName = 'EmployeeId'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK) SET EmployeeId = @Value WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET EmployeeId = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET EmployeeId = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'FullName'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK, ROWLOCK) SET FullName = @Value	WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET FullName = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET FullName = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'NickName'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET NickName = @Value WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET NickName = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET Nickname = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'DepartmentId'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET DepartmentId = CAST(@Value AS INT) WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET DepartmentId = CAST(@Value AS INT)
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET DepartmentId = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'SectionId'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET SectionId = CAST(@Value AS INT) WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET SectionId = CAST(@Value AS INT)
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET SectionId = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'GroupId'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET GroupId = CAST(@Value AS INT) WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET GroupId = CAST(@Value AS INT)
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET GroupId = @Value
+		WHERE RowType = 'NEW'
 	END
 
 	IF @ColumnName = 'Extension'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET Extension = @Value  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET Extension = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET Extension = @Value
+		WHERE RowType = 'NEW'
 	END
 
 	IF @ColumnName = 'Phone'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET Phone = @Value  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET Phone = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET Phone = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'Email'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET Email = @Value  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET Email = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET Email = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'Skype'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET Skype = @Value  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET Skype = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET Skype = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'CategoryId'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET CategoryId = CAST(@Value AS INT)  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET CategoryId = CAST(@Value AS INT)
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET CategoryId = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'LocationCode'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET LocationCode = @Value  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET LocationCode = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET LocationCode = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'Pickup'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET Pickup = CAST(@Value AS BIT)  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET Pickup = CAST(@Value AS BIT)
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET Pickup = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'Level'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET [Level] = CAST(@Value AS INT)  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET [Level] = CAST(@Value AS INT)
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET LEVEL = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'Address'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET Address = @Value  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET Address = @Value
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET Address = @Value
+		WHERE RowType = 'NEW'
 	END
+
 	IF @ColumnName = 'IsSecondAccount'
 	BEGIN
-		UPDATE dbo.[User] WITH (UPDLOCK	,ROWLOCK ) SET IsSecondAccount = CAST(@Value AS BIT)  WHERE UserId = @UserId
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET IsSecondAccount = CAST(@Value AS BIT)
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET IsSecondAccount = @Value
+		WHERE RowType = 'NEW'
 	END
-	IF (
-			@ColumnName = 'RoleId'
-			AND @Value IS NOT NULL
-			)
+
+	IF @ColumnName = 'RoleId'
 	BEGIN
 		DELETE
 		FROM dbo.UserRole
 		WHERE UserId = @UserId
 
-		INSERT INTO dbo.UserRole (
-			UserId
-			,RoleId
-			)
-		VALUES (
-			@UserId
-			, CAST(@Value AS INT)
-			)
-	END
-			--New data
-			/*
-		SET @Xml = (
-				SELECT ISNULL(@FullName, '') AS '@fn'
-					,ISNULL(@NickName, '') AS '@nn'
-					,ISNULL(@EmployeeId, '') AS '@eid'
-					,ISNULL(@CategoryId, 0) AS '@ca'
-					,ISNULL(@Extension, '') AS '@ex'
-					,ISNULL(@Phone, '') AS '@p'
-					,ISNULL(@Email, '') AS '@e'
-					,ISNULL(@Skype, '') AS '@s'
-					,ISNULL(@DepartmentId, 0) AS '@d'
-					,ISNULL(@SectionId, 0) AS '@sec'
-					,ISNULL(@GroupId, 0) AS '@grp'
-					,ISNULL(@RoleId, 0) AS '@r'
-					,ISNULL(@LocationCode, '') AS '@lo'
-					,ISNULL(@Pickup, '') AS '@pk'
-					,ISNULL(@Address, '') AS '@ad'
-					,ISNULL(@Level, '') AS '@lv'
-					,ISNULL(@IsSecondAccount, '') AS '@sa'
-				FOR XML PATH('z')
-					,ROOT('r')
+		IF @Value IS NOT NULL
+		BEGIN
+			INSERT INTO dbo.UserRole (
+				UserId
+				,RoleId
 				)
-		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
-		 
-		EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
-			,@SPName = 'OWP_UserUpdate'
-			,@LoggedDate = @StartRun
-			,@Duration = @Duration
-			,@ObjectId = @UserId
-			,@Data = @LogData
-			,@DataOld = @LogDataOld
-			*/
+			VALUES (
+				@UserId
+				,CAST(@Value AS INT)
+				)
+		END
+
+		UPDATE #tblLogData
+		SET RoleId = @Value
+		WHERE RowType = 'NEW'
+	END
+
+	--New data
+	SET @Xml = (
+			SELECT ISNULL(ou.FullName, '') AS '@fn'
+				,ISNULL(ou.NickName, '') AS '@nn'
+				,ISNULL(ou.EmployeeId, '') AS '@eid'
+				,ISNULL(ou.CategoryId, 0) AS '@ca'
+				,ISNULL(ou.Extension, '') AS '@ex'
+				,ISNULL(ou.Phone, '') AS '@p'
+				,ISNULL(ou.Email, '') AS '@e'
+				,ISNULL(ou.Skype, '') AS '@s'
+				,ISNULL(ou.DepartmentId, 0) AS '@d'
+				,ISNULL(ou.SectionId, 0) AS '@sec'
+				,ISNULL(ou.GroupId, 0) AS '@grp'
+				,ISNULL(ou.RoleId, 0) AS '@r'
+				,ISNULL(ou.LocationCode, '') AS '@lo'
+				,ISNULL(ou.Pickup, '') AS '@pk'
+				,ISNULL(ou.[Address], '') AS '@ad'
+				,ISNULL(ou.[Level], '') AS '@lv'
+				,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
+			FROM #tblLogData AS ou
+			WHERE ou.RowType = 'NEW'
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+	EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+		,@SPName = 'OWP_UserUpdate'
+		,@LoggedDate = @StartRun
+		,@Duration = @Duration
+		,@ObjectId = @UserId
+		,@Data = @LogData
+		,@DataOld = @LogDataOld
+
+	DROP TABLE #tblLogData
 END
