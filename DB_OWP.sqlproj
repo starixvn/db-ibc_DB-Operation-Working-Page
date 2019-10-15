@@ -386,6 +386,8 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Update_MatchInfo_Deselect.sql" />
     <Build Include="dbo\Functions\fnc_SplitString.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetLA.sql" />
+    <Build Include="dbo\Tables\UserRemark_1.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_UserRemark_Update.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
