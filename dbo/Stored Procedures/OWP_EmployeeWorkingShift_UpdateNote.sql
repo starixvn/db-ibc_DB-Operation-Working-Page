@@ -25,6 +25,7 @@ BEGIN
 		,@OldNote NVARCHAR(4000)
 		,@OldCreatedDate DATETIME
 		,@OldCreatedBy INT
+		,@UserId INT
 		,@LogDataOld NVARCHAR(MAX)
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
@@ -33,6 +34,7 @@ BEGIN
 	SELECT @OldNote = Note
 		,@OldCreatedBy = CreatedBy
 		,@OldCreatedDate = CreatedDate
+		,@UserId = UserId
 	FROM dbo.[EmployeeWorkingShiftNote] WITH (NOLOCK)
 	WHERE EmployeeWorkingShiftNoteId = @EmployeeWorkingShiftNoteId
 	
@@ -41,6 +43,7 @@ BEGIN
 			SELECT @OldNote AS '@nt'
 				,@OldCreatedDate AS '@cd'
 				,@OldCreatedBy AS '@cb'
+				,@EmployeeWorkingShiftNoteId AS '@ni'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
@@ -59,6 +62,7 @@ BEGIN
 			SELECT @Note AS '@nt'
 				,@LastUpdated AS '@cd'
 				,@ActorId AS '@cb'
+				,@EmployeeWorkingShiftNoteId AS '@ni'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
@@ -70,7 +74,7 @@ BEGIN
 		,@SPName = 'OWP_EmployeeWorkingShift_UpdateNote'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
-		,@ObjectId = @EmployeeWorkingShiftNoteId
+		,@ObjectId = @UserId
 		,@Data = @LogData
 		,@DataOld = @LogDataOld
 

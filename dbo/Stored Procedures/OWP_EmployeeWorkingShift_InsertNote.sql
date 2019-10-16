@@ -37,6 +37,7 @@ BEGIN
 				,@LastUpdated AS '@cd'
 				,@ShiftDate AS '@sd'
 				,@Note AS '@nt'
+				,@NoteId AS '@ni'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
@@ -48,7 +49,7 @@ BEGIN
 		,@SPName = 'OWP_EmployeeWorkingShift_InsertNote'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
-		,@ObjectId = @NoteId
+		,@ObjectId = @UserId
 		,@Data = @LogData
 
 	SELECT @NoteId  AS NoteId 

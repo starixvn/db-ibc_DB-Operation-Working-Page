@@ -51,14 +51,14 @@ INSERT INTO dbo.LogAction (ActionId	,ModuleId ,[ModuleObjectId]	,[ActionTypeId]	
 VALUES (99, 7 ,29 ,2 ,'OWP_EmployeeWorkingShift_UpdateRemark' ,'OWP_EmployeeWorkingShift_UpdateRemark' ,'<root><xml path="r/z" /><row item="Category" alias="ca" /><row item="Remark" alias="rm" /></root>')
 
 UPDATE dbo.LogAction WITH (ROWLOCK)
-SET LogItems='<root><xml path="r/z" /><row item="CreatedDate" alias="cd" /><row item="Note" alias="nt" /><row item="CreatedBy" alias="cb" /></root>'
+SET LogItems='<root><xml path="r/z" /><row item="CreatedDate" alias="cd" /><row item="Note" alias="nt" /><row item="CreatedBy" alias="cb" /><row item="EmployeeWorkingShiftNoteId" alias="ni" /></root>'
 WHERE SPName='OWP_EmployeeWorkingShift_UpdateNote'
 
 INSERT INTO dbo.LogAction (ActionId	,ModuleId ,[ModuleObjectId]	,[ActionTypeId]	,[ActionName] ,[SPName]	,[LogItems])
-VALUES (100, 7 ,25 ,1 ,'OWP_EmployeeWorkingShift_InsertNote' ,'OWP_EmployeeWorkingShift_InsertNote' ,'<root><xml path="r/z" /><row item="UserId" alias="ui" /><row item="CreatedDate" alias="cd" /><row item="Note" alias="nt" /><row item="ShiftDate" alias="sd" /></root>')
+VALUES (100, 7 ,25 ,1 ,'OWP_EmployeeWorkingShift_InsertNote' ,'OWP_EmployeeWorkingShift_InsertNote' ,'<root><xml path="r/z" /><row item="UserId" alias="ui" /><row item="CreatedDate" alias="cd" /><row item="Note" alias="nt" /><row item="EmployeeWorkingShiftNoteId" alias="ni" /><row item="ShiftDate" alias="sd" /></root>')
 
 INSERT INTO dbo.LogAction (ActionId	,ModuleId ,[ModuleObjectId]	,[ActionTypeId]	,[ActionName] ,[SPName]	,[LogItems])
-VALUES (101, 7 ,25 ,3 ,'OWP_EmployeeWorkingShift_DeleteNote' ,'OWP_EmployeeWorkingShift_DeleteNote' ,'<root><xml path="r/z" /><row item="CreatedDate" alias="cd" /><row item="Note" alias="nt" /><row item="CreatedBy" alias="cb" /><row item="ShiftDate" alias="sd" /><row item="UserId" alias="ui" /></root>')
+VALUES (101, 7 ,25 ,3 ,'OWP_EmployeeWorkingShift_DeleteNote' ,'OWP_EmployeeWorkingShift_DeleteNote' ,'<root><xml path="r/z" /><row item="CreatedDate" alias="cd" /><row item="Note" alias="nt" /><row item="CreatedBy" alias="cb" /><row item="ShiftDate" alias="sd" /><row item="UserId" alias="ui" /><row item="EmployeeWorkingShiftNoteId" alias="ni" /></root>')
 
 GO
 

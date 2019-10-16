@@ -19,7 +19,7 @@ BEGIN
 		,@OldNote NVARCHAR(4000)
 		,@OldCreatedDate DATETIME
 		,@OldCreatedBy INT
-		,@OldUserId INT
+		,@UserId INT
 		,@OldShiftDate DATETIME
 		,@LogDataOld NVARCHAR(MAX)
 		,@LogData NVARCHAR(MAX)
@@ -30,7 +30,7 @@ BEGIN
 		,@OldCreatedBy = CreatedBy
 		,@OldCreatedDate = CreatedDate
 		,@OldShiftDate = ShiftDate
-		,@OldUserId = UserId
+		,@UserId = UserId
 	FROM dbo.[EmployeeWorkingShiftNote] WITH (NOLOCK)
 	WHERE EmployeeWorkingShiftNoteId = @EmployeeWorkingShiftNoteId
 	
@@ -40,7 +40,7 @@ BEGIN
 				,@OldCreatedDate AS '@cd'
 				,@OldCreatedBy AS '@cb'
 				,@OldShiftDate AS '@sd'
-				,@OldUserId AS '@ui'
+				,@EmployeeWorkingShiftNoteId AS '@ni'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
@@ -58,6 +58,6 @@ BEGIN
 		,@SPName = 'OWP_EmployeeWorkingShift_DeleteNote'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
-		,@ObjectId = @EmployeeWorkingShiftNoteId
+		,@ObjectId = @UserId
 		,@DataOld = @LogDataOld
 END
