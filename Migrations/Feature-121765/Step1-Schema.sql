@@ -7,6 +7,10 @@
 USE bodb_OWP
 GO
 
+-- add column status code for auto assignment
+ALTER TABLE [AutoAssignmentResult]
+ADD StatusCode INT
+
 -- add user group
 ALTER TABLE dbo.[User]
 ADD GroupId INT
