@@ -26,7 +26,7 @@ VALUES ('UserGroup',1,'C_LG',1),
 GO
 
 -- log action
-UPDATE dbo.LogAction
+UPDATE dbo.LogAction WITH (ROWLOCK)
 SET LogItems='<root><xml path="r/z" />
 		<row item="FullName" alias="fn" />
 		<row item="NickName" alias="nn" />
@@ -50,7 +50,7 @@ VALUES (29, 'UserRemark', 7)
 INSERT INTO dbo.LogAction (ActionId	,ModuleId ,[ModuleObjectId]	,[ActionTypeId]	,[ActionName] ,[SPName]	,[LogItems])
 VALUES (99, 7 ,29 ,2 ,'OWP_EmployeeWorkingShift_UpdateRemark' ,'OWP_EmployeeWorkingShift_UpdateRemark' ,'<root><xml path="r/z" /><row item="Category" alias="ca" /><row item="Remark" alias="rm" /></root>')
 
-UPDATE dbo.LogAction
+UPDATE dbo.LogAction WITH (ROWLOCK)
 SET LogItems='<root><xml path="r/z" /><row item="CreatedDate" alias="cd" /><row item="Note" alias="nt" /><row item="CreatedBy" alias="cb" /></root>'
 WHERE SPName='OWP_EmployeeWorkingShift_UpdateNote'
 
