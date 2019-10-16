@@ -1,12 +1,13 @@
-﻿CREATE TABLE [dbo].[UserRemark] (
-    [UserId] INT            NOT NULL,
-    [Remark] NVARCHAR (200) NULL,
-    [Group]  INT            NOT NULL,
-    CONSTRAINT [PK_UserRemark] PRIMARY KEY CLUSTERED ([UserId] ASC)
+CREATE TABLE [dbo].[UserRemark] (
+    [UserId]   INT            NOT NULL,
+    [Category] INT            NOT NULL,
+    [Remark]   NVARCHAR (200) NULL
 );
 
 
+
+
 GO
-CREATE UNIQUE NONCLUSTERED INDEX [IX_UserRemark_UserId_Group]
-    ON [dbo].[UserRemark]([UserId] ASC, [Group] ASC);
+CREATE UNIQUE NONCLUSTERED INDEX [IX_UserRemark_UserId_Category]
+    ON [dbo].[UserRemark]([UserId] ASC, [Category] ASC);
 
