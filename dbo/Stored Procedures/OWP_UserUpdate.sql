@@ -40,25 +40,6 @@ BEGIN
 		RETURN
 	END
 
-	IF @ColumnName = 'NickName'
-	BEGIN
-		IF EXISTS (
-				SELECT TOP 1 u.UserId
-				FROM dbo.[User] AS u WITH (NOLOCK)
-				WHERE u.UserId <> @UserId
-					AND (
-						u.Nickname = @Value
-						OR u.Username = @Value
-						)
-				)
-		BEGIN
-			SELECT @ErrMsg = 'Nickname already exists!'
-				,@ErrCode = 5802
-
-			RETURN
-		END
-	END
-
 	DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
 		,@Duration INT
@@ -198,7 +179,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET EmployeeId = @Value
+		SET EmployeeId = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -214,7 +195,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET FullName = @Value
+		SET FullName = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -224,17 +205,34 @@ BEGIN
 
 	IF @ColumnName = 'NickName'
 	BEGIN
+		IF EXISTS (
+				SELECT TOP 1 u.UserId
+				FROM dbo.[User] AS u WITH (NOLOCK)
+				WHERE u.UserId <> @UserId
+					AND @Value <> ''
+					AND (
+						u.Nickname = @Value
+						OR u.Username = @Value
+						)
+				)
+		BEGIN
+			SELECT @ErrMsg = 'Nickname already exists!'
+				,@ErrCode = 5802
+
+			RETURN
+		END
+
 		UPDATE dbo.[User]
 		WITH (
 				UPDLOCK
 				,ROWLOCK
 				)
 
-		SET NickName = @Value
+		SET NickName = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
-		SET Nickname = @Value
+		SET Nickname = NULLIF(@Value, '')
 		WHERE RowType = 'NEW'
 	END
 
@@ -294,7 +292,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Extension = @Value
+		SET Extension = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -310,7 +308,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Phone = @Value
+		SET Phone = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -326,7 +324,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Email = @Value
+		SET Email = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -342,7 +340,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Skype = @Value
+		SET Skype = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -374,7 +372,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET LocationCode = @Value
+		SET LocationCode = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -422,7 +420,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Address = @Value
+		SET Address = NULLIF(@Value, '')
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
