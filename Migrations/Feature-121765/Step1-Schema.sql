@@ -1,18 +1,24 @@
 /*
-	Created: Tyler.Dang
+	Created: Kane.Le
 	Date: 20191011
-	Task: Create table UserRemark [Redmine: #121878]
+	Task: schema [Redmine: #121765]
 	DB: bodb_OWP
 */
-
 USE bodb_OWP
+GO
 
+-- add user group
+ALTER TABLE dbo.[User]
+ADD GroupId INT
+
+GO
+
+-- add user ws remark
 CREATE TABLE dbo.[UserRemark](
 	[UserId] [int] NOT NULL,
 	[Category] INT NOT NULL,
 	[Remark] [nvarchar](200)
 )
-GO
 
 CREATE UNIQUE NONCLUSTERED INDEX [IX_UserRemark_UserId_Category] ON [dbo].[UserRemark]
 (
@@ -21,11 +27,7 @@ CREATE UNIQUE NONCLUSTERED INDEX [IX_UserRemark_UserId_Category] ON [dbo].[UserR
 )
 GO
 
-INSERT INTO dbo.[UserRemark] (UserId, Remark, Category)
-SELECT UserId, Note, 1
-FROM dbo.[EmployeeWorkingShiftNote] WITH (NOLOCK)
-GO
-
+-- add user ws note
 EXEC sp_rename 'EmployeeWorkingShiftNote.PK_EmployeeWorkingShiftNote', 'PK_EmployeeWorkingShiftNote_Old', 'INDEX'
 GO
 
@@ -41,7 +43,6 @@ CREATE TABLE dbo.[EmployeeWorkingShiftNote](
 	[ShiftDate] [datetime] NOT NULL,
 	CONSTRAINT [PK_EmployeeWorkingShiftNoteId] PRIMARY KEY CLUSTERED ([EmployeeWorkingShiftNoteId] ASC)
 )
-GO
 
 CREATE NONCLUSTERED INDEX [IX_EmployeeWorkingShiftNote_UserId_ShiftDate] ON [dbo].[EmployeeWorkingShiftNote]
 (

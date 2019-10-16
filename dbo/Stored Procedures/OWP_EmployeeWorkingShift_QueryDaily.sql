@@ -214,7 +214,7 @@ BEGIN
 		,ws.ShiftId
 		,ur.Remark
 	FROM @tblUser AS u
-		INNER JOIN dbo.[User] AS us ON u.UserId = us.UserId
+		INNER JOIN dbo.[User] AS us WITH (NOLOCK) ON u.UserId = us.UserId
 		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
 		LEFT JOIN (
 			SELECT ResourceId AS GroupId
