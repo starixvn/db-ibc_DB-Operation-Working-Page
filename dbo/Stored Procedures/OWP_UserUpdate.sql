@@ -458,7 +458,7 @@ BEGIN
 				)
 			VALUES (
 				@UserId
-				,CAST(@Value AS INT)
+				,@Value
 				)
 		END
 
