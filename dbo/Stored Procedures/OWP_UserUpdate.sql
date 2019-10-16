@@ -169,7 +169,7 @@ BEGIN
 				,ROOT('r')
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-
+	SET @Value = NULLIF(@Value, '')
 	--Update
 	IF @ColumnName = 'EmployeeId'
 	BEGIN
@@ -179,7 +179,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET EmployeeId = NULLIF(@Value, '')
+		SET EmployeeId = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -195,7 +195,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET FullName = NULLIF(@Value, '')
+		SET FullName = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -209,7 +209,7 @@ BEGIN
 				SELECT TOP 1 u.UserId
 				FROM dbo.[User] AS u WITH (NOLOCK)
 				WHERE u.UserId <> @UserId
-					AND @Value <> ''
+					AND ISNULL(@Value, '') <> ''
 					AND (
 						u.Nickname = @Value
 						OR u.Username = @Value
@@ -228,11 +228,11 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET NickName = NULLIF(@Value, '')
+		SET NickName = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
-		SET Nickname = NULLIF(@Value, '')
+		SET Nickname = @Value
 		WHERE RowType = 'NEW'
 	END
 
@@ -244,7 +244,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET DepartmentId = CAST(@Value AS INT)
+		SET DepartmentId = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -260,7 +260,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET SectionId = CAST(@Value AS INT)
+		SET SectionId = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -276,7 +276,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET GroupId = CAST(@Value AS INT)
+		SET GroupId = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -292,7 +292,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Extension = NULLIF(@Value, '')
+		SET Extension = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -308,7 +308,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Phone = NULLIF(@Value, '')
+		SET Phone = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -324,7 +324,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Email = NULLIF(@Value, '')
+		SET Email = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -340,7 +340,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Skype = NULLIF(@Value, '')
+		SET Skype = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -356,7 +356,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET CategoryId = CAST(@Value AS INT)
+		SET CategoryId = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -372,7 +372,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET LocationCode = NULLIF(@Value, '')
+		SET LocationCode = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -388,7 +388,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Pickup = CAST(@Value AS BIT)
+		SET Pickup = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -404,7 +404,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET [Level] = CAST(@Value AS INT)
+		SET [Level] = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -420,7 +420,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Address = NULLIF(@Value, '')
+		SET Address = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -436,7 +436,7 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET IsSecondAccount = CAST(@Value AS BIT)
+		SET IsSecondAccount = @Value
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
