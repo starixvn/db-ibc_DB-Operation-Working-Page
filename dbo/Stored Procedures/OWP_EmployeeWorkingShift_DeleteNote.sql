@@ -22,7 +22,6 @@ BEGIN
 		,@UserId INT
 		,@OldShiftDate DATETIME
 		,@LogDataOld NVARCHAR(MAX)
-		,@LogData NVARCHAR(MAX)
 		,@Xml XML
 		,@LastUpdated DATETIME
 
