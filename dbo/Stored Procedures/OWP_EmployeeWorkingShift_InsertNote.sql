@@ -33,8 +33,7 @@ BEGIN
 
 	--New data
 	SET @Xml = (
-			SELECT @UserId AS '@ui'
-				,@LastUpdated AS '@cd'
+			SELECT @LastUpdated AS '@cd'
 				,@ShiftDate AS '@sd'
 				,@Note AS '@nt'
 				,@NoteId AS '@ni'

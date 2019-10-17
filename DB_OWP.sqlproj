@@ -388,6 +388,9 @@
     <Build Include="dbo\Stored Procedures\OWP_UserRemark_Update.sql" />
     <Build Include="dbo\Stored Procedures\OWP_RefResourceGetAll.sql" />
     <Build Include="dbo\Tables\UserRemark.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_DeleteNote.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_InsertNote.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryNoteById.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
