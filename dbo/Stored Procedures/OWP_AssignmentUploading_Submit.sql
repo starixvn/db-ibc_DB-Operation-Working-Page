@@ -38,6 +38,7 @@ AS
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20190924@Kane.Le: remove existing events deselected + notification - [Redmine: #116688]
 	20191003@Leo.Vo: Update lock hint - [Redmine: #121438]
+	20191018@Kane.Le: Fix temp table cannot drop - [Redmine: #121438]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -649,7 +650,45 @@ BEGIN
 		,Bettype INT
 		)
 
-	CREATE TABLE #tblInvalidMatch (OWPMatchId INT)
+		CREATE TABLE #tblInvalidMatch (OWPMatchId INT)
+
+		CREATE TABLE #tblMessageDeselected (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			);
+
+		CREATE TABLE #tblMessageDeselectedWatcher (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			,MessageContent NVARCHAR(MAX)
+			);
+
+		CREATE TABLE #tblMessageDeselectedAssignmentOfMyAssigned (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			,MessageContent NVARCHAR(MAX)
+			);
+
+		CREATE TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned (
+			SessionId NVARCHAR(50)
+			,MessageId INT NOT NULL
+			,UserId INT NOT NULL
+			);
+
+		CREATE TABLE #tblMessageTemplateForDeselected (
+			OWPMatchId INT NOT NULL
+			,MessageContent NVARCHAR(MAX) NOT NULL
+			,MessageTypeId INT NOT NULL
+			,IsImportant BIT NOT NULL
+			);
+
+		CREATE TABLE #tblAssigneeReceiver (
+			UserId INT NOT NULL
+			,OWPMatchId INT NOT NULL
+			);
 
 	BEGIN TRY
 		/*------Remove invalid data if has error from previous upload-----*/
@@ -3795,43 +3834,7 @@ BEGIN
 					)
 				);
 
-		CREATE TABLE #tblMessageDeselected (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			);
-
-		CREATE TABLE #tblMessageDeselectedWatcher (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			,MessageContent NVARCHAR(MAX)
-			);
-
-		CREATE TABLE #tblMessageDeselectedAssignmentOfMyAssigned (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			,MessageContent NVARCHAR(MAX)
-			);
-
-		CREATE TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned (
-			SessionId NVARCHAR(50)
-			,MessageId INT NOT NULL
-			,UserId INT NOT NULL
-			);
-
-		CREATE TABLE #tblMessageTemplateForDeselected (
-			OWPMatchId INT NOT NULL
-			,MessageContent NVARCHAR(MAX) NOT NULL
-			,MessageTypeId INT NOT NULL
-			,IsImportant BIT NOT NULL
-			);
-
-		CREATE TABLE #tblAssigneeReceiver (
-			UserId INT NOT NULL
-			,OWPMatchId INT NOT NULL
-			);
+	
 
 		UPDATE l
 		SET l.OWPMatchId = mm.ParentMatchId
