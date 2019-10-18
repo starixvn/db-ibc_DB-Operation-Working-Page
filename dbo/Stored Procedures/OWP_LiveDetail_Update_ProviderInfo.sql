@@ -11,9 +11,9 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo] @ActorId INT
 	,@IsUpdatePhone BIT = 0
 	,@TVIds NVARCHAR(500) = ''
 	,@IsUpdateTVs BIT = 0
-	,@OtherProviderIds NVARCHAR(100) = ''
+	,@OtherProvider NVARCHAR(2000) = ''
 	,@IsUpdateOtherProviders BIT = 0
-	,@ProviderIds NVARCHAR(100) = ''
+	,@Provider NVARCHAR(2000) = ''
 	,@IsUpdateProviders BIT = 0
 	,@AgentIds NVARCHAR(100) = ''
 	,@IsUpdateAgents BIT = 0
@@ -27,17 +27,18 @@ DB: bodb_OWP
 
 Revisions:    
 	20190820@Kane.Le: init SP - [Redmine: #117960]
-	20190823@Carlos.Nguyen: Prevent send notification - [Redmine: #120415]	
+	20190823@Carlos.Nguyen: Prevent send notification - [Redmine: #120415]
+	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
 	
+ 
+
 	DECLARE @EventDateTime DATETIME
 		,@StartRun DATETIME = GETDATE()
 		,@EndRun DATETIME
-		,@Duration INT
-		,@LogData NVARCHAR(MAX)
-		,@LogDataOld NVARCHAR(MAX)
+		,@Duration INT		 
 		,@Xml XML
 		,@OldChannel NVARCHAR(100)
 		,@OldWB NVARCHAR(100)
@@ -180,6 +181,7 @@ BEGIN
 	DECLARE @Id INT
 		,@RelevantMatchId INT
 		,@RelevantMinorBettypeId INT
+		,@MaxRowCount INT
 		
 	-- list of minor bettypes Corner & Booking but not 15 mins
 	DECLARE @tblCornerBookingBetTypes TABLE (MinorBettypeId INT NOT NULL)
@@ -202,20 +204,6 @@ BEGIN
 	SELECT Value
 	FROM dbo.fnc_SplitString(@TVIds, ',')
 	
-	DECLARE @tblProviderIds TVP_INT
-	INSERT INTO @tblProviderIds (
-		Id
-		)
-	SELECT Value
-	FROM dbo.fnc_SplitString(@ProviderIds, ',')
-	
-	DECLARE @tblOtherProviderIds TVP_INT
-	INSERT INTO @tblOtherProviderIds (
-		Id
-		)
-	SELECT Value
-	FROM dbo.fnc_SplitString(@OtherProviderIds, ',')
-	
 	DECLARE @tblAgentIds TVP_INT
 	INSERT INTO @tblAgentIds (
 		Id
@@ -224,11 +212,16 @@ BEGIN
 	FROM dbo.fnc_SplitString(@AgentIds, ',')
 		
 	SET @Id = 1
-	WHILE 1=1
+
+
+	 
+	SELECT @MaxRowCount = COUNT(Id)
+	FROM @tblRelevantMatches
+
+	WHILE (@Id <= @MaxRowCount)
+	 
 	BEGIN
-		SELECT @RelevantMatchId = NULL
-			,@RelevantMinorBettypeId = NULL
-			
+				 
 		SELECT @RelevantMatchId = OWPMatchId
 			,@RelevantMinorBettypeId = MinorBettypeId
 		FROM @tblRelevantMatches
@@ -253,7 +246,7 @@ BEGIN
 			,@RelevantIsUpdateOtherProviders BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateOtherProviders END)
 			,@RelevantIsUpdateAgents BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateAgents END)
 			,@RelevantIsUpdatePhone BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdatePhone END)
-		
+	 
 		EXEC dbo.OWP_LiveDetail_Update_ProviderInfo_Single @ActorId = @ActorId
 			,@SessionId = @SessionId
 			,@OWPMatchId = @RelevantMatchId
@@ -268,13 +261,13 @@ BEGIN
 			,@IsUpdateWB = @RelevantIsUpdateWB
 			,@Phone = @Phone
 			,@IsUpdatePhone = @RelevantIsUpdatePhone
-			,@ProviderIds = @tblProviderIds
+			,@Provider = @Provider
 			,@IsUpdateProviders = @RelevantIsUpdateProviders
-			,@OtherProviderIds = @tblOtherProviderIds
+			,@OtherProvider = @OtherProvider
 			,@IsUpdateOtherProviders = @RelevantIsUpdateOtherProviders
 			,@AgentIds = @tblAgentIds
 			,@IsUpdateAgents = @RelevantIsUpdateAgents
-		
+		 
 		SET @Id = @Id + 1
 	END
 
@@ -285,9 +278,9 @@ BEGIN
 				,@IsUpdateChannel AS '@iuch'
 				,@WB AS '@wb'
 				,@IsUpdateWB AS '@iuwb'
-				,@ProviderIds AS '@pv'
+				,@Provider AS '@pv'
 				,@IsUpdateProviders AS '@iupv'
-				,@OtherProviderIds AS '@opv'
+				,@OtherProvider AS '@opv'
 				,@IsUpdateOtherProviders AS '@iuopv'
 				,@Phone AS '@ph'
 				,@IsUpdatePhone AS '@iuph'

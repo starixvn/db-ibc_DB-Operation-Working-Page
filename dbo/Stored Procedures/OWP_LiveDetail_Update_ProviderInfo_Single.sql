@@ -14,9 +14,9 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo_Single] @ActorId INT
 	,@IsUpdatePhone BIT = 0
 	,@TVIds TVP_INT READONLY
 	,@IsUpdateTVs BIT = 0
-	,@OtherProviderIds TVP_INT READONLY
+	,@OtherProvider NVARCHAR(2000)=''
 	,@IsUpdateOtherProviders BIT = 0
-	,@ProviderIds TVP_INT READONLY
+	,@Provider NVARCHAR(2000)=''
 	,@IsUpdateProviders BIT = 0
 	,@AgentIds TVP_INT READONLY
 	,@IsUpdateAgents BIT = 0
@@ -28,6 +28,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190820@Leo.Vo: Initial SP - [Redmine: #120496]
+	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -44,6 +45,8 @@ BEGIN
 		,@TotalBooking INT = - 6
 		,@Specific15MinsNoOfCorners INT = - 5
 		,@Specific15MinsTotalBooking INT = - 8
+		,@OtherProviderId INT
+		,@ProviderId INT
 
 	-- build relevant matches
 	DECLARE @tblRelevantMatches TABLE (
@@ -182,27 +185,40 @@ BEGIN
 			WHERE mp.OWPMatchId = @OWPMatchId
 			FOR XML PATH('')
 			), 1, 2, ''), '')
+				 
 			
-		SELECT @NewProvider = ISNULL(STUFF((
-			SELECT ', ' + p.ProviderName
-			FROM @ProviderIds AS t
-			INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON t.Id = p.ProviderId
-			FOR XML PATH('')
-			), 1, 2, ''), '')
-			
-		IF @OldProvider <> @NewProvider
-		BEGIN
+		 
 			DELETE dbo.MatchProvider WITH (ROWLOCK)
 			WHERE OWPMatchId = @OWPMatchId
 			
-			INSERT INTO dbo.MatchProvider (
-				OWPMatchId
-				,ProviderId
-			)
-			SELECT @OWPMatchId
-				,Id
-			FROM @ProviderIds
-		END
+			IF (ISNULL(@Provider, '') != '')
+			BEGIN		 
+				SET @ProviderId = (
+				SELECT TOP 1 ProviderId
+				FROM dbo.[Provider] WITH (NOLOCK)
+				WHERE ProviderName = @Provider
+				)
+
+				IF @ProviderId IS NULL
+				BEGIN
+				INSERT INTO dbo.[Provider]
+				WITH (ROWLOCK) (ProviderName)
+				VALUES (@Provider)
+
+				SET @ProviderId = SCOPE_IDENTITY()
+				END
+
+				INSERT INTO dbo.MatchProvider (
+					OWPMatchId
+					,ProviderId
+					)
+				VALUES (
+					@OWPMatchId
+					,@ProviderId
+					)
+			END
+
+		 
 	END
 	
 	IF @IsUpdateOtherProviders = 1
@@ -215,25 +231,38 @@ BEGIN
 			FOR XML PATH('')
 			), 1, 2, ''), '')
 			
-		SELECT @NewOtherProvider = ISNULL(STUFF((
-			SELECT ', ' + op.OtherProviderName
-			FROM @OtherProviderIds AS t
-			INNER JOIN dbo.OtherProvider AS op ON t.Id = op.OtherProviderId
-			FOR XML PATH('')
-			), 1, 2, ''), '')
+		 
 			
-		IF @OldOtherProvider <> @NewOtherProvider
-		BEGIN
+		 
 			DELETE dbo.MatchOtherProvider WITH (ROWLOCK)
 			WHERE OWPMatchId = @OWPMatchId
 			
-			INSERT INTO dbo.MatchOtherProvider (
-				OWPMatchId
-				,OtherProviderId
-			)
-			SELECT @OWPMatchId
-				,Id
-			FROM @OtherProviderIds
+				IF (ISNULL(@OtherProvider, '') != '')
+					BEGIN
+						SET @OtherProviderId = (
+						SELECT TOP 1 OtherProviderId
+						FROM dbo.OtherProvider WITH (NOLOCK)
+						WHERE OtherProviderName = @OtherProvider
+						)
+
+						IF @OtherProviderId IS NULL
+						BEGIN
+						INSERT INTO dbo.OtherProvider
+						WITH (ROWLOCK) (OtherProviderName)
+						VALUES (@OtherProvider)
+
+						SET @OtherProviderId = SCOPE_IDENTITY()
+						END
+						INSERT INTO dbo.MatchOtherProvider
+						WITH (ROWLOCK) (
+								OWPMatchId
+								,OtherProviderId
+								)
+						VALUES (
+							@OWPMatchId
+							,@OtherProviderId
+							)
+					 
 		END
 	END
 	
@@ -319,8 +348,8 @@ BEGIN
 			,NewValue
 			,TemplateCode
 		)
-		VALUES (@OldProvider, @NewProvider, 'EditProvider')
-			,(@OldOtherProvider, @NewOtherProvider, 'EditOtherProvider')
+		VALUES (@OldProvider, @Provider, 'EditProvider')
+			,(@OldOtherProvider, @OtherProvider, 'EditOtherProvider')
 			,(@OldAgent, @NewAgent, 'EditAgent')
 			,(@OldChannel, @NewChannel, 'EditChannel')
 			,(@OldWB, @NewWB, 'EditWB')
