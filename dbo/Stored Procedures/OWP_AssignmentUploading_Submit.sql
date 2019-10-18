@@ -651,6 +651,44 @@ BEGIN
 
 	CREATE TABLE #tblInvalidMatch (OWPMatchId INT)
 
+	CREATE TABLE #tblMessageDeselected (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			);
+
+		CREATE TABLE #tblMessageDeselectedWatcher (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			,MessageContent NVARCHAR(MAX)
+			);
+
+		CREATE TABLE #tblMessageDeselectedAssignmentOfMyAssigned (
+			OWPMatchId INT NOT NULL
+			,MessageId INT NOT NULL
+			,MessageTypeId INT NOT NULL
+			,MessageContent NVARCHAR(MAX)
+			);
+
+		CREATE TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned (
+			SessionId NVARCHAR(50)
+			,MessageId INT NOT NULL
+			,UserId INT NOT NULL
+			);
+
+		CREATE TABLE #tblMessageTemplateForDeselected (
+			OWPMatchId INT NOT NULL
+			,MessageContent NVARCHAR(MAX) NOT NULL
+			,MessageTypeId INT NOT NULL
+			,IsImportant BIT NOT NULL
+			);
+
+		CREATE TABLE #tblAssigneeReceiver (
+			UserId INT NOT NULL
+			,OWPMatchId INT NOT NULL
+			);
+
 	BEGIN TRY
 		/*------Remove invalid data if has error from previous upload-----*/
 		SELECT TOP 1 @TempEventDate = au.EventDate
@@ -3795,43 +3833,7 @@ BEGIN
 					)
 				);
 
-		CREATE TABLE #tblMessageDeselected (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			);
-
-		CREATE TABLE #tblMessageDeselectedWatcher (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			,MessageContent NVARCHAR(MAX)
-			);
-
-		CREATE TABLE #tblMessageDeselectedAssignmentOfMyAssigned (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			,MessageContent NVARCHAR(MAX)
-			);
-
-		CREATE TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned (
-			SessionId NVARCHAR(50)
-			,MessageId INT NOT NULL
-			,UserId INT NOT NULL
-			);
-
-		CREATE TABLE #tblMessageTemplateForDeselected (
-			OWPMatchId INT NOT NULL
-			,MessageContent NVARCHAR(MAX) NOT NULL
-			,MessageTypeId INT NOT NULL
-			,IsImportant BIT NOT NULL
-			);
-
-		CREATE TABLE #tblAssigneeReceiver (
-			UserId INT NOT NULL
-			,OWPMatchId INT NOT NULL
-			);
+		
 
 		UPDATE l
 		SET l.OWPMatchId = mm.ParentMatchId
@@ -3869,12 +3871,20 @@ BEGIN
 				)
 
 		DELETE
-		FROM #tblAssignmentLog
+		FROM #tblAssignmentLog  				 
 		WHERE NOT EXISTS (
 				SELECT 1
 				FROM #tblRemoveMatch mn
 				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
 				)
+				DELETE
+		FROM #tblAssignmentLog  				 
+		WHERE NOT EXISTS (
+				SELECT 1
+				FROM #tblMatchInTimeRange mn
+				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
+				)
+
 			--Deleting duplicate values
 			;
 
@@ -4072,10 +4082,7 @@ BEGIN
 			,inserted.MessageType
 			,inserted.MessageContent
 		INTO #tblMessageDeselectedAssignmentOfMyAssigned(OWPMatchId, [MessageId], MessageTypeId, MessageContent);
-
-
 		
-
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
 			SELECT m.MessageId
