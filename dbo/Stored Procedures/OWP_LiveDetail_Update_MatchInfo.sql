@@ -65,27 +65,6 @@ BEGIN
 	FROM dbo.OWPMatch AS m WITH (NOLOCK)
 	WHERE m.OWPMatchId = @OWPMatchId
 		
-	-- checking InfoSiteId duplicated
-	IF @InfoSiteMatchId IS NOT NULL
-	BEGIN
-		DECLARE @FromDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDateTime), '12:00:00')
-			,@ToDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDateTime), '11:59:59')
-			
-		IF EXISTS (
-			SELECT 1
-			FROM dbo.OWPMatch AS m WITH (NOLOCK)
-			WHERE m.InfoSiteMatchId = @InfoSiteMatchId
-				AND m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
-				AND m.OWPMatchId <> @OWPMatchId
-			)
-		BEGIN
-			SELECT @ErrCode = 1
-				,@ErrMsg = 'InfoSiteID is duplicating.'
-
-			RETURN
-		END
-	END
-	
 	SELECT @ErrCode = 0
 		,@ErrMsg = 'The event has been edited successfully!'
 		
@@ -97,6 +76,27 @@ BEGIN
 	END
 	ELSE
 	BEGIN
+		-- checking InfoSiteId duplicated
+		IF @InfoSiteMatchId IS NOT NULL
+		BEGIN
+			DECLARE @FromDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDateTime), '12:00:00')
+				,@ToDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDateTime), '11:59:59')
+				
+			IF EXISTS (
+				SELECT 1
+				FROM dbo.OWPMatch AS m WITH (NOLOCK)
+				WHERE m.InfoSiteMatchId = @InfoSiteMatchId
+					AND m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
+					AND m.OWPMatchId <> @OWPMatchId
+				)
+			BEGIN
+				SELECT @ErrCode = 1
+					,@ErrMsg = 'InfoSiteID is duplicating.'
+
+				RETURN
+			END
+		END
+	
 		-- save old value
 		SELECT @OldMarketIds = ISNULL(STUFF((
 				SELECT ', ' + CAST(MarketId AS NVARCHAR)
