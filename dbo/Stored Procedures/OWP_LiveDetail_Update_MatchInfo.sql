@@ -36,6 +36,7 @@ DB: bodb_OWP
 Revisions:
 	20190820@Tyler.Dang: InitialSP - [Redmine: #118566]
 	20190919@Tyler.Dang: Update relevant matchs - [Redmine: #120496]
+	20191021@Leo.Vo: Check duplicate InfoSiteID - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -68,7 +69,7 @@ BEGIN
 	IF @InfoSiteMatchId IS NOT NULL
 	BEGIN
 		DECLARE @FromDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDateTime), '12:00:00')
-			,@ToDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, 1, @EventDateTime), '11:59:59')
+			,@ToDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDateTime), '11:59:59')
 			
 		IF EXISTS (
 			SELECT 1

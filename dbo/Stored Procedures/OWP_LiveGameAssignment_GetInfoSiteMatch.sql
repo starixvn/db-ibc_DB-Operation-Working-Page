@@ -14,17 +14,19 @@ Revisions:
 	20190725@Tyler.Dang: Initial SP - [Redmine: #117578]
 	20190912@Leo.Vo: Return tv & agent detail - [Redmine: #119650]
 	20190918@Kane.Le: Check duplicate InfoSiteID - [Redmine: #120415]
+	20191021@Leo.Vo: Check duplicate InfoSiteID - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 
 	IF EXISTS (
 			SELECT 1
 			FROM dbo.OWPMatch AS m WITH (NOLOCK)
 			WHERE m.InfoSiteMatchId = @InfoSiteMatchId
-				AND m.EventDateTime >= @FromDate
+				AND m.EventDateTime >= @FromDate AND m.EventDateTime <= @ToDate
 			)
 	BEGIN
 		SELECT @ErrCode = 2

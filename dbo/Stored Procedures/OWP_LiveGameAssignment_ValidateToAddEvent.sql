@@ -24,6 +24,7 @@ AS
 	20190724@Leo.Vo: Initial SP - [Feature: #117461]
 	20190807@Kane.Le: Prevent duplicate MatchNo - [Feature: #117227]
 	20190918@Kane.Le: Check duplicate InfoSiteID - [Redmine: #120415]
+	20191021@Leo.Vo: Check duplicate InfoSiteID - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -69,6 +70,7 @@ BEGIN
 			FROM dbo.OWPMatch AS m WITH (NOLOCK)
 			WHERE m.InfoSiteMatchId = @InfoSiteMatchId
 				AND m.EventDateTime >= @FromDate
+				AND m.EventDateTime <= @ToDate
 			)
 	BEGIN
 		SELECT @ErrCode = 2
