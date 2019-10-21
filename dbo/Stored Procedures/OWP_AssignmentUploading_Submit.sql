@@ -38,6 +38,7 @@ AS
 	20190924@Kane.Le: remove existing events deselected + notification - [Redmine: #116688]
 	20191003@Leo.Vo: Update lock hint - [Redmine: #121438]
 	20191018@Kane.Le: Fix temp table cannot drop - [Redmine: #122194]
+	20191021@Tyler.Dang: Edit Provider/ Other Provider upload - [Redmine: #122211]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -359,7 +360,7 @@ BEGIN
 	--list of upload values of TV, Provider, OtherProvider or Agent in upload data
 	CREATE TABLE #tblTextList (
 		OWPMatchId INT NOT NULL
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		,OrderId INT IDENTITY(1, 1)
 		)
 
@@ -1577,11 +1578,10 @@ BEGIN
 			,[Text]
 			)
 		SELECT m.OWPMatchId
-			,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+			,CAST(REPLACE(m.[Provider], '/', ',') AS NVARCHAR(2000))
 		FROM #tblMatch AS m
-		CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.[Provider], '/', ','), ',') AS d
 		WHERE m.[Provider] <> ''
-			AND RTRIM(LTRIM(d.val)) <> ''
+			AND RTRIM(LTRIM(m.[Provider])) <> ''
 		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
@@ -1596,7 +1596,7 @@ BEGIN
 		ORDER BY MIN(OrderId) ASC
 
 		INSERT INTO dbo.[Provider] (ProviderName)
-		SELECT DISTINCT tl.[Text]
+		SELECT tl.[Text]
 		FROM #tblDistinctTextList AS tl
 		WHERE NOT EXISTS (
 				SELECT 1
@@ -1706,11 +1706,10 @@ BEGIN
 			,[Text]
 			)
 		SELECT m.OWPMatchId
-			,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+			,CAST(REPLACE(m.OtherProvider, '/', ',') AS NVARCHAR(2000))
 		FROM #tblMatch AS m
-		CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.OtherProvider, '/', ','), ',') AS d
 		WHERE m.OtherProvider <> ''
-			AND RTRIM(LTRIM(d.val)) <> ''
+			AND RTRIM(LTRIM(m.OtherProvider)) <> ''
 		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
