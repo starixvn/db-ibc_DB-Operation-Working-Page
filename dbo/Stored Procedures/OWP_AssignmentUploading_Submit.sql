@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -38,6 +37,7 @@ AS
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20190924@Kane.Le: remove existing events deselected + notification - [Redmine: #116688]
 	20191003@Leo.Vo: Update lock hint - [Redmine: #121438]
+	20191018@Kane.Le: Fix temp table cannot drop - [Redmine: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -652,42 +652,42 @@ BEGIN
 	CREATE TABLE #tblInvalidMatch (OWPMatchId INT)
 
 	CREATE TABLE #tblMessageDeselected (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			);
+		OWPMatchId INT NOT NULL
+		,MessageId INT NOT NULL
+		,MessageTypeId INT NOT NULL
+		);
 
-		CREATE TABLE #tblMessageDeselectedWatcher (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			,MessageContent NVARCHAR(MAX)
-			);
+	CREATE TABLE #tblMessageDeselectedWatcher (
+		OWPMatchId INT NOT NULL
+		,MessageId INT NOT NULL
+		,MessageTypeId INT NOT NULL
+		,MessageContent NVARCHAR(MAX)
+		);
 
-		CREATE TABLE #tblMessageDeselectedAssignmentOfMyAssigned (
-			OWPMatchId INT NOT NULL
-			,MessageId INT NOT NULL
-			,MessageTypeId INT NOT NULL
-			,MessageContent NVARCHAR(MAX)
-			);
+	CREATE TABLE #tblMessageDeselectedAssignmentOfMyAssigned (
+		OWPMatchId INT NOT NULL
+		,MessageId INT NOT NULL
+		,MessageTypeId INT NOT NULL
+		,MessageContent NVARCHAR(MAX)
+		);
 
-		CREATE TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned (
-			SessionId NVARCHAR(50)
-			,MessageId INT NOT NULL
-			,UserId INT NOT NULL
-			);
+	CREATE TABLE #tblMessageUserDeselectedAssignmentOfMyAssigned (
+		SessionId NVARCHAR(50)
+		,MessageId INT NOT NULL
+		,UserId INT NOT NULL
+		);
 
-		CREATE TABLE #tblMessageTemplateForDeselected (
-			OWPMatchId INT NOT NULL
-			,MessageContent NVARCHAR(MAX) NOT NULL
-			,MessageTypeId INT NOT NULL
-			,IsImportant BIT NOT NULL
-			);
+	CREATE TABLE #tblMessageTemplateForDeselected (
+		OWPMatchId INT NOT NULL
+		,MessageContent NVARCHAR(MAX) NOT NULL
+		,MessageTypeId INT NOT NULL
+		,IsImportant BIT NOT NULL
+		);
 
-		CREATE TABLE #tblAssigneeReceiver (
-			UserId INT NOT NULL
-			,OWPMatchId INT NOT NULL
-			);
+	CREATE TABLE #tblAssigneeReceiver (
+		UserId INT NOT NULL
+		,OWPMatchId INT NOT NULL
+		);
 
 	BEGIN TRY
 		/*------Remove invalid data if has error from previous upload-----*/
@@ -3833,8 +3833,6 @@ BEGIN
 					)
 				);
 
-		
-
 		UPDATE l
 		SET l.OWPMatchId = mm.ParentMatchId
 		FROM #tblAssignmentLog AS l
@@ -3871,20 +3869,20 @@ BEGIN
 				)
 
 		DELETE
-		FROM #tblAssignmentLog  				 
+		FROM #tblAssignmentLog
 		WHERE NOT EXISTS (
 				SELECT 1
 				FROM #tblRemoveMatch mn
 				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
 				)
-				DELETE
-		FROM #tblAssignmentLog  				 
+
+		DELETE
+		FROM #tblAssignmentLog
 		WHERE NOT EXISTS (
 				SELECT 1
 				FROM #tblMatchInTimeRange mn
 				WHERE #tblAssignmentLog.OWPMatchId = mn.OWPMatchId
 				)
-
 			--Deleting duplicate values
 			;
 
@@ -4082,7 +4080,7 @@ BEGIN
 			,inserted.MessageType
 			,inserted.MessageContent
 		INTO #tblMessageDeselectedAssignmentOfMyAssigned(OWPMatchId, [MessageId], MessageTypeId, MessageContent);
-		
+
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
 			SELECT m.MessageId
@@ -4125,7 +4123,6 @@ BEGIN
 			,inserted.UserId
 		INTO #tblMessageUserDeselectedAssignmentOfMyAssigned(SessionId, [MessageId], UserId);
 
-
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
 			SELECT m.MessageId
@@ -4147,9 +4144,12 @@ BEGIN
 					FROM dbo.[User] AS u WITH (NOLOCK)
 					JOIN #tblAssignmentLog AS l ON l.OldUserId = u.UserId
 					) AS l ON l.SectionId = u.SectionId
-				
-				) AS ass 
-				WHERE NOT EXISTS (SELECT 1 FROM #tblMessageUserDeselectedAssignmentOfMyAssigned AS ll WHERE ll.UserId=ass.UserId)
+				) AS ass
+			WHERE NOT EXISTS (
+					SELECT 1
+					FROM #tblMessageUserDeselectedAssignmentOfMyAssigned AS ll
+					WHERE ll.UserId = ass.UserId
+					)
 			) AS m
 			ON 1 = 0
 		WHEN NOT MATCHED
