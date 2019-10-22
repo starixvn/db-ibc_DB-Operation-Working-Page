@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -1596,7 +1597,7 @@ BEGIN
 		ORDER BY MIN(OrderId) ASC
 
 		INSERT INTO dbo.[Provider] (ProviderName)
-		SELECT tl.[Text]
+		SELECT DISTINCT tl.[Text]
 		FROM #tblDistinctTextList AS tl
 		WHERE NOT EXISTS (
 				SELECT 1
