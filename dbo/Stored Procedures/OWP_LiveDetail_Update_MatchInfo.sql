@@ -60,35 +60,40 @@ BEGIN
 		,@OldWebsite3 NVARCHAR(1000)
 		,@OldWebsite4 NVARCHAR(1000)
 		,@OldMatchStatus NVARCHAR(15)
-		
+
 	SELECT @EventDateTime = EventDateTime
 	FROM dbo.OWPMatch AS m WITH (NOLOCK)
 	WHERE m.OWPMatchId = @OWPMatchId
-		
+
 	SELECT @ErrCode = 0
 		,@ErrMsg = 'The event has been edited successfully!'
-		
+
 	IF @IsSelected = 0
 	BEGIN
 		EXEC dbo.OWP_LiveDetail_Update_MatchInfo_Deselect @ActorId = @ActorId
-				,@SessionId = @SessionId
-				,@OWPMatchId = @OWPMatchId
+			,@SessionId = @SessionId
+			,@OWPMatchId = @OWPMatchId
 	END
 	ELSE
 	BEGIN
 		-- checking InfoSiteId duplicated
 		IF @InfoSiteMatchId IS NOT NULL
 		BEGIN
-			DECLARE @FromDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDateTime), '12:00:00')
-				,@ToDateTime DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDateTime), '11:59:59')
-				
+			DECLARE @FromDateTime DATETIME
+				,@ToDateTime DATETIME
+
+			SELECT @FromDateTime = FromDateTime
+				,@ToDateTime = ToDateTime
+			FROM [fnc_GetFromDateToDateOfMatch](@OWPMatchId)
+
 			IF EXISTS (
-				SELECT 1
-				FROM dbo.OWPMatch AS m WITH (NOLOCK)
-				WHERE m.InfoSiteMatchId = @InfoSiteMatchId
-					AND m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
-					AND m.OWPMatchId <> @OWPMatchId
-				)
+					SELECT 1
+					FROM dbo.OWPMatch AS m WITH (NOLOCK)
+					WHERE m.InfoSiteMatchId = @InfoSiteMatchId
+						AND m.EventDateTime BETWEEN @FromDateTime
+							AND @ToDateTime
+						AND m.OWPMatchId <> @OWPMatchId
+					)
 			BEGIN
 				SELECT @ErrCode = 1
 					,@ErrMsg = 'InfoSiteID is duplicating.'
@@ -96,14 +101,14 @@ BEGIN
 				RETURN
 			END
 		END
-	
+
 		-- save old value
 		SELECT @OldMarketIds = ISNULL(STUFF((
-				SELECT ', ' + CAST(MarketId AS NVARCHAR)
-				FROM dbo.MatchMarket WITH (NOLOCK)
-				WHERE OWPMatchId = @OWPMatchId
-				FOR XML PATH('')
-				), 1, 2, ''), '')
+						SELECT ', ' + CAST(MarketId AS NVARCHAR)
+						FROM dbo.MatchMarket WITH (NOLOCK)
+						WHERE OWPMatchId = @OWPMatchId
+						FOR XML PATH('')
+						), 1, 2, ''), '')
 
 		SELECT @OldRemark = m.Remark
 			,@OldRound = m.[Round]
@@ -138,63 +143,68 @@ BEGIN
 					,ROOT('r')
 				)
 		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		
+
 		DECLARE @FromTimeSendMessage DATETIME
 			,@ToTimeSendMessage DATETIME
 			,@FromTimeSendMessageSpecialBettype DATETIME
 			,@ToTimeSendMessageSpecialBettype DATETIME
 			,@ParentMatchId INT
 			,@MinorBettypeId INT
-			
+
 		SELECT @ParentMatchId = ParentMatchId
 			,@MinorBettypeId = MinorBettypeId
 		FROM dbo.MinorMatch WITH (NOLOCK)
 		WHERE MinorMatchId = @OWPMatchId
-		
+
 		SELECT @FromTimeSendMessage = FromTime
 			,@ToTimeSendMessage = ToTime
 			,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
 			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
-		
+
 		DECLARE @tblRelevantMatches TABLE (
-			Id INT IDENTITY(1,1)
+			Id INT IDENTITY(1, 1)
 			,OWPMatchId INT PRIMARY KEY CLUSTERED
 			,MinorBettypeId INT
-			,IsMatchInTimeRange BIT)
-		
+			,IsMatchInTimeRange BIT
+			)
 		DECLARE @MinorBettype_FastMarket INT = - 88
 			,@MinorBettype_AllInOne INT = - 89
 			,@MinorBettype_Specific15Mins INT = - 1
 			,@MinorBettype_Specific10Mins INT = - 2
 			,@MinorBettype_Specific15MinsNoOfCorners INT = - 5
 			,@MinorBettype_Specific15MinsTotalBooking INT = - 8
-			
+
 		INSERT INTO @tblRelevantMatches (
 			OWPMatchId
 			,MinorBettypeId
-		)
-		VALUES (@OWPMatchId, @MinorBettypeId)
-		
+			)
+		VALUES (
+			@OWPMatchId
+			,@MinorBettypeId
+			)
+
 		-- add relevant matches to update status	
 		IF @ParentMatchId IS NULL
 		BEGIN
 			INSERT INTO @tblRelevantMatches (
 				OWPMatchId
 				,MinorBettypeId
-			)
+				)
 			SELECT MinorMatchId
 				,MinorBettypeId
 			FROM dbo.MinorMatch WITH (NOLOCK)
-			WHERE ParentMatchId = @OWPMatchId AND MinorBettypeId NOT IN (
-				@MinorBettype_FastMarket
-				,@MinorBettype_AllInOne
-				,@MinorBettype_Specific10Mins
-				,@MinorBettype_Specific15Mins
-				,@MinorBettype_Specific15MinsNoOfCorners
-				,@MinorBettype_Specific15MinsTotalBooking)
+			WHERE ParentMatchId = @OWPMatchId
+				AND MinorBettypeId NOT IN (
+					@MinorBettype_FastMarket
+					,@MinorBettype_AllInOne
+					,@MinorBettype_Specific10Mins
+					,@MinorBettype_Specific15Mins
+					,@MinorBettype_Specific15MinsNoOfCorners
+					,@MinorBettype_Specific15MinsTotalBooking
+					)
 		END
-		
+
 		-- list of minor bettypes Corner & Booking but not 15 mins
 		DECLARE @tblCornerBookingBetTypes TABLE (MinorBettypeId INT NOT NULL)
 
@@ -208,39 +218,52 @@ BEGIN
 				MinorBettypeName LIKE '%corner%'
 				OR MinorBettypeName LIKE '%booking%'
 				)
-		
+
 		DECLARE @Id INT
 			,@RelevantMatchId INT
 			,@RelevantMinorBettypeId INT
 			,@IsMatchInTimeRange BIT
+
 		SET @Id = 1
-		WHILE 1=1
+
+		WHILE 1 = 1
 		BEGIN
 			SELECT @RelevantMatchId = NULL
 				,@RelevantMinorBettypeId = NULL
-				
+
 			SELECT @RelevantMatchId = OWPMatchId
 				,@RelevantMinorBettypeId = MinorBettypeId
 			FROM @tblRelevantMatches
 			WHERE Id = @Id
-			
-			IF @RelevantMatchId IS NULL BREAK
-			
-			SET @IsMatchInTimeRange = CASE WHEN (@EventDateTime >= @FromTimeSendMessage AND @EventDateTime <= @ToTimeSendMessage)
-				OR ( @RelevantMinorBettypeId IS NOT NULL AND EXISTS (
-					SELECT 1
-					FROM @tblCornerBookingBetTypes
-					WHERE MinorBettypeId = @RelevantMinorBettypeId
-						AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
-						AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
-					)
-				) THEN 1 ELSE 0 END
-				
+
+			IF @RelevantMatchId IS NULL
+				BREAK
+
+			SET @IsMatchInTimeRange = CASE 
+					WHEN (
+							@EventDateTime >= @FromTimeSendMessage
+							AND @EventDateTime <= @ToTimeSendMessage
+							)
+						OR (
+							@RelevantMinorBettypeId IS NOT NULL
+							AND EXISTS (
+								SELECT 1
+								FROM @tblCornerBookingBetTypes
+								WHERE MinorBettypeId = @RelevantMinorBettypeId
+									AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
+									AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
+								)
+							)
+						THEN 1
+					ELSE 0
+					END
+
 			UPDATE @tblRelevantMatches
 			SET IsMatchInTimeRange = @IsMatchInTimeRange
 			WHERE Id = @Id
-			
-			IF @OWPMatchId = @RelevantMatchId OR @MatchStatus <> 'Live'
+
+			IF @OWPMatchId = @RelevantMatchId
+				OR @MatchStatus <> 'Live'
 			BEGIN
 				EXEC dbo.OWP_LiveDetail_Update_MatchInfo_MatchStatus @ActorId = @ActorId
 					,@SessionId = @SessionId
@@ -250,79 +273,160 @@ BEGIN
 					,@MatchStatus = @MatchStatus
 					,@IsMatchInTimeRange = @IsMatchInTimeRange
 			END
-			
+
 			SET @Id = @Id + 1
 		END
-		
+
 		-- add more relevant matches for update info
 		IF @ParentMatchId IS NOT NULL
 		BEGIN
 			INSERT INTO @tblRelevantMatches (
 				OWPMatchId
 				,MinorBettypeId
-			)
+				)
 			SELECT @ParentMatchId
 				,NULL
+			
 			UNION
+			
 			SELECT MinorMatchId
 				,MinorBettypeId
 			FROM dbo.MinorMatch WITH (NOLOCK)
-			WHERE ParentMatchId = @ParentMatchId AND MinorMatchId <> @OWPMatchId AND MinorBettypeId NOT IN (
-				@MinorBettype_FastMarket
-				,@MinorBettype_AllInOne
-				,@MinorBettype_Specific10Mins
-				,@MinorBettype_Specific15Mins
-				,@MinorBettype_Specific15MinsNoOfCorners
-				,@MinorBettype_Specific15MinsTotalBooking)
+			WHERE ParentMatchId = @ParentMatchId
+				AND MinorMatchId <> @OWPMatchId
+				AND MinorBettypeId NOT IN (
+					@MinorBettype_FastMarket
+					,@MinorBettype_AllInOne
+					,@MinorBettype_Specific10Mins
+					,@MinorBettype_Specific15Mins
+					,@MinorBettype_Specific15MinsNoOfCorners
+					,@MinorBettype_Specific15MinsTotalBooking
+					)
 		END
-		
+
 		DECLARE @tblMarketIds TVP_INT
-		INSERT INTO @tblMarketIds (
-			Id
-			)
+
+		INSERT INTO @tblMarketIds (Id)
 		SELECT Value
 		FROM dbo.fnc_SplitString(@MarketIds, ',')
-		
+
 		SET @Id = 1
-		WHILE 1=1
+
+		WHILE 1 = 1
 		BEGIN
 			SELECT @RelevantMatchId = NULL
 				,@RelevantMinorBettypeId = NULL
 				,@IsMatchInTimeRange = NULL
-				
+
 			SELECT @RelevantMatchId = OWPMatchId
 				,@RelevantMinorBettypeId = MinorBettypeId
 				,@IsMatchInTimeRange = IsMatchInTimeRange
 			FROM @tblRelevantMatches
 			WHERE Id = @Id
-			
-			IF @RelevantMatchId IS NULL BREAK
-			
+
+			IF @RelevantMatchId IS NULL
+				BREAK
+
 			IF @IsMatchInTimeRange IS NULL
 			BEGIN
-				SET @IsMatchInTimeRange = CASE WHEN (@EventDateTime >= @FromTimeSendMessage AND @EventDateTime <= @ToTimeSendMessage)
-					OR ( @RelevantMinorBettypeId IS NOT NULL AND EXISTS (
-						SELECT 1
-						FROM @tblCornerBookingBetTypes
-						WHERE MinorBettypeId = @RelevantMinorBettypeId
-							AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
-							AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
-						)
-					) THEN 1 ELSE 0 END
+				SET @IsMatchInTimeRange = CASE 
+						WHEN (
+								@EventDateTime >= @FromTimeSendMessage
+								AND @EventDateTime <= @ToTimeSendMessage
+								)
+							OR (
+								@RelevantMinorBettypeId IS NOT NULL
+								AND EXISTS (
+									SELECT 1
+									FROM @tblCornerBookingBetTypes
+									WHERE MinorBettypeId = @RelevantMinorBettypeId
+										AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
+										AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
+									)
+								)
+							THEN 1
+						ELSE 0
+						END
 			END
-			
-			DECLARE @RelevantIsUpdateRemark BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE 0 END)
-				,@RelevantIsUpdateInfoSiteMatchId BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE 0 END)
-				,@RelevantIsUpdateRound BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateRound END)
-				,@RelevantIsUpdateDivision BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateDivision END)
-				,@RelevantIsUpdateVenue BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateVenue END)
-				,@RelevantIsUpdateOtherTime BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateOtherTime END)
-				,@RelevantIsUpdateMarkets BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateMarkets END)
-				,@RelevantIsUpdateWebsite1 BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateWebsite1 END)
-				,@RelevantIsUpdateWebsite2 BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateWebsite2 END)
-				,@RelevantIsUpdateWebsite3 BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateWebsite3 END)
-				,@RelevantIsUpdateWebsite4 BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateWebsite4 END)
-			
+
+			DECLARE @RelevantIsUpdateRemark BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE 0
+						END
+					)
+				,@RelevantIsUpdateInfoSiteMatchId BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE 0
+						END
+					)
+				,@RelevantIsUpdateRound BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateRound
+						END
+					)
+				,@RelevantIsUpdateDivision BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateDivision
+						END
+					)
+				,@RelevantIsUpdateVenue BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateVenue
+						END
+					)
+				,@RelevantIsUpdateOtherTime BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateOtherTime
+						END
+					)
+				,@RelevantIsUpdateMarkets BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateMarkets
+						END
+					)
+				,@RelevantIsUpdateWebsite1 BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateWebsite1
+						END
+					)
+				,@RelevantIsUpdateWebsite2 BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateWebsite2
+						END
+					)
+				,@RelevantIsUpdateWebsite3 BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateWebsite3
+						END
+					)
+				,@RelevantIsUpdateWebsite4 BIT = (
+					CASE 
+						WHEN @RelevantMatchId = @OWPMatchId
+							THEN 1
+						ELSE @IsUpdateWebsite4
+						END
+					)
+
 			EXEC dbo.OWP_LiveDetail_Update_MatchInfo_Single @ActorId = @ActorId
 				,@SessionId = @SessionId
 				,@OWPMatchId = @RelevantMatchId
@@ -351,11 +455,11 @@ BEGIN
 				,@IsUpdateWebsite3 = @RelevantIsUpdateWebsite3
 				,@Website4 = @Website4
 				,@IsUpdateWebsite4 = @RelevantIsUpdateWebsite4
-			
+
 			SET @Id = @Id + 1
 		END
 	END
-	
+
 	SET @Xml = (
 			SELECT @MatchStatus AS '@ms'
 				,@IsSelected AS '@is'

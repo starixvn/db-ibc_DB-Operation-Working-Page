@@ -16,6 +16,7 @@ DB: bodb_OWP
 Revisions:
 	20190821@Leo.Vo: initial - [Redmine: #117960]
 	20190927@Leo.Vo: Write log - [Feature: #120415]
+	20191021@Leo.Vo: Remove debug code - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -195,8 +196,6 @@ BEGIN
 		BEGIN
 			SELECT @OldValue = ISNULL((SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP'),'None')
 					,@NewValue = ISNULL((SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP'),'None')
-			print 'old' + @OldValue
-			print 'new' + @NewValue
 			SELECT @MessageTemplate = mt.MsgTemplateContent
 				,@MessageTypeId = mt.MsgTemplateId
 			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)

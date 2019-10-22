@@ -18,6 +18,7 @@ AS
 
  Revisions:
 	20190724@Kane.Le: Initial SP - [Feature: #117461]
+	20191021@Leo.Vo: Check duplicate match - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -33,14 +34,13 @@ BEGIN
 		,@ErrCode = @ErrCode OUTPUT
 		,@ErrMsg = @ErrMsg OUTPUT
 
-	DECLARE @EventDate DATETIME
-
-	SELECT @EventDate = EventDate
-	FROM dbo.OWPMatch AS m WITH (NOLOCK)
-	WHERE m.OWPMatchId = @OWPMatchId;
-
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59');
+	DECLARE @FromDateTime DATETIME
+		,@ToDateTime DATETIME
+		
+	SELECT @FromDateTime = FromDateTime
+		,@ToDateTime = ToDateTime
+	FROM [fnc_GetFromDateToDateOfMatch](@OWPMatchId)
+			
 	CREATE TABLE #tblOWPMatchByEventDate (
 		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,OWPMatchId INT
@@ -74,8 +74,8 @@ BEGIN
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
 	--INNER JOIN dbo.MinorMatch AS mn WITH (NOLOCK) ON mn.ParentMatchId = m.OWPMatchId
 	WHERE m.OWPMatchId <> @OWPMatchId
-		AND m.EventDateTime BETWEEN @FromDate
-			AND @ToDate;
+		AND m.EventDateTime BETWEEN @FromDateTime
+			AND @ToDateTime;
 
 	CREATE TABLE #tblSpecialEventTemplate (
 		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED

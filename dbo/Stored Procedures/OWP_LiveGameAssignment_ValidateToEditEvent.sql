@@ -3,7 +3,7 @@
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_ValidateToEditEvent] @OWPMatchId INT
 	,@KickOffTime TIME(7)
 	,@LeagueName NVARCHAR(500)
-	,@MatchNo NVARCHAR(50) = ''
+	,@MatchNo NVARCHAR(50) = '' 
 	,@HomeName NVARCHAR(200)
 	,@AwayName NVARCHAR(200)
 	,@ErrCode INT = 0 OUTPUT
@@ -17,12 +17,14 @@ AS
  DB: bodb_OWP
 
  Revisions:
-	20190813@Kane.Le: Initial SP - [Feature: #117960]	
+	20190813@Kane.Le: Initial SP - [Feature: #117960]
+	20191021@Leo.Vo: Check duplicate InfoSiteID - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @EventDate DATE
+	DECLARE @FromDateTime DATETIME
+		,@ToDateTime DATETIME
 		,@ExistedMatchId INT
 		,@OldParentMatchId INT
 		,@MinorBettype_FastMarket INT = - 88
@@ -47,12 +49,10 @@ BEGIN
 	FROM dbo.OWPMatch AS m WITH (NOLOCK)
 	WHERE m.OWPMatchId = @OWPMatchId;
 
-	SELECT @EventDate = EventDate
-	FROM dbo.OWPMatch AS m WITH (NOLOCK)
-	WHERE m.OWPMatchId = @OWPMatchId;
-
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59');
+	SELECT @FromDateTime = FromDateTime
+		,@ToDateTime = ToDateTime
+	FROM [fnc_GetFromDateToDateOfMatch](@OWPMatchId)
+	
 	CREATE TABLE #tblOWPMatchByEventDate (
 		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
 		,OWPMatchId INT
@@ -94,8 +94,8 @@ BEGIN
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
 	WHERE m.OWPMatchId <> @OWPMatchId
-		AND m.EventDateTime BETWEEN @FromDate
-			AND @ToDate;
+		AND m.EventDateTime BETWEEN @FromDateTime
+			AND @ToDateTime;
 
 	INSERT INTO @tblMinorBettypeId
 	SELECT mm.MinorMatchId
@@ -185,7 +185,7 @@ BEGIN
 			,@ErrMsg = 'The Match No. is used. Please choose another one.';
 
 		RETURN;
-	END;
+	END;	 
 
 	IF EXISTS (
 			SELECT 1
@@ -305,8 +305,8 @@ BEGIN
 					INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
 					INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 					INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-					WHERE m.EventDateTime BETWEEN @FromDate
-							AND @ToDate
+					WHERE m.EventDateTime BETWEEN @FromDateTime
+							AND @ToDateTime
 						AND l.OWPLeagueName = RTRIM(LEFT(@LeagueName, LEN(@LeagueName) - @LeagueChars))
 						AND h.OWPTeamName = RTRIM(LEFT(@HomeName, LEN(@HomeName) - @HomeChars))
 						AND a.OWPTeamName = RTRIM(LEFT(@AwayName, LEN(@AwayName) - @AwayChars));
@@ -326,8 +326,8 @@ BEGIN
 					INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
 					INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 					INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-					WHERE m.EventDateTime BETWEEN @FromDate
-							AND @ToDate
+					WHERE m.EventDateTime BETWEEN @FromDateTime
+							AND @ToDateTime
 						AND l.OWPLeagueName = RTRIM(LEFT(@LeagueName, LEN(@LeagueName) - @LeagueChars))
 						AND (
 							(
