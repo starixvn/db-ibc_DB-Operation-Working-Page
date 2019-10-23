@@ -41,6 +41,7 @@ AS
  Revisions:
 	20190724@Kane.Le: Initial SP - [Feature: #117461]
 	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
+	20191021@Kane.Le: Fix MinorBettypeId IS NULL - [Feature: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -64,7 +65,7 @@ BEGIN
 	FROM @tblSpecialEventTemplate
 
 	EXEC OWP_LiveGameAssignment_AddMainMatch @EventDate = @EventDate
-		,@MatchStatus=@MatchStatus
+		,@MatchStatus = @MatchStatus
 		,@LeagueName = @LeagueName
 		,@HomeName = @HomeName
 		,@AwayName = @AwayName
@@ -98,6 +99,7 @@ BEGIN
 		,@OWPMatchId = @MinorMatchId OUTPUT
 
 	IF @ErrCode = 0
+		AND @MinorBettypeId IS NOT NULL
 	BEGIN
 		INSERT INTO dbo.MinorMatch (
 			MinorMatchId
