@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMainMatch] @EventDate DATE
 	,@LeagueName NVARCHAR(500)
 	,@HomeName NVARCHAR(200)
@@ -24,8 +23,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMainMatch] @EventDate DATE
 	,@Division NVARCHAR(2000) = ''
 	,@Venue NVARCHAR(100) = ''
 	,@TVIds NVARCHAR(500) = ''
-	,@OtherProvider NVARCHAR(2000) = ''
-	,@Provider NVARCHAR(2000) = ''
+	,@OtherProviderIds NVARCHAR(100) = ''
+	,@ProviderIds NVARCHAR(100) = ''
 	,@AgentIds NVARCHAR(100) = ''
 	,@MarketIds NVARCHAR(100) = ''
 	,@ActorId INT
@@ -41,8 +40,7 @@ AS
 
  Revisions:
 	20190905@Kane.Le: Initial SP - [Feature: #117960]	 
-	20190905@Kane.Le: Change temp table - [Feature: #117960]
-	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
+	20190905@Kane.Le: Change temp table - [Feature: #117960]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -53,7 +51,7 @@ BEGIN
 		,@EventDateTime DATETIME
 
 	IF (@KickOffTime < '12:00')
-		SELECT @EventDate = DATEADD(DAY, 1, @EventDate)
+		SELECT @EventDate = DATEADD(DAY, -1, @EventDate)
 
 	SELECT @EventDateTime = CAST(@EventDate AS DATETIME) + CAST(@KickOffTime AS DATETIME)
 
@@ -152,8 +150,8 @@ BEGIN
 		,@Venue
 		,@OtherTime
 		,@TVIds
-		,@OtherProvider
-		,@Provider
+		,@OtherProviderIds
+		,@ProviderIds
 		,@AgentIds
 		,@MarketIds
 		,@ErrCode

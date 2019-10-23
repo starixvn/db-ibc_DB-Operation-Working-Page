@@ -23,8 +23,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMinorMatch] @ParentMatchId INT
 	,@Division NVARCHAR(2000) = ''
 	,@Venue NVARCHAR(100) = ''
 	,@TVIds NVARCHAR(500) = ''
-	,@OtherProvider NVARCHAR(2000) = ''
-	,@Provider NVARCHAR(2000) = ''
+	,@OtherProviderIds NVARCHAR(100) = ''
+	,@ProviderIds NVARCHAR(100) = ''
 	,@AgentIds NVARCHAR(100) = ''
 	,@MarketIds NVARCHAR(100) = ''
 	,@ActorId INT
@@ -41,7 +41,6 @@ AS
  Revisions:
 	20190724@Kane.Le: Initial SP - [Feature: #117461]
 	20191021@Kane.Le: Fix MinorBettypeId IS NULL - [Feature: #120415]
-	20191022@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -88,8 +87,8 @@ BEGIN
 		,@Division = @Division
 		,@Venue = @Venue
 		,@TVIds = @TVIds
-		,@OtherProvider = @OtherProvider
-		,@Provider = @Provider
+		,@OtherProviderIds = @OtherProviderIds
+		,@ProviderIds = @ProviderIds
 		,@AgentIds = @AgentIds
 		,@MarketIds = @MarketIds
 		,@ActorId = @ActorId
