@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMainMatch] @EventDate DATE
 	,@LeagueName NVARCHAR(500)
 	,@HomeName NVARCHAR(200)
@@ -23,8 +24,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMainMatch] @EventDate DATE
 	,@Division NVARCHAR(2000) = ''
 	,@Venue NVARCHAR(100) = ''
 	,@TVIds NVARCHAR(500) = ''
-	,@OtherProviderIds NVARCHAR(100) = ''
-	,@ProviderIds NVARCHAR(100) = ''
+	,@OtherProvider NVARCHAR(2000) = ''
+	,@Provider NVARCHAR(2000) = ''
 	,@AgentIds NVARCHAR(100) = ''
 	,@MarketIds NVARCHAR(100) = ''
 	,@ActorId INT
@@ -40,7 +41,8 @@ AS
 
  Revisions:
 	20190905@Kane.Le: Initial SP - [Feature: #117960]	 
-	20190905@Kane.Le: Change temp table - [Feature: #117960]	
+	20190905@Kane.Le: Change temp table - [Feature: #117960]
+	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -150,8 +152,8 @@ BEGIN
 		,@Venue
 		,@OtherTime
 		,@TVIds
-		,@OtherProviderIds
-		,@ProviderIds
+		,@OtherProvider
+		,@Provider
 		,@AgentIds
 		,@MarketIds
 		,@ErrCode
