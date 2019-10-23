@@ -51,7 +51,7 @@ BEGIN
 		,@EventDateTime DATETIME
 
 	IF (@KickOffTime < '12:00')
-		SELECT @EventDate = DATEADD(DAY, -1, @EventDate)
+		SELECT @EventDate = DATEADD(DAY, 1, @EventDate)
 
 	SELECT @EventDateTime = CAST(@EventDate AS DATETIME) + CAST(@KickOffTime AS DATETIME)
 
