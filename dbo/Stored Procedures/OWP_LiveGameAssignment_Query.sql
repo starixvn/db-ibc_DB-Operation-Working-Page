@@ -16,6 +16,7 @@ AS
 	20190807@Kane.Le: Return Website1 - [Feature: #117227]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20190910@Leo.Vo: Include EventDateTime - [Feature: #119650]
+	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -337,14 +338,14 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(MAX)), '')
 				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
 				INNER JOIN dbo.MatchOtherProvider AS mot WITH (NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
 				WHERE mot.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(MAX)), '')
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 				INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = ml.OWPMatchId

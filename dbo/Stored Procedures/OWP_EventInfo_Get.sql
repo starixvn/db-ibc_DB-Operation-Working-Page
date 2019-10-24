@@ -48,6 +48,7 @@ Revisions:
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
+	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -940,14 +941,14 @@ BEGIN
 		,tm.WatchBet
 		,tm.Channel
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(MAX)), '')
 				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS mop WITH (NOLOCK) ON rs.OtherProviderId = mop.OtherProviderId
 				WHERE mop.OWPMatchId = tm.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS [OtherProvider]
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(MAX)), '')
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = tm.OWPMatchId

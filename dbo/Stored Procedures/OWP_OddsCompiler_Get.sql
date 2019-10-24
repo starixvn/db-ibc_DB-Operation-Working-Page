@@ -14,6 +14,7 @@ AS
 	20181120@Raymond.Le: Add more info to Odds Compiler - [Redmine: #105043]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190513@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
+	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -80,7 +81,7 @@ BEGIN
 		,info.[Round]
 		,info.Division
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS VARCHAR), '')
+				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(MAX)), '')
 				FROM dbo.[Provider] rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS f WITH (NOLOCK) ON rs.ProviderId = f.ProviderId
 				WHERE m.OWPMatchId = f.OWPMatchId
@@ -88,7 +89,7 @@ BEGIN
 				), 1, 2, '') AS 'Provider'
 		,info.WB
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS VARCHAR), '')
+				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(MAX)), '')
 				FROM dbo.OtherProvider rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS f WITH (NOLOCK) ON rs.OtherProviderId = f.OtherProviderId
 				WHERE m.OWPMatchId = f.OWPMatchId
