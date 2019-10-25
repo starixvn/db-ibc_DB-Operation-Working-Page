@@ -8,19 +8,15 @@
 
 USE bodb_OWP;
 GO
-DROP INDEX Provider.IX_Provider_ProviderName;
-GO
--- add column ProviderName max length 2000
 
-ALTER TABLE Provider ALTER COLUMN ProviderName NVARCHAR(2000) NOT NULL;
-GO
+-- add column ProviderName max length 900
+DROP INDEX Provider.IX_Provider_ProviderName;
+ALTER TABLE Provider ALTER COLUMN ProviderName VARCHAR(900) NOT NULL;
 CREATE UNIQUE NONCLUSTERED INDEX IX_Provider_ProviderName ON dbo.Provider(ProviderName ASC);
 GO
-DROP INDEX OtherProvider.IX_OtherProvider_OtherProviderName;
-GO
--- add column OtherProviderName max length 2000
 
-ALTER TABLE OtherProvider ALTER COLUMN OtherProviderName NVARCHAR(2000) NOT NULL;
-GO
+-- add column OtherProviderName max length 900
+DROP INDEX OtherProvider.IX_OtherProvider_OtherProviderName;
+ALTER TABLE OtherProvider ALTER COLUMN OtherProviderName VARCHAR(900) NOT NULL;
 CREATE UNIQUE NONCLUSTERED INDEX IX_OtherProvider_OtherProviderName ON dbo.OtherProvider(OtherProviderName ASC);
 GO

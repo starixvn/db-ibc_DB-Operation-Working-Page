@@ -21,6 +21,7 @@ AS
 	20190816@Leo.Vo: Update message content - [Feature: #117960]
 	20190918@Kane.Le: Update AgentIds - [Redmine: #120415]
 	20191014@Leo.Vo: Fix issue job failed - [Redmine: #121722]
+	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -362,7 +363,7 @@ BEGIN
 		)
 	SELECT m.OWPMatchId
 		,ISNULL(STUFF((
-					SELECT ', ' + CAST(tv.TVCode AS NVARCHAR)
+					SELECT ', ' + tv.TVCode
 					FROM #tblOldMatchTelevision AS mtv
 					INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tv.TVId = mtv.TVId
 					WHERE mtv.OWPMatchId = m.OWPMatchId
@@ -435,7 +436,7 @@ BEGIN
 		)
 	SELECT m.OWPMatchId
 		,ISNULL(STUFF((
-					SELECT ', ' + CAST(ag.AgentName AS NVARCHAR)
+					SELECT ', ' + ag.AgentName
 					FROM #tblOldMatchAgent AS a
 					INNER JOIN dbo.Agent AS ag WITH (NOLOCK) ON ag.AgentId = a.AgentId
 					WHERE a.OWPMatchId = m.OWPMatchId

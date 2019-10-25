@@ -81,7 +81,7 @@ BEGIN
 		,info.[Round]
 		,info.Division
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(MAX)), '')
+				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS f WITH (NOLOCK) ON rs.ProviderId = f.ProviderId
 				WHERE m.OWPMatchId = f.OWPMatchId
@@ -89,7 +89,7 @@ BEGIN
 				), 1, 2, '') AS 'Provider'
 		,info.WB
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(MAX)), '')
+				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.OtherProvider rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS f WITH (NOLOCK) ON rs.OtherProviderId = f.OtherProviderId
 				WHERE m.OWPMatchId = f.OWPMatchId

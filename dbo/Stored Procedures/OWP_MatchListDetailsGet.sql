@@ -22,6 +22,7 @@ AS
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
+	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -177,7 +178,7 @@ BEGIN
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.TVCode AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.TVCode
 				FROM dbo.Television AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK) ON rs.TVId = mtv.TVId
 				WHERE mtv.OWPMatchId = ml.OWPMatchId
@@ -186,21 +187,21 @@ BEGIN
 		,ml.Channel
 		,ml.WatchBet
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.AgentName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.AgentName
 				FROM dbo.Agent AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchAgent AS ma WITH (NOLOCK) ON rs.AgentId = ma.AgentId
 				WHERE ma.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS mot WITH (NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
 				WHERE mot.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = ml.OWPMatchId

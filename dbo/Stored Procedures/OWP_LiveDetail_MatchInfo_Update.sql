@@ -15,8 +15,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@Venue NVARCHAR(100) = ''
 	,@OtherTime DATETIME = NULL
 	,@TVIds NVARCHAR(500) = ''
-	,@OtherProvider NVARCHAR(2000) = ''
-	,@Provider NVARCHAR(2000) = ''
+	,@OtherProvider VARCHAR(900) = ''
+	,@Provider VARCHAR(900) = ''
 	,@AgentIds NVARCHAR(100) = ''
 	,@MarketIds NVARCHAR(100) = ''
 	,@ErrCode INT = 0 OUTPUT
@@ -42,7 +42,8 @@ Revisions:
 	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190704@Tyler.Dang: change message template - [Redmine: #116230]
-	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
+	20191021@Leo.Vo: Remove debug code - [Redmine: #120415]
+	20191022@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -96,12 +97,12 @@ BEGIN
 
 	CREATE TABLE #tblOldItem (
 		Id INT
-		,[Text] NVARCHAR(100)
+		,[Text] NVARCHAR(2000)
 		)
 
 	CREATE TABLE #tblNewItem (
 		Id INT
-		,[Text] NVARCHAR(100)
+		,[Text] NVARCHAR(2000)
 		)
 
 	CREATE TABLE #tblAllAssigneeOfMatch (UserId INT NOT NULL)

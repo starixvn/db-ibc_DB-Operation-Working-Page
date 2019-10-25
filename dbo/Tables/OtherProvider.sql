@@ -1,8 +1,10 @@
 ﻿CREATE TABLE [dbo].[OtherProvider] (
-    [OtherProviderId]   INT             IDENTITY (1, 1) NOT NULL,
-    [OtherProviderName] NVARCHAR (2000) NOT NULL,
+    [OtherProviderId]   INT           IDENTITY (1, 1) NOT NULL,
+    [OtherProviderName] VARCHAR (900) NOT NULL,
     CONSTRAINT [PK_OtherProvider] PRIMARY KEY CLUSTERED ([OtherProviderId] ASC)
 );
+
+
 
 
 

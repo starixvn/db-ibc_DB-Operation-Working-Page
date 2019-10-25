@@ -368,13 +368,13 @@ BEGIN
 	CREATE TABLE #tblDistinctTextList (
 		OWPMatchId INT NOT NULL
 		,Id INT
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		)
 
 	CREATE TABLE #tblOldDistinctTextList (
 		OWPMatchId INT NOT NULL
 		,Id INT
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		)
 
 	CREATE TABLE #tblMatchEditedInfo (
@@ -1579,11 +1579,9 @@ BEGIN
 			,[Text]
 			)
 		SELECT m.OWPMatchId
-			,CAST(REPLACE(m.[Provider], '/', ',') AS NVARCHAR(2000))
+			,m.Provider
 		FROM #tblMatch AS m
 		WHERE m.[Provider] <> ''
-			AND RTRIM(LTRIM(m.[Provider])) <> ''
-		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1707,11 +1705,9 @@ BEGIN
 			,[Text]
 			)
 		SELECT m.OWPMatchId
-			,CAST(REPLACE(m.OtherProvider, '/', ',') AS NVARCHAR(2000))
+			,m.OtherProvider
 		FROM #tblMatch AS m
 		WHERE m.OtherProvider <> ''
-			AND RTRIM(LTRIM(m.OtherProvider)) <> ''
-		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId

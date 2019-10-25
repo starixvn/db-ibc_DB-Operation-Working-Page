@@ -24,8 +24,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMainMatch] @EventDate DATE
 	,@Division NVARCHAR(2000) = ''
 	,@Venue NVARCHAR(100) = ''
 	,@TVIds NVARCHAR(500) = ''
-	,@OtherProvider NVARCHAR(2000) = ''
-	,@Provider NVARCHAR(2000) = ''
+	,@OtherProvider VARCHAR(900) = ''
+	,@Provider VARCHAR(900) = ''
 	,@AgentIds NVARCHAR(100) = ''
 	,@MarketIds NVARCHAR(100) = ''
 	,@ActorId INT

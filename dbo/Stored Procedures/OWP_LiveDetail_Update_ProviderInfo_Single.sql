@@ -13,9 +13,9 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo_Single] @ActorId INT
 	,@IsUpdatePhone BIT = 0
 	,@TVIds TVP_INT READONLY
 	,@IsUpdateTVs BIT = 0
-	,@OtherProvider NVARCHAR(2000) = ''
+	,@OtherProvider VARCHAR(900) = ''
 	,@IsUpdateOtherProviders BIT = 0
-	,@Provider NVARCHAR(2000) = ''
+	,@Provider VARCHAR(900) = ''
 	,@IsUpdateProviders BIT = 0
 	,@AgentIds TVP_INT READONLY
 	,@IsUpdateAgents BIT = 0

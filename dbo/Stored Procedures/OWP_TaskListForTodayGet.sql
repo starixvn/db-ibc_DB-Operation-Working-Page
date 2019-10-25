@@ -437,14 +437,14 @@ BEGIN
 		,inf.WB AS WatchBet
 		,inf.Channel
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(MAX)), '')
+				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS mop WITH (NOLOCK) ON rs.OtherProviderId = mop.OtherProviderId
 				WHERE mop.OWPMatchId = inf.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.[ProviderName] AS NVARCHAR(MAX)), '')
+				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = inf.OWPMatchId
