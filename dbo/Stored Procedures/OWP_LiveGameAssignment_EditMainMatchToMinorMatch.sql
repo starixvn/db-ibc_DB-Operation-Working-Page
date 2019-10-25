@@ -20,6 +20,7 @@ AS
  Revisions:
 	20190816@Leo.Vo: Initial SP - [Feature: #117960]
 	20190927@Kane.Le: Update message MatchNo - [Feature: #120415]
+	20191021@Kane.Le: Fix MinorBettypeId IS NULL - [Feature: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -276,6 +277,8 @@ BEGIN
 	
 
 	-- create new MinorMatch
+	IF @MinorBettypeId IS NOT NULL
+	BEGIN
 	INSERT INTO dbo.MinorMatch (
 		MinorMatchId
 		,ParentMatchId
@@ -288,7 +291,7 @@ BEGIN
 		,@MinorBettypeId
 		,1
 		)
-
+	END
 	-- if minor match is total booking or no of corner then also change 15' minor match
 	DECLARE @tblMappingMinorMatch TABLE (
 		MinorBettypeId INT

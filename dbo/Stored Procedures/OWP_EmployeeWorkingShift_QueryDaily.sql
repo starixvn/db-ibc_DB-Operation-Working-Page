@@ -22,6 +22,7 @@ AS
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 	20190604@Kane.Le: Add SiteId - [Feature: #113832]
 	20190703@Kane.Le: Add MinorBettypeId - [Feature: #115390]
+	20191011@Tyler.Dang: Add EmployeeWorkingShiftNote & UserRemark - [Feature: #121901]
 	
 */
 BEGIN
@@ -31,11 +32,10 @@ BEGIN
 		,@EventDateTo DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @Date), '11:59:59')
 		,@QueryDateFrom DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00')
 		,@QueryDateTo DATETIME = DATEADD(DAY, (DATEDIFF(DAY, 0, @Date) + 1), '11:59:59')
+		,@DailyRemarkCategory INT = 2
 	 
 	DECLARE @tblUser TABLE (
 		UserId INT
-		,Username VARCHAR(30)
-		,Nickname VARCHAR(30)
 		,SectionId SMALLINT
 		,LocationCode VARCHAR(10)
 		,IsSecondAccount BIT
@@ -91,15 +91,11 @@ BEGIN
 	-- Get Users have valid filter
 	INSERT INTO @tblUser (
 		UserId
-		,Nickname
-		,Username
 		,SectionId
 		,LocationCode
 		,IsSecondAccount
 		)
 	SELECT u.UserId
-		,u.Nickname
-		,u.Username
 		,ISNULL(u.SectionId, 0)
 		,ISNULL(u.LocationCode, 'None')
 		,u.IsSecondAccount
@@ -204,27 +200,46 @@ BEGIN
 		FROM #tblUserBettype AS bt
 		WHERE bt.UserId = u.UserId
 	)
+	
 	------------------------
 	-- return UserList
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
 		,ts.SectionName
-		,u.Username
-		,u.Nickname
+		,us.Username
+		,us.Nickname
+		,ul.LevelName
+		,ug.GroupName
+		,us.IsSecondAccount
 		,ws.ShiftId
+		,ur.Remark
 	FROM @tblUser AS u
+		INNER JOIN dbo.[User] AS us WITH (NOLOCK) ON u.UserId = us.UserId
 		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
+		LEFT JOIN (
+			SELECT ResourceId AS GroupId
+				,Value AS GroupName
+			FROM dbo.RefResource WITH (NOLOCK)
+			WHERE RefName = 'UserGroup'
+		) AS ug ON us.GroupId = ug.GroupId
+		LEFT JOIN (
+			SELECT ResourceId AS LevelId
+				,Value AS LevelName
+			FROM dbo.RefResource WITH (NOLOCK)
+			WHERE RefName = 'UserLevel'
+		) AS ul ON us.[Level] = ul.LevelId
 		LEFT JOIN dbo.EmployeeWorkingShift AS ws WITH (NOLOCK) ON u.UserId = ws.EmployeeId AND ws.ShiftDate = @Date
+		LEFT JOIN dbo.UserRemark AS ur WITH (NOLOCK) ON ur.UserId = u.UserId AND ur.Category = @DailyRemarkCategory
 		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.EmployeeId = u.UserId
-		AND od.SectionId = u.SectionId
-		AND od.UserId = 0
+			AND od.SectionId = u.SectionId
+			AND od.UserId = 0
 	ORDER BY ts.SectionName
 		,CASE 
 			WHEN od.OrderId IS NOT NULL THEN 1
 			ELSE 2
 			END
 		,od.OrderId
-		,u.Username;
+		,us.Username;
 
 	-- return WorkingShift
 	SELECT u.UserId AS EmployeeId
@@ -283,6 +298,18 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
 		LEFT JOIN dbo.MatchSetting ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId		
 		AND ms.Bettype = 1
+
+	-- Return notes
+	DECLARE @TimeZoneGMT8 INT = 8;
+	SELECT ewn.UserId
+		,ewn.EmployeeWorkingShiftNoteId
+		,ewn.Note
+		,u.Username
+		,DATEADD(HH, @TimeZoneGMT8, (DATEADD(hh, DATEDIFF(hh, GETDATE(), GETUTCDATE()), ewn.CreatedDate))) AS LastUpdated
+	FROM dbo.EmployeeWorkingShiftNote AS ewn WITH (NOLOCK)
+	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON ewn.CreatedBy = u.UserId
+	WHERE CAST(ewn.ShiftDate AS DATE) = @Date
+	ORDER BY ewn.CreatedDate DESC
 
 	DROP TABLE #tblUserBettype
 

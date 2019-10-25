@@ -12,6 +12,7 @@ Revisions:
 	20190306@Leo.Vo: Change condition - [Redmine: #109560]
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20190917@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
+	20191015@Kane.Le: Update rule User Staff Level - [Redmine: #121765]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -41,16 +42,17 @@ BEGIN
 		,[Level]
 		,SpeakChinese
 		)
-	SELECT UserId
-		,ISNULL([Level], @NullLevelId)
+	SELECT ou.UserId
+		,ISNULL(ou.[Level], @NullLevelId)
 		,CASE 
 			WHEN LocationCode = 'CTI' THEN 1
 			ELSE 0
 			END
-	FROM dbo.[User] WITH (NOLOCK)
+	FROM dbo.[User] AS ou WITH (NOLOCK)  
+	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 	WHERE LocationCode IS NOT NULL
 		AND SectionId = @LASection
-
+		AND (ur.RoleId = 1 OR ur.RoleId IS NULL)
 	SELECT UserId
 		,[Level]
 		,SpeakChinese

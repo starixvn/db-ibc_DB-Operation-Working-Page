@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_Query] @EventDate DATE
 	,@Username NVARCHAR(30) = NULL
 	,@MatchStatusIds NVARCHAR(100) = NULL

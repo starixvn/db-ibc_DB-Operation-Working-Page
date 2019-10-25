@@ -18,8 +18,11 @@
     [Level]             INT            NULL,
     [TimeZoneSettingId] SMALLINT       NULL,
     [IsSecondAccount]   BIT            DEFAULT ((0)) NOT NULL,
+    [GroupId]           INT            NULL,
     CONSTRAINT [PK_User] PRIMARY KEY CLUSTERED ([UserId] ASC)
 );
+
+
 
 
 

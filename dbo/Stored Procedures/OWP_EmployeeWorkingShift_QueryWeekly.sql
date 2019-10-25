@@ -31,12 +31,16 @@ AS
 	 20190524@Leo.Vo: Return OrderId - [Feature: #114073]
 	 20190531@Leo.Vo: Refactor SP [Redmine: #114442]
 	 20190531@Leo.Vo: Add Email info [Redmine: #114047]
+	 20191011@Tyler.Dang: Alter Note to Remark [Redmine: #121878]
 
 -- @Note:    
 EXEC OWP_EmployeeWorkingShift_QueryWeekly @FromDate = '2018/03/12', @ToDate = '2018/03/13', @SectionId = N'1,2,3,4';
 */
 BEGIN
 	SET NOCOUNT ON;
+
+	DECLARE @Category_WEEKLY INT = 1
+	DECLARE @Category_DAILY INT = 2
 
 	DECLARE @tblSection TABLE (
 		SectionId INT
@@ -143,12 +147,12 @@ BEGIN
 		,s.SectionName
 		,u.CategoryId
 		,od.OrderId
-		,n.Note
+		,n.Remark
 	FROM @tblUser AS tmp
 		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON tmp.UserId = u.UserId
 		INNER JOIN @tblSection AS s ON s.SectionId = tmp.SectionId
-		LEFT JOIN dbo.EmployeeWorkingShiftNote AS n WITH (NOLOCK) ON u.UserId = n.UserId
+		LEFT JOIN dbo.UserRemark AS n WITH (NOLOCK) ON u.UserId = n.UserId AND n.Category = @Category_WEEKLY
 		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.UserId = @OrderUserId
-		AND od.EmployeeId = u.UserId
-		AND od.SectionId = u.SectionId
+			AND od.EmployeeId = u.UserId
+			AND od.SectionId = u.SectionId
 END;

@@ -42,6 +42,7 @@ Revisions:
 	20190509@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190704@Tyler.Dang: change message template - [Redmine: #116230]
+	20191021@Leo.Vo: Remove debug code - [Redmine: #120415]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -1018,8 +1019,6 @@ BEGIN
 			BEGIN
 				SELECT @OldValue = ISNULL((SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @OldNoOfHDPId AND RefName='NoOfHDP'),'None')
 						,@NewValue = ISNULL((SELECT [Value] FROM dbo.RefResource WITH (NOLOCK) WHERE ResourceId =  @NoOfHDPId AND RefName='NoOfHDP'),'None')
-				print 'old' + @OldValue
-				print 'new' + @NewValue
 				SELECT @MessageTemplate = mt.MsgTemplateContent
 					,@MessageTypeId = mt.MsgTemplateId
 				FROM dbo.MessageTemplate AS mt WITH (NOLOCK)

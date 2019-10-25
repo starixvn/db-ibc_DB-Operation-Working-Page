@@ -1,8 +1,8 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateNote] @ActorId INT
-	,@UserId INT
-	,@Note NVARCHAR(200) = NULL
+	,@EmployeeWorkingShiftNoteId INT
+	,@Note NVARCHAR(4000)
 AS
 /*    
  Created: 20180312@Leo
@@ -10,62 +10,59 @@ AS
  DB: bodb_OWP
 
  Revisions:
-	20181009@Leo.Vo: New structure of event assignment - [Redmine: #92868]
-	20190521@Kane.Le: Write log - [Redmine: #113763]
+	20181009@leo.vo: New structure of event assignment - [Redmine: #92868]
+	20190521@kane.le: Write log - [Redmine: #113763]
+	20191015@Tyler.Dang: Init SP - [Redmine: #121901]
 */
-BEGIN	
+BEGIN
+	-- SET NOCOUNT ON added to prevent extra result sets from
+	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-	DECLARE @StartRun DATETIME
+    DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
 		,@Duration INT
+		,@OldNote NVARCHAR(4000)
+		,@OldCreatedDate DATETIME
+		,@OldCreatedBy INT
+		,@UserId INT
 		,@LogDataOld NVARCHAR(MAX)
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
+		,@LastUpdated DATETIME
 
+	SELECT @OldNote = Note
+		,@OldCreatedBy = CreatedBy
+		,@OldCreatedDate = CreatedDate
+		,@UserId = UserId
+	FROM dbo.[EmployeeWorkingShiftNote] WITH (NOLOCK)
+	WHERE EmployeeWorkingShiftNoteId = @EmployeeWorkingShiftNoteId
+	
 	SET @StartRun = GETDATE()
 	SET @Xml = (
-			SELECT @UserId AS '@uid'
-				,nt.Note AS '@no'
-			FROM EmployeeWorkingShiftNote nt WITH (NOLOCK)
-			WHERE nt.UserId = @UserId
+			SELECT @OldNote AS '@nt'
+				,@OldCreatedDate AS '@cd'
+				,@OldCreatedBy AS '@cb'
+				,@EmployeeWorkingShiftNoteId AS '@ni'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	
+	SET @LastUpdated = GETDATE()
 
-
-	IF EXISTS (
-			SELECT 1
-			FROM EmployeeWorkingShiftNote
-			WHERE UserId = @UserId
-			)
-	BEGIN
-		UPDATE dbo.EmployeeWorkingShiftNote
-		WITH (
-				ROWLOCK
-				,UPDLOCK
-				)
-
-		SET Note = @Note
-		WHERE UserId = @UserId
-	END
-	ELSE
-	BEGIN
-		INSERT INTO dbo.EmployeeWorkingShiftNote (
-			UserId
-			,Note
-			)
-		VALUES (
-			@UserId
-			,@Note
-			);
-	END
-
+	UPDATE dbo.[EmployeeWorkingShiftNote] WITH (ROWLOCK)
+	SET Note = @Note
+		,CreatedDate = @LastUpdated
+		,CreatedBy = @ActorId
+	WHERE EmployeeWorkingShiftNoteId = @EmployeeWorkingShiftNoteId
+	
 	--New data
 	SET @Xml = (
-			SELECT @UserId AS '@uid'
-				,@Note AS '@no'
+			SELECT @Note AS '@nt'
+				,@LastUpdated AS '@cd'
+				,@ActorId AS '@cb'
+				,@EmployeeWorkingShiftNoteId AS '@ni'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
@@ -80,4 +77,6 @@ BEGIN
 		,@ObjectId = @UserId
 		,@Data = @LogData
 		,@DataOld = @LogDataOld
+
+	SELECT @EmployeeWorkingShiftNoteId AS NoteId
 END
