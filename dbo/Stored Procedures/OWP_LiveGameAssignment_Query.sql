@@ -16,6 +16,7 @@ AS
 	20190807@Kane.Le: Return Website1 - [Feature: #117227]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20190910@Leo.Vo: Include EventDateTime - [Feature: #119650]
+	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -321,7 +322,7 @@ BEGIN
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.TVCode AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.TVCode
 				FROM dbo.Television AS rs WITH (NOLOCK)
 				INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK) ON rs.TVId = mtv.TVId
 				WHERE mtv.OWPMatchId = ml.OWPMatchId
@@ -330,21 +331,21 @@ BEGIN
 		,ml.Channel
 		,ml.WatchBet
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.AgentName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.AgentName
 				FROM dbo.Agent AS rs WITH (NOLOCK)
 				INNER JOIN dbo.MatchAgent AS ma WITH (NOLOCK) ON rs.AgentId = ma.AgentId
 				WHERE ma.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
 				INNER JOIN dbo.MatchOtherProvider AS mot WITH (NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
 				WHERE mot.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 				INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = ml.OWPMatchId

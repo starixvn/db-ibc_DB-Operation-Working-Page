@@ -1,4 +1,5 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -38,6 +39,7 @@ AS
 	20190924@Kane.Le: remove existing events deselected + notification - [Redmine: #116688]
 	20191003@Leo.Vo: Update lock hint - [Redmine: #121438]
 	20191018@Kane.Le: Fix temp table cannot drop - [Redmine: #122194]
+	20191021@Tyler.Dang: Edit Provider/ Other Provider upload - [Redmine: #122211]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -359,20 +361,20 @@ BEGIN
 	--list of upload values of TV, Provider, OtherProvider or Agent in upload data
 	CREATE TABLE #tblTextList (
 		OWPMatchId INT NOT NULL
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		,OrderId INT IDENTITY(1, 1)
 		)
 
 	CREATE TABLE #tblDistinctTextList (
 		OWPMatchId INT NOT NULL
 		,Id INT
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		)
 
 	CREATE TABLE #tblOldDistinctTextList (
 		OWPMatchId INT NOT NULL
 		,Id INT
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		)
 
 	CREATE TABLE #tblMatchEditedInfo (
@@ -1577,12 +1579,9 @@ BEGIN
 			,[Text]
 			)
 		SELECT m.OWPMatchId
-			,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+			,m.Provider
 		FROM #tblMatch AS m
-		CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.[Provider], '/', ','), ',') AS d
 		WHERE m.[Provider] <> ''
-			AND RTRIM(LTRIM(d.val)) <> ''
-		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId
@@ -1706,12 +1705,9 @@ BEGIN
 			,[Text]
 			)
 		SELECT m.OWPMatchId
-			,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(100))
+			,m.OtherProvider
 		FROM #tblMatch AS m
-		CROSS APPLY dbo.fnc_SplitStrings(REPLACE(m.OtherProvider, '/', ','), ',') AS d
 		WHERE m.OtherProvider <> ''
-			AND RTRIM(LTRIM(d.val)) <> ''
-		OPTION (MAXRECURSION 0)
 
 		INSERT INTO #tblDistinctTextList (
 			OWPMatchId

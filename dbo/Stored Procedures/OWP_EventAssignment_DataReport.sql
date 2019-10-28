@@ -10,6 +10,7 @@ DB: bodb_OWP
 Revisions:
 	20190607@Leo: Initial SP - [Redmine: #114749]
 	20190610@Leo: Update time & column name - [Redmine: #114749]
+	20191021@Leo.Vo: Edit Provider/ Other Provider upload - [Redmine: #122211]
 */
 BEGIN
 	DECLARE @FromDate DATETIME = '2018-06-01'
@@ -629,14 +630,14 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherTradersAIO
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.AgentName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.AgentName
 				FROM dbo.Agent AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchAgent AS ma WITH (NOLOCK) ON rs.AgentId = ma.AgentId
 				WHERE ma.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS Agent
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.TVCode AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.TVCode
 				FROM dbo.Television AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchTelevision AS mtv WITH (NOLOCK) ON rs.TVId = mtv.TVId
 				WHERE mtv.OWPMatchId = ml.OWPMatchId
@@ -645,14 +646,14 @@ BEGIN
 		,ml.Channel
 		,ml.WatchBet AS WB
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.OtherProvider AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS mot WITH (NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
 				WHERE mot.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.ProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = ml.OWPMatchId

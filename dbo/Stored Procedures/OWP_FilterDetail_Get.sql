@@ -11,6 +11,7 @@ AS
 	20181026@Raymond.Le: Enhance performance page Live Game List - [Redmine: #103598]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190110@Leo.Vo: Rename column RefResourceId in table RefResource - [Redmine: #107257]
+	20191021@Leo.Vo: Edit Provider/ Other Provider upload - [Redmine: #122211]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -66,13 +67,13 @@ BEGIN
 
 	CREATE TABLE #tblProvider (
 		ProviderId INT
-		,ProviderName NVARCHAR(100)
+		,ProviderName VARCHAR(900)
 		,IsSelected BIT
 	)
 	
 	CREATE TABLE #tblOtherProvider (
 		OtherProviderId INT
-		,OtherProviderName NVARCHAR(100)
+		,OtherProviderName VARCHAR(900)
 		,IsSelected BIT
 	)
 	

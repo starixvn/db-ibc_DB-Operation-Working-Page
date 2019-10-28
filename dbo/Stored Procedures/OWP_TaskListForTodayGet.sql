@@ -23,6 +23,7 @@ AS
 	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20190910@Leo.Vo: Fix issue Fatal error 605 - [Feature: #119987]
+	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 
 */
 BEGIN
@@ -436,14 +437,14 @@ BEGIN
 		,inf.WB AS WatchBet
 		,inf.Channel
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.OtherProviderName AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchOtherProvider AS mop WITH (NOLOCK) ON rs.OtherProviderId = mop.OtherProviderId
 				WHERE mop.OWPMatchId = inf.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS OtherProvider
 		,STUFF((
-				SELECT ', ' + ISNULL(CAST(rs.[ProviderName] AS NVARCHAR(100)), '')
+				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] AS rs WITH (NOLOCK)
 					INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON rs.ProviderId = mp.ProviderId
 				WHERE mp.OWPMatchId = inf.OWPMatchId

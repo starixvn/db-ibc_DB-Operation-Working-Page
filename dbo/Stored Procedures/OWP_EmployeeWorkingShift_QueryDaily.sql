@@ -23,7 +23,7 @@ AS
 	20190604@Kane.Le: Add SiteId - [Feature: #113832]
 	20190703@Kane.Le: Add MinorBettypeId - [Feature: #115390]
 	20191011@Tyler.Dang: Add EmployeeWorkingShiftNote & UserRemark - [Feature: #121901]
-	
+	20191021@Leo.Vo: Edit Provider/ Other Provider upload - [Redmine: #122211]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -262,7 +262,7 @@ BEGIN
 	SELECT m.OWPMatchId
 		,m.MatchNo
 		,STUFF((
-				SELECT ', ' + CAST(op.OtherProviderName AS NVARCHAR(30))
+				SELECT ', ' + op.OtherProviderName
 				FROM dbo.OtherProvider AS op WITH (NOLOCK)
 				WHERE op.OtherProviderId IN (
 						SELECT ot.OtherProviderId
@@ -272,7 +272,7 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 1, '') AS 'OtherProvider'
 		,STUFF((
-				SELECT ', ' + CAST(p.ProviderName AS NVARCHAR(30))
+				SELECT ', ' + p.ProviderName
 				FROM dbo.[Provider] AS p WITH (NOLOCK)
 				WHERE p.ProviderId IN (
 						SELECT p.ProviderId
