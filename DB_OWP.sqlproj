@@ -392,6 +392,7 @@
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_InsertNote.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryNoteById.sql" />
     <Build Include="dbo\Functions\fnc_GetFromDateToDateOfMatch.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ViewLog.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

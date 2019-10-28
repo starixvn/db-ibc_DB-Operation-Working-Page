@@ -32,9 +32,7 @@ AS
 	 20190531@Leo.Vo: Refactor SP [Redmine: #114442]
 	 20190531@Leo.Vo: Add Email info [Redmine: #114047]
 	 20191011@Tyler.Dang: Alter Note to Remark [Redmine: #121878]
-
--- @Note:    
-EXEC OWP_EmployeeWorkingShift_QueryWeekly @FromDate = '2018/03/12', @ToDate = '2018/03/13', @SectionId = N'1,2,3,4';
+	 20191028@Leo.Vo: Get Modified By [Redmine: #122604]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -51,6 +49,12 @@ BEGIN
 		,CategoryName VARCHAR(50)
 		)
 	DECLARE @tblLocation TABLE (LocationCode VARCHAR(10))
+	
+	DECLARE @tblWorkingShiftLogAction TABLE (
+		ActionId INT
+	)
+	INSERT INTO @tblWorkingShiftLogAction (ActionId)
+	VALUES (74), (75), (76), (77), (78), (79), (84), (85), (87), (89)
 
 	-- Get Section filter
 	INSERT INTO @tblSection (
@@ -148,6 +152,7 @@ BEGIN
 		,u.CategoryId
 		,od.OrderId
 		,n.Remark
+		,ISNULL(u2.Nickname, u2.Username) AS ModifiedBy
 	FROM @tblUser AS tmp
 		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON tmp.UserId = u.UserId
 		INNER JOIN @tblSection AS s ON s.SectionId = tmp.SectionId
@@ -155,4 +160,18 @@ BEGIN
 		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.UserId = @OrderUserId
 			AND od.EmployeeId = u.UserId
 			AND od.SectionId = u.SectionId
+		LEFT JOIN (
+			SELECT obj.ObjectId, agg.CreatorId
+			FROM (
+				SELECT DISTINCT _ul.ObjectId
+				FROM dbo.UserLog AS _ul WITH (NOLOCK)
+			) AS obj
+			CROSS APPLY (
+				SELECT TOP(1) _ul.CreatorId, _ul.UserLogId
+				FROM dbo.UserLog AS _ul WITH (NOLOCK)
+				WHERE _ul.ObjectId = obj.ObjectId
+				ORDER BY _ul.UserLogId DESC
+			) AS agg
+		) AS ul ON u.UserId = ul.ObjectId
+		LEFT JOIN dbo.[User] AS u2 WITH (NOLOCK) ON ul.CreatorId = u2.UserId
 END;

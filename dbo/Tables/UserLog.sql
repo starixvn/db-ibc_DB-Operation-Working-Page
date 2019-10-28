@@ -10,3 +10,11 @@
     CONSTRAINT [PK_UserLog] PRIMARY KEY CLUSTERED ([UserLogId] ASC)
 );
 
+
+
+
+GO
+CREATE UNIQUE NONCLUSTERED INDEX [IX_UserLog_ObjectId_UserLogId]
+    ON [dbo].[UserLog]([ObjectId] ASC, [UserLogId] ASC)
+    ON [OWP_Index];
+

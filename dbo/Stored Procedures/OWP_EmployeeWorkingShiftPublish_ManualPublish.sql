@@ -12,7 +12,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
-	20190530@Kane.Le: Initial SP - [Redmine: #110322]	
+	20190530@Kane.Le: Initial SP - [Redmine: #110322]
+	20191025@Carlos.Nguyen: Manual public working shift - [Redmine: #122661]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -55,6 +56,13 @@ BEGIN
 				,ROOT('r')
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	
+	IF(@IsPublished=1)
+	BEGIN
+		DECLARE @CurrentDate DATE = DATEADD(DAY,-7, @FromDate)
+		EXECUTE [dbo].[Task_OWP_SyncDefaultWorkingShift] @CurrentDate, @SectionId
+	END
+	
 
 	UPDATE dbo.EmployeeWorkingShiftPublish
 	WITH (ROWLOCK)
