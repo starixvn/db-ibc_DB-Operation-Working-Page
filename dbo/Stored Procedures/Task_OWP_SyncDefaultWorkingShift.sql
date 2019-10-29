@@ -1,6 +1,8 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift] @CurrentDate DATETIME = NULL
+CREATE PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift]
+	@CurrentDate DATETIME = NULL,
+	@SectionId INT=NULL
 AS
 /*
 Created: 20190213@Raymond.Le
@@ -13,6 +15,7 @@ Revisions:
 	20190513@Leo.Vo: Change rule get default shift - [Redmine: #112737]
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
+	20191025@Carlos.Nguyen: Manual public working shift - [Redmine: #122661]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -87,6 +90,7 @@ BEGIN
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN dbo.EmployeeWorkingShiftDefault AS ds WITH (NOLOCK) ON u.UserId = ds.UserId
 		LEFT JOIN dbo.EmployeeWorkingShiftColor AS sc WITH (NOLOCK) ON ds.ShiftId = sc.ShiftId
+	WHERE (@SectionId IS NULL OR u.SectionId=@SectionId)
 
 	--Update shift start date
 	UPDATE ds WITH (ROWLOCK, UPDLOCK)
