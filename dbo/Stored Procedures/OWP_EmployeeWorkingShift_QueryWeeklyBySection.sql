@@ -15,7 +15,7 @@ AS
 */
 
 BEGIN
-	DECLARE @UserIds VARCHAR(200);
+	DECLARE @UserIds VARCHAR(MAX);
 	
 	SELECT @UserIds = ISNULL(STUFF((
 					SELECT ', ' + CAST(u.UserId AS NVARCHAR)
