@@ -152,7 +152,8 @@ BEGIN
 		,u.CategoryId
 		,od.OrderId
 		,n.Remark
-		,ISNULL(u2.Nickname, u2.Username) AS ModifiedBy
+		,(CASE WHEN ul.CreatorId = 0 THEN 'System' ELSE u2.Username END) AS ModifiedBy
+		,ul.LoggedDate AS ModifiedDate
 	FROM @tblUser AS tmp
 		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON tmp.UserId = u.UserId
 		INNER JOIN @tblSection AS s ON s.SectionId = tmp.SectionId
@@ -161,13 +162,13 @@ BEGIN
 			AND od.EmployeeId = u.UserId
 			AND od.SectionId = u.SectionId
 		LEFT JOIN (
-			SELECT obj.ObjectId, agg.CreatorId
+			SELECT obj.ObjectId, agg.CreatorId, agg.LoggedDate
 			FROM (
 				SELECT DISTINCT _ul.ObjectId
 				FROM dbo.UserLog AS _ul WITH (NOLOCK)
 			) AS obj
 			CROSS APPLY (
-				SELECT TOP(1) _ul.CreatorId, _ul.UserLogId
+				SELECT TOP(1) _ul.CreatorId, _ul.UserLogId, _ul.LoggedDate
 				FROM dbo.UserLog AS _ul WITH (NOLOCK)
 				WHERE _ul.ObjectId = obj.ObjectId
 				ORDER BY _ul.UserLogId DESC
