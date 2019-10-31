@@ -166,10 +166,12 @@ BEGIN
 			FROM (
 				SELECT DISTINCT _ul.ObjectId
 				FROM dbo.UserLog AS _ul WITH (NOLOCK)
+				INNER JOIN @tblWorkingShiftLogAction AS la ON _ul.ActionId = la.ActionId
 			) AS obj
 			CROSS APPLY (
 				SELECT TOP(1) _ul.CreatorId, _ul.UserLogId, _ul.LoggedDate
 				FROM dbo.UserLog AS _ul WITH (NOLOCK)
+				INNER JOIN @tblWorkingShiftLogAction AS la ON _ul.ActionId = la.ActionId
 				WHERE _ul.ObjectId = obj.ObjectId
 				ORDER BY _ul.UserLogId DESC
 			) AS agg
