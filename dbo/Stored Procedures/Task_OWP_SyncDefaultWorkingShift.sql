@@ -2,7 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift]
 	@CurrentDate DATETIME = NULL,
-	@SectionId INT=NULL
+	@SectionId INT=NULL,
+	@ActorId INT = 0
 AS
 /*
 Created: 20190213@Raymond.Le
@@ -193,7 +194,7 @@ BEGIN
 		,Data
 		,DataOld
 		)
-	SELECT 0
+	SELECT @ActorId
 		,@StartRun
 		,UserId
 		,@ActionId

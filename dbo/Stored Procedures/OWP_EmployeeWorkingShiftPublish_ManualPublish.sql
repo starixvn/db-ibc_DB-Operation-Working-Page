@@ -60,7 +60,7 @@ BEGIN
 	IF(@IsPublished=1)
 	BEGIN
 		DECLARE @CurrentDate DATE = DATEADD(DAY,-7, @FromDate)
-		EXECUTE [dbo].[Task_OWP_SyncDefaultWorkingShift] @CurrentDate, @SectionId
+		EXECUTE [dbo].[Task_OWP_SyncDefaultWorkingShift] @CurrentDate, @SectionId, @ActorId
 	END
 	
 
