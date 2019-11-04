@@ -16,8 +16,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Kane.Le: Update Pickup, Address, Level, Refactor SP  [Redmine: #105043]
 	20190402@Kane.Le: Update IsSecondAccount - [Redmine: #11068]	
-	20191014@Kane.Le: Update user per column - [Redmine: #121765]
-	20191031@Kane.Le: Check duplicate EmployeeId - [Redmine: #122604]
+	20191014@Kane.Le: Update user per column - [Redmine: #121765]	 
 
 */
 BEGIN
@@ -174,21 +173,6 @@ BEGIN
 	--Update
 	IF @ColumnName = 'EmployeeId'
 	BEGIN
-
-	IF EXISTS (
-				SELECT TOP 1 u.UserId
-				FROM dbo.[User] AS u WITH (NOLOCK)
-				WHERE u.UserId <> @UserId
-					AND ISNULL(@Value, '') <> ''
-					AND  u.EmployeeId = @Value
-						 
-				)
-		BEGIN
-			SELECT @ErrMsg = 'EmployeeId already exists!'
-				,@ErrCode = 5802
-
-			RETURN
-		END
 
 		UPDATE dbo.[User]
 		WITH (
