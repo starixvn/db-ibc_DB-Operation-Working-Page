@@ -15,6 +15,7 @@ AS
 	20190503@Kane.Le Get IsSecondAccount - [Redmine: #111840]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20191024@Kane.Le: Get EmployeeId - [Feature: #122604]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -30,6 +31,7 @@ BEGIN
 	CREATE TABLE #tblFinalUserId (UserId INT)
 
 	SELECT u.UserId
+		,u.EmployeeId
 		,u.Username
 		,u.Nickname
 		,u.Extension

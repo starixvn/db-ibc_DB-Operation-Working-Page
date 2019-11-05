@@ -12,7 +12,8 @@ AS
  DB: bodb_OWP
 
  Revisions:
-	20190530@Kane.Le: Initial SP - [Redmine: #110322]	
+	20190530@Kane.Le: Initial SP - [Redmine: #110322]
+	20191025@Carlos.Nguyen: Manual public working shift - [Redmine: #122661]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -55,6 +56,13 @@ BEGIN
 				,ROOT('r')
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	
+	IF(@IsPublished=1)
+	BEGIN
+		DECLARE @CurrentDate DATE = DATEADD(DAY,-7, @FromDate)
+		EXECUTE [dbo].[Task_OWP_SyncDefaultWorkingShift] @CurrentDate, @SectionId, @ActorId
+	END
+	
 
 	UPDATE dbo.EmployeeWorkingShiftPublish
 	WITH (ROWLOCK)
@@ -104,11 +112,36 @@ BEGIN
 	SET @EndRun = GETDATE()
 	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
 
-	EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+	CREATE TABLE #tblUserLog (
+		Id INT IDENTITY(1,1) PRIMARY KEY,
+		UserId INT)
+		
+	INSERT INTO #tblUserLog(UserId)
+	SELECT u.UserId
+	FROM dbo.[User] AS u WITH (NOLOCK)
+	WHERE u.SectionId=@SectionId
+
+	DECLARE @rowNum INT,
+		@userId INT
+	
+	SELECT @rowNum = MAX(u.Id)
+	FROM #tblUserLog AS u WITH (NOLOCK)
+	
+	WHILE @rowNum>0
+	BEGIN
+		SELECT TOP 1 @userId= u.UserId
+		FROM #tblUserLog AS u WITH (NOLOCK)
+		WHERE u.Id=@rowNum
+		
+		EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
 		,@SPName = 'OWP_EmployeeWorkingShiftPublish_Update'
 		,@LoggedDate = @StartRun
 		,@Duration = @Duration
-		,@ObjectId = @SectionId
+		,@ObjectId = @userId
 		,@Data = @LogData
 		,@DataOld = @LogDataOld
+		
+		SET @rowNum=@rowNum-1
+	END
+	DROP TABLE #tblUserLog
 END

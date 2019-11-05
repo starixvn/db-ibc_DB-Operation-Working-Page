@@ -16,7 +16,7 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Kane.Le: Update Pickup, Address, Level, Refactor SP  [Redmine: #105043]
 	20190402@Kane.Le: Update IsSecondAccount - [Redmine: #11068]	
-	20191014@Kane.Le: Update user per column - [Redmine: #121765]
+	20191014@Kane.Le: Update user per column - [Redmine: #121765]	 
 
 */
 BEGIN
@@ -173,6 +173,7 @@ BEGIN
 	--Update
 	IF @ColumnName = 'EmployeeId'
 	BEGIN
+
 		UPDATE dbo.[User]
 		WITH (
 				UPDLOCK
