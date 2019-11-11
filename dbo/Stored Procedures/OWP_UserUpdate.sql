@@ -3,7 +3,7 @@
 CREATE PROCEDURE [dbo].[OWP_UserUpdate] @ActorId INT
 	,@UserId INT
 	,@ColumnName NVARCHAR(200) = NULL
-	,@Value VARCHAR(500) = NULL
+	,@Value NVARCHAR(500) = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -16,8 +16,8 @@ Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
 	20181120@Kane.Le: Update Pickup, Address, Level, Refactor SP  [Redmine: #105043]
 	20190402@Kane.Le: Update IsSecondAccount - [Redmine: #11068]	
-	20191014@Kane.Le: Update user per column - [Redmine: #121765]	 
-
+	20191014@Kane.Le: Update user per column - [Redmine: #121765]
+	20191014@Leo.Vo: Support unicode - [Redmine: #123637]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -170,6 +170,7 @@ BEGIN
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 	SET @Value = NULLIF(@Value, '')
+	
 	--Update
 	IF @ColumnName = 'EmployeeId'
 	BEGIN
@@ -212,8 +213,8 @@ BEGIN
 				WHERE u.UserId <> @UserId
 					AND ISNULL(@Value, '') <> ''
 					AND (
-						u.Nickname = @Value
-						OR u.Username = @Value
+						u.Nickname = CAST(@Value AS VARCHAR(30))
+						OR u.Username = CAST(@Value AS VARCHAR(30))
 						)
 				)
 		BEGIN
