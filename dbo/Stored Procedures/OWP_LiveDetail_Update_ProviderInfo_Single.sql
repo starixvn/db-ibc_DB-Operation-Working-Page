@@ -28,6 +28,7 @@ DB: bodb_OWP
 Revisions:
 	20190820@Leo.Vo: Initial SP - [Redmine: #120496]
 	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
+	20191117@Carlos: Fix phone notification - [Feature: #123167]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -142,7 +143,11 @@ BEGIN
 				THEN @Phone
 			ELSE @OldPhone
 			END
-
+			
+	SELECT @OldPhone=mi.Phone
+	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
+	WHERE mi.OWPMatchId=@OWPMatchId
+	
 	UPDATE mi
 	SET mi.Channel = @NewChannel
 		,mi.WB = @NewWB

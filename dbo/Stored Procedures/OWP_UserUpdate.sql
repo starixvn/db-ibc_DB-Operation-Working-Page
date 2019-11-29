@@ -18,6 +18,8 @@ Revisions:
 	20190402@Kane.Le: Update IsSecondAccount - [Redmine: #11068]	
 	20191014@Kane.Le: Update user per column - [Redmine: #121765]
 	20191014@Leo.Vo: Support unicode - [Redmine: #123637]
+	20191125@Carlos.Nguyen:  Update user log - [Redmine: #124371]
+	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -149,19 +151,19 @@ BEGIN
 			SELECT ISNULL(ou.FullName, '') AS '@fn'
 				,ISNULL(ou.NickName, '') AS '@nn'
 				,ISNULL(ou.EmployeeId, '') AS '@eid'
-				,ISNULL(ou.CategoryId, 0) AS '@ca'
+				,ISNULL(CAST(ou.CategoryId AS NVARCHAR), '') AS '@ca'
 				,ISNULL(ou.Extension, '') AS '@ex'
 				,ISNULL(ou.Phone, '') AS '@p'
 				,ISNULL(ou.Email, '') AS '@e'
 				,ISNULL(ou.Skype, '') AS '@s'
-				,ISNULL(ou.DepartmentId, 0) AS '@d'
-				,ISNULL(ou.SectionId, 0) AS '@sec'
-				,ISNULL(ou.GroupId, 0) AS '@grp'
-				,ISNULL(ou.RoleId, 0) AS '@r'
+				,ISNULL(CAST(ou.DepartmentId AS NVARCHAR), '') AS '@d'
+				,ISNULL(CAST(ou.SectionId AS NVARCHAR), '') AS '@sec'
+				,ISNULL(CAST(ou.GroupId AS NVARCHAR), '') AS '@grp'
+				,ISNULL(CAST(ou.RoleId AS NVARCHAR), '') AS '@r'
 				,ISNULL(ou.LocationCode, '') AS '@lo'
-				,ISNULL(ou.Pickup, '') AS '@pk'
+				,ISNULL(CAST(ou.Pickup AS NVARCHAR), '') AS '@pk'
 				,ISNULL(ou.[Address], '') AS '@ad'
-				,ISNULL(ou.[Level], '') AS '@lv'
+				,ISNULL(CAST(ou.[Level] AS NVARCHAR), '') AS '@lv'
 				,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
 			FROM #tblLogData AS ou
 			WHERE ou.RowType = 'OLD'
@@ -246,7 +248,10 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET DepartmentId = @Value
+		SET DepartmentId = CASE
+							WHEN @Value='' THEN NULL
+							ELSE @Value
+						   END
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -262,7 +267,10 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET SectionId = @Value
+		SET SectionId = CASE
+							WHEN @Value='' THEN NULL
+							ELSE @Value
+						   END		   
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -278,7 +286,10 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET GroupId = @Value
+		SET GroupId = CASE
+							WHEN @Value='' THEN NULL
+							ELSE @Value
+						   END
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -358,7 +369,10 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET CategoryId = @Value
+		SET CategoryId = CASE
+							WHEN @Value='' THEN NULL
+							ELSE @Value
+						   END
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -390,11 +404,17 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET Pickup = @Value
+		SET Pickup = CASE
+						WHEN @Value='' THEN NULL
+						ELSE @Value
+					END
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
-		SET Pickup = @Value
+		SET Pickup = CASE
+						WHEN @Value='' THEN NULL
+						ELSE @Value
+					END
 		WHERE RowType = 'NEW'
 	END
 
@@ -406,7 +426,10 @@ BEGIN
 				,ROWLOCK
 				)
 
-		SET [Level] = @Value
+		SET [Level] = CASE
+							WHEN @Value='' THEN NULL
+							ELSE @Value
+						   END
 		WHERE UserId = @UserId
 
 		UPDATE #tblLogData
@@ -474,25 +497,28 @@ BEGIN
 			SELECT ISNULL(ou.FullName, '') AS '@fn'
 				,ISNULL(ou.NickName, '') AS '@nn'
 				,ISNULL(ou.EmployeeId, '') AS '@eid'
-				,ISNULL(ou.CategoryId, 0) AS '@ca'
+				,ISNULL(CAST(ou.CategoryId AS NVARCHAR), '') AS '@ca'
 				,ISNULL(ou.Extension, '') AS '@ex'
 				,ISNULL(ou.Phone, '') AS '@p'
 				,ISNULL(ou.Email, '') AS '@e'
 				,ISNULL(ou.Skype, '') AS '@s'
-				,ISNULL(ou.DepartmentId, 0) AS '@d'
-				,ISNULL(ou.SectionId, 0) AS '@sec'
-				,ISNULL(ou.GroupId, 0) AS '@grp'
-				,ISNULL(ou.RoleId, 0) AS '@r'
+				,ISNULL(CAST(ou.DepartmentId AS NVARCHAR), '') AS '@d'
+				,ISNULL(CAST(ou.SectionId AS NVARCHAR), '') AS '@sec'
+				,ISNULL(CAST(ou.GroupId AS NVARCHAR), '') AS '@grp'
+				,ISNULL(CAST(ou.RoleId AS NVARCHAR), '') AS '@r'
 				,ISNULL(ou.LocationCode, '') AS '@lo'
-				,ISNULL(ou.Pickup, '') AS '@pk'
+				,ISNULL(CAST(ou.Pickup AS NVARCHAR), '') AS '@pk'
 				,ISNULL(ou.[Address], '') AS '@ad'
-				,ISNULL(ou.[Level], '') AS '@lv'
+				,ISNULL(CAST(ou.[Level] AS NVARCHAR), '') AS '@lv'
 				,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
 			FROM #tblLogData AS ou
 			WHERE ou.RowType = 'NEW'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
+	SELECT @Xml
+	
+	
 	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 	SET @EndRun = GETDATE()
 	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)

@@ -16,6 +16,7 @@ AS
 	20190403@Raymond.Le: Correct data type for columns - [Redmine: #111068]
 	20190918@Kane.Le: Update AgentIds - [Redmine: #120415]
 	20191014@Leo.Vo: Fix issue job failed - [Redmine: #121722]
+	20191108@Leo.Vo: Add venue - [Redmine: #123167]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -48,6 +49,7 @@ BEGIN
 		,[Round] [nvarchar](2000) NULL
 		,[Division] [nvarchar](2000) NULL
 		,[Agent] [nvarchar](2000) NULL
+		,[Venue] [nvarchar](100) NULL
 		,[TV] [nvarchar](2000) NULL
 		,[Channel] [nvarchar](100) NULL
 		,[WB] [nvarchar](100) NULL
@@ -72,6 +74,7 @@ BEGIN
 		,[Round]
 		,[Division]
 		,[Agent]
+		,[Venue]
 		,[TV]
 		,[Channel]
 		,[WB]
@@ -89,6 +92,7 @@ BEGIN
 		,[Round]
 		,[Division]
 		,[Agent]
+		,[Venue]
 		,[LocalTV]
 		,[LiveTV]
 		,[WatchBet]
@@ -106,6 +110,7 @@ BEGIN
 			,[Round] [nvarchar](2000)
 			,[Division] [nvarchar](2000)
 			,[Agent] [nvarchar](2000)
+			,[Venue] [nvarchar](100)
 			,[LocalTV] [nvarchar](2000)
 			,[LiveTV] [nvarchar](100)
 			,[WatchBet] [nvarchar](100)
@@ -278,6 +283,7 @@ BEGIN
 			,[Round]
 			,[Division]
 			,[Agent]
+			,[Venue]
 			,[TV]
 			,[Channel]
 			,[WB]
@@ -305,6 +311,7 @@ BEGIN
 				,t.[Round] = s.[Round]
 				,t.[Division] = s.[Division]
 				,t.[Agent] = s.[Agent]
+				,t.[Venue] = s.[Venue]
 				,t.[TV] = s.[TV]
 				,t.[Channel] = s.[Channel]
 				,t.[WB] = s.[WB]
@@ -330,6 +337,7 @@ BEGIN
 				,[Round]
 				,[Division]
 				,[Agent]
+				,[Venue]
 				,[TV]
 				,[Channel]
 				,[WB]
@@ -354,6 +362,7 @@ BEGIN
 				,s.[Round]
 				,s.[Division]
 				,s.[Agent]
+				,s.[Venue]
 				,s.[TV]
 				,s.[Channel]
 				,s.[WB]

@@ -2,6 +2,7 @@
 CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Insert] @UserId INT
 	,@SessionId VARCHAR(50)
 	,@AssignmentUploadDoc NVARCHAR(MAX)
+	,@IsUploadAssignment BIT
 AS
 /*          
  Created: 20170214@Razor.Nguyen
@@ -24,6 +25,7 @@ AS
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20190718@Leo.Vo: Add total row uploaded - [Redmine: #117098]
+	20191113@Carlos.Nguyen: BE/FE/DB Upload FM & AIO - [Redmine: #123790]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -447,6 +449,7 @@ BEGIN
 		,TotalRowUpload
 		,TotalRowResult
 		,[Status]
+		,IsUploadPHAssignment
 		)
 	VALUES (
 		@SessionId
@@ -454,5 +457,6 @@ BEGIN
 		,@totalRowUpload
 		,@totalRow * @totalRule
 		,0
+		,@IsUploadAssignment
 		)
 END

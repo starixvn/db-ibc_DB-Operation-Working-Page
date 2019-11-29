@@ -40,6 +40,7 @@ AS
 	20191003@Leo.Vo: Update lock hint - [Redmine: #121438]
 	20191018@Kane.Le: Fix temp table cannot drop - [Redmine: #122194]
 	20191021@Tyler.Dang: Edit Provider/ Other Provider upload - [Redmine: #122211]
+	20191113@Leo.Vo: handle setting to upload PH assignment
 */
 BEGIN
 	SET NOCOUNT ON
@@ -144,8 +145,13 @@ BEGIN
 		,@EditVenueMessageTypeId INT = 23
 		,@EditWBMessageTypeId INT = 16
 		,@TempEventDate DATETIME
+		,@IsUploadPHAssignment BIT = 0
 
 	SELECT @Username = dbo.fnc_GetUsernameByUserId(@UserId)
+	
+	SELECT @IsUploadPHAssignment = IsUploadPHAssignment
+	FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
+	WHERE SessionId = @SessionId
 
 	--Get event upload date
 	SELECT TOP 1 @EventDate = CASE 
@@ -488,6 +494,7 @@ BEGIN
 	--list of MatchSetting from upload data
 	CREATE TABLE #tblMatchSetting (
 		OWPMatchId INT NOT NULL
+		,MinorBettypeId INT
 		,BetType INT NOT NULL
 		,MaxBet MONEY
 		,MaxBetCN88 MONEY
@@ -519,6 +526,7 @@ BEGIN
 	--list of Assignment from upload data
 	CREATE TABLE #tblAssignment (
 		OWPMatchId INT NOT NULL
+		,MinorBettypeId INT
 		,BetType INT NOT NULL
 		,AssignmentType INT NOT NULL
 		,UserId INT
@@ -2236,6 +2244,7 @@ BEGIN
 		-- Fill MatchSetting of upload matches
 		INSERT INTO #tblMatchSetting (
 			OWPMatchId
+			,MinorBetTypeId
 			,BetType
 			,MaxBet
 			,Spread
@@ -2243,6 +2252,7 @@ BEGIN
 			,SpreadCN88
 			)
 		SELECT OWPMatchId
+			,MinorBetTypeId
 			,1
 			,MaxBetHDP
 			,SpreadHDP
@@ -2257,6 +2267,7 @@ BEGIN
 		UNION ALL
 		
 		SELECT OWPMatchId
+			,MinorBetTypeId
 			,3
 			,MaxBetOU
 			,SpreadOU
@@ -2271,6 +2282,7 @@ BEGIN
 		UNION ALL
 		
 		SELECT OWPMatchId
+			,MinorBetTypeId
 			,5
 			,MaxBet1X2
 			,Spread1X2
@@ -2285,6 +2297,7 @@ BEGIN
 		UNION ALL
 		
 		SELECT OWPMatchId
+			,MinorBetTypeId
 			,7
 			,MaxBet1HHDP
 			,Spread1HHDP
@@ -2299,6 +2312,7 @@ BEGIN
 		UNION ALL
 		
 		SELECT OWPMatchId
+			,MinorBetTypeId
 			,8
 			,MaxBet1HOU
 			,Spread1HOU
@@ -2313,6 +2327,7 @@ BEGIN
 		UNION ALL
 		
 		SELECT OWPMatchId
+			,MinorBetTypeId
 			,15
 			,MaxBet1H1X2
 			,Spread1H1X2
@@ -2375,6 +2390,7 @@ BEGIN
 		MERGE dbo.MatchSetting WITH (ROWLOCK) AS ms
 		USING (
 			SELECT OWPMatchId
+				,MinorBettypeId
 				,BetType
 				,MaxBet
 				,Spread
@@ -2391,13 +2407,14 @@ BEGIN
 				OR ISNULL(ms.MaxBetCN88, - 1) <> ISNULL(tms.MaxBetCN88, - 1)
 				OR ISNULL(ms.SpreadCN88, - 1) <> ISNULL(tms.SpreadCN88, - 1)
 				)
+			AND (@IsUploadPHAssignment = 1 OR tms.MinorBettypeId IS NULL OR tms.MinorBettypeId NOT IN (@FastMarket, @AllInOne))
 			THEN
 				UPDATE
 				SET ms.MaxBet = tms.MaxBet
 					,ms.Spread = tms.Spread
 					,ms.MaxBetCN88 = tms.MaxBetCN88
 					,ms.SpreadCN88 = tms.SpreadCN88
-		WHEN NOT MATCHED BY TARGET
+		WHEN NOT MATCHED BY TARGET AND (@IsUploadPHAssignment = 1 OR tms.MinorBettypeId IS NULL OR tms.MinorBettypeId NOT IN (@FastMarket, @AllInOne))
 			THEN
 				INSERT (
 					OWPMatchId
@@ -2447,15 +2464,17 @@ BEGIN
 				ELSE deleted.SpreadCN88
 				END
 		INTO #tblMatchSettingLog;
-
+		
 		-- Fill main assignment of upload matches
 		INSERT INTO #tblAssignment (
 			OWPMatchId
+			,MinorBettypeId
 			,BetType
 			,AssignmentType
 			,UserId
 			)
 		SELECT OWPMatchId
+			,MinorBetTypeId
 			,(
 				CASE TraderBettype
 					WHEN 'TraderHDP'
@@ -2493,12 +2512,14 @@ BEGIN
 		-- Fill other assignment of upload matches
 		INSERT INTO #tblAssignment (
 			OWPMatchId
+			,MinorBettypeId
 			,BetType
 			,AssignmentType
 			,UserId
 			,AssignmentNote
 			)
 		SELECT m.OWPMatchId
+			,m.MinorBetTypeId
 			,ot.Bettype
 			,2
 			,u.UserId
@@ -2536,6 +2557,7 @@ BEGIN
 		FROM dbo.Assignment AS a WITH (ROWLOCK)
 		INNER JOIN #tblMatch AS m ON a.OWPMatchId = m.OWPMatchId
 		WHERE a.AssignmentType = 2
+			AND (@IsUploadPHAssignment = 1 OR m.MinorBettypeId IS NULL OR m.MinorBettypeId NOT IN (@FastMarket, @AllInOne))
 
 		-- Delete old main assignment of upload matches (match uploaded but assignment not be included)
 		DELETE a
@@ -2552,11 +2574,13 @@ BEGIN
 		LEFT JOIN #tblAssignment AS ta ON a.OWPMatchId = ta.OWPMatchId
 			AND a.BetType = ta.BetType
 		WHERE ta.OWPMatchId IS NULL
+			AND (@IsUploadPHAssignment = 1 OR m.MinorBettypeId IS NULL OR m.MinorBettypeId NOT IN (@FastMarket, @AllInOne))
 
 		-- Insert or update main assignment of upload matches
 		MERGE dbo.Assignment WITH (ROWLOCK) AS a
 		USING (
 			SELECT OWPMatchId
+				,MinorBettypeId
 				,BetType
 				,UserId
 			FROM #tblAssignment
@@ -2566,10 +2590,11 @@ BEGIN
 				AND a.BetType = ta.BetType
 		WHEN MATCHED
 			AND a.UserId <> ta.UserId
+			AND (@IsUploadPHAssignment = 1 OR ta.MinorBettypeId IS NULL OR ta.MinorBettypeId NOT IN (@FastMarket, @AllInOne))
 			THEN
 				UPDATE
 				SET a.UserId = ta.UserId
-		WHEN NOT MATCHED BY TARGET
+		WHEN NOT MATCHED BY TARGET AND (@IsUploadPHAssignment = 1 OR ta.MinorBettypeId IS NULL OR ta.MinorBettypeId NOT IN (@FastMarket, @AllInOne))
 			THEN
 				INSERT (
 					OWPMatchId
@@ -2629,6 +2654,7 @@ BEGIN
 		FROM #tblAssignment AS ta
 		INNER JOIN #tblMatch AS m ON ta.OWPMatchId = m.OWPMatchId
 		WHERE ta.AssignmentType = 2
+			AND (@IsUploadPHAssignment = 1 OR ta.MinorBettypeId IS NULL OR ta.MinorBetTypeId NOT IN (@FastMarket, @AllInOne))
 
 		-- when other assignment of upload match has changed and we remove other assignment and insert new other assignment.
 		-- So we need compare before & after to get changed (DELETE or INSERT). Note: can't detect case UPDATE

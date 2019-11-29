@@ -36,6 +36,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190820@Leo.Vo: Initial SP - [Redmine: #120496]
+	20191118@Leo.Vo: Update InfositeMatch only main match - [Redmine: #123167]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -185,10 +186,14 @@ BEGIN
 			END
 
 	UPDATE m
-	SET m.InfoSiteMatchId = @NewInfoSiteMatchId
-		,m.OtherTime = @NewOtherTime
+	SET m.OtherTime = @NewOtherTime
 	FROM dbo.OWPMatch AS m WITH (ROWLOCK)
 		INNER JOIN @tblRelevantMatches AS rm ON m.OWPMatchId = rm.OWPMatchId
+		
+	UPDATE m
+	SET m.InfoSiteMatchId = @NewInfoSiteMatchId
+	FROM dbo.OWPMatch AS m WITH (ROWLOCK)
+	WHERE m.OWPMatchId = @OWPMatchId
 
 	UPDATE mi
 	SET mi.Remark = @NewRemark

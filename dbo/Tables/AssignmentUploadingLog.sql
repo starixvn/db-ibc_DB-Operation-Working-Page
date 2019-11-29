@@ -1,15 +1,18 @@
 ﻿CREATE TABLE [dbo].[AssignmentUploadingLog] (
-    [SessionId]      VARCHAR (50)  NOT NULL,
-    [UserId]         INT           NOT NULL,
-    [TotalRowResult] INT           NOT NULL,
-    [CreatedDate]    DATETIME      CONSTRAINT [DF_AssignmentUploadingLog_CreatedDate] DEFAULT (getdate()) NOT NULL,
-    [StartDate]      DATETIME      NULL,
-    [EndDate]        DATETIME      NULL,
-    [Status]         TINYINT       NOT NULL,
-    [LogMessage]     VARCHAR (MAX) CONSTRAINT [DF_AssignmentUploadingLog_LogMessage] DEFAULT ('') NOT NULL,
-    [TotalRowUpload] INT           CONSTRAINT [DF_AssignmentUploadingLog_TotalRowUpload] DEFAULT ((0)) NOT NULL,
+    [SessionId]            VARCHAR (50)  NOT NULL,
+    [UserId]               INT           NOT NULL,
+    [TotalRowResult]       INT           NOT NULL,
+    [CreatedDate]          DATETIME      CONSTRAINT [DF_AssignmentUploadingLog_CreatedDate] DEFAULT (getdate()) NOT NULL,
+    [StartDate]            DATETIME      NULL,
+    [EndDate]              DATETIME      NULL,
+    [Status]               TINYINT       NOT NULL,
+    [LogMessage]           VARCHAR (MAX) CONSTRAINT [DF_AssignmentUploadingLog_LogMessage] DEFAULT ('') NOT NULL,
+    [TotalRowUpload]       INT           CONSTRAINT [DF_AssignmentUploadingLog_TotalRowUpload] DEFAULT ((0)) NOT NULL,
+    [IsUploadPHAssignment] BIT           CONSTRAINT [DF_AssignmentUploadingLogg_IsUploadPHAssignment] DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_AssignmentUploadingLog] PRIMARY KEY CLUSTERED ([SessionId] ASC)
 );
+
+
 
 
 

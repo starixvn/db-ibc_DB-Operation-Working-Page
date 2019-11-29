@@ -10,6 +10,7 @@ AS
 
  Revisions:
     20180725@Raymond.Le: Missing main assignment of {bet type} - [Redmine: #92868]
+    20191113@Leo.Vo: handle setting to upload PH assignment
 */
 BEGIN
 	SET NOCOUNT ON
@@ -53,6 +54,11 @@ BEGIN
 	-- upload
 	IF LEN(@SessionId) > 0
 	BEGIN
+		DECLARE @IsUploadPHAssignment BIT = 0
+		SELECT @IsUploadPHAssignment = IsUploadPHAssignment
+		FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
+		WHERE SessionId = @SessionId
+		
 		INSERT INTO #tblAssignmentUploading (
 			RowNumber
 			,InvalidBettype
@@ -86,10 +92,12 @@ BEGIN
 				WHEN unpvt.ColumnName = 'Trader10Mins'
 					AND ot.OtherTraders10Mins IS NOT NULL
 					AND CAST(ot.OtherTraders10Mins AS NVARCHAR(MAX)) != '' THEN '10Mins'
-				WHEN unpvt.ColumnName = 'TraderFM'
+				WHEN @IsUploadPHAssignment = 1
+					AND unpvt.ColumnName = 'TraderFM'
 					AND ot.OtherTradersFM IS NOT NULL
 					AND CAST(ot.OtherTradersFM AS NVARCHAR(MAX)) != '' THEN 'FM'
-				WHEN unpvt.ColumnName = 'TraderAIO'
+				WHEN @IsUploadPHAssignment = 1
+					AND unpvt.ColumnName = 'TraderAIO'
 					AND ot.OtherTradersAIO IS NOT NULL
 					AND CAST(ot.OtherTradersAIO AS NVARCHAR(MAX)) != '' THEN 'AIO'
 				END

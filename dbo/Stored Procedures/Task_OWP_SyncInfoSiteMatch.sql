@@ -22,6 +22,7 @@ AS
 	20190918@Kane.Le: Update AgentIds - [Redmine: #120415]
 	20191014@Leo.Vo: Fix issue job failed - [Redmine: #121722]
 	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
+	20191108@Leo.Vo: Sync venue - [Feature: #123167]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -452,7 +453,7 @@ BEGIN
 		WHERE l.OWPMatchId = m.OWPMatchId
 	)
 
-	-- sync Round, Division, Channel, WB, Website1, Website2, Website3, Website4
+	-- sync Round, Division, Channel, WB, Venue, Website1, Website2, Website3, Website4
 	INSERT INTO #tblMessageChangeLog (
 		OWPMatchId
 		,OldValue
@@ -484,6 +485,16 @@ BEGIN
 		,mi.Channel
 		,im.Channel
 		,'EditChannel'
+	FROM #tblMatch AS m
+	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+	INNER JOIN dbo.InfoSiteMatch AS im WITH (NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
+	
+	UNION ALL
+	
+	SELECT m.OWPMatchId
+		,mi.Venue
+		,im.Venue
+		,'EditVenue'
 	FROM #tblMatch AS m
 	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
 	INNER JOIN dbo.InfoSiteMatch AS im WITH (NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
@@ -543,6 +554,7 @@ BEGIN
 		,mi.Division = im.Division
 		,mi.Channel = im.Channel
 		,mi.WB = im.WB
+		,mi.Venue = im.Venue
 		,mi.Website1 = im.Website1
 		,mi.Website2 = im.Website2
 		,mi.Website3 = im.Website3

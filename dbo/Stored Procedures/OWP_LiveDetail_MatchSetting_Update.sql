@@ -22,6 +22,7 @@ Revisions:
 	20190819@Carlos: Initial SP - [Feature: #118856]
 	20190927@Leo.Vo: Write log - [Feature: #120415]
 	20191021@Leo.Vo: Fix error to compare NULL - [Feature: #120415]
+	20191125@Kane.Le: Cast Maxbet to Float - [Feature: #123167]
 */
 BEGIN
 	DECLARE @minorMatchId INT
@@ -231,12 +232,12 @@ BEGIN
 
 			IF (@Maxbet IS NOT NULL)
 			BEGIN
-				SET @MaxbetFormatK = CAST(@Maxbet / 1000 AS NVARCHAR) + 'K'
+				SET @MaxbetFormatK = CONVERT(VARCHAR, CAST(@Maxbet / 1000 AS FLOAT)) + 'K'
 			END
 
 			IF (@OldMaxbet IS NOT NULL)
 			BEGIN
-				SET @OldMaxbetFormatK = CAST(@OldMaxbet / 1000 AS NVARCHAR) + 'K'
+				SET @OldMaxbetFormatK = CONVERT(VARCHAR, CAST(@OldMaxbet / 1000 AS FLOAT)) + 'K'
 			END
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
@@ -273,12 +274,12 @@ BEGIN
 
 			IF (@MaxbetCN88 IS NOT NULL)
 			BEGIN
-				SET @MaxbetCN88FormatK = CAST(@MaxbetCN88 / 1000 AS NVARCHAR) + 'K'
+				SET @MaxbetCN88FormatK =  CONVERT(VARCHAR, CAST(@MaxbetCN88 / 1000 AS FLOAT)) + 'K'
 			END
 
 			IF (@OldMaxbetCN88 IS NOT NULL)
 			BEGIN
-				SET @OldMaxbetCN88FormatK = CAST(@OldMaxbetCN88 / 1000 AS NVARCHAR) + 'K'
+				SET @OldMaxbetCN88FormatK = CONVERT(VARCHAR, CAST(@OldMaxbetCN88 / 1000 AS FLOAT)) + 'K'
 			END
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
@@ -315,12 +316,12 @@ BEGIN
 
 			IF (@Spread IS NOT NULL)
 			BEGIN
-				SET @SpreadFormatPercent = CAST(@Spread * 100 AS NVARCHAR) + '%'
+				SET @SpreadFormatPercent = CONVERT(VARCHAR, CAST(@Spread * 100 AS FLOAT)) + '%'
 			END
 
 			IF (@OldSpread IS NOT NULL)
 			BEGIN
-				SET @OldSpreadFormatPercent = CAST(@OldSpread * 100 AS NVARCHAR) + '%'
+				SET @OldSpreadFormatPercent = CONVERT(VARCHAR, CAST(@OldSpread * 100 AS FLOAT)) + '%'
 			END
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
@@ -357,12 +358,12 @@ BEGIN
 
 			IF (@SpreadCN88 IS NOT NULL)
 			BEGIN
-				SET @SpreadCN88FormatPercent = CAST(@SpreadCN88 * 100 AS NVARCHAR) + '%'
+				SET @SpreadCN88FormatPercent = CONVERT(VARCHAR, CAST(@SpreadCN88 * 100 AS FLOAT)) + '%'
 			END
 
 			IF (@OldSpreadCN88 IS NOT NULL)
 			BEGIN
-				SET @OldSpreadCN88FormatPercent = CAST(@OldSpreadCN88 * 100 AS NVARCHAR) + '%'
+				SET @OldSpreadCN88FormatPercent = CONVERT(VARCHAR,  CAST(@OldSpreadCN88 * 100 AS FLOAT)) + '%'
 			END
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)

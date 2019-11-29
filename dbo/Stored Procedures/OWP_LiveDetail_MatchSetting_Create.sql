@@ -22,6 +22,7 @@ Revisions:
 	20190819@Carlos: Initial SP - [Feature: #118856]
 	20190927@Leo.Vo: Write log - [Feature: #120415]
 	20191021@Leo.Vo: Fix error to compare NULL - [Feature: #120415]
+	20191125@Kane.Le: Cast Maxbet to Float - [Feature: #123167]
 */
 BEGIN
 	DECLARE @minorMatchId INT
@@ -189,7 +190,7 @@ BEGIN
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CAST(@Maxbet / 1000 AS NVARCHAR) + 'K')
+			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CONVERT(VARCHAR, CAST(@Maxbet /1000 AS FLOAT)) + 'K')
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', '')
 
 			EXEC dbo.OWP_MessageInsert @UserId = @UserId
@@ -218,7 +219,7 @@ BEGIN
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CAST(@MaxbetCN88 / 1000 AS NVARCHAR) + 'K')
+			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CONVERT(VARCHAR, CAST(@MaxbetCN88 /1000 AS FLOAT))  + 'K')
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', '')
 
 			EXEC dbo.OWP_MessageInsert @UserId = @UserId
@@ -247,7 +248,7 @@ BEGIN
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CAST(@Spread * 100 AS NVARCHAR) + '%')
+			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CONVERT(VARCHAR, CAST(@Spread * 100 AS FLOAT)) + '%')
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', '')
 
 			EXEC dbo.OWP_MessageInsert @UserId = @UserId
@@ -276,7 +277,7 @@ BEGIN
 
 			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CAST(@SpreadCN88 * 100 AS NVARCHAR) + '%')
+			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', CONVERT(VARCHAR, CAST(@SpreadCN88 * 100 AS FLOAT)) + '%')
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', '')
 
 			EXEC dbo.OWP_MessageInsert @UserId = @UserId
