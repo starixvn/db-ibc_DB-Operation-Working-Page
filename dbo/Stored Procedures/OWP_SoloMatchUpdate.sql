@@ -10,6 +10,7 @@ AS
    20170420@Tim.Trinh: fix bug
    20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
    20191125@Carlos.Nguyen:  Change strategy log - [Redmine: #124374]
+   20191203@Carlos.Nguyen:  Update condition detect solo match - [Redmine: #124861]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -61,7 +62,12 @@ BEGIN
 		
 		SELECT TOP 1 @isSolo=0
 		FROM #tblMajorMatch AS mm WITH (NOLOCK)
-		WHERE mm.id<>@i AND ABS(DATEDIFF(MINUTE,mm.eventdatetime,@eventdatetime))<=60
+		WHERE mm.id<>@i AND 1=CASE
+							WHEN (@eventdatetime>=mm.eventdatetime AND DATEDIFF(MINUTE,mm.eventdatetime,@eventdatetime)<=120)
+								OR
+							 (mm.eventdatetime>=mm.eventdatetime AND DATEDIFF(MINUTE,@eventdatetime,mm.eventdatetime)<=60) THEN 1
+							ELSE 0
+							END
 		
 		INSERT INTO #tblSoloMatch(owpmatchid
 			,isSolo)
