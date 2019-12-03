@@ -65,7 +65,7 @@ BEGIN
 		WHERE mm.id<>@i AND 1=CASE
 							WHEN (@eventdatetime>=mm.eventdatetime AND DATEDIFF(MINUTE,mm.eventdatetime,@eventdatetime)<=120)
 								OR
-							 (mm.eventdatetime>=mm.eventdatetime AND DATEDIFF(MINUTE,@eventdatetime,mm.eventdatetime)<=60) THEN 1
+							 (mm.eventdatetime>=@eventdatetime AND DATEDIFF(MINUTE,@eventdatetime,mm.eventdatetime)<=60) THEN 1
 							ELSE 0
 							END
 		
