@@ -13,6 +13,7 @@ Revisions:
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20190917@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20191015@Kane.Le: Update rule User Staff Level - [Redmine: #121765]
+	20190512@Kane.Le: Update ExtraTime, Venue [Redmine: #124940]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -35,27 +36,43 @@ BEGIN
 		UserId INT
 		,[Level] INT
 		,SpeakChinese BIT
+		,SpeakEnglish BIT
+		,[Location] NVARCHAR(50)
+		,LanguageId NVARCHAR(50)
 		)
 
 	INSERT INTO #tblUser (
 		UserId
 		,[Level]
-		,SpeakChinese
+	 
+		,[Location]
+		,LanguageId
 		)
 	SELECT ou.UserId
 		,ISNULL(ou.[Level], @NullLevelId)
-		,CASE 
-			WHEN LocationCode = 'CTI' THEN 1
-			ELSE 0
-			END
+		
+			,ou.LocationCode
+			,ou.LanguageId
 	FROM dbo.[User] AS ou WITH (NOLOCK)  
 	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 	WHERE LocationCode IS NOT NULL
 		AND SectionId = @LASection
 		AND (ur.RoleId = 1 OR ur.RoleId IS NULL)
+
+
 	SELECT UserId
 		,[Level]
-		,SpeakChinese
+		,(CASE 
+			WHEN Location = 'CTI' THEN 1
+			ELSE 0
+			END) AS SpeakChinese
+			,(CASE 
+			WHEN Location = 'SMS' THEN 1
+			ELSE 0
+			END) AS SpeakEnglish
+		 
+		,[Location] AS 'Location'
+		,LanguageId
 	FROM #tblUser
 
 	SELECT u.UserId

@@ -13,6 +13,7 @@ Revisions:
 	20190618@Leo.Vo: Add MatchSolo & filter only Live match [Redmine: #114614]
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
+	20190512@Kane.Le: Update ExtraTime, Venue [Redmine: #124940]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -197,11 +198,12 @@ BEGIN
 	-- return match list
 	SELECT m.ParentMatchId AS MatchId
 		,om.EventDateTime AS KOTime
+		,om.OtherTime
 		,ISNULL(m.MinorBettypeId, 0) AS SchedulingBettypeId
 		,m.HasTV
 		,m.Maxbet
 		,mi.IsSoloMatch
-		,m.IsMajorLeague
+		,m.IsMajorLeague		
 		,ISNULL(p.Provider, CASE 
 				WHEN EXISTS (
 						SELECT 1
@@ -210,6 +212,11 @@ BEGIN
 						) THEN CAST(@Provider_Other AS VARCHAR(10))
 				ELSE ''
 				END) AS Provider
+		,CASE 
+				WHEN LOWER(mi.Remark) LIKE '%et%' OR LOWER(mi.Remark) LIKE '%pk%' THEN 1
+				ELSE 0
+				END AS ExtraTime				 
+		,mi.Venue AS Venue
 	FROM #tblMatch AS m
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.ParentMatchId = om.OWPMatchId
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
