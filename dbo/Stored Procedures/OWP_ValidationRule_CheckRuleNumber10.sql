@@ -10,7 +10,7 @@ AS
 
  Revisions:
     20180725@Raymond.Le: Missing main assignment of {bet type} - [Redmine: #92868]
-    20191113@Leo.Vo: handle setting to upload PH assignment
+    20191113@Leo.Vo: handle setting to upload PH assignment - [Redmine: #123167]
 */
 BEGIN
 	SET NOCOUNT ON
