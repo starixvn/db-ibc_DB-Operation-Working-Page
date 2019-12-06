@@ -26,7 +26,7 @@ Revisions:
 	20190718@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
 	20190719@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
 	20191011@Kane.Le: Get User Group - [Redmine: #121765]
-	
+	20191206@Carlos.Nguyen:  Update language - [Redmine: #124940]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -108,7 +108,7 @@ BEGIN
 		SELECT RowNumber, UserId
 		FROM #tblUserId WITH (NOLOCK)
 	END
-
+	
 	SELECT u.UserId
 		,u.Username
 		,u.ProfilePic
@@ -135,6 +135,7 @@ BEGIN
 		,u.GroupId
 		,ugr.[Value] AS 'GroupName'
 		,u.IsSecondAccount
+		,u.LanguageId
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblFinalUserId AS ul ON ul.UserId = u.UserId
 		LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = u.UserId
@@ -154,8 +155,7 @@ BEGIN
 
 	-- total item
 	SELECT @TotalRecords = COUNT(1)
-	FROM #tblUserId
-
+	FROM #tblUserId	 
 	DROP TABLE #tblUserId
 
 	DROP TABLE #tblFinalUserId

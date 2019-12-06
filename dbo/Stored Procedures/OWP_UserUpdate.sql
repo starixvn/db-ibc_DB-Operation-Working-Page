@@ -19,6 +19,7 @@ Revisions:
 	20191014@Kane.Le: Update user per column - [Redmine: #121765]
 	20191014@Leo.Vo: Support unicode - [Redmine: #123637]
 	20191125@Carlos.Nguyen:  Update user log - [Redmine: #124371]
+	20191206@Carlos.Nguyen:  Update language - [Redmine: #124940]
 	
 */
 BEGIN
@@ -70,6 +71,7 @@ BEGIN
 		,[RoleId] SMALLINT NULL
 		,[IsSecondAccount] BIT NOT NULL
 		,[GroupId] INT NULL
+		,[LanguageId] NVARCHAR(500) NULL
 		);
 
 	SET @StartRun = GETDATE()
@@ -96,6 +98,7 @@ BEGIN
 		,[RoleId]
 		,[IsSecondAccount]
 		,[GroupId]
+		,[LanguageId]
 		)
 	SELECT 'OLD'
 		,@UserId
@@ -117,6 +120,7 @@ BEGIN
 		,ur.RoleId
 		,ou.IsSecondAccount
 		,ou.GroupId
+		,ou.LanguageId
 	FROM [User] ou WITH (NOLOCK)
 	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 	WHERE ou.UserId = @UserId
@@ -143,6 +147,7 @@ BEGIN
 		,ur.RoleId
 		,ou.IsSecondAccount
 		,ou.GroupId
+		,ou.LanguageId
 	FROM [User] ou WITH (NOLOCK)
 	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 	WHERE ou.UserId = @UserId
@@ -165,6 +170,7 @@ BEGIN
 				,ISNULL(ou.[Address], '') AS '@ad'
 				,ISNULL(CAST(ou.[Level] AS NVARCHAR), '') AS '@lv'
 				,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
+				,ISNULL(ou.[LanguageId], '') AS '@lang'
 			FROM #tblLogData AS ou
 			WHERE ou.RowType = 'OLD'
 			FOR XML PATH('z')
@@ -492,6 +498,24 @@ BEGIN
 		WHERE RowType = 'NEW'
 	END
 
+IF @ColumnName = 'Language'
+	BEGIN
+		UPDATE dbo.[User]
+		WITH (
+				UPDLOCK
+				,ROWLOCK
+				)
+
+		SET LanguageId = CASE
+							WHEN @Value='' THEN NULL
+							ELSE @Value
+						   END
+		WHERE UserId = @UserId
+
+		UPDATE #tblLogData
+		SET [LanguageId] = @Value
+		WHERE RowType = 'NEW'
+	END
 	--New data
 	SET @Xml = (
 			SELECT ISNULL(ou.FullName, '') AS '@fn'
@@ -511,6 +535,7 @@ BEGIN
 				,ISNULL(ou.[Address], '') AS '@ad'
 				,ISNULL(CAST(ou.[Level] AS NVARCHAR), '') AS '@lv'
 				,ISNULL(ou.[IsSecondAccount], '') AS '@sa'
+				,ISNULL(ou.[LanguageId], '') AS '@lang'
 			FROM #tblLogData AS ou
 			WHERE ou.RowType = 'NEW'
 			FOR XML PATH('z')
