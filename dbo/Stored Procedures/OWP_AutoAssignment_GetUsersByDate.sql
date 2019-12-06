@@ -38,7 +38,7 @@ BEGIN
 		,SpeakChinese BIT
 		,SpeakEnglish BIT
 		,[Location] NVARCHAR(50)
-		,LanguageId NVARCHAR(50)
+		,LanguageId VARCHAR(10)
 		)
 
 	INSERT INTO #tblUser (
@@ -49,8 +49,7 @@ BEGIN
 		,LanguageId
 		)
 	SELECT ou.UserId
-		,ISNULL(ou.[Level], @NullLevelId)
-		
+		,ISNULL(ou.[Level], @NullLevelId)		
 			,ou.LocationCode
 			,ou.LanguageId
 	FROM dbo.[User] AS ou WITH (NOLOCK)  
@@ -63,16 +62,15 @@ BEGIN
 	SELECT UserId
 		,[Level]
 		,(CASE 
-			WHEN Location = 'CTI' THEN 1
+			WHEN LanguageId LIKE '%1%' THEN 1
 			ELSE 0
 			END) AS SpeakChinese
 			,(CASE 
-			WHEN Location = 'SMS' THEN 1
+			WHEN LanguageId LIKE '%2%' THEN 1
 			ELSE 0
 			END) AS SpeakEnglish
 		 
-		,[Location] AS 'Location'
-		,LanguageId
+		,[Location]		
 	FROM #tblUser
 
 	SELECT u.UserId
