@@ -7,7 +7,8 @@
 */
 USE bodb_OWP;
 GO
+
 INSERT INTO RefResource(RefName,ResourceId,Value,[Order])
-VALUES('Language', 1, 'Chinese(CN)',0),
-	  ('Language', 2, 'English(EN)',0),
-	  ('Language', 3, 'Vietnamese (VN)',0)
+VALUES('Language', 1, 'CN',0),
+	  ('Language', 2, 'EN',0),
+	  ('Language', 3, 'VN',0)
