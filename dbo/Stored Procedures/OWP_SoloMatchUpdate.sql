@@ -11,6 +11,7 @@ AS
    20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
    20191125@Carlos.Nguyen:  Change strategy log - [Redmine: #124374]
    20191203@Carlos.Nguyen:  Update condition detect solo match - [Redmine: #124861]
+   20191209@Carlos.Nguyen:  Enhance performent - [Redmine: #125154]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -29,14 +30,13 @@ BEGIN
 		,isSolo BIT
 		)
 
+	/* 1. Collect all major match from yesterday-->future*/
 	INSERT INTO #tblMajorMatch (
 		owpmatchid
 		,eventdatetime
 		)
 	SELECT o.OWPMatchId
 		,o.EventDateTime
-	
-	/* 1. Collect all major match from yesterday-->future*/
 	FROM dbo.OWPMatch AS o WITH (NOLOCK)
 		INNER JOIN dbo.OWPLeague AS league WITH (NOLOCK) ON o.OWPLeagueId = league.OWPLeagueId
 	WHERE league.CategoryId = 1
@@ -44,38 +44,22 @@ BEGIN
 	ORDER BY o.OWPMatchId
 	
 	/*2. Detect major match is solo match*/
-	DECLARE @i INT =1
-		,@isSolo INT =1
-		,@rowMax INT
-		,@matchid INT
-		,@eventdatetime DATETIME
-		
-	SELECT @rowMax = MAX(mm.id) FROM #tblMajorMatch AS mm WITH (NOLOCK)
-		
-	WHILE(@i<=@rowMax)
-	BEGIN
-		SELECT TOP 1 @matchid=mm.owpmatchid
-			,@eventdatetime=mm.eventdatetime
-		FROM #tblMajorMatch AS mm WITH (NOLOCK)
-		WHERE mm.id=@i
-		SET @isSolo=1
-		
-		SELECT TOP 1 @isSolo=0
-		FROM #tblMajorMatch AS mm WITH (NOLOCK)
-		WHERE mm.id<>@i AND 1=CASE
-							WHEN (@eventdatetime>=mm.eventdatetime AND DATEDIFF(MINUTE,mm.eventdatetime,@eventdatetime)<=120)
-								OR
-							 (mm.eventdatetime>=@eventdatetime AND DATEDIFF(MINUTE,@eventdatetime,mm.eventdatetime)<=60) THEN 1
-							ELSE 0
-							END
-		
-		INSERT INTO #tblSoloMatch(owpmatchid
-			,isSolo)
-		VALUES(@matchid,@isSolo)
-		SET @i=@i+1
-	END
-	
-	/*3. Add more minor match, status issolo same with main match*/
+	INSERT INTO #tblSoloMatch (
+		owpmatchid,
+		isSolo
+		)
+	SELECT DISTINCT mm1.owpmatchid,
+		CASE
+			WHEN mm2.owpmatchid IS NULL THEN 1
+			ELSE 0
+		END
+	FROM #tblMajorMatch AS mm1 WITH(NOLOCK) LEFT JOIN
+		 #tblMajorMatch AS mm2 WITH (NOLOCK) ON
+			mm1.owpmatchid<>mm2.owpmatchid AND
+		   ((mm2.eventdatetime BETWEEN DATEADD(MINUTE,-120,mm1.eventdatetime) AND mm1.eventdatetime) OR
+		   (mm2.eventdatetime BETWEEN mm1.eventdatetime AND DATEADD(MINUTE,60,mm1.eventdatetime)))
+		   
+	/*3. Insert minnor macht, status solo same with parent*/
 	INSERT INTO #tblSoloMatch (owpmatchid
 			,isSolo)
 	SELECT mm.MinorMatchId
@@ -130,7 +114,9 @@ BEGIN
 	SELECT slm.owpmatchid,
 		slm.isSolo
 	FROM #tblSoloMatch AS slm WITH (NOLOCK)
-		
+	
+	DECLARE @rowMax INT
+	DECLARE @i INT
 	SELECT @rowMax = MAX(mm.id) FROM #tblLog AS mm WITH (NOLOCK)
 	SET @i=1
 		
