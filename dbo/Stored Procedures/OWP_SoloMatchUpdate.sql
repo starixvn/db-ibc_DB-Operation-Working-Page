@@ -41,7 +41,6 @@ BEGIN
 		INNER JOIN dbo.OWPLeague AS league WITH (NOLOCK) ON o.OWPLeagueId = league.OWPLeagueId
 	WHERE league.CategoryId = 1
 		AND o.EventDateTime >= @PmYesterDay
-	ORDER BY o.OWPMatchId
 	
 	/*2. Detect major match is solo match*/
 	INSERT INTO #tblSoloMatch (
