@@ -71,7 +71,7 @@ BEGIN
 		,[RoleId] SMALLINT NULL
 		,[IsSecondAccount] BIT NOT NULL
 		,[GroupId] INT NULL
-		,[LanguageId] NVARCHAR(500) NULL
+		,[LanguageId] NVARCHAR(50) NULL
 		);
 
 	SET @StartRun = GETDATE()
