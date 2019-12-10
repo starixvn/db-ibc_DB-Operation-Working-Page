@@ -37,8 +37,8 @@ BEGIN
 		,[Level] INT
 		,SpeakChinese BIT
 		,SpeakEnglish BIT
-		,[Location] NVARCHAR(50)
-		,LanguageId VARCHAR(10)
+		,[Location] VARCHAR(10)
+		,LanguageId VARCHAR(50)
 		)
 
 	INSERT INTO #tblUser (
