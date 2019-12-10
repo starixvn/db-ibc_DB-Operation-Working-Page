@@ -8,4 +8,4 @@ USE bodb_OWP;
 GO
 
 ALTER TABLE dbo.[User]
-ADD LanguageId NVARCHAR(50)
+ADD LanguageId VARCHAR(50)
