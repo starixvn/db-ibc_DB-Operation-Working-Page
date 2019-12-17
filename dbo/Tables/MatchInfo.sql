@@ -20,8 +20,11 @@
     [Website4]              NVARCHAR (1000) NULL,
     [MatchStatus]           VARCHAR (15)    CONSTRAINT [DF_MatchInfo_MatchStatus] DEFAULT ('Live') NOT NULL,
     [NoOfHDPId]             INT             NULL,
+    [Market]                NVARCHAR (250)  NULL,
     CONSTRAINT [PK_MatchInfo] PRIMARY KEY CLUSTERED ([OWPMatchId] ASC)
 );
+
+
 
 
 

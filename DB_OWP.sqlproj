@@ -174,9 +174,7 @@
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsBlackList.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateIsActive.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_Get.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_Insert.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_Get.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_Delete.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MinorSettingDetail_Update.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MinorSettingDetail_Reset.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MinorSettingDetail_Insert.sql" />
@@ -240,7 +238,6 @@
     <Build Include="dbo\Stored Procedures\OWP_RecommendOdds_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Provider_GetAll.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_UpdateOdds.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_UpdateHDP.sql" />
     <Build Include="dbo\Stored Procedures\OWP_NotificationSetting_Update.sql" />
     <Build Include="dbo\Stored Procedures\OWP_NotificationSetting_GetByUserId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchSetting_GetByMatchId.sql" />
@@ -394,6 +391,12 @@
     <Build Include="dbo\Functions\fnc_GetFromDateToDateOfMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_ViewLog.sql" />
     <Build Include="dbo\Stored Procedures\OWP_EmployeeWorkingShift_QueryWeeklyBySection.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_UpdateMarket.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_SendNotification.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_InsertOdds.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_DeleteOdds.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_Notification_GetUsers.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_MatchInfo_SendNotification.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

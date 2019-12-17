@@ -1,6 +1,7 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
 	,@League NVARCHAR(500) = ''
+	,@MatchStatusIds NVARCHAR(20) = ''
 AS
 /*          
  Created: 20170317@Alvin.Nguyen
@@ -15,71 +16,119 @@ AS
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
 	20190513@Kane.Le: Change schema of Provider, OtherProvider, Agent, Television - [Redmine: #112918]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
+	20191105@Tyler.Dang: Add OherTime, MatchStatus, MB and Spread CN88, Markets - [Redmine: #123331]
+	20191111@Kane.Le: Get All Bettype - [Redmine: #123331]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @Tomorrow DATE = DATEADD(DAY, 1, @Date)
-	DECLARE @Handicap TINYINT = 1
-		,@OverUnder TINYINT = 3
-		,@1X2 TINYINT = 5
+	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @Date), '11:59:59')
+		,@BettypeHDP INT = 1
+		,@Specific15Mins INT = - 1
+		,@Specific10Mins INT = - 2
+		,@Specific15MinsNoOfCorners INT = - 5
+		,@Specific15MinsTotalBooking INT = - 8
+		,@FastMarket INT = - 88
+		,@AllInOne INT = - 89
+	
+	DECLARE @tblMatchStatus TABLE (Value NVARCHAR(50) NOT NULL)
+	INSERT INTO @tblMatchStatus (
+		[Value]
+		)
+	SELECT [Value]
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'MatchStatus'
+		AND ResourceId IN (
+			SELECT val
+			FROM dbo.fnc_SplitStrings(@MatchStatusIds, ',')
+			)
+	
+	DECLARE @tblRefResourceMatchStatus TABLE (
+		Id INT NOT NULL
+		,Value NVARCHAR(50) NOT NULL
+		)
+
+	INSERT INTO @tblRefResourceMatchStatus (
+		Id
+		,Value
+		)
+	SELECT ResourceId
+		,Value
+	FROM dbo.RefResource WITH (NOLOCK)
+	WHERE RefName = 'MatchStatus'
+		AND ResourceId IN (
+			SELECT val
+			FROM dbo.fnc_SplitStrings(@MatchStatusIds, ',')
+			)
 
 	CREATE TABLE #tblMatch (
 		OWPMatchId INT
-		,MatchNo VARCHAR(50)
-		,KickOffTime TIME
-		,League NVARCHAR(2000)
-		,Home NVARCHAR(200)
-		,Away NVARCHAR(200)
-		,Remark NVARCHAR(2000)
-		,[Round] NVARCHAR(2000)
-		,Division NVARCHAR(2000)
-		,[Provider] NVARCHAR(MAX)
-		,WatchBet NVARCHAR(100)
-		,OtherProvider NVARCHAR(MAX)
-		,Website1 NVARCHAR(1000)
-		,Website2 NVARCHAR(1000)
-		,Website3 NVARCHAR(1000)
-		,Website4 NVARCHAR(1000)
+		,OWPLeagueId INT
+		,MatchStatus NVARCHAR(15)
+		,IsMinorMatch BIT
+		,MinorBettypeId INT
+		,ParentMatchId INT
 		)
 
-	CREATE TABLE #tblMatchSetting (
-		OWPMatchId INT
-		,LeagueId INT
-		,Bettype INT
-		,MaxBet MONEY
-		,Spread SMALLMONEY
-		,IsMatchSetting BIT
-		)
-
-	-- get match
 	INSERT INTO #tblMatch (
 		OWPMatchId
-		,MatchNo
-		,KickOffTime
-		,League
-		,Home
-		,Away
-		,Remark
-		,[Round]
-		,Division
-		,[Provider]
-		,WatchBet
-		,OtherProvider
-		,Website1
-		,Website2
-		,Website3
-		,Website4
+		,OWPLeagueId
+		,MatchStatus
+		,IsMinorMatch
+		,MinorBettypeId
+		,ParentMatchId
 		)
+	SELECT om.OWPMatchId
+		,om.OWPLeagueId
+		,dbo.OWP_GetCurrentMatchStatus(om.EventDate, om.KickOffTime, mi.MatchStatus)
+		,CASE 
+			WHEN minor.MinorMatchId IS NULL
+				THEN 0
+			ELSE 1
+			END AS IsMinorMatch
+		,minor.MinorBettypeId
+		,CASE 
+			WHEN minor.ParentMatchId IS NULL
+				THEN om.OWPMatchId
+			ELSE minor.ParentMatchId
+			END AS ParentMatchId
+	FROM dbo.OWPMatch AS om WITH (NOLOCK)
+	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+	LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
+	WHERE (om.EventDateTime BETWEEN @FromDate AND @ToDate)
+		AND (minor.MinorBettypeId IS NULL OR minor.MinorBettypeId NOT IN (
+				@Specific15Mins
+				,@Specific10Mins
+				,@Specific15MinsNoOfCorners
+				,@Specific15MinsTotalBooking
+				,@FastMarket
+				,@AllInOne)
+			)
+	
+	CREATE TABLE #tblFilterMatch (
+		OWPMatchId INT
+	)
+	
+	INSERT INTO #tblFilterMatch (OWPMatchId)
+	SELECT m.OWPMatchId
+	FROM #tblMatch AS m
+	INNER JOIN dbo.OWPLeague AS l ON l.OWPLeagueId = m.OWPLeagueId
+	INNER JOIN @tblMatchStatus AS ms ON m.MatchStatus = ms.Value
+	WHERE ISNULL(@League, '') = '' OR l.OWPLeagueName LIKE + '%' + @League + '%'
+
+	-- Return Matches info
 	SELECT m.OWPMatchId
 		,m.MatchNo
+		,m.EventDate
 		,m.KickOffTime
-		,League.OWPLeagueName
-		,home.OWPTeamName
-		,away.OWPTeamName
-		,info.Remark
-		,info.[Round]
-		,info.Division
+		,l.OWPLeagueName AS League
+		,h.OWPTeamName AS Home
+		,a.OWPTeamName AS Away
+		,mi.Remark
+		,mi.[Round]
+		,mi.Division
+		,mi.Market
 		,STUFF((
 				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] rs WITH (NOLOCK)
@@ -87,7 +136,6 @@ BEGIN
 				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS 'Provider'
-		,info.WB
 		,STUFF((
 				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.OtherProvider rs WITH (NOLOCK)
@@ -95,185 +143,169 @@ BEGIN
 				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS 'OtherProvider'
-		,info.Website1
-		,info.Website2
-		,info.Website3
-		,info.Website4
-	FROM dbo.OWPMatch AS m WITH (NOLOCK)
-		INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON m.OWPMatchId = info.OWPMatchId
-		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = m.OWPHomeId
-		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON away.OWPTeamId = m.OWPAwayId
-		INNER JOIN dbo.OWPLeague AS league WITH (NOLOCK) ON m.OWPLeagueId = league.OWPLeagueId
-		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON m.OWPMatchId = minor.MinorMatchId
-	WHERE info.MatchStatus = 'Live'
-		AND info.IsSelected = 1
-		AND league.OWPLeagueName LIKE + '%' + ISNULL(@League, '') + '%'
-		AND (
-			(
-				m.EventDate = @Date
-				AND m.KickOffTime >= '12:00:00'
-				)
-			OR (
-				m.EventDate = @Tomorrow
-				AND m.KickOffTime < '12:00:00'
-				)
-			)
-		AND minor.MinorMatchId IS NULL
+		,mi.Website1
+		,mi.Website2
+		,mi.Website3
+		,mi.Website4
+		,m.OtherTime
+		,m1.MatchStatus
+		,m.InfoSiteMatchId
+		,(CASE WHEN m.InfoSiteMatchId IS NULL THEN NULL ELSE CASE WHEN im.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END END) AS IsInfoSiteLinked
+	FROM dbo.OWPMatch AS m
+	INNER JOIN #tblMatch AS m1 ON m.OWPMatchId = m1.OWPMatchId
+	INNER JOIN #tblFilterMatch AS m2 ON m1.OWPMatchId = m2.OWPMatchId
+	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+	LEFT JOIN dbo.InfoSiteMatch as im WITH (NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
+	ORDER BY m.EventDate
+		,m.KickOffTime
+		,m.MatchNo
+		,l.OWPLeagueName
+		,h.OWPTeamName
+		,m1.ParentMatchId
+		,m1.IsMinorMatch
 
-	--insert match setting
-	INSERT INTO #tblMatchSetting (
+	-- Get maxbet
+	CREATE TABLE #tblMaxBet (
+		OWPMatchId INT
+		,ParentMatchId INT
+		,Bettype INT
+		,MinorBettypeId INT
+		,MaxBet MONEY
+		,Spread MONEY
+		,MaxBetCN88 MONEY
+		,SpreadCN88 MONEY
+		,IsMatchSetting BIT
+		,LeagueId INT
+		)
+
+	INSERT INTO #tblMaxBet (
 		OWPMatchId
+		,ParentMatchId
 		,Bettype
+		,MinorBettypeId
 		,MaxBet
 		,Spread
+		,MaxBetCN88
+		,SpreadCN88
 		,IsMatchSetting
 		)
 	SELECT m.OWPMatchId
+		,m.ParentMatchId
 		,ms.Bettype
+		,m.MinorBettypeId
 		,ms.Maxbet
 		,ms.Spread
+		,ms.MaxbetCN88
+		,ms.SpreadCN88
 		,1
-	FROM #tblMatch AS m WITH (NOLOCK)
-		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
-	WHERE ms.Bettype IN (@Handicap, @OverUnder)
-
-	--insert league setting
-	INSERT INTO #tblMatchSetting (
+	FROM #tblMatch AS m
+	INNER JOIN #tblFilterMatch AS fm ON m.OWPMatchId = fm.OWPMatchId
+	INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
+			
+	-- league setting
+	INSERT INTO #tblMaxBet (
 		OWPMatchId
+		,ParentMatchId
 		,LeagueId
 		,Bettype
-		,Maxbet
-		,Spread
 		,IsMatchSetting
 		)
-	SELECT OWPMatchId
-		,OWPLeagueId
-		,tb2.Bettype
-		,ls.Maxbet
-		,ls1.Spread
+	SELECT m.OWPMatchId
+		,m.ParentMatchId
+		,m.OWPLeagueId
+		,ls.Bettype
 		,0
-	FROM (
-		SELECT OWPMatchId
-			,OWPLeagueId
-			,Bettype
-			,POWER(2 * wd, 1) + POWER(2 * wk, 2) + POWER(2 * tv, 3) + POWER(2 * ukrb, 4) AS MaxBetOption
-			,POWER(2 * tv, 3) + POWER(2 * ukrb, 4) AS SpreadOption
-		FROM (
+	FROM #tblMatch AS m
+	INNER JOIN #tblFilterMatch AS fm ON m.OWPMatchId = fm.OWPMatchId
+	INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON m.OWPLeagueId = ls.LeagueId
+	WHERE m.OWPMatchId NOT IN (
 			SELECT OWPMatchId
-				,OWPLeagueId
-				,Bettype
-				,CASE ISNULL(DATEPART(dw, OnDate), - 1)
-					WHEN 1 THEN 0
-					WHEN 2 THEN 1
-					WHEN 3 THEN 1
-					WHEN 4 THEN 1
-					WHEN 5 THEN 1
-					WHEN 6 THEN 1
-					WHEN 7 THEN 0
-					END AS wd
-				,CASE ISNULL(DATEPART(dw, OnDate), - 1)
-					WHEN 1 THEN 1
-					WHEN 2 THEN 0
-					WHEN 3 THEN 0
-					WHEN 4 THEN 0
-					WHEN 5 THEN 0
-					WHEN 6 THEN 0
-					WHEN 7 THEN 1
-					END AS wk
-				,tv
-				,CASE 
-					WHEN tv = 1
-						AND ukrb = 1 THEN 0
-					ELSE ukrb
-					END AS ukrb
-			FROM (
-				SELECT DISTINCT m.OWPMatchId
-					,m.OWPLeagueId
-					,ls.Bettype
-					,DATEADD(dd, DATEDIFF(dd, 0, m.EventDate), CAST(m.KickOffTime AS DATETIME)) AS OnDate
-					,(CASE 
-						WHEN EXISTS (
-								SELECT 1
-								FROM dbo.MatchTelevision WITH (NOLOCK)
-								WHERE OWPMatchId = mif.OWPMatchId
-								) THEN 1
-						ELSE 0 END
-						) AS tv
-					,(CASE 
-						WHEN EXISTS (
-								SELECT 1
-								FROM dbo.MatchOtherProvider WITH (NOLOCK)
-								WHERE OWPMatchId = mif.OWPMatchId
-								) THEN 1
-						ELSE 0 END
-						) AS ukrb
-				FROM #tblMatch AS mt WITH (NOLOCK)
-					INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mt.OWPMatchId = m.OWPMatchId
-					INNER JOIN dbo.MatchInfo AS mif WITH (NOLOCK) ON m.OWPMatchId = mif.OWPMatchId
-					INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON m.OWPLeagueId = ls.LeagueId
-				WHERE m.OWPMatchId NOT IN (
-						SELECT OWPMatchId
-						FROM #tblMatchSetting WITH (NOLOCK)
-						)
-					AND ls.Bettype IN (@Handicap, @OverUnder)
-				) AS tb
-			) AS tb1
-		) AS tb2
-		LEFT JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON ls.LeagueId = tb2.OWPLeagueId
-		AND ls.OptionsId = tb2.MaxBetOption
-		AND ls.Bettype = tb2.Bettype
-		LEFT JOIN dbo.LeagueSetting AS ls1 WITH (NOLOCK) ON ls1.LeagueId = tb2.OWPLeagueId
-		AND ls1.OptionsId = tb2.SpreadOption
-		AND ls1.Bettype = tb2.Bettype
-
-	--get matchs
-	SELECT m.OWPMatchId
-		,m.MatchNo
-		,m.KickOffTime
-		,m.League
-		,m.Home
-		,m.Away
-		,m.Remark
-		,m.[Round]
-		,m.Division
-		,m.[Provider]
-		,m.WatchBet
-		,m.OtherProvider
-		,m.Website1
-		,m.Website2
-		,m.Website3
-		,m.Website4
-	FROM #tblMatch AS m WITH (NOLOCK)
-	ORDER BY KickOffTime
-
-	--get match settings
-	SELECT m.OWPMatchId
-		,ms.Bettype
-		,ms.Maxbet
-		,ms.Spread
-	FROM #tblMatch AS m WITH (NOLOCK)
-		INNER JOIN #tblMatchSetting AS ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
-	WHERE ms.Bettype IN (@Handicap, @OverUnder)
-		AND (
-			ms.Maxbet IS NOT NULL
-			OR ms.Spread IS NOT NULL
+			FROM #tblMaxBet WITH (NOLOCK)
 			)
+		AND m.IsMinorMatch = 0
+	GROUP BY m.OWPMatchId
+		,m.OWPLeagueId
+		,ls.Bettype
+		,m.ParentMatchId
+
+	UPDATE mb
+	SET mb.MaxBet = dbo.OWP_MaxBetGet(mb.OWPMatchId, mb.LeagueId, mb.Bettype)
+		,mb.Spread = dbo.OWP_SpreadGet(mb.OWPMatchId, mb.LeagueId, mb.Bettype)
+	FROM #tblMaxBet AS mb
+	WHERE mb.IsMatchSetting = 0
+
+	INSERT INTO #tblMaxBet (
+		OWPMatchId
+		,ParentMatchId
+		,Bettype
+		,MinorBettypeId
+		,MaxBet
+		,Spread
+		)
+	SELECT t.OWPMatchId
+		,t.ParentMatchId
+		,t.InheritedBettypeId
+		,t.MinorBettypeId
+		,md.MaxBet
+		,md.Spread
+	FROM (
+		SELECT m.OWPMatchId
+			,m.ParentMatchId
+			,mbt.ParentBettypeId
+			,mbt.InheritedBettypeId
+			,m.MinorBettypeId
+			,CASE 
+				WHEN mst.OWPMatchId IS NULL
+					THEN dbo.OWP_MaxBetGet(minor.ParentMatchId, m.OWPLeagueId, @BettypeHDP)
+				ELSE mst.Maxbet
+				END AS MaxBetHDP
+		FROM #tblMatch AS m
+		INNER JOIN #tblFilterMatch AS fm ON m.OWPMatchId = fm.OWPMatchId
+		INNER JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON m.OWPMatchId = minor.MinorMatchId
+		INNER JOIN dbo.MinorBettype AS mbt WITH (NOLOCK) ON minor.MinorBettypeId = mbt.ParentBettypeId
+		LEFT JOIN dbo.MatchSetting AS mst WITH (NOLOCK) ON minor.ParentMatchId = mst.OWPMatchId
+			AND mst.Bettype = @BettypeHDP
+		WHERE m.IsMinorMatch = 1
+			AND m.OWPMatchId NOT IN (
+				SELECT OWPMatchId
+				FROM #tblMaxBet WITH (NOLOCK)
+				)
+		) AS t
+	INNER JOIN dbo.MinorSetting AS m WITH (NOLOCK) ON t.MaxBetHDP BETWEEN ISNULL(FromMaxBet, 0)
+			AND ISNULL(ToMaxBet, 99999999999)
+	INNER JOIN dbo.MinorSettingDetail AS md WITH (NOLOCK) ON m.MinorSettingId = md.MinorSettingId
+		AND md.MinorBettypeId = t.ParentBettypeId
+
+	-- Return Match Setting
+	SELECT mb.OWPMatchId
+		,mb.ParentMatchId
+		,mb.Bettype
+		,mb.MinorBettypeId
+		,mb.MaxBet
+		,mb.Spread
+		,mb.MaxBetCN88
+		,mb.SpreadCN88
+	FROM #tblMaxBet AS mb WITH (NOLOCK)
 
 	--get recommend odds
 	SELECT mr.MatchRecommendOddsId AS Id
 		,mr.OWPMatchId
 		,mr.Bettype
-		,mr.HDP AS Handicap
+		,mr.HDP
 		,mr.TeamChoice
 		,mrd.Choice
 		,mrd.Odds
-	FROM dbo.MatchRecommendOdds AS mr WITH (NOLOCK)
-		INNER JOIN #tblMatch AS tm ON mr.OWPMatchId = tm.OWPMatchId
+	FROM #tblFilterMatch AS fm
+		INNER JOIN dbo.MatchRecommendOdds AS mr WITH (NOLOCK) ON fm.OWPMatchId = mr.OWPMatchId
 		LEFT JOIN dbo.MatchRecommendOddsDetail AS mrd WITH (NOLOCK) ON mr.MatchRecommendOddsId = mrd.MatchRecommendOddsId
-	WHERE mr.Bettype IN (@Handicap, @OverUnder, @1X2)
 	ORDER BY mr.MatchRecommendOddsId
-
+	
 	DROP TABLE #tblMatch
-
-	DROP TABLE #tblMatchSetting
+	
+	DROP TABLE #tblFilterMatch
+	
+	DROP TABLE #tblMaxBet
 END
