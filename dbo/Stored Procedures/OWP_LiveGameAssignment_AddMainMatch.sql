@@ -27,7 +27,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMainMatch] @EventDate DATE
 	,@OtherProvider VARCHAR(900) = ''
 	,@Provider VARCHAR(900) = ''
 	,@AgentIds NVARCHAR(100) = ''
-	,@MarketIds NVARCHAR(100) = ''
+	,@Market NVARCHAR(250) = ''
 	,@ActorId INT
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -42,7 +42,8 @@ AS
  Revisions:
 	20190905@Kane.Le: Initial SP - [Feature: #117960]	 
 	20190905@Kane.Le: Change temp table - [Feature: #117960]
-	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
+	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
+	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -155,7 +156,7 @@ BEGIN
 		,@OtherProvider
 		,@Provider
 		,@AgentIds
-		,@MarketIds
+		,@Market
 		,@ErrCode
 		,@ErrMsg
 

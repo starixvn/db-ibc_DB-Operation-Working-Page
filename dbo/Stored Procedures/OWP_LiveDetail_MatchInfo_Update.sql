@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@SessionId NVARCHAR(100)
 	,@OWPMatchId INT
@@ -18,7 +17,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchInfo_Update] @ActorId INT
 	,@OtherProvider VARCHAR(900) = ''
 	,@Provider VARCHAR(900) = ''
 	,@AgentIds NVARCHAR(100) = ''
-	,@MarketIds NVARCHAR(100) = ''
+	,@Market NVARCHAR(250) = ''
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -43,7 +42,8 @@ Revisions:
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
 	20190704@Tyler.Dang: change message template - [Redmine: #116230]
 	20191021@Leo.Vo: Remove debug code - [Redmine: #120415]
-	20191022@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
+	20191022@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
+	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -68,7 +68,7 @@ BEGIN
 		,@OldOtherProviderIds NVARCHAR(100)
 		,@OldProviderIds NVARCHAR(100)
 		,@OldAgentIds NVARCHAR(100)
-		,@OldMarketIds NVARCHAR(100)
+		,@OldMarket NVARCHAR(250)
 		,@OldMatchOfferIds NVARCHAR(100)
 		-- send message by condition date
 		,@UserReceivedAssigneeMessageMatchInfo TVP_INT
@@ -114,9 +114,6 @@ BEGIN
 		)
 
 	--BEGIN TRY
-	SELECT @OldMarketIds = COALESCE(@OldMarketIds + ', ', '') + CAST(MarketId AS NVARCHAR)
-	FROM dbo.MatchMarket WITH (NOLOCK)
-	WHERE OWPMatchId = @OWPMatchId
 
 	SELECT @OldMatchOfferIds = COALESCE(@OldMatchOfferIds + ', ', '') + CAST(MatchOfferId AS NVARCHAR)
 	FROM dbo.MatchOfferDetail WITH (NOLOCK)
@@ -132,11 +129,8 @@ BEGIN
 		,@OldRound = m.[Round]
 		,@OldDivision = m.Division
 		,@OldVenue = m.Venue
+		,@OldMarket = m.Market
 		,@OldOtherTime = om.OtherTime
-	--,@OldTVIds = m.TVCode
-	--,@OldOtherProviderIds = m.OtherProvider
-	--,@OldProviderIds = m.[Provider]
-	--,@OldAgentIds = m.Agent
 	FROM dbo.MatchInfo m WITH (NOLOCK)
 	LEFT JOIN dbo.OWPMatch om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 	WHERE m.OWPMatchId = @OWPMatchId
@@ -181,7 +175,6 @@ BEGIN
 			ROWLOCK
 			,UPDLOCK
 			)
-
 	SET Channel = @Channel
 		,WB = @WB
 		,Phone = @Phone
@@ -191,10 +184,7 @@ BEGIN
 		,[Round] = @Round
 		,Division = @Division
 		,Venue = @Venue
-	--,OtherProvider = @OtherProviderIds
-	--,[Provider] = @ProviderIds
-	--,TVCode = @TVIds
-	--,Agent = @AgentIds
+		,Market = @Market
 	WHERE OWPMatchId = @OWPMatchId
 
 	UPDATE dbo.OWPMatch
@@ -300,22 +290,6 @@ BEGIN
 		SELECT @OWPMatchId
 			,val
 		FROM dbo.strSplit(ISNULL(@AgentIds, ''), ',')
-	END
-
-	-- handle changes of Match Market
-	DELETE
-	FROM dbo.MatchMarket WITH (ROWLOCK)
-	WHERE OWPMatchId = @OWPMatchId
-
-	IF (ISNULL(@MarketIds, '') != '')
-	BEGIN
-		INSERT INTO dbo.MatchMarket WITH (ROWLOCK)(
-			OWPMatchId
-			,MarketId
-			)
-		SELECT @OWPMatchId
-			,val
-		FROM dbo.strSplit(ISNULL(@MarketIds, ''), ',')
 	END
 
 	-- handle changes of Match Offer
@@ -1032,61 +1006,10 @@ BEGIN
 		END
 
 		-- Edit Market
-		TRUNCATE TABLE #tblOldItem
-
-		TRUNCATE TABLE #tblNewItem
-
-		INSERT INTO #tblOldItem (
-			Id
-			,[Text]
-			)
-		SELECT rr.ResourceId
-			,rr.Value
-		FROM dbo.RefResource AS rr WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@OldMarketIds, ',') AS f
-		WHERE rr.RefName = 'Market'
-			AND rr.ResourceId = f.val
-
-		INSERT INTO #tblNewItem (
-			Id
-			,[Text]
-			)
-		SELECT rr.ResourceId
-			,rr.Value
-		FROM dbo.RefResource AS rr WITH (NOLOCK)
-		CROSS APPLY dbo.fnc_SplitStrings(@MarketIds, ',') AS f
-		WHERE rr.RefName = 'Market'
-			AND rr.ResourceId = f.val
-
-		IF EXISTS (
-				SELECT Id
-				FROM #tblOldItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblNewItem
-				)
-			OR EXISTS (
-				SELECT Id
-				FROM #tblNewItem
-				
-				EXCEPT
-				
-				SELECT Id
-				FROM #tblOldItem
-				)
+		IF @OldMarket <> @Market
 		BEGIN
-			SELECT @OldValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblOldItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
-				,@NewValue = ISNULL(STUFF((
-							SELECT ', ' + [Text]
-							FROM #tblNewItem WITH (NOLOCK)
-							FOR XML PATH('')
-							), 1, 2, ''), '')
+			SELECT @OldValue = @OldMarket
+				,@NewValue = @Market
 
 			SELECT @MessageTemplate = mt.MsgTemplateContent
 				,@MessageTypeId = mt.MsgTemplateId

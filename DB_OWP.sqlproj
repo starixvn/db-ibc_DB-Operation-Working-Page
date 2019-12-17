@@ -248,9 +248,7 @@
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Provider_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchStatus_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchInfo_UpdateMatchStatus.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchInfo_Update.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchInfo_Get.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Market_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LiveDetail_Agent_GetByMatchId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AssignmentUploading_InsertMinorMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AssignmentUploading_DetermineMinorMatch.sql" />
@@ -397,6 +395,7 @@
     <Build Include="dbo\Stored Procedures\OWP_OddsCompiler_DeleteOdds.sql" />
     <Build Include="dbo\Stored Procedures\OWP_Notification_GetUsers.sql" />
     <Build Include="dbo\Stored Procedures\OWP_MatchInfo_SendNotification.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LiveDetail_MatchInfo_Update.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

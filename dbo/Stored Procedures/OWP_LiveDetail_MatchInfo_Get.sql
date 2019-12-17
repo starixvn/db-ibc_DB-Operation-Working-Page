@@ -11,6 +11,7 @@ Revisions:
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
 	20190116@Kane.Le: Get Column NoOfHDPId - [Redmine: #107257]
 	20190813@Tyler.Dang: Add more info to edit Event - [Redmine: #118562]
+	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -39,6 +40,7 @@ BEGIN
 		,mi.Website2
 		,mi.Website3
 		,mi.Website4
+		,mi.Market
 		,minor.MinorBettypeId
 		,minor.ParentMatchId
 		,main.MatchStatus AS ParentMatchStatus

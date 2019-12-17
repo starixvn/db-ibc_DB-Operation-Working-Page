@@ -14,8 +14,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_MatchInfo] @ActorId INT
 	,@IsUpdateVenue BIT = 0
 	,@OtherTime DATETIME = NULL
 	,@IsUpdateOtherTime BIT = 0
-	,@MarketIds NVARCHAR(100) = ''
-	,@IsUpdateMarkets BIT = 0
+	,@Market NVARCHAR(250) = ''
+	,@IsUpdateMarket BIT = 0
 	,@Website1 NVARCHAR(1000) = ''
 	,@IsUpdateWebsite1 BIT = 0
 	,@Website2 NVARCHAR(1000) = ''
@@ -37,6 +37,7 @@ Revisions:
 	20190820@Tyler.Dang: InitialSP - [Redmine: #118566]
 	20190919@Tyler.Dang: Update relevant matchs - [Redmine: #120496]
 	20191021@Leo.Vo: Check duplicate InfoSiteID - [Redmine: #120415]
+	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -54,7 +55,7 @@ BEGIN
 		,@OldVenue NVARCHAR(100)
 		,@OldOtherTime TIME
 		,@OldInfoSiteMatchId INT
-		,@OldMarketIds NVARCHAR(100)
+		,@OldMarket NVARCHAR(250)
 		,@OldWebsite1 NVARCHAR(1000)
 		,@OldWebsite2 NVARCHAR(1000)
 		,@OldWebsite3 NVARCHAR(1000)
@@ -103,13 +104,6 @@ BEGIN
 		END
 
 		-- save old value
-		SELECT @OldMarketIds = ISNULL(STUFF((
-						SELECT ', ' + CAST(MarketId AS NVARCHAR)
-						FROM dbo.MatchMarket WITH (NOLOCK)
-						WHERE OWPMatchId = @OWPMatchId
-						FOR XML PATH('')
-						), 1, 2, ''), '')
-
 		SELECT @OldRemark = m.Remark
 			,@OldRound = m.[Round]
 			,@OldDivision = m.Division
@@ -119,6 +113,7 @@ BEGIN
 			,@OldWebsite2 = m.Website2
 			,@OldWebsite3 = m.Website3
 			,@OldWebsite4 = m.Website4
+			,@OldMarket = m.Market
 			,@OldInfoSiteMatchId = om.InfoSiteMatchId
 			,@OldMatchStatus = m.MatchStatus
 		FROM dbo.MatchInfo m WITH (NOLOCK)
@@ -137,7 +132,7 @@ BEGIN
 					,@OldWebsite3 AS '@ws3'
 					,@OldWebsite4 AS '@ws4'
 					,@OldInfoSiteMatchId AS '@ifi'
-					,@OldMarketIds AS '@mk'
+					,@OldMarket AS '@mk'
 					,@OldMatchStatus AS '@ms'
 				FOR XML PATH('z')
 					,ROOT('r')
@@ -304,12 +299,6 @@ BEGIN
 					)
 		END
 
-		DECLARE @tblMarketIds TVP_INT
-
-		INSERT INTO @tblMarketIds (Id)
-		SELECT Value
-		FROM dbo.fnc_SplitString(@MarketIds, ',')
-
 		SET @Id = 1
 
 		WHILE 1 = 1
@@ -391,11 +380,11 @@ BEGIN
 						ELSE @IsUpdateOtherTime
 						END
 					)
-				,@RelevantIsUpdateMarkets BIT = (
+				,@RelevantIsUpdateMarket BIT = (
 					CASE 
 						WHEN @RelevantMatchId = @OWPMatchId
 							THEN 1
-						ELSE @IsUpdateMarkets
+						ELSE @IsUpdateMarket
 						END
 					)
 				,@RelevantIsUpdateWebsite1 BIT = (
@@ -445,8 +434,8 @@ BEGIN
 				,@IsUpdateVenue = @RelevantIsUpdateVenue
 				,@OtherTime = @OtherTime
 				,@IsUpdateOtherTime = @RelevantIsUpdateOtherTime
-				,@MarketIds = @tblMarketIds
-				,@IsUpdateMarkets = @RelevantIsUpdateMarkets
+				,@Market = @Market
+				,@IsUpdateMarket = @RelevantIsUpdateMarket
 				,@Website1 = @Website1
 				,@IsUpdateWebsite1 = @RelevantIsUpdateWebsite1
 				,@Website2 = @Website2
@@ -481,8 +470,8 @@ BEGIN
 				,@IsUpdateWebsite3 AS '@iuws3'
 				,@Website4 AS '@ws4'
 				,@IsUpdateWebsite4 AS '@iuws4'
-				,@MarketIds AS '@mk'
-				,@IsUpdateMarkets AS '@iumk'
+				,@Market AS '@mk'
+				,@IsUpdateMarket AS '@iumk'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)

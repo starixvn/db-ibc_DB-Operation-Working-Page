@@ -26,7 +26,7 @@ CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_AddMinorMatch] @ParentMatchId INT
 	,@OtherProvider VARCHAR(900) = ''
 	,@Provider VARCHAR(900) = ''
 	,@AgentIds NVARCHAR(100) = ''
-	,@MarketIds NVARCHAR(100) = ''
+	,@Market NVARCHAR(250) = ''
 	,@ActorId INT
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
@@ -41,7 +41,8 @@ AS
  Revisions:
 	20190724@Kane.Le: Initial SP - [Feature: #117461]
 	20191021@Kane.Le: Fix MinorBettypeId IS NULL - [Feature: #120415]
-	20191022@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]	
+	20191022@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
+	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -91,7 +92,7 @@ BEGIN
 		,@OtherProvider = @OtherProvider
 		,@Provider = @Provider
 		,@AgentIds = @AgentIds
-		,@MarketIds = @MarketIds
+		,@Market = @Market
 		,@ActorId = @ActorId
 		,@SessionId = @SessionId
 		,@ErrCode = @ErrCode OUTPUT

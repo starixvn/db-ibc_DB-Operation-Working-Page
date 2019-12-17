@@ -11,6 +11,7 @@ DB: bodb_OWP#
 
 Revisions:
 	20190920@Leo.Vo: InitialSP - [Redmine: #120496]
+	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -137,10 +138,6 @@ BEGIN
 				AND MinorBettypeId = @Specific15MinsTotalBooking
 		END
 	END
-
-	-- remove match market
-	DELETE dbo.MatchMarket WITH (ROWLOCK)
-	WHERE OWPMatchId = @OWPMatchId
 
 	-- remove match offers
 	DELETE t

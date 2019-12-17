@@ -18,8 +18,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_MatchInfo_Single] @ActorId INT
 	,@IsUpdateVenue BIT = 0
 	,@OtherTime DATETIME = NULL
 	,@IsUpdateOtherTime BIT = 0
-	,@MarketIds TVP_INT READONLY
-	,@IsUpdateMarkets BIT = 0
+	,@Market NVARCHAR(250) = ''
+	,@IsUpdateMarket BIT = 0
 	,@Website1 NVARCHAR(1000) = ''
 	,@IsUpdateWebsite1 BIT = 0
 	,@Website2 NVARCHAR(1000) = ''
@@ -37,6 +37,7 @@ DB: bodb_OWP
 Revisions:
 	20190820@Leo.Vo: Initial SP - [Redmine: #120496]
 	20191118@Leo.Vo: Update InfositeMatch only main match - [Redmine: #123167]
+	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -117,7 +118,7 @@ BEGIN
 		,@OldWebsite2 NVARCHAR(1000) = ''
 		,@OldWebsite3 NVARCHAR(1000) = ''
 		,@OldWebsite4 NVARCHAR(1000) = ''
-		,@OldMarket NVARCHAR(2000) = ''
+		,@OldMarket NVARCHAR(250) = ''
 		,@NewRemark NVARCHAR(2000) = ''
 		,@NewRound NVARCHAR(2000) = ''
 		,@NewDivision NVARCHAR(2000) = ''
@@ -128,7 +129,7 @@ BEGIN
 		,@NewWebsite2 NVARCHAR(1000) = ''
 		,@NewWebsite3 NVARCHAR(1000) = ''
 		,@NewWebsite4 NVARCHAR(1000) = ''
-		,@NewMarket NVARCHAR(2000) = ''
+		,@NewMarket NVARCHAR(250) = ''
 
 	SELECT @OldRemark = mi.Remark
 		,@OldRound = mi.[Round]
@@ -180,6 +181,10 @@ BEGIN
 			WHEN @IsUpdateWebsite4 = 1 THEN @Website4
 			ELSE @OldWebsite4
 			END
+		,@NewMarket = CASE 
+			WHEN @IsUpdateMarket = 1 THEN @Market
+			ELSE @OldMarket
+			END
 		,@NewInfoSiteMatchId = CASE 
 			WHEN @IsUpdateInfoSiteMatchId = 1 THEN @InfoSiteMatchId
 			ELSE @OldInfoSiteMatchId
@@ -204,40 +209,9 @@ BEGIN
 		,mi.Website2 = @NewWebsite2
 		,mi.Website3 = @NewWebsite3
 		,mi.Website4 = @NewWebsite4
+		,mi.Market = @NewMarket
 	FROM dbo.MatchInfo AS mi WITH (ROWLOCK)
 		INNER JOIN @tblRelevantMatches AS rm ON mi.OWPMatchId = rm.OWPMatchId
-		
-	IF @IsUpdateMarkets = 1
-	BEGIN
-		SELECT @OldMarket = ISNULL(STUFF((
-			SELECT ', ' + CAST(r.Value AS NVARCHAR)
-			FROM dbo.MatchMarket AS mk WITH (NOLOCK)
-			INNER JOIN dbo.RefResource AS r WITH (NOLOCK) ON mk.MarketId = r.ResourceId AND r.RefName = 'Market'
-			WHERE OWPMatchId = @OWPMatchId
-			FOR XML PATH('')
-			), 1, 2, ''), '')
-			
-		SELECT @NewMarket = ISNULL(STUFF((
-			SELECT ', ' + CAST(r.Value AS NVARCHAR)
-			FROM @MarketIds AS mk
-			INNER JOIN dbo.RefResource AS r WITH (NOLOCK) ON mk.Id = r.ResourceId AND r.RefName = 'Market'
-			FOR XML PATH('')
-			), 1, 2, ''), '')
-			
-		IF @OldMarket <> @NewMarket
-		BEGIN
-			DELETE dbo.MatchMarket WITH (ROWLOCK)
-			WHERE OWPMatchId = @OWPMatchId
-			
-			INSERT INTO dbo.MatchMarket (
-				OWPMatchId
-				,MarketId
-			)
-			SELECT @OWPMatchId
-				,Id
-			FROM @MarketIds
-		END
-	END
 	
 	CREATE TABLE #tblAssignee (
 		UserId INT
