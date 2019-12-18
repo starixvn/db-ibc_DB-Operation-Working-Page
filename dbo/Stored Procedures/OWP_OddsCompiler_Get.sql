@@ -18,6 +18,7 @@ AS
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20191105@Tyler.Dang: Add OherTime, MatchStatus, MB and Spread CN88, Markets - [Redmine: #123331]
 	20191111@Kane.Le: Get All Bettype - [Redmine: #123331]
+	20191218@Kane.Le: Get WatchBet - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -143,6 +144,7 @@ BEGIN
 				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS 'OtherProvider'
+		,mi.WB AS WatchBet
 		,mi.Website1
 		,mi.Website2
 		,mi.Website3
