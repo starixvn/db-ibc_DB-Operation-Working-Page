@@ -1,5 +1,5 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 CREATE PROCEDURE [dbo].[Task_OWP_LSTReport_GetDataByDate] @FromDate DATE
 	,@ToDate DATE
 AS
@@ -9,12 +9,10 @@ AS
  DB: bodb_OWP    
     
  Revisions:
-	20191211@Kane.Le: Initial SP - [Redmine: #124448]
-	
+	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
 */
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
+	 
 	SET NOCOUNT ON;
 
 	CREATE TABLE #tmpSectionResource (
