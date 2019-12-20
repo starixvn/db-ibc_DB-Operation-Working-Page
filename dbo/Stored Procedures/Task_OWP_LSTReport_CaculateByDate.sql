@@ -1,6 +1,5 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-
 CREATE PROCEDURE [dbo].[Task_OWP_LSTReport_CaculateByDate]
 AS
 /*    
@@ -12,17 +11,11 @@ AS
 	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
 */
 BEGIN
-	
 	SET NOCOUNT ON;
 
 	DECLARE @EventDate DATE = GETDATE();
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
+	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
-
-	SELECT @eventDate
-		,@FromDate
-		,@ToDate
-
 	-- Insert statements for procedure here
 	-- DECLARE CONSTANTS
 	DECLARE @HandicapHDP INT = 1
@@ -140,12 +133,6 @@ BEGIN
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
 
-	SELECT *
-	FROM #tblTempAssignmentReportMainMatch
-
-	SELECT *
-	FROM #tblTempAssignmentReportMinorMatch
-
 	CREATE TABLE #tblReportTypeGeneral (
 		Id INT IDENTITY
 		,UserId INT
@@ -205,20 +192,6 @@ BEGIN
 	GROUP BY tmp.UserId
 		,tmp.UserName
 
-	/*
-	SELECT DISTINCT UserId
-		,OWPMatchId
-		,CASE 
-			WHEN Bettype = 7
-				THEN 1
-			WHEN Bettype = 8
-				THEN 3
-			WHEN Bettype = 3
-				THEN 3
-			ELSE Bettype
-			END AS Bettype
-	FROM #tblTempAssignmentReportMainMatch
-	*/
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -244,6 +217,7 @@ BEGIN
 				,Type1_FT_OU
 				,Type1_FT_HDPOU
 				,TotalMatch
+				,CreatedDate
 				)
 			VALUES (
 				SOURCE.EventDate
@@ -253,6 +227,7 @@ BEGIN
 				,SOURCE.FT_OU
 				,SOURCE.FT_HDP_OU
 				,SOURCE.FT_HDP + SOURCE.FT_OU + SOURCE.FT_HDP_OU
+				,@EventDate
 				);
 
 	-- Type 2 AUS
@@ -1799,12 +1774,13 @@ BEGIN
 				END AS Bettype
 		FROM #tblTempAssignmentReportMinorMatch
 		WHERE LeagueName LIKE '%- PENALTY SHOOT-OUT'
-		GROUP BY UserId, Username, OWPMatchParentId, Bettype
-		 
+		GROUP BY UserId
+			,Username
+			,OWPMatchParentId
+			,Bettype
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
-		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1832,11 +1808,6 @@ BEGIN
 				,SOURCE.UserName
 				,SOURCE.FT_HDP
 				);
-
-			SELECT 'PENALTY SHOOT-OUT';
-
-			
-	SELECT * FROM #tblReportTypeGeneral
 
 	-- Type 4 WIN
 	TRUNCATE TABLE #tblReportTypeGeneral
@@ -1920,7 +1891,6 @@ BEGIN
 				,SOURCE.FT_HDP
 				);
 
-	
 	-- PH-1x2 Major
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -2296,9 +2266,9 @@ BEGIN
 					END
 				);
 
-	 
-
 	DROP TABLE #tblReportTypeGeneral
 
 	DROP TABLE #tblTempAssignmentReportMainMatch
+
+	DROP TABLE #tblTempAssignmentReportMinorMatch
 END
