@@ -20,10 +20,16 @@ Revisions:
 	20181016@Kane.Le: Insert message for assignee traders - [Redmine: #102867]
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20180705@Tyler.Dang: Edit SP for Live Details Recommend odds notification [Redmine: #116398]
+	20191224@Kane.Le: add user log - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
-
+	DECLARE @StartRun DATETIME = GETDATE()
+		,@EndRun DATETIME
+		,@Duration INT
+		,@Xml XML
+		,@LogData NVARCHAR(MAX)
+		SET @StartRun = GETDATE()
 	DECLARE @idoc INT
 		,@BettypeName NVARCHAR(50) = ''
 		,@NewOddsText NVARCHAR(200) = ''
@@ -189,6 +195,33 @@ BEGIN
 			,@ErrCode = @ErrCode OUTPUT
 			,@ErrMsg = @ErrMsg OUTPUT
 	END
+
+
+	SET @Xml = (
+			SELECT mo.MatchRecommendOddsId AS '@id'
+				,mo.Bettype AS '@bt'
+				,mo.HDP AS '@hdp'
+				,mo.TeamChoice AS '@tc'
+				,mo.CreatedBy AS '@cb'
+				,mo.CreatedDate AS '@cd'
+				,d.Choice AS '@ch'
+				,d.Odds AS '@odd'
+			FROM dbo.MatchRecommendOdds AS mo WITH (NOLOCK)
+				INNER JOIN dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK) ON mo.MatchRecommendOddsId = d.MatchRecommendOddsId
+			WHERE mo.MatchRecommendOddsId = @Id
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+	EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+		,@SPName = 'OWP_OddsCompiler_InsertOdds'
+		,@LoggedDate = @StartRun
+		,@Duration = @Duration
+		,@ObjectId = @OWPMatchId
+		,@Data = @LogData
 
 	DROP TABLE #RecommendOdds
 

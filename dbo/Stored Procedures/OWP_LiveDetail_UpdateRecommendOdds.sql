@@ -20,6 +20,7 @@ Revisions:
 	20190308@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190513@Leo.Vo: change condition when send message - [Redmine: #113333]
 	20180705@Tyler.Dang: Edit SP for Live Details Recommend odds notification [Redmine: #116398]
+	20191224@Kane.Le: add user log - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -53,6 +54,31 @@ BEGIN
 		,@OldTeamChoice = TeamChoice
 	FROM dbo.MatchRecommendOdds WITH (NOLOCK)
 	WHERE MatchRecommendOddsId = @Id
+
+		DECLARE @StartRun DATETIME = GETDATE()
+		,@EndRun DATETIME
+		,@Duration INT
+		,@Xml XML
+		,@LogDataOld NVARCHAR(MAX)
+		,@LogData NVARCHAR(MAX)
+
+	SET @StartRun = GETDATE()
+	SET @Xml = (
+			SELECT mo.MatchRecommendOddsId AS '@id'
+				,mo.Bettype AS '@bt'
+				,mo.HDP AS '@hdp'
+				,mo.TeamChoice AS '@tc'
+				,mo.CreatedBy AS 'cb'
+				,mo.CreatedDate AS 'cd'
+				,d.Choice AS 'ch'
+				,d.Odds AS 'odd'
+			FROM dbo.MatchRecommendOdds AS mo WITH (NOLOCK)
+				INNER JOIN dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK) ON mo.MatchRecommendOddsId = d.MatchRecommendOddsId
+			WHERE mo.MatchRecommendOddsId = @Id
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 
 	IF @OWPMatchId IS NULL
 	BEGIN
@@ -263,6 +289,34 @@ BEGIN
 			,@ErrCode = @ErrCode OUTPUT
 			,@ErrMsg = @ErrMsg OUTPUT
 	END
+
+
+	SET @Xml = (
+			SELECT mo.MatchRecommendOddsId AS '@id'
+				,mo.Bettype AS '@bt'
+				,mo.HDP AS '@hdp'
+				,mo.TeamChoice AS '@tc'
+				,mo.CreatedBy AS '@cb'
+				,mo.CreatedDate AS '@cd'
+				,d.Choice AS '@ch'
+				,d.Odds AS '@odd'
+			FROM dbo.MatchRecommendOdds AS mo WITH (NOLOCK)
+				INNER JOIN dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK) ON mo.MatchRecommendOddsId = d.MatchRecommendOddsId
+			WHERE mo.MatchRecommendOddsId = @Id
+			FOR XML PATH('z')
+				,ROOT('r')
+			)
+	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	SET @EndRun = GETDATE()
+	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+	EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+		,@SPName = 'OWP_OddsCompiler_UpdateOdds'
+		,@LoggedDate = @StartRun
+		,@Duration = @Duration
+		,@ObjectId = @OWPMatchId
+		,@Data = @LogData
+		,@DataOld = @LogDataOld
 
 	DROP TABLE #RecommendOdds
 

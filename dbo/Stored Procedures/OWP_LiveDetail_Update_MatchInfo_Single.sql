@@ -135,6 +135,7 @@ BEGIN
 		,@OldRound = mi.[Round]
 		,@OldDivision = mi.Division
 		,@OldVenue = mi.Venue
+		,@OldMarket = mi.Market
 		,@OldOtherTime = m.OtherTime
 		,@OldWebsite1 = mi.Website1
 		,@OldWebsite2 = mi.Website2

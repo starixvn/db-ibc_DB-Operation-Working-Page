@@ -12,6 +12,7 @@ AS
 */
 BEGIN
 	SET NOCOUNT ON;
+	SET ANSI_WARNINGS OFF;
 
 	DECLARE @EventDate DATE = GETDATE();
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '12:00:00')
@@ -174,11 +175,12 @@ BEGIN
 					THEN 2
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -192,13 +194,14 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
-		/*
+		 
 		SELECT @EventDate, @FromDate, @ToDate
 			SELECT * FROM #tblTempAssignmentReportMainMatch
-			SELECT * FROM #tblTempAssignmentReportMinorMatch
+		--	SELECT * FROM #tblTempAssignmentReportMinorMatch
 			SELECT * FROM #tblReportTypeGeneral
-		*/
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -267,11 +270,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -290,6 +294,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -339,6 +344,7 @@ BEGIN
 		)
 	SELECT tmp.UserId
 		,tmp.UserName
+
 		,COUNT(CASE 
 				WHEN tmp.Bettype = @HandicapHDP
 					THEN 1
@@ -355,11 +361,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -379,6 +386,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -444,11 +452,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -467,6 +476,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -532,11 +542,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -555,6 +566,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -591,7 +603,7 @@ BEGIN
 					END
 				);
 
-	-- Type 3 Solo MJ
+-- Type 3 Solo MJ
 	TRUNCATE TABLE #tblReportTypeGeneral
 
 	INSERT INTO #tblReportTypeGeneral (
@@ -620,11 +632,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -643,7 +656,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
-
+		,tmp.EventDate
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -679,6 +692,7 @@ BEGIN
 					END
 				);
 
+ 	
 	-- Type 4 Major League
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -708,11 +722,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -731,6 +746,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -767,7 +783,7 @@ BEGIN
 					END
 				);
 
-	-- Type 4 MIN-1 League
+-- Type 4 MIN-1 League
 	TRUNCATE TABLE #tblReportTypeGeneral
 
 	INSERT INTO #tblReportTypeGeneral (
@@ -796,11 +812,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -819,6 +836,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -855,6 +873,8 @@ BEGIN
 					END
 				);
 
+	
+
 	-- Type 4 MIN-2 League
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -868,6 +888,7 @@ BEGIN
 		)
 	SELECT tmp.UserId
 		,tmp.UserName
+		 
 		,COUNT(CASE 
 				WHEN tmp.Bettype = @HandicapHDP
 					THEN 1
@@ -884,11 +905,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -907,6 +929,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -972,11 +995,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -995,6 +1019,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1031,6 +1056,10 @@ BEGIN
 					END
 				);
 
+
+				
+
+	
 	-- Type 4 1ST MJ League
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -1060,11 +1089,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS '1H-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 7
@@ -1081,6 +1111,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1146,11 +1177,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS '1H-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 7
@@ -1167,6 +1199,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1232,11 +1265,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1255,6 +1289,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1320,11 +1355,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1343,6 +1379,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1408,11 +1445,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1431,6 +1469,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1496,11 +1535,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1519,6 +1559,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1584,11 +1625,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1607,6 +1649,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1671,11 +1714,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1694,6 +1738,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1761,12 +1806,13 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			--,OWPMatchId			
 			,OWPMatchParentId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1786,9 +1832,11 @@ BEGIN
 			,Username
 			,OWPMatchParentId
 			,Bettype
+			,EventDate
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1848,11 +1896,12 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM (
 		SELECT DISTINCT UserId
 			,Username
 			,OWPMatchId
+			,EventDate
 			,CASE 
 				WHEN Bettype = @1H_HandicapHDP
 					THEN 1
@@ -1871,6 +1920,7 @@ BEGIN
 		) AS tmp
 	GROUP BY tmp.UserId
 		,tmp.UserName
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1898,6 +1948,8 @@ BEGIN
 				,SOURCE.UserName
 				,SOURCE.FT_HDP
 				);
+
+	
 
 	-- PH-1x2 Major
 	TRUNCATE TABLE #tblReportTypeGeneral
@@ -1928,7 +1980,7 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM #tblTempAssignmentReportMainMatch AS tmp
 	WHERE LeagueCategoryId = @LeagueCategoryId_MJ
 		AND Bettype IN (
@@ -1937,6 +1989,7 @@ BEGIN
 			)
 	GROUP BY tmp.UserId
 		,tmp.Username
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1973,6 +2026,7 @@ BEGIN
 					END
 				);
 
+
 	-- PH-1x2 Minor1 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -2002,7 +2056,7 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM #tblTempAssignmentReportMainMatch AS tmp
 	WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
 		AND Bettype IN (
@@ -2011,6 +2065,7 @@ BEGIN
 			)
 	GROUP BY tmp.UserId
 		,tmp.Username
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2047,6 +2102,8 @@ BEGIN
 					END
 				);
 
+
+				
 	-- PH-1x2 Minor2 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -2076,7 +2133,7 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM #tblTempAssignmentReportMainMatch AS tmp
 	WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
 		AND Bettype IN (
@@ -2085,6 +2142,7 @@ BEGIN
 			)
 	GROUP BY tmp.UserId
 		,tmp.Username
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2121,6 +2179,9 @@ BEGIN
 					END
 				);
 
+
+
+
 	-- PH-1x2 Minor3 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -2150,7 +2211,7 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM #tblTempAssignmentReportMainMatch AS tmp
 	WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
 		AND Bettype IN (
@@ -2159,6 +2220,7 @@ BEGIN
 			)
 	GROUP BY tmp.UserId
 		,tmp.Username
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2195,6 +2257,8 @@ BEGIN
 					END
 				);
 
+
+
 	-- PH_1X2_Others
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -2224,7 +2288,7 @@ BEGIN
 					THEN 1
 				ELSE NULL
 				END) AS 'FT-HDP/OU'
-		,@EventDate
+		,tmp.EventDate
 	FROM #tblTempAssignmentReportMainMatch AS tmp
 	WHERE LeagueCategoryId NOT IN (
 			@LeagueCategoryId_MJ
@@ -2238,6 +2302,7 @@ BEGIN
 			)
 	GROUP BY tmp.UserId
 		,tmp.Username
+		,tmp.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
