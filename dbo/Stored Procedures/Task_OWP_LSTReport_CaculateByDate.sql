@@ -48,6 +48,7 @@ BEGIN
 		,MinorBettypeId INT
 		)
 
+
 	CREATE TABLE #tblTempAssignmentReportMinorMatch (
 		Id INT IDENTITY
 		,UserId INT
@@ -192,6 +193,13 @@ BEGIN
 	GROUP BY tmp.UserId
 		,tmp.UserName
 
+		/*
+		SELECT @EventDate, @FromDate, @ToDate
+			SELECT * FROM #tblTempAssignmentReportMainMatch
+			SELECT * FROM #tblTempAssignmentReportMinorMatch
+			SELECT * FROM #tblReportTypeGeneral
+		*/
+
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -227,7 +235,7 @@ BEGIN
 				,SOURCE.FT_OU
 				,SOURCE.FT_HDP_OU
 				,SOURCE.FT_HDP + SOURCE.FT_OU + SOURCE.FT_HDP_OU
-				,@EventDate
+				,GETDATE()
 				);
 
 	-- Type 2 AUS

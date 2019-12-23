@@ -41,3 +41,16 @@ FROM dbo.MatchInfo AS mi
 	INNER JOIN #tblMatch AS m ON mi.OWPMatchId = m.OWPMatchId
 
 DROP TABLE #tblMatch
+
+INSERT INTO dbo.Module (ModuleId, ModuleName)
+VALUES(8, 'OddsCompiler')
+GO
+
+INSERT INTO dbo.ModuleObject (ModuleObjectId, ModuleObjectName, ModuleId)
+VALUES(30, 'Remark_OddsCompiler', 8)
+GO
+
+INSERT INTO dbo.LogAction (ActionId, ModuleId, ModuleObjectId, ActionTypeId, ActionName, SPName, LogItems)
+VALUES(102, 8, 30,2, 'OWP_OddsCompiler_UpdateMarket', 'OWP_OddsCompiler_UpdateMarket', N'<root><xml path="r/z" /><row item="Market" alias="mk" /></root>')
+GO
+
