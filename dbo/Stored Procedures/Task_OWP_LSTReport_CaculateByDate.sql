@@ -197,10 +197,10 @@ BEGIN
 		,tmp.EventDate
 
 		 
-		SELECT @EventDate, @FromDate, @ToDate
-			SELECT * FROM #tblTempAssignmentReportMainMatch
+		--SELECT @EventDate, @FromDate, @ToDate
+		--	SELECT * FROM #tblTempAssignmentReportMainMatch
 		--	SELECT * FROM #tblTempAssignmentReportMinorMatch
-			SELECT * FROM #tblReportTypeGeneral
+		--	SELECT * FROM #tblReportTypeGeneral
 		 
 
 	MERGE dbo.LSTReport AS TARGET

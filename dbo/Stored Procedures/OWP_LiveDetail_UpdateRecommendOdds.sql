@@ -68,10 +68,10 @@ BEGIN
 				,mo.Bettype AS '@bt'
 				,mo.HDP AS '@hdp'
 				,mo.TeamChoice AS '@tc'
-				,mo.CreatedBy AS 'cb'
-				,mo.CreatedDate AS 'cd'
-				,d.Choice AS 'ch'
-				,d.Odds AS 'odd'
+				,mo.CreatedBy AS '@cb'
+				,mo.CreatedDate AS '@cd'
+				,d.Choice AS '@ch'
+				,d.Odds AS '@odd'
 			FROM dbo.MatchRecommendOdds AS mo WITH (NOLOCK)
 				INNER JOIN dbo.MatchRecommendOddsDetail AS d WITH (NOLOCK) ON mo.MatchRecommendOddsId = d.MatchRecommendOddsId
 			WHERE mo.MatchRecommendOddsId = @Id

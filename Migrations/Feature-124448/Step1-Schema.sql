@@ -13,6 +13,12 @@ ALTER TABLE dbo.MatchInfo
 ADD Market NVARCHAR(250)
 GO
 
+ALTER TABLE dbo.MatchSetting
+ALTER COLUMN Spread MONEY
+GO
+ALTER TABLE dbo.MatchSetting
+ALTER COLUMN SpreadCN88 MONEY
+GO
 
 CREATE TABLE [dbo].[LSTReport](
 	[ReportDate] [datetime] NULL,

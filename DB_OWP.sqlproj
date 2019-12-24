@@ -399,6 +399,7 @@
     <Build Include="dbo\Tables\LSTReport.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_LSTReport_GetDataByDate.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_LSTReport_CaculateByDate.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LSTReport_GetTraderAssignmentByDate.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

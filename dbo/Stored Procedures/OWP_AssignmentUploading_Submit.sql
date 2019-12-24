@@ -41,6 +41,7 @@ AS
 	20191018@Kane.Le: Fix temp table cannot drop - [Redmine: #122194]
 	20191021@Tyler.Dang: Edit Provider/ Other Provider upload - [Redmine: #122211]
 	20191113@Leo.Vo: handle setting to upload PH assignment
+	20191924@Kane.Le: Review MaxBet, MaxBetSpread - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -234,29 +235,29 @@ BEGIN
 		,Phone NVARCHAR(200)
 		,Note XML
 		,MaxBetHDP MONEY
-		,SpreadHDP SMALLMONEY
+		,SpreadHDP MONEY
 		,MaxBetHDP_CN88 MONEY
-		,SpreadHDP_CN88 SMALLMONEY
+		,SpreadHDP_CN88 MONEY
 		,MaxBet1HHDP MONEY
-		,Spread1HHDP SMALLMONEY
+		,Spread1HHDP MONEY
 		,MaxBet1HHDP_CN88 MONEY
-		,Spread1HHDP_CN88 SMALLMONEY
+		,Spread1HHDP_CN88 MONEY
 		,MaxBetOU MONEY
-		,SpreadOU SMALLMONEY
+		,SpreadOU MONEY
 		,MaxBetOU_CN88 MONEY
-		,SpreadOU_CN88 SMALLMONEY
+		,SpreadOU_CN88 MONEY
 		,MaxBet1HOU MONEY
-		,Spread1HOU SMALLMONEY
+		,Spread1HOU MONEY
 		,MaxBet1HOU_CN88 MONEY
-		,Spread1HOU_CN88 SMALLMONEY
+		,Spread1HOU_CN88 MONEY
 		,MaxBet1X2 MONEY
-		,Spread1X2 SMALLMONEY
+		,Spread1X2 MONEY
 		,MaxBet1X2_CN88 MONEY
-		,Spread1X2_CN88 SMALLMONEY
+		,Spread1X2_CN88 MONEY
 		,MaxBet1H1X2 MONEY
-		,Spread1H1X2 SMALLMONEY
+		,Spread1H1X2 MONEY
 		,MaxBet1H1X2_CN88 MONEY
-		,Spread1H1X2_CN88 SMALLMONEY
+		,Spread1H1X2_CN88 MONEY
 		,TraderHDP NVARCHAR(200)
 		,Trader1HHDP NVARCHAR(200)
 		,TraderOU NVARCHAR(200)
@@ -265,13 +266,13 @@ BEGIN
 		,Trader1H1X2 NVARCHAR(200)
 		,LA NVARCHAR(200)
 		,MaxBetXMins MONEY
-		,SpreadXMins SMALLMONEY
+		,SpreadXMins MONEY
 		,MaxBetXMins_CN88 MONEY
-		,SpreadXMins_CN88 SMALLMONEY
+		,SpreadXMins_CN88 MONEY
 		,MaxBetFM MONEY
-		,SpreadFM SMALLMONEY
+		,SpreadFM MONEY
 		,MaxBetFM_CN88 MONEY
-		,SpreadFM_CN88 SMALLMONEY
+		,SpreadFM_CN88 MONEY
 		,EventDateTime DATETIME
 		,MatchStatus VARCHAR(15)
 		,[Round] NVARCHAR(2000)
@@ -498,8 +499,8 @@ BEGIN
 		,BetType INT NOT NULL
 		,MaxBet MONEY
 		,MaxBetCN88 MONEY
-		,Spread SMALLMONEY
-		,SpreadCN88 SMALLMONEY
+		,Spread MONEY
+		,SpreadCN88 MONEY
 		)
 
 	--list of old MatchSetting of existed match 
@@ -508,8 +509,8 @@ BEGIN
 		,BetType INT NOT NULL
 		,MaxBet MONEY
 		,MaxBetCN88 MONEY
-		,Spread SMALLMONEY
-		,SpreadCN88 SMALLMONEY
+		,Spread MONEY
+		,SpreadCN88 MONEY
 		)
 
 	--log for actions on table MatchSetting
@@ -519,8 +520,8 @@ BEGIN
 		,BetType INT NOT NULL
 		,MaxBet MONEY
 		,MaxBetCN88 MONEY
-		,Spread SMALLMONEY
-		,SpreadCN88 SMALLMONEY
+		,Spread MONEY
+		,SpreadCN88 MONEY
 		)
 
 	--list of Assignment from upload data
@@ -699,7 +700,7 @@ BEGIN
 		,OWPMatchId INT NOT NULL
 		);
 
-	BEGIN TRY
+	 BEGIN TRY
 		/*------Remove invalid data if has error from previous upload-----*/
 		SELECT TOP 1 @TempEventDate = au.EventDate
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
@@ -840,7 +841,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadHDP) = 1
-					THEN CAST(au.SpreadHDP AS SMALLMONEY)
+					THEN CAST(au.SpreadHDP AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -850,7 +851,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadHDP_CN88) = 1
-					THEN CAST(au.SpreadHDP_CN88 AS SMALLMONEY)
+					THEN CAST(au.SpreadHDP_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -860,7 +861,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1HHDP) = 1
-					THEN CAST(au.Spread1HHDP AS SMALLMONEY)
+					THEN CAST(au.Spread1HHDP AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -870,7 +871,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1HHDP_CN88) = 1
-					THEN CAST(au.Spread1HHDP_CN88 AS SMALLMONEY)
+					THEN CAST(au.Spread1HHDP_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -880,7 +881,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadOU) = 1
-					THEN CAST(au.SpreadOU AS SMALLMONEY)
+					THEN CAST(au.SpreadOU AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -890,7 +891,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadOU_CN88) = 1
-					THEN CAST(au.SpreadOU_CN88 AS SMALLMONEY)
+					THEN CAST(au.SpreadOU_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -900,7 +901,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1HOU) = 1
-					THEN CAST(au.Spread1HOU AS SMALLMONEY)
+					THEN CAST(au.Spread1HOU AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -910,7 +911,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1HOU_CN88) = 1
-					THEN CAST(au.Spread1HOU_CN88 AS SMALLMONEY)
+					THEN CAST(au.Spread1HOU_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -920,7 +921,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1X2) = 1
-					THEN CAST(au.Spread1X2 AS SMALLMONEY)
+					THEN CAST(au.Spread1X2 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -930,7 +931,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1X2_CN88) = 1
-					THEN CAST(au.Spread1X2_CN88 AS SMALLMONEY)
+					THEN CAST(au.Spread1X2_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -940,7 +941,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1H1X2) = 1
-					THEN CAST(au.Spread1H1X2 AS SMALLMONEY)
+					THEN CAST(au.Spread1H1X2 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -950,7 +951,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.Spread1H1X2_CN88) = 1
-					THEN CAST(au.Spread1H1X2_CN88 AS SMALLMONEY)
+					THEN CAST(au.Spread1H1X2_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,au.TraderHDP
@@ -967,7 +968,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadXMins) = 1
-					THEN CAST(au.SpreadXMins AS SMALLMONEY)
+					THEN CAST(au.SpreadXMins AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -977,7 +978,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadXMins_CN88) = 1
-					THEN CAST(au.SpreadXMins_CN88 AS SMALLMONEY)
+					THEN CAST(au.SpreadXMins_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -987,7 +988,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadFM) = 1
-					THEN CAST(au.SpreadFM AS SMALLMONEY)
+					THEN CAST(au.SpreadFM AS MONEY)
 				ELSE NULL
 				END
 			,CASE 
@@ -997,7 +998,7 @@ BEGIN
 				END
 			,CASE 
 				WHEN ISNUMERIC(au.SpreadFM_CN88) = 1
-					THEN CAST(au.SpreadFM_CN88 AS SMALLMONEY)
+					THEN CAST(au.SpreadFM_CN88 AS MONEY)
 				ELSE NULL
 				END
 			,DATEADD(DAY, DATEDIFF(DAY, 0, EventDate), CAST(KickOffTime AS DATETIME))
@@ -2356,6 +2357,8 @@ BEGIN
 			,ms.SpreadCN88
 		FROM dbo.MatchSetting AS ms WITH (NOLOCK)
 		INNER JOIN #tblExistedMatch AS em ON ms.OWPMatchId = em.OWPMatchId
+
+		select * from #tblMatchSetting
 
 		-- Remove MatchSetting of matches not in upload
 		DELETE ms
@@ -4301,7 +4304,7 @@ BEGIN
 		SET [Status] = 5 -- success
 			,EndDate = GETDATE()
 		WHERE SessionId = @SessionId
-	END TRY
+ END TRY
 
 	BEGIN CATCH
 		BEGIN
@@ -4317,6 +4320,7 @@ BEGIN
 			SELECT @ErrCode = 1
 				,@ErrMsg = 'Uploading Fail.'
 		END
+
 	END CATCH
 
 	--drop tables
