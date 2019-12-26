@@ -16,7 +16,7 @@ BEGIN
 
 	DECLARE @EventDate DATE = GETDATE();
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '11:59:59')
 	-- Insert statements for procedure here
 	-- DECLARE CONSTANTS
 	DECLARE @HandicapHDP INT = 1
@@ -49,7 +49,6 @@ BEGIN
 		,MinorBettypeId INT
 		)
 
-
 	CREATE TABLE #tblTempAssignmentReportMinorMatch (
 		Id INT IDENTITY
 		,UserId INT
@@ -81,7 +80,7 @@ BEGIN
 		,u.Username
 		,ma.OWPMatchId
 		,ass.Bettype
-		,ma.EventDate
+		,ma.EventDateTime
 		,mi.IsSoloMatch
 		,ma.OWPLeagueId
 		,la.OWPLeagueName
@@ -116,7 +115,7 @@ BEGIN
 		,u.Username
 		,ma.OWPMatchId
 		,ass.Bettype
-		,ma.EventDate
+		,ma.EventDateTime
 		,mi.IsSoloMatch
 		,ma.OWPLeagueId
 		,la.OWPLeagueName
@@ -153,65 +152,89 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @1H_HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					OR tmp.Bettype = @1H_OverUnder
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @1H_HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					OR tmp.Bettype = @1H_OverUnder
-					THEN 2
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
-
-		 
-		--SELECT @EventDate, @FromDate, @ToDate
-		--	SELECT * FROM #tblTempAssignmentReportMainMatch
-		--	SELECT * FROM #tblTempAssignmentReportMinorMatch
-		--	SELECT * FROM #tblReportTypeGeneral
-		 
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND CAST(TARGET.ReportDate AS DATE) = CAST(SOURCE.EventDate AS DATE)
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND CAST(TARGET.ReportDate AS DATE) = CAST(SOURCE.EventDate AS DATE)
 		THEN
 			UPDATE
 			SET TARGET.Type1_FT_HDP = SOURCE.FT_HDP
@@ -252,49 +275,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -308,9 +362,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type2_AUS_League = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -325,9 +383,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -342,51 +404,81 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
-			AND MinorBettypeId = @MinorBettype_NextCorner
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMinorMatch
+			WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
+				AND MinorBettypeId = @MinorBettype_NextCorner
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -400,9 +492,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type2_AUS_League_Corner = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -417,9 +513,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -434,49 +534,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 1%'
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 1%'
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -490,9 +621,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type2_JAP_Divison1 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -507,9 +642,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -524,49 +663,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 2%'
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 2%'
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -580,9 +750,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type2_JAP_Divison2 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -597,13 +771,17 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
--- Type 3 Solo MJ
+	-- Type 3 Solo MJ
 	TRUNCATE TABLE #tblReportTypeGeneral
 
 	INSERT INTO #tblReportTypeGeneral (
@@ -614,49 +792,81 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE IsSoloMatch = 1
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE IsSoloMatch = 1
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
+
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -669,9 +879,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type3_Solo_Major = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -686,13 +900,16 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
- 	
 	-- Type 4 Major League
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -704,49 +921,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueCategoryId = @LeagueCategoryId_MJ
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueCategoryId = @LeagueCategoryId_MJ
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -760,9 +1008,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_Major = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -777,13 +1029,17 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
--- Type 4 MIN-1 League
+	-- Type 4 MIN-1 League
 	TRUNCATE TABLE #tblReportTypeGeneral
 
 	INSERT INTO #tblReportTypeGeneral (
@@ -794,49 +1050,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -850,9 +1137,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_Minor1 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -867,13 +1158,15 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
-
-	
 
 	-- Type 4 MIN-2 League
 	TRUNCATE TABLE #tblReportTypeGeneral
@@ -886,50 +1179,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		 
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -943,9 +1266,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_Minor2 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -960,9 +1287,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -977,49 +1308,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1033,9 +1395,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_Minor3 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1050,16 +1416,16 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
-
-				
-
-	
 	-- Type 4 1ST MJ League
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -1071,47 +1437,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS '1H-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_OverUnder
-					THEN 1
-				ELSE NULL
-				END) AS '1H-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_HandicapHDP
-					OR tmp.Bettype = @1H_OverUnder
-					THEN 1
-				ELSE NULL
-				END) AS '1H-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
-					THEN 7
-				WHEN Bettype = @1H_OverUnder
-					THEN 8
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueCategoryId = 1
-			AND Bettype IN (
-				@1H_HandicapHDP
-				,@1H_OverUnder
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueCategoryId = 1
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1125,9 +1524,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_1ST_Major = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1142,9 +1545,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -1159,47 +1566,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS '1H-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_OverUnder
-					THEN 1
-				ELSE NULL
-				END) AS '1H-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_HandicapHDP
-					OR tmp.Bettype = @1H_OverUnder
-					THEN 1
-				ELSE NULL
-				END) AS '1H-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
-					THEN 7
-				WHEN Bettype = @1H_OverUnder
-					THEN 8
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueCategoryId <> 1
-			AND Bettype IN (
-				@1H_HandicapHDP
-				,@1H_OverUnder
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1H_HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @1H_OverUnder
+								THEN 1
+							ELSE NULL
+							END) < 1
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1H_HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @1H_OverUnder
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1H_HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @1H_OverUnder
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueCategoryId <> 1
+				AND Bettype IN (
+					@1H_HandicapHDP
+					,@1H_OverUnder
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1213,9 +1653,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_1ST_Other = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1230,9 +1674,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -1247,49 +1695,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMainMatch
-		WHERE LeagueName LIKE '%FANTASY MATCH%'
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch
+			WHERE LeagueName LIKE '%FANTASY MATCH%'
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1303,9 +1782,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_Fantasy = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1320,9 +1803,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -1337,49 +1824,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE MinorBettypeId = @MinorBettype_NextCorner
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMinorMatch
+			WHERE MinorBettypeId = @MinorBettype_NextCorner
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1393,9 +1911,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_Corner_NextCorner = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1410,9 +1932,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -1427,49 +1953,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE MinorBettypeId = @MinorBettype_15Mins
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMinorMatch
+			WHERE MinorBettypeId = @MinorBettype_15Mins
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1483,9 +2040,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_15M = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1500,9 +2061,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -1517,49 +2082,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE MinorBettypeId = @MinorBettype_10Mins
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMinorMatch
+			WHERE MinorBettypeId = @MinorBettype_10Mins
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1573,9 +2169,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_10M = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1590,9 +2190,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -1607,49 +2211,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE MinorBettypeId = @MinorBettype_NextBooking
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
+					THEN 1
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMinorMatch
+			WHERE MinorBettypeId = @MinorBettype_NextBooking
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1663,9 +2298,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.Type4_TotalBooking = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -1680,98 +2319,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
-					END
-				);
-
-	TRUNCATE TABLE #tblReportTypeGeneral
-
-	INSERT INTO #tblReportTypeGeneral (
-		UserId
-		,UserName
-		,FT_HDP
-		,FT_OU
-		,FT_HDP_OU
-		,EventDate
-		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @OverUnderOU
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
-	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
-			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
-					THEN 1
-				WHEN Bettype = @1H_OverUnder
-					THEN 3
-				WHEN Bettype = @OverUnderOU
-					THEN 3
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE MinorBettypeId = @MinorBettype_NextBooking
-			AND Bettype IN (
-				@HandicapHDP
-				,@OverUnderOU
-				)
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
-
-	MERGE dbo.LSTReport AS TARGET
-	USING #tblReportTypeGeneral AS SOURCE
-		ON (
-				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
-				)
-	WHEN MATCHED
-		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
-		THEN
-			UPDATE
-			SET TARGET.Type4_TotalBooking = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
-					END
-	WHEN NOT MATCHED BY TARGET
-		THEN
-			INSERT (
-				ReportDate
-				,UserId
-				,Username
-				,Type4_TotalBooking
-				)
-			VALUES (
-				SOURCE.EventDate
-				,SOURCE.UserId
-				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
@@ -1786,57 +2340,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @1H_HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					OR tmp.Bettype = @1H_OverUnder
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
-					OR tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			--,OWPMatchId			
-			,OWPMatchParentId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
 					THEN 1
-				WHEN Bettype = @OverUnderOU
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
 					THEN 1
-				WHEN Bettype = @1X2
-					THEN 1
-				WHEN Bettype = @1H_1X2
-					THEN 1
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE LeagueName LIKE '%- PENALTY SHOOT-OUT'
-		GROUP BY UserId
-			,Username
-			,OWPMatchParentId
-			,Bettype
-			,EventDate
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMinorMatch
+			WHERE LeagueName LIKE '%- PENALTY SHOOT-OUT'
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1849,7 +2426,15 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_PKSO = SOURCE.FT_HDP
+			SET TARGET.Type4_PKSO = CASE 
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
+					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1862,7 +2447,15 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,SOURCE.FT_HDP
+				,CASE 
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
+					END
 				);
 
 	-- Type 4 WIN
@@ -1876,51 +2469,80 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @HandicapHDP
-					OR tmp.Bettype = @1H_HandicapHDP
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @OverUnderOU
-					OR tmp.Bettype = @1H_OverUnder
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
-					OR tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
 	FROM (
-		SELECT DISTINCT UserId
-			,Username
-			,OWPMatchId
-			,EventDate
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
 			,CASE 
-				WHEN Bettype = @1H_HandicapHDP
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) < 1
 					THEN 1
-				WHEN Bettype = @1H_OverUnder
+				ELSE 0
+				END AS 'FT_HDP'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) < 1
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
 					THEN 1
-				WHEN Bettype = @OverUnderOU
+				ELSE 0
+				END AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @HandicapHDP
+								THEN 1
+							ELSE NULL
+							END) > 0
+					AND COUNT(CASE 
+							WHEN tmp.Bettype = @OverUnderOU
+								THEN 1
+							ELSE NULL
+							END) > 0
 					THEN 1
-				WHEN Bettype = @1X2
-					THEN 1
-				WHEN Bettype = @1H_1X2
-					THEN 1
-				ELSE Bettype
-				END AS Bettype
-		FROM #tblTempAssignmentReportMinorMatch
-		WHERE LeagueName LIKE '%- WINNER'
-		) AS tmp
-	GROUP BY tmp.UserId
-		,tmp.UserName
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMinorMatch
+			WHERE LeagueName LIKE '%- WINNER'
+				AND Bettype IN (
+					@HandicapHDP
+					,@OverUnderOU
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1933,7 +2555,15 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Winner = SOURCE.FT_HDP
+			SET TARGET.Type4_Winner = CASE 
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
+					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1946,10 +2576,16 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,SOURCE.FT_HDP
+				,CASE 
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
+					END
 				);
-
-	
 
 	-- PH-1x2 Major
 	TRUNCATE TABLE #tblReportTypeGeneral
@@ -1962,34 +2598,48 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
+	FROM (
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1X2
+								THEN 1
+							ELSE NULL
+							END) > 0					 
 					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
-					OR tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
-	FROM #tblTempAssignmentReportMainMatch AS tmp
-	WHERE LeagueCategoryId = @LeagueCategoryId_MJ
-		AND Bettype IN (
-			@1X2
-			,@1H_1X2
-			)
-	GROUP BY tmp.UserId
-		,tmp.Username
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch AS tmp
+			WHERE LeagueCategoryId = @LeagueCategoryId_MJ
+				AND Bettype IN (
+					@1X2					 
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2003,9 +2653,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Major = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -2020,17 +2674,20 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
-
 
 	-- PH-1x2 Minor1 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
-	INSERT INTO #tblReportTypeGeneral (
+		INSERT INTO #tblReportTypeGeneral (
 		UserId
 		,UserName
 		,FT_HDP
@@ -2038,34 +2695,48 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
+	FROM (
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1X2
+								THEN 1
+							ELSE NULL
+							END) > 0					 
 					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
-					OR tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
-	FROM #tblTempAssignmentReportMainMatch AS tmp
-	WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
-		AND Bettype IN (
-			@1X2
-			,@1H_1X2
-			)
-	GROUP BY tmp.UserId
-		,tmp.Username
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch AS tmp
+			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
+				AND Bettype IN (
+					@1X2					 
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2079,9 +2750,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Minor1 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -2096,14 +2771,16 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 
-
-				
 	-- PH-1x2 Minor2 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
@@ -2115,34 +2792,48 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
+	FROM (
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1X2
+								THEN 1
+							ELSE NULL
+							END) > 0					 
 					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
-					OR tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
-	FROM #tblTempAssignmentReportMainMatch AS tmp
-	WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
-		AND Bettype IN (
-			@1X2
-			,@1H_1X2
-			)
-	GROUP BY tmp.UserId
-		,tmp.Username
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch AS tmp
+			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
+				AND Bettype IN (
+					@1X2					 
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2156,9 +2847,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Minor2 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -2173,18 +2868,20 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
-
-
-
 
 	-- PH-1x2 Minor3 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
+	
 	INSERT INTO #tblReportTypeGeneral (
 		UserId
 		,UserName
@@ -2193,34 +2890,48 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
+	FROM (
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1X2
+								THEN 1
+							ELSE NULL
+							END) > 0					 
 					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
-					OR tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
-	FROM #tblTempAssignmentReportMainMatch AS tmp
-	WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
-		AND Bettype IN (
-			@1X2
-			,@1H_1X2
-			)
-	GROUP BY tmp.UserId
-		,tmp.Username
-		,tmp.EventDate
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch AS tmp
+			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
+				AND Bettype IN (
+					@1X2					 
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2234,9 +2945,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Minor3 = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -2251,18 +2966,20 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
-
-
 
 	-- PH_1X2_Others
 	TRUNCATE TABLE #tblReportTypeGeneral
 
-	INSERT INTO #tblReportTypeGeneral (
+		INSERT INTO #tblReportTypeGeneral (
 		UserId
 		,UserName
 		,FT_HDP
@@ -2270,39 +2987,53 @@ BEGIN
 		,FT_HDP_OU
 		,EventDate
 		)
-	SELECT tmp.UserId
-		,tmp.UserName
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
+	SELECT a.UserId
+		,a.Username
+		,SUM(a.FT_HDP) AS 'FT_HDP'
+		,SUM(a.FT_OU) AS 'FT_OU'
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,a.EventDate
+	FROM (
+		SELECT tmp.UserId
+			,tmp.UserName
+			,tmp.OWPMatchId
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,CASE 
+				WHEN COUNT(CASE 
+							WHEN tmp.Bettype = @1X2
+								THEN 1
+							ELSE NULL
+							END) > 0					 
 					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-OU'
-		,COUNT(CASE 
-				WHEN tmp.Bettype = @1X2
-					OR tmp.Bettype = @1H_1X2
-					THEN 1
-				ELSE NULL
-				END) AS 'FT-HDP/OU'
-		,tmp.EventDate
-	FROM #tblTempAssignmentReportMainMatch AS tmp
-	WHERE LeagueCategoryId NOT IN (
+				ELSE 0
+				END AS 'FT_HDP_OU'
+			,tmp.EventDate
+		FROM (
+			SELECT DISTINCT UserId
+				,Username
+				,OWPMatchId
+				,EventDate
+				,Bettype
+			FROM #tblTempAssignmentReportMainMatch AS tmp
+			WHERE LeagueCategoryId NOT IN (
 			@LeagueCategoryId_MJ
 			,@LeagueCategoryId_MIN_1
 			,@LeagueCategoryId_MIN_2
 			,@LeagueCategoryId_MIN_3
 			)
-		AND Bettype IN (
-			@1X2
-			,@1H_1X2
-			)
-	GROUP BY tmp.UserId
-		,tmp.Username
-		,tmp.EventDate
+				AND Bettype IN (
+					@1X2					 
+					)
+			) AS tmp
+		GROUP BY tmp.UserId
+			,tmp.UserName
+			,tmp.EventDate
+			,tmp.OWPMatchId
+		) AS a
+	GROUP BY a.UserId
+		,a.UserName
+		,a.EventDate
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -2316,9 +3047,13 @@ BEGIN
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Others = CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 	WHEN NOT MATCHED BY TARGET
 		THEN
@@ -2333,9 +3068,13 @@ BEGIN
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,CASE 
-					WHEN SOURCE.FT_HDP > 0
-						THEN SOURCE.FT_HDP
-					ELSE SOURCE.FT_OU
+					WHEN SOURCE.FT_HDP_OU > 0
+						THEN SOURCE.FT_HDP_OU
+					ELSE CASE 
+							WHEN SOURCE.FT_OU > 0
+								THEN SOURCE.FT_OU
+							ELSE SOURCE.FT_HDP
+							END
 					END
 				);
 

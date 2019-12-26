@@ -38,7 +38,7 @@ BEGIN
 		,u.[SectionId]
 		,rs.[Name] AS SectionName
 		 
-		,CASE WHEN SUM( [Type1_FT_OU] + [Type1_FT_HDPOU]) > 0 THEN CAST(SUM( [Type1_FT_OU] + [Type1_FT_HDPOU]) AS VARCHAR) ELSE '-' END AS [TotalMatch]
+		,CASE WHEN SUM([TotalMatch]) > 0 THEN CAST(SUM( [TotalMatch]) AS VARCHAR) ELSE '-' END AS [TotalMatch]
 		,CASE WHEN SUM([Type1_FT_HDP]) > 0 THEN CAST(SUM([Type1_FT_HDP]) AS VARCHAR) ELSE '-' END AS [Type1_FT_HDP]
 		,CASE WHEN SUM([Type1_FT_OU]) > 0 THEN CAST(SUM([Type1_FT_OU]) AS VARCHAR) ELSE '-' END AS [Type1_FT_OU]
 		,CASE WHEN SUM([Type1_FT_HDPOU]) > 0 THEN CAST(SUM([Type1_FT_HDPOU]) AS VARCHAR) ELSE '-' END AS [Type1_FT_HDPOU]
