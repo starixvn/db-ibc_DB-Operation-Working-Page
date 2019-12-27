@@ -134,6 +134,23 @@ BEGIN
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
 
+	-- DELETE IF NOT EXISTS
+	DELETE b
+	FROM LSTReport b
+	LEFT JOIN (
+		SELECT DISTINCT UserId
+			,EventDate
+		FROM #tblTempAssignmentReportMainMatch
+		
+		UNION
+		
+		SELECT DISTINCT UserId
+			,EventDate
+		FROM #tblTempAssignmentReportMinorMatch
+		) f ON f.UserId = b.UserId
+		AND b.ReportDate = f.EventDate
+	WHERE f.UserId IS NULL
+
 	CREATE TABLE #tblReportTypeGeneral (
 		Id INT IDENTITY
 		,UserId INT
@@ -225,7 +242,9 @@ BEGIN
 	GROUP BY a.UserId
 		,a.UserName
 		,a.EventDate
+ 
 
+	-- Type 1
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -277,9 +296,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -361,15 +380,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type2_AUS_League = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type2_AUS_League = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -382,15 +393,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 2 AUS Conner
@@ -406,9 +409,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -491,15 +494,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type2_AUS_League_Corner = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type2_AUS_League_Corner = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -512,15 +507,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 2 JAP Division1
@@ -536,9 +523,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -620,15 +607,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type2_JAP_Divison1 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type2_JAP_Divison1 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -641,15 +620,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 2 JAP Division2
@@ -665,9 +636,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -749,15 +720,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type2_JAP_Divison2 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type2_JAP_Divison2 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -770,15 +733,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 3 Solo MJ
@@ -794,9 +749,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -878,15 +833,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type3_Solo_Major = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type3_Solo_Major = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -899,15 +846,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 Major League
@@ -923,9 +862,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1007,15 +946,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Major = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_Major = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1028,15 +959,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 MIN-1 League
@@ -1052,9 +975,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1136,15 +1059,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Minor1 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_Minor1 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1157,15 +1072,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 MIN-2 League
@@ -1181,9 +1088,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1265,15 +1172,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Minor2 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_Minor2 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1286,15 +1185,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 MIN-3 League
@@ -1310,9 +1201,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1394,15 +1285,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Minor3 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_Minor3 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1415,15 +1298,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 1ST MJ League
@@ -1439,9 +1314,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1523,15 +1398,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_1ST_Major = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_1ST_Major = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1544,15 +1411,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 1ST(Other) MJ League
@@ -1568,9 +1427,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1652,15 +1511,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_1ST_Other = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_1ST_Other = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1673,15 +1524,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 FANTASY
@@ -1697,9 +1540,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1781,15 +1624,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Fantasy = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_Fantasy = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1802,15 +1637,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 Conner/NextConner Conner
@@ -1826,9 +1653,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -1910,15 +1737,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Corner_NextCorner = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_Corner_NextCorner = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -1931,15 +1750,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type4_15M
@@ -1955,9 +1766,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2039,15 +1850,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_15M = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_15M = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2060,15 +1863,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type4_10M
@@ -2084,9 +1879,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2168,15 +1963,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_10M = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_10M = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2189,15 +1976,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type4_TB (TotalBooking, count as NextBooking)
@@ -2213,9 +1992,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2297,15 +2076,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_TotalBooking = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_TotalBooking = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2318,15 +2089,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 PK SO
@@ -2342,9 +2105,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2426,15 +2189,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_PKSO = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_PKSO = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2447,15 +2202,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- Type 4 WIN
@@ -2471,9 +2218,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2555,15 +2302,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.Type4_Winner = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.Type4_Winner = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2576,15 +2315,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- PH-1x2 Major
@@ -2600,9 +2331,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2615,7 +2346,7 @@ BEGIN
 							WHEN tmp.Bettype = @1X2
 								THEN 1
 							ELSE NULL
-							END) > 0					 
+							END) > 0
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
@@ -2628,9 +2359,7 @@ BEGIN
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MJ
-				AND Bettype IN (
-					@1X2					 
-					)
+				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -2652,15 +2381,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.PH_1X2_Major = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.PH_1X2_Major = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2673,21 +2394,13 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- PH-1x2 Minor1 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
-		INSERT INTO #tblReportTypeGeneral (
+	INSERT INTO #tblReportTypeGeneral (
 		UserId
 		,UserName
 		,FT_HDP
@@ -2697,9 +2410,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2712,7 +2425,7 @@ BEGIN
 							WHEN tmp.Bettype = @1X2
 								THEN 1
 							ELSE NULL
-							END) > 0					 
+							END) > 0
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
@@ -2725,9 +2438,7 @@ BEGIN
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
-				AND Bettype IN (
-					@1X2					 
-					)
+				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -2749,15 +2460,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.PH_1X2_Minor1 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.PH_1X2_Minor1 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2770,15 +2473,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- PH-1x2 Minor2 MIN-1
@@ -2794,9 +2489,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2809,7 +2504,7 @@ BEGIN
 							WHEN tmp.Bettype = @1X2
 								THEN 1
 							ELSE NULL
-							END) > 0					 
+							END) > 0
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
@@ -2822,9 +2517,7 @@ BEGIN
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
-				AND Bettype IN (
-					@1X2					 
-					)
+				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -2846,15 +2539,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.PH_1X2_Minor2 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.PH_1X2_Minor2 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2867,21 +2552,12 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- PH-1x2 Minor3 MIN-1
 	TRUNCATE TABLE #tblReportTypeGeneral
 
-	
 	INSERT INTO #tblReportTypeGeneral (
 		UserId
 		,UserName
@@ -2892,9 +2568,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -2907,7 +2583,7 @@ BEGIN
 							WHEN tmp.Bettype = @1X2
 								THEN 1
 							ELSE NULL
-							END) > 0					 
+							END) > 0
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
@@ -2920,9 +2596,7 @@ BEGIN
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
-				AND Bettype IN (
-					@1X2					 
-					)
+				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -2944,15 +2618,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.PH_1X2_Minor3 = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.PH_1X2_Minor3 = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -2965,21 +2631,13 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	-- PH_1X2_Others
 	TRUNCATE TABLE #tblReportTypeGeneral
 
-		INSERT INTO #tblReportTypeGeneral (
+	INSERT INTO #tblReportTypeGeneral (
 		UserId
 		,UserName
 		,FT_HDP
@@ -2989,9 +2647,9 @@ BEGIN
 		)
 	SELECT a.UserId
 		,a.Username
-		,SUM(a.FT_HDP) AS 'FT_HDP'
-		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
+		,0 AS 'FT_HDP'
+		,0 AS 'FT_OU'
+		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
 		,a.EventDate
 	FROM (
 		SELECT tmp.UserId
@@ -3004,7 +2662,7 @@ BEGIN
 							WHEN tmp.Bettype = @1X2
 								THEN 1
 							ELSE NULL
-							END) > 0					 
+							END) > 0
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
@@ -3017,14 +2675,12 @@ BEGIN
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId NOT IN (
-			@LeagueCategoryId_MJ
-			,@LeagueCategoryId_MIN_1
-			,@LeagueCategoryId_MIN_2
-			,@LeagueCategoryId_MIN_3
-			)
-				AND Bettype IN (
-					@1X2					 
+					@LeagueCategoryId_MJ
+					,@LeagueCategoryId_MIN_1
+					,@LeagueCategoryId_MIN_2
+					,@LeagueCategoryId_MIN_3
 					)
+				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -3046,15 +2702,7 @@ BEGIN
 		AND TARGET.ReportDate = SOURCE.EventDate
 		THEN
 			UPDATE
-			SET TARGET.PH_1X2_Others = CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+			SET TARGET.PH_1X2_Others = SOURCE.FT_HDP_OU
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -3067,15 +2715,7 @@ BEGIN
 				SOURCE.EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
-				,CASE 
-					WHEN SOURCE.FT_HDP_OU > 0
-						THEN SOURCE.FT_HDP_OU
-					ELSE CASE 
-							WHEN SOURCE.FT_OU > 0
-								THEN SOURCE.FT_OU
-							ELSE SOURCE.FT_HDP
-							END
-					END
+				,SOURCE.FT_HDP_OU
 				);
 
 	DROP TABLE #tblReportTypeGeneral

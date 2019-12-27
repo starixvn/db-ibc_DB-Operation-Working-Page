@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [dbo].[LSTReport] (
-    [ReportDate]              DATETIME           NULL,
+    [ReportDate]              DATE               NULL,
     [UserId]                  INT                NULL,
     [Username]                VARCHAR (50)       NULL,
     [SectionId]               INT                NULL,
@@ -47,6 +47,8 @@
     [Winloss_Others]          INT                NULL,
     [CreatedDate]             DATETIMEOFFSET (7) NULL
 );
+
+
 
 
 
