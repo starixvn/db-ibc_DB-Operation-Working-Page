@@ -8,7 +8,7 @@ Task : Get by status
 DB: bodb_OWP
 
 Revisions:
-	20191227@Carlos.Nguyen: Initial SP - [Redmine: #126250]
+	20191228@Carlos.Nguyen: Initial SP - [Redmine: #126250]
 */
 BEGIN
 	SELECT RequestId
