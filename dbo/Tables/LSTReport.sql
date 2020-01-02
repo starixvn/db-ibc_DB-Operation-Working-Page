@@ -53,7 +53,8 @@
 
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IX_ReportDate_UserId_LSTReport]
-    ON [dbo].[LSTReport]([ReportDate] ASC, [UserId] ASC);
+
 

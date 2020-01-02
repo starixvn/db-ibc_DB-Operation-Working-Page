@@ -9,7 +9,7 @@ AS
  DB: bodb_OWP    
     
  Revisions:
-	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
+	20191211@Kane.Le: Initial SP - [Redmine: #124448]
 */
 BEGIN
 	 
@@ -88,6 +88,6 @@ BEGIN
 		,rp.[Username]
 		,u.[SectionId]
 		,rs.[Name]
-
+	ORDER BY [SectionId]
 	DROP TABLE #tmpSectionResource
 END

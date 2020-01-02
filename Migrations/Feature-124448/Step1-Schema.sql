@@ -20,8 +20,14 @@ ALTER TABLE dbo.MatchSetting
 ALTER COLUMN SpreadCN88 MONEY
 GO
 
+ALTER TABLE dbo.AutoAssignmentRequest
+ADD Id INT IDENTITY(1,1),
+	RequestDate DATETIME,
+	ResponseDate DATETIME
+GO
+
 CREATE TABLE [dbo].[LSTReport](
-	[ReportDate] [datetime] NULL,
+	[ReportDate] [date] NULL,
 	[UserId] [int] NULL,
 	[Username] [varchar](50) NULL,
 	[SectionId] [int] NULL,
