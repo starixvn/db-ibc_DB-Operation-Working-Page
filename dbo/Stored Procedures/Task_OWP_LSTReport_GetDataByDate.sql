@@ -13,11 +13,7 @@ AS
 */
 BEGIN
 	 
-	SET NOCOUNT ON;
-
-	-- Run 3 day latest
-
-	EXEC Task_OWP_LSTReport_CaculateByDate
+	SET NOCOUNT ON;	
 
 	CREATE TABLE #tmpSectionResource (
 		Id INT

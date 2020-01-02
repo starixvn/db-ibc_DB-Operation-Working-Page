@@ -1,4 +1,4 @@
-﻿CREATE TABLE [dbo].[LSTReport] (
+CREATE TABLE [dbo].[LSTReport] (
     [ReportDate]              DATE               NULL,
     [UserId]                  INT                NULL,
     [Username]                VARCHAR (50)       NULL,
@@ -55,6 +55,9 @@
 
 
 
-GO
 
+
+GO
+CREATE CLUSTERED INDEX [IX_ReportDate_UserId_LSTReport]
+    ON [dbo].[LSTReport]([ReportDate] ASC, [UserId] ASC);
 
