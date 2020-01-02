@@ -25,7 +25,8 @@ BEGIN
 	DECLARE @idoc INT
 
 	UPDATE dbo.AutoAssignmentRequest WITH (ROWLOCK)
-	SET [Status] = @Status
+	SET [Status] = @Status,
+		ResponseDate= GETDATE()
 	WHERE RequestId = @RequestId
 		AND [Status] <> @Status
 

@@ -1,9 +1,12 @@
-CREATE TABLE [dbo].[AutoAssignmentRequest] (
-    [RequestId]   VARCHAR (50) NOT NULL,
-    [EventDate]   DATE         NOT NULL,
-    [Status]      INT          NOT NULL,
-    [CreatedDate] DATETIME     CONSTRAINT [DF_AutoAssignmentRequest_CreatedDate] DEFAULT (getdate()) NOT NULL,
-    [CreatorId]   INT          NOT NULL,
+﻿CREATE TABLE [dbo].[AutoAssignmentRequest] (
+    [RequestId]    VARCHAR (50) NOT NULL,
+    [EventDate]    DATE         NOT NULL,
+    [Status]       INT          NOT NULL,
+    [CreatedDate]  DATETIME     CONSTRAINT [DF_AutoAssignmentRequest_CreatedDate] DEFAULT (getdate()) NOT NULL,
+    [CreatorId]    INT          NOT NULL,
+    [Id]           INT          IDENTITY (1, 1) NOT NULL,
+    [RequestDate]  DATETIME     NULL,
+    [ResponseDate] DATETIME     NULL,
     CONSTRAINT [PK_AutoAssignmentRequest] PRIMARY KEY CLUSTERED ([RequestId] ASC)
 );
 
@@ -12,16 +15,16 @@ CREATE TABLE [dbo].[AutoAssignmentRequest] (
 
 
 
+
+
+GO
+
+
+
 GO
 
 
 
 GO
 
-
-
-GO
-CREATE NONCLUSTERED INDEX [IX_AutoAssignmentRequest_CreatedDate]
-    ON [dbo].[AutoAssignmentRequest]([CreatedDate] DESC)
-    ON [OWP_Index];
 

@@ -137,7 +137,7 @@ BEGIN
 	-- DELETE IF NOT EXISTS
 	DELETE b
 	FROM LSTReport b
-	LEFT JOIN (
+	WHERE NOT EXISTS (
 		SELECT DISTINCT UserId
 			,EventDate
 		FROM #tblTempAssignmentReportMainMatch
@@ -146,10 +146,10 @@ BEGIN
 		
 		SELECT DISTINCT UserId
 			,EventDate
-		FROM #tblTempAssignmentReportMinorMatch
-		) f ON f.UserId = b.UserId
-		AND b.ReportDate = f.EventDate
-	WHERE f.UserId IS NULL
+		FROM #tblTempAssignmentReportMinorMatch		 		
+		)
+		AND b.ReportDate >= @FromDate
+		AND b.ReportDate <= @ToDate
 
 	CREATE TABLE #tblReportTypeGeneral (
 		Id INT IDENTITY

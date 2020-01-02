@@ -21,11 +21,13 @@ BEGIN
 		,EventDate
 		,[Status]
 		,CreatorId
+		,RequestDate
 		)
 	VALUES (
 		@RequestId
 		,@EventDate
 		,@Status
 		,@CreatorId
+		,GETDATE()
 		)
 END
