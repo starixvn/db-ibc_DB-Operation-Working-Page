@@ -78,6 +78,6 @@ CREATE TABLE [dbo].[LSTReport](
 GO
 
 
-CREATE INDEX IX_ReportDate_UserId_LSTReport
+CREATE CLUSTERED INDEX IX_ReportDate_UserId_LSTReport
 ON dbo.LSTReport (ReportDate, UserId);
 GO
