@@ -9,6 +9,7 @@ AS
     
  Revisions:
 	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
+	20190107@Kane.Le: Delete report when unassign - [Redmine: #124448]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -135,21 +136,9 @@ BEGIN
 		AND ass.Bettype <> @LA_Bettype
 
 	-- DELETE IF NOT EXISTS
-	DELETE b
-	FROM LSTReport b
-	WHERE NOT EXISTS (
-		SELECT DISTINCT UserId
-			,EventDate
-		FROM #tblTempAssignmentReportMainMatch
-		
-		UNION
-		
-		SELECT DISTINCT UserId
-			,EventDate
-		FROM #tblTempAssignmentReportMinorMatch		 		
-		)
-		AND b.ReportDate >= @FromDate
-		AND b.ReportDate <= @ToDate
+	DELETE LSTReport
+	WHERE ReportDate >= CAST(@FromDate AS DATE)
+		AND ReportDate <= CAST(@ToDate AS DATE)
 
 	CREATE TABLE #tblReportTypeGeneral (
 		Id INT IDENTITY
@@ -242,7 +231,6 @@ BEGIN
 	GROUP BY a.UserId
 		,a.UserName
 		,a.EventDate
- 
 
 	-- Type 1
 	MERGE dbo.LSTReport AS TARGET
