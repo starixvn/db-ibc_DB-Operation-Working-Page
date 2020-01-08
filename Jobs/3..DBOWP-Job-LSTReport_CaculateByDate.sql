@@ -3,7 +3,8 @@
 	Job Name:	[bodb_OWP - Job: Task_OWP_LSTReport_CaculateByDate]
 	Server:		DBOWP
 	Revision:
-		- 20191211@Kane.Le: Task_OWP_LSTReport_CaculateByDate - [Redmine: #124448]		 
+		- 20191211@Kane.Le: Task_OWP_LSTReport_CaculateByDate - [Redmine: #124448]
+		- 20191211@Kane.Le: Update job to run every minutes - [Redmine: #124448]
 */
 
 SET NOCOUNT ON;
@@ -180,14 +181,14 @@ END;
 BEGIN;
 	EXECUTE	@ReturnCode	= msdb.dbo.sp_add_jobschedule
 							@job_id						= @JobId
-						,	@name						= N'Every day at 10:55'
+						,	@name						= N'Loop after every minutes'
 						,	@enabled					= 1
 						,	@freq_type					= 4
 						,	@freq_interval				= 1
-						,	@freq_subday_type			= 1
-						,	@freq_subday_interval		= 0
+						,	@freq_subday_type			= 4
+						,	@freq_subday_interval		= 1
 						,	@freq_relative_interval		= 0
-						,	@freq_recurrence_factor		= 1
+						,	@freq_recurrence_factor		= 0
 						,	@active_start_date			= 20191120
 						,	@active_end_date			= 99991231
 						,	@active_start_time			= 000000

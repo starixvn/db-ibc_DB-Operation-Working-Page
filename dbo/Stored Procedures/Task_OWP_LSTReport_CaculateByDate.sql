@@ -16,8 +16,8 @@ BEGIN
 	SET ANSI_WARNINGS OFF;
 
 	DECLARE @EventDate DATE = GETDATE();
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '11:59:59')
+	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 3, @EventDate), '12:00:00')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59')
 	-- Insert statements for procedure here
 	-- DECLARE CONSTANTS
 	DECLARE @HandicapHDP INT = 1
