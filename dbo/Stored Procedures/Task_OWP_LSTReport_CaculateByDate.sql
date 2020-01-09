@@ -15,8 +15,22 @@ AS
 BEGIN
 	SET NOCOUNT ON;
 	SET ANSI_WARNINGS OFF;
+	 
+/*    
+ Created: 20191211@Kane.Le
+ Task : Caculate report by date of LST Report
+ DB: bodb_OWP    
+    
+ Revisions:
+	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
+	20190107@Kane.Le: Delete report when unassign - [Redmine: #124448]	
+*/
+ 
+	SET NOCOUNT ON;
+	SET ANSI_WARNINGS OFF;
+	 
 	IF @EventDate IS NULL
-	SET @EventDate =  DATEADD(DAY, DATEDIFF(DAY, 1, GETDATE()), '12:00:00')
+	SET @EventDate =  DATEADD(DAY, -1, GETDATE())
 	 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59')
@@ -140,7 +154,7 @@ BEGIN
 	-- DELETE IF NOT EXISTS
 	DELETE b
 	FROM LSTReport b
-	WHERE b.ReportDate = CAST(@EventDate AS DATE)		
+	WHERE b.ReportDate = @EventDate
 
 	CREATE TABLE #tblReportTypeGeneral (
 		Id INT IDENTITY
@@ -1311,12 +1325,12 @@ BEGIN
 			,tmp.OWPMatchId
 			,CASE 
 				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
+							WHEN tmp.Bettype = @1H_HandicapHDP
 								THEN 1
 							ELSE NULL
 							END) > 0
 					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
+							WHEN tmp.Bettype = @1H_OverUnder
 								THEN 1
 							ELSE NULL
 							END) < 1
@@ -1325,12 +1339,12 @@ BEGIN
 				END AS 'FT_HDP'
 			,CASE 
 				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
+							WHEN tmp.Bettype = @1H_HandicapHDP
 								THEN 1
 							ELSE NULL
 							END) < 1
 					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
+							WHEN tmp.Bettype = @1H_OverUnder
 								THEN 1
 							ELSE NULL
 							END) > 0
@@ -1339,12 +1353,12 @@ BEGIN
 				END AS 'FT_OU'
 			,CASE 
 				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
+							WHEN tmp.Bettype = @1H_HandicapHDP
 								THEN 1
 							ELSE NULL
 							END) > 0
 					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
+							WHEN tmp.Bettype = @1H_OverUnder
 								THEN 1
 							ELSE NULL
 							END) > 0
@@ -1361,8 +1375,8 @@ BEGIN
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueCategoryId = 1
 				AND Bettype IN (
-					@HandicapHDP
-					,@OverUnderOU
+					@1H_HandicapHDP
+					,@1H_OverUnder
 					)
 			) AS tmp
 		GROUP BY tmp.UserId
@@ -1371,8 +1385,7 @@ BEGIN
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
-		,a.UserName
-		 
+		,a.UserName		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
@@ -1472,7 +1485,7 @@ BEGIN
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueCategoryId <> 1
+			WHERE ISNULL(LeagueCategoryId, 0) <> 1
 				AND Bettype IN (
 					@1H_HandicapHDP
 					,@1H_OverUnder
@@ -1547,6 +1560,7 @@ BEGIN
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueName LIKE '%FANTASY MATCH%'
+			AND Bettype IN (@HandicapHDP, @OverUnderOU, @1H_HandicapHDP, @1H_OverUnder)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -1554,9 +1568,8 @@ BEGIN
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
-		,a.UserName
-		 
-
+		,a.UserName			
+	
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -2299,7 +2312,7 @@ BEGIN
 	GROUP BY a.UserId
 		,a.UserName
 		 
-
+	
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -2446,7 +2459,7 @@ BEGIN
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
-			WHERE LeagueCategoryId NOT IN (
+			WHERE ISNULL(LeagueCategoryId, 0) NOT IN (
 					@LeagueCategoryId_MJ
 					,@LeagueCategoryId_MIN_1
 					,@LeagueCategoryId_MIN_2
@@ -2462,7 +2475,6 @@ BEGIN
 	GROUP BY a.UserId
 		,a.UserName
 		 
-
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
@@ -2495,4 +2507,6 @@ BEGIN
 	DROP TABLE #tblTempAssignmentReportMainMatch
 
 	DROP TABLE #tblTempAssignmentReportMinorMatch
+ 
+
 END
