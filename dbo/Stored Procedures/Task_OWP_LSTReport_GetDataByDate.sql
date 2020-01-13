@@ -10,6 +10,7 @@ AS
     
  Revisions:
 	20191211@Kane.Le: Initial SP - [Redmine: #124448]
+	20200113@Kane.Le: Order by SectionId, Username - [Redmine: #124448]
 */
 BEGIN
 	 
@@ -84,6 +85,6 @@ BEGIN
 		,rp.[Username]
 		,u.[SectionId]
 		,rs.[Name]
-	ORDER BY [SectionId]
+	ORDER BY [SectionId], [Username]
 	DROP TABLE #tmpSectionResource
 END
