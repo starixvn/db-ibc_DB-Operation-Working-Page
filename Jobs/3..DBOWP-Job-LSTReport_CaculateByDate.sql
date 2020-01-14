@@ -4,7 +4,7 @@
 	Server:		DBOWP
 	Revision:
 		- 20191211@Kane.Le: Task_OWP_LSTReport_CaculateByDate - [Redmine: #124448]
-		- 20191211@Kane.Le: Update job to run every minutes - [Redmine: #124448]
+		- 20200110@Kane.Le: Update job to run every minutes - [Redmine: #124448]
 */
 
 SET NOCOUNT ON;
