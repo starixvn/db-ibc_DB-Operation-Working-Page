@@ -3,12 +3,12 @@
 CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetAssignInfoInvalid] @EventDate DATE
 AS
 /*
-Created: 
-Task : 
+Created: 2020110@Carlos.Nguyen
+Task :Get assign info invalid
 DB: bodb_OWP
 
 Revisions:
-	
+	2020110@Carlos.Nguyen: Initial SP - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
