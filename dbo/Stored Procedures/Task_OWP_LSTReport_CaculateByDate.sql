@@ -12,9 +12,7 @@ AS
 	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
 	20190107@Kane.Le: Delete report when unassign - [Redmine: #124448]	
 */
-BEGIN
-	SET NOCOUNT ON;
-	SET ANSI_WARNINGS OFF;
+BEGIN	 
 	 
 /*    
  Created: 20191211@Kane.Le
@@ -114,6 +112,7 @@ BEGIN
 		AND ma.EventDateTime >= @FromDate
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
+		AND mi.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
 
 	INSERT INTO #tblTempAssignmentReportMinorMatch (
 		UserId
@@ -150,7 +149,7 @@ BEGIN
 		AND ma.EventDateTime >= @FromDate
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
-
+		AND mi.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
 	-- DELETE IF NOT EXISTS
 	DELETE b
 	FROM LSTReport b
