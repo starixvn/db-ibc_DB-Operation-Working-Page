@@ -1,4 +1,6 @@
-﻿CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_AssignmentUploading_Submit] @UserId INT
 	,@SessionId VARCHAR(50)
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
@@ -40,8 +42,7 @@ AS
 	20191021@Tyler.Dang: Edit Provider/ Other Provider upload - [Redmine: #122211]
 	20191113@Leo.Vo: handle setting to upload PH assignment
 	20191924@Kane.Le: Review MaxBet, MaxBetSpread - [Redmine: #124448]
-	20200119@Kane.Le: Fix Error MessageContent - [Redmine: #127321]
-	20200119@Kane.Le: Return Error Code - [Redmine: #127321]
+	20200117@Kane.Le: Fix Error MessageContent - [Redmine: #127321]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -700,7 +701,7 @@ BEGIN
 		,OWPMatchId INT NOT NULL
 		);
 
-	BEGIN TRY
+	-- BEGIN TRY
 		/*------Remove invalid data if has error from previous upload-----*/
 		SELECT TOP 1 @TempEventDate = au.EventDate
 		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
@@ -1022,7 +1023,6 @@ BEGIN
 		LEFT JOIN #tblNoOfHDP AS nohdp ON au.NoHDP = nohdp.Value
 		WHERE SessionId = @SessionId
 
-		
 		-- Insert Home & Away Team
 		INSERT INTO dbo.OWPTeam (OWPTeamName)
 		OUTPUT 'DELETE'
@@ -1069,7 +1069,7 @@ BEGIN
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.League = l.OWPLeagueName
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.Home = h.OWPTeamName
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.Away = a.OWPTeamName
-				
+
 		-- Update OWPMatchId of matches have same League, Home, Away, EventDate & same Upload time
 		UPDATE m
 		SET m.OWPMatchId = om.OWPMatchId
@@ -1077,7 +1077,6 @@ BEGIN
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.OWPLeagueId = om.OWPLeagueId
 			AND m.OWPHomeId = om.OWPHomeId
 			AND m.OWPAwayId = om.OWPAwayId
-			AND ISNULL( m.MatchNo, '') = ISNULL( om.MatchNo, '')
 			AND om.EventDateTime >= @EventFromDateTime
 			AND om.EventDateTime < @EventToDateTime
 		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
@@ -1130,7 +1129,7 @@ BEGIN
 			,mo.MatchOfferId
 		FROM dbo.MatchOfferDetail AS mo WITH (NOLOCK)
 		INNER JOIN #tblExistedMatch AS m ON m.OWPMatchId = mo.OWPMatchId
-		
+
 		-- Insert new matches
 		MERGE INTO dbo.OWPMatch WITH (ROWLOCK) AS om
 		USING (
@@ -2388,7 +2387,7 @@ BEGIN
 		LEFT JOIN #tblMatchSetting AS tms ON ms.OWPMatchId = tms.OWPMatchId
 			AND ms.BetType = tms.BetType
 		WHERE tms.OWPMatchId IS NULL
-		
+
 		-- Insert, Update MatchSetting of upload matches
 		MERGE dbo.MatchSetting WITH (ROWLOCK) AS ms
 		USING (
@@ -2893,12 +2892,7 @@ BEGIN
 									WHEN a.AssignmentType = 1
 										THEN @MessageDeleteAssignment
 									ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.OldAssignmentNote, '#<user>', ''))))
-									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', 
-									CASE 
-					WHEN ISNULL(a.MatchNo, '') = ''
-						THEN ''
-					ELSE '#' + a.MatchNo
-					END), '<User>', '#' + @Username)
+									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>',  ISNULL( a.MatchNo,'' )), '<User>', '#' + @Username)
 			,CASE 
 				WHEN a.AssignmentType = 1
 					THEN @MessageDeleteAssignmentId
@@ -2926,13 +2920,7 @@ BEGIN
 									WHEN a.AssignmentType = 1
 										THEN @MessageInsertAssignment
 									ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
-									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', 
-									CASE 
-					WHEN ISNULL(a.MatchNo, '') = ''
-						THEN ''
-					ELSE '#' + a.MatchNo
-					END
-									), '<User>', '#' + @Username)
+									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', a.MatchNo), '<User>', '#' + @Username)
 			,CASE 
 				WHEN a.AssignmentType = 1
 					THEN @MessageInsertAssignmentId
@@ -3145,12 +3133,7 @@ BEGIN
 																		END)))
 													END
 										ELSE ''
-										END), '<Event>', a.EventName), '<User>', @Username), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>',CASE 
-					WHEN ISNULL(a.MatchNo, '') = ''
-						THEN ''
-					ELSE '#' + a.MatchNo
-					END 
-										)
+										END), '<Event>', a.EventName), '<User>', @Username), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', a.MatchNo)
 		FROM #tblAssignmentInTimeRange AS a
 
 		-- assignee message change assignment
@@ -3661,7 +3644,7 @@ BEGIN
 		SELECT tr.OWPMatchId
 			,tr.MessageTypeId
 			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(mt.MsgTemplateContent, '<User>', '#' + @Username), '<Event>', home.OWPTeamName + ' -vs- ' + away.OWPTeamName), '<Old>', tr.OldValue), '<New>', tr.NewValue), '<League>', l.OWPLeagueName), '<Match.No>', CASE 
-					WHEN ISNULL(om.MatchNo, '') = ''
+					WHEN om.MatchNo = ''
 						THEN ''
 					ELSE '#' + om.MatchNo
 					END) AS MessageContent
@@ -3680,7 +3663,8 @@ BEGIN
 				,@Specific15MinsTotalBooking
 				,@FastMarket
 				,@AllInOne
-				)		
+				)
+
 		-- assignee message edit Match info
 		MERGE INTO dbo.[Message] WITH (ROWLOCK)
 		USING (
@@ -3990,12 +3974,10 @@ BEGIN
 			)
 		DELETE o
 		FROM TableBWithRowID o
-		WHERE RowID > 1		 
+		WHERE RowID > 1
 
 		--INNER JOIN dbo.OWPLeague AS ol WITH(NOLOCK) ON ol.OWPLeagueId = l.OldOWPLeagueId;
 		-- insert Message assignee
-
-	
 		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
 		USING #tblMessageTemplateForDeselected AS m
 			ON 1 = 0
@@ -4019,7 +4001,7 @@ BEGIN
 			,inserted.MessageId
 			,inserted.MessageType
 		INTO #tblMessageDeselected(OWPMatchId, [MessageId], MessageTypeId);
-		
+
 		-- insert MessageUser assignee
 		MERGE dbo.MessageUser WITH (ROWLOCK) AS mu
 		USING (
@@ -4033,9 +4015,8 @@ BEGIN
 				AND nsm.UserId = ass.OldUserId
 			WHERE ISNULL(nsm.Value, ns.DefaultValue) = 'True'
 				AND ass.[Action] = 'DELETE'
-				AND ass.OldUserId IS NOT NULL 
 			) AS m
-			ON m.MessageId = mu.MessageId AND m.OldUserId = mu.UserId
+			ON 1 = 0
 		WHEN NOT MATCHED
 			THEN
 				INSERT (
@@ -4051,10 +4032,14 @@ BEGIN
 		OUTPUT m.OldUserId
 			,m.OWPMatchId
 		INTO #tblAssigneeReceiver(UserId, OWPMatchId);
-		
 
 		DELETE
-		FROM #tblMessageTemplateForDeselected		
+		FROM #tblMessageTemplateForDeselected
+
+		SELECT @MessageTemplate = mt.MsgTemplateContent
+			,@MessageTypeId = mt.MsgTemplateId
+		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
+		WHERE mt.MsgTemplateCode = 'ChangeOfAssignment'
 
 		INSERT INTO #tblMessageTemplateForDeselected (
 			OWPMatchId
@@ -4063,7 +4048,7 @@ BEGIN
 			,IsImportant
 			)
 		SELECT l.OWPMatchId
-			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', '#' + @Username), '<Old>', '#' + ISNULL(l.OldUsername, '')), '<New>', ''), '<Match.No>', CASE 
+			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', '#' + @Username), '<Old>', '#' + l.OldUsername), '<New>', ''), '<Match.No>', CASE 
 								WHEN ISNULL(m.MatchNo, '') = ''
 									THEN ''
 								ELSE '#' + m.MatchNo
@@ -4077,7 +4062,6 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS oa WITH (NOLOCK) ON oa.OWPTeamId = m.OWPAwayId
 		INNER JOIN dbo.OWPLeague AS le WITH (NOLOCK) ON le.OWPLeagueId = m.OWPLeagueId
 		WHERE l.[Action] = 'DELETE'
-		AND l.OldUsername IS NOT NULL
 			--Deleting duplicate values
 			;
 
@@ -4319,9 +4303,9 @@ BEGIN
 		SET [Status] = 5 -- success
 			,EndDate = GETDATE()
 		WHERE SessionId = @SessionId
-	END TRY
+ -- END TRY
 
-	
+  /*
 	BEGIN CATCH
 		BEGIN
 			-- set status of uploading is failure
@@ -4333,13 +4317,15 @@ BEGIN
 				,LogMessage = 'ENumber: ' + CAST(ERROR_NUMBER() AS VARCHAR(50)) + ' --ELine: ' + CAST(ERROR_LINE() AS VARCHAR(50)) + ' --EMessage: ' + ERROR_MESSAGE()
 			WHERE SessionId = @SessionId
 
-			SELECT @ErrCode = ERROR_NUMBER()
-				,@ErrMsg = ERROR_MESSAGE()
-				 
+			SELECT @ErrCode = 1
+				,@ErrMsg = 'Uploading Fail.'
 		END
 
 	END CATCH
-
+	 */
+	-- SELECT @ErrCode ,@ErrMsg 
+	-- SELECT * FROM #tblMatch
+	-- SELECT * FROM #tblAssignment
 	--drop tables
 	DROP TABLE #tblMessageDeselectedWatcher
 
