@@ -4209,7 +4209,7 @@ BEGIN
 					,m.UserId
 					,@SessionId
 					);
-
+		 
 		-- watcher
 		DELETE
 		FROM #tblMessageDeselectedWatcher
@@ -4330,16 +4330,19 @@ BEGIN
 	BEGIN CATCH
 		BEGIN
 			-- set status of uploading is failure
+			DECLARE @ErrorMessage NVARCHAR(500)
+			SET @ErrorMessage = 'ENumber: ' + CAST(ERROR_NUMBER() AS VARCHAR(50)) + ' --ELine: ' + CAST(ERROR_LINE() AS VARCHAR(50)) + ' --EMessage: ' + ERROR_MESSAGE()
+
 			UPDATE dbo.AssignmentUploadingLog
 			WITH (ROWLOCK)
-
+			
 			SET [Status] = 6 -- failure
 				,EndDate = GETDATE()
-				,LogMessage = 'ENumber: ' + CAST(ERROR_NUMBER() AS VARCHAR(50)) + ' --ELine: ' + CAST(ERROR_LINE() AS VARCHAR(50)) + ' --EMessage: ' + ERROR_MESSAGE()
+				,LogMessage = @ErrorMessage
 			WHERE SessionId = @SessionId
 
 			SELECT @ErrCode = ERROR_NUMBER()
-				,@ErrMsg = ERROR_MESSAGE()
+				,@ErrMsg = @ErrorMessage
 				 
 		END
 
