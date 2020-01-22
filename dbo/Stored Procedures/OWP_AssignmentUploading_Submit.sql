@@ -44,7 +44,7 @@ AS
 	20191113@Leo.Vo: handle setting to upload PH assignment
 	20191924@Kane.Le: Review MaxBet, MaxBetSpread - [Redmine: #124448]
 	20200119@Kane.Le: Fix Error MessageContent - [Redmine: #127321]
-	20200119@Kane.Le: Return Error Code - [Redmine: #127321]
+	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -3998,7 +3998,9 @@ BEGIN
 		--INNER JOIN dbo.OWPLeague AS ol WITH(NOLOCK) ON ol.OWPLeagueId = l.OldOWPLeagueId;
 		-- insert Message assignee
 
-	
+		/*
+		-- THIS CODE MAKE DUPLICATE MESSAGE
+
 		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
 		USING #tblMessageTemplateForDeselected AS m
 			ON 1 = 0
@@ -4054,7 +4056,7 @@ BEGIN
 		OUTPUT m.OldUserId
 			,m.OWPMatchId
 		INTO #tblAssigneeReceiver(UserId, OWPMatchId);
-		
+		*/
 
 		DELETE
 		FROM #tblMessageTemplateForDeselected		
