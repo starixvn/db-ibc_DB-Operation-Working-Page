@@ -19,7 +19,7 @@ BEGIN
 	
 	SET NOCOUNT ON
 	UPDATE dbo.AutoAssignmentRequest
-	SET RequestDate = GETDATE()
-		--Status=2
+	SET RequestDate = GETDATE(),
+		Status=2
 	WHERE Status=1
 END
