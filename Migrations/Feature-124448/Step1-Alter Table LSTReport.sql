@@ -12,3 +12,8 @@ GO
 ALTER TABLE dbo.[LSTReport]
 ALTER COLUMN [ReportDate] DATE
 GO
+ALTER TABLE AutoAssignmentRequest
+ADD RequestDate DATETIME,
+	ResponseDate DATETIME
+
+GO
