@@ -18,6 +18,7 @@ Revisions:
   20190108@Leo: handle with CreatedBy=0 - [Redmine: #107257]
   20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
   20190222@Leo.Vo: support watcher - [Redmine: #108723]
+  20200105@Kane.Le: Fix High CPU - [Redmine: #108723]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -25,8 +26,8 @@ BEGIN
 	DECLARE @AnnouncementMessage TINYINT = 2
 		,@Message TINYINT = 3
 		,@CurrentRow INT = NULL
-		,@MinDate DATE = DATEADD(day, - 2, CAST(GETDATE() AS DATE))
-
+		,@MinDate DATE = DATEADD(day, - 1, CAST(GETDATE() AS DATE))
+	 
 	SELECT @TotalNotViewMessage = COUNT(m.MessageId)
 	FROM dbo.[Message] AS m WITH (NOLOCK)
 		INNER JOIN dbo.MessageUser AS mu WITH (NOLOCK) ON mu.MessageId = m.MessageId
@@ -61,7 +62,7 @@ BEGIN
 		,MessageType
 		,SystemMessageType
 		)
-	SELECT ROW_NUMBER() OVER (
+	SELECT TOP 10 ROW_NUMBER() OVER (
 			ORDER BY m.MessageId DESC
 			) AS RowNumber
 		,mu.MessageId
@@ -82,14 +83,14 @@ BEGIN
 		LEFT JOIN dbo.MessageTemplate AS mt WITH (NOLOCK) ON m.MessageType = mt.MsgTemplateId
 	WHERE mu.UserId = @UserId
 		AND m.IsWatcher = @IsWatcher
-		AND m.CreatedDate >= @MinDate
+		AND m.CreatedDate >= @MinDate	
 
 	SELECT @CurrentRow = RowNumber
 	FROM #OrderedMessage WITH (NOLOCK)
 	WHERE MessageId = @LastMessageId
 
 	SET @CurrentRow = ISNULL(@CurrentRow, 0)
-
+	 
 	SELECT om.RowNumber
 		,om.MessageId
 		,om.IsViewed

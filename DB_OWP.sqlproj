@@ -402,6 +402,9 @@
     <Build Include="dbo\Stored Procedures\OWP_LSTReport_GetTraderAssignmentByDate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_GetStatusByRequestId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_GetByStatus.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetAllMatchIsAssigned.sql" />
+    <Build Include="dbo\Stored Procedures\Task_OWP_LSTReport_MultipleMatches.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetAssignInfoInvalid.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

@@ -1,6 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[Task_OWP_LSTReport_CaculateByDate]
+@EventDate DATE = NULL
 AS
 /*    
  Created: 20191211@Kane.Le
@@ -9,14 +10,28 @@ AS
     
  Revisions:
 	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
+	20190107@Kane.Le: Delete report when unassign - [Redmine: #124448]	
 */
-BEGIN
+BEGIN	 
+	 
+/*    
+ Created: 20191211@Kane.Le
+ Task : Caculate report by date of LST Report
+ DB: bodb_OWP    
+    
+ Revisions:
+	20191211@Kane.Le: Initial SP - [Redmine: #124448]	
+	20190107@Kane.Le: Delete report when unassign - [Redmine: #124448]	
+*/
+ 
 	SET NOCOUNT ON;
 	SET ANSI_WARNINGS OFF;
-
-	DECLARE @EventDate DATE = GETDATE();
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '11:59:59')
+	 
+	IF @EventDate IS NULL
+	SET @EventDate =  DATEADD(DAY, -1, GETDATE())
+	 
+	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
+		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59')
 	-- Insert statements for procedure here
 	-- DECLARE CONSTANTS
 	DECLARE @HandicapHDP INT = 1
@@ -41,7 +56,7 @@ BEGIN
 		,Username NVARCHAR(50)
 		,OWPMatchId INT
 		,Bettype INT
-		,EventDate DATE
+		,EventDate DATETIME
 		,IsSoloMatch BIT
 		,LeagueId INT
 		,LeagueName NVARCHAR(500)
@@ -55,7 +70,7 @@ BEGIN
 		,Username NVARCHAR(50)
 		,OWPMatchId INT
 		,Bettype INT
-		,EventDate DATE
+		,EventDate DATETIME
 		,IsSoloMatch BIT
 		,LeagueId INT
 		,LeagueName NVARCHAR(500)
@@ -97,6 +112,7 @@ BEGIN
 		AND ma.EventDateTime >= @FromDate
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
+		AND mi.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
 
 	INSERT INTO #tblTempAssignmentReportMinorMatch (
 		UserId
@@ -133,23 +149,11 @@ BEGIN
 		AND ma.EventDateTime >= @FromDate
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
-
+		AND mi.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
 	-- DELETE IF NOT EXISTS
 	DELETE b
 	FROM LSTReport b
-	WHERE NOT EXISTS (
-		SELECT DISTINCT UserId
-			,EventDate
-		FROM #tblTempAssignmentReportMainMatch
-		
-		UNION
-		
-		SELECT DISTINCT UserId
-			,EventDate
-		FROM #tblTempAssignmentReportMinorMatch		 		
-		)
-		AND b.ReportDate >= @FromDate
-		AND b.ReportDate <= @ToDate
+	WHERE b.ReportDate = @EventDate
 
 	CREATE TABLE #tblReportTypeGeneral (
 		Id INT IDENTITY
@@ -157,8 +161,7 @@ BEGIN
 		,Username NVARCHAR(50)
 		,FT_HDP INT
 		,FT_OU INT
-		,FT_HDP_OU INT
-		,EventDate DATE
+		,FT_HDP_OU INT		 
 		)
 
 	INSERT INTO #tblReportTypeGeneral (
@@ -166,15 +169,13 @@ BEGIN
 		,UserName
 		,FT_HDP
 		,FT_OU
-		,FT_HDP_OU
-		,EventDate
+		,FT_HDP_OU		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,SUM(a.FT_HDP) AS 'FT_HDP'
 		,SUM(a.FT_OU) AS 'FT_OU'
-		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		,SUM(a.FT_HDP_OU) AS 'FT_HDP_OU'		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -221,12 +222,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE Bettype IN (
@@ -236,24 +237,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+		 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
- 
 
 	-- Type 1
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND CAST(TARGET.ReportDate AS DATE) = CAST(SOURCE.EventDate AS DATE)
+				AND CAST(TARGET.ReportDate AS DATE) = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND CAST(TARGET.ReportDate AS DATE) = CAST(SOURCE.EventDate AS DATE)
+		AND CAST(TARGET.ReportDate AS DATE) = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type1_FT_HDP = SOURCE.FT_HDP
@@ -273,7 +272,7 @@ BEGIN
 				,CreatedDate
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP
@@ -284,6 +283,7 @@ BEGIN
 				);
 
 	-- Type 2 AUS
+
 	TRUNCATE TABLE #tblReportTypeGeneral
 
 	INSERT INTO #tblReportTypeGeneral (
@@ -292,14 +292,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -346,12 +346,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+			 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
@@ -362,22 +362,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+		 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type2_AUS_League = SOURCE.FT_HDP_OU
@@ -390,7 +390,7 @@ BEGIN
 				,Type2_AUS_League
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -405,14 +405,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -459,12 +459,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
 			WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
@@ -476,22 +476,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type2_AUS_League_Corner = SOURCE.FT_HDP_OU
@@ -504,7 +504,7 @@ BEGIN
 				,Type2_AUS_League_Corner
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -519,14 +519,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -573,7 +573,7 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
@@ -589,22 +589,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+		 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type2_JAP_Divison1 = SOURCE.FT_HDP_OU
@@ -617,7 +617,7 @@ BEGIN
 				,Type2_JAP_Divison1
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -632,14 +632,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -686,12 +686,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 2%'
@@ -702,22 +702,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type2_JAP_Divison2 = SOURCE.FT_HDP_OU
@@ -730,7 +730,7 @@ BEGIN
 				,Type2_JAP_Divison2
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -745,14 +745,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+	 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -799,12 +799,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE IsSoloMatch = 1
@@ -815,22 +815,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type3_Solo_Major = SOURCE.FT_HDP_OU
@@ -843,7 +843,7 @@ BEGIN
 				,Type3_Solo_Major
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -858,14 +858,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -912,12 +912,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueCategoryId = @LeagueCategoryId_MJ
@@ -928,22 +928,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_Major = SOURCE.FT_HDP_OU
@@ -956,7 +956,7 @@ BEGIN
 				,Type4_Major
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -971,14 +971,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -1025,12 +1025,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
@@ -1041,22 +1041,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_Minor1 = SOURCE.FT_HDP_OU
@@ -1069,7 +1069,7 @@ BEGIN
 				,Type4_Minor1
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1084,14 +1084,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -1138,7 +1138,7 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+		 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
@@ -1154,22 +1154,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_Minor2 = SOURCE.FT_HDP_OU
@@ -1182,7 +1182,7 @@ BEGIN
 				,Type4_Minor2
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1197,14 +1197,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -1251,12 +1251,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
@@ -1267,22 +1267,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+	 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_Minor3 = SOURCE.FT_HDP_OU
@@ -1295,7 +1295,7 @@ BEGIN
 				,Type4_Minor3
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1310,26 +1310,26 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
 			,tmp.OWPMatchId
 			,CASE 
 				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
+							WHEN tmp.Bettype = @1H_HandicapHDP
 								THEN 1
 							ELSE NULL
 							END) > 0
 					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
+							WHEN tmp.Bettype = @1H_OverUnder
 								THEN 1
 							ELSE NULL
 							END) < 1
@@ -1338,12 +1338,12 @@ BEGIN
 				END AS 'FT_HDP'
 			,CASE 
 				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
+							WHEN tmp.Bettype = @1H_HandicapHDP
 								THEN 1
 							ELSE NULL
 							END) < 1
 					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
+							WHEN tmp.Bettype = @1H_OverUnder
 								THEN 1
 							ELSE NULL
 							END) > 0
@@ -1352,19 +1352,19 @@ BEGIN
 				END AS 'FT_OU'
 			,CASE 
 				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
+							WHEN tmp.Bettype = @1H_HandicapHDP
 								THEN 1
 							ELSE NULL
 							END) > 0
 					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
+							WHEN tmp.Bettype = @1H_OverUnder
 								THEN 1
 							ELSE NULL
 							END) > 0
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+		 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
@@ -1374,28 +1374,27 @@ BEGIN
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueCategoryId = 1
 				AND Bettype IN (
-					@HandicapHDP
-					,@OverUnderOU
+					@1H_HandicapHDP
+					,@1H_OverUnder
 					)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
-		,a.UserName
-		,a.EventDate
+		,a.UserName		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_1ST_Major = SOURCE.FT_HDP_OU
@@ -1408,7 +1407,7 @@ BEGIN
 				,Type4_1ST_Major
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1423,14 +1422,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -1477,15 +1476,15 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueCategoryId <> 1
+			WHERE ISNULL(LeagueCategoryId, 0) <> 1
 				AND Bettype IN (
 					@1H_HandicapHDP
 					,@1H_OverUnder
@@ -1493,22 +1492,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_1ST_Other = SOURCE.FT_HDP_OU
@@ -1521,7 +1520,7 @@ BEGIN
 				,Type4_1ST_Other
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1536,92 +1535,49 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
 			,tmp.OWPMatchId
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) < 1
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) < 1
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_OU'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			,0 'FT_HDP'
+			,0 'FT_OU'
+			,1 AS 'FT_HDP_OU'
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
 			WHERE LeagueName LIKE '%FANTASY MATCH%'
-				AND Bettype IN (
-					@HandicapHDP
-					,@OverUnderOU
-					)
+			AND Bettype IN (@HandicapHDP, @OverUnderOU, @1H_HandicapHDP, @1H_OverUnder)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
-		,a.UserName
-		,a.EventDate
-
+		,a.UserName			
+	
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_Fantasy = SOURCE.FT_HDP_OU
@@ -1634,7 +1590,7 @@ BEGIN
 				,Type4_Fantasy
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1649,92 +1605,49 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
 			,tmp.OWPMatchId
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) < 1
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) < 1
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_OU'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,1 AS 'FT_HDP_OU'
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
 			WHERE MinorBettypeId = @MinorBettype_NextCorner
-				AND Bettype IN (
-					@HandicapHDP
-					,@OverUnderOU
-					)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_Corner_NextCorner = SOURCE.FT_HDP_OU
@@ -1747,7 +1660,7 @@ BEGIN
 				,Type4_Corner_NextCorner
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1762,14 +1675,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+	 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -1816,12 +1729,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
 			WHERE MinorBettypeId = @MinorBettype_15Mins
@@ -1832,22 +1745,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_15M = SOURCE.FT_HDP_OU
@@ -1860,7 +1773,7 @@ BEGIN
 				,Type4_15M
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1875,14 +1788,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -1929,12 +1842,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
 			WHERE MinorBettypeId = @MinorBettype_10Mins
@@ -1945,22 +1858,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+		 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_10M = SOURCE.FT_HDP_OU
@@ -1973,7 +1886,7 @@ BEGIN
 				,Type4_10M
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -1988,92 +1901,49 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
 			,tmp.OWPMatchId
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) < 1
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) < 1
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_OU'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,1 AS 'FT_HDP_OU'
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+			 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
 			WHERE MinorBettypeId = @MinorBettype_NextBooking
-				AND Bettype IN (
-					@HandicapHDP
-					,@OverUnderOU
-					)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+		 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_TotalBooking = SOURCE.FT_HDP_OU
@@ -2086,7 +1956,7 @@ BEGIN
 				,Type4_TotalBooking
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2101,92 +1971,49 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
-			,tmp.OWPMatchId
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) < 1
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) < 1
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_OU'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			,tmp.OWPMatchParentId
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,1 AS 'FT_HDP_OU'
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
-				,OWPMatchId
-				,EventDate
+				,OWPMatchParentId
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
 			WHERE LeagueName LIKE '%- PENALTY SHOOT-OUT'
-				AND Bettype IN (
-					@HandicapHDP
-					,@OverUnderOU
-					)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
-			,tmp.OWPMatchId
+			 
+			,tmp.OWPMatchParentId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_PKSO = SOURCE.FT_HDP_OU
@@ -2199,7 +2026,7 @@ BEGIN
 				,Type4_PKSO
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2214,92 +2041,49 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
 			,tmp.OWPMatchId
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) < 1
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) < 1
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_OU'
-			,CASE 
-				WHEN COUNT(CASE 
-							WHEN tmp.Bettype = @HandicapHDP
-								THEN 1
-							ELSE NULL
-							END) > 0
-					AND COUNT(CASE 
-							WHEN tmp.Bettype = @OverUnderOU
-								THEN 1
-							ELSE NULL
-							END) > 0
-					THEN 1
-				ELSE 0
-				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			,0 AS 'FT_HDP'
+			,0 AS 'FT_OU'
+			,1 AS 'FT_HDP_OU'
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+			 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
 			WHERE LeagueName LIKE '%- WINNER'
-				AND Bettype IN (
-					@HandicapHDP
-					,@OverUnderOU
-					)
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.Type4_Winner = SOURCE.FT_HDP_OU
@@ -2312,7 +2096,7 @@ BEGIN
 				,Type4_Winner
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2327,14 +2111,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -2350,12 +2134,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MJ
@@ -2363,22 +2147,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Major = SOURCE.FT_HDP_OU
@@ -2391,7 +2175,7 @@ BEGIN
 				,PH_1X2_Major
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2406,14 +2190,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -2429,12 +2213,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
@@ -2442,22 +2226,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Minor1 = SOURCE.FT_HDP_OU
@@ -2470,7 +2254,7 @@ BEGIN
 				,PH_1X2_Minor1
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2485,14 +2269,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -2508,12 +2292,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
@@ -2521,22 +2305,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
-
+		 
+	
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Minor2 = SOURCE.FT_HDP_OU
@@ -2549,7 +2333,7 @@ BEGIN
 				,PH_1X2_Minor2
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2564,14 +2348,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -2587,12 +2371,12 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+			 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
 			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
@@ -2600,22 +2384,22 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+		 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
+		 
 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Minor3 = SOURCE.FT_HDP_OU
@@ -2628,7 +2412,7 @@ BEGIN
 				,PH_1X2_Minor3
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2643,14 +2427,14 @@ BEGIN
 		,FT_HDP
 		,FT_OU
 		,FT_HDP_OU
-		,EventDate
+		 
 		)
 	SELECT a.UserId
 		,a.Username
 		,0 AS 'FT_HDP'
 		,0 AS 'FT_OU'
 		,SUM(a.FT_HDP + a.FT_OU + a.FT_HDP_OU) AS 'FT_HDP_OU'
-		,a.EventDate
+		 
 	FROM (
 		SELECT tmp.UserId
 			,tmp.UserName
@@ -2666,15 +2450,15 @@ BEGIN
 					THEN 1
 				ELSE 0
 				END AS 'FT_HDP_OU'
-			,tmp.EventDate
+		 
 		FROM (
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				,EventDate
+				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
-			WHERE LeagueCategoryId NOT IN (
+			WHERE ISNULL(LeagueCategoryId, 0) NOT IN (
 					@LeagueCategoryId_MJ
 					,@LeagueCategoryId_MIN_1
 					,@LeagueCategoryId_MIN_2
@@ -2684,22 +2468,21 @@ BEGIN
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
-			,tmp.EventDate
+			 
 			,tmp.OWPMatchId
 		) AS a
 	GROUP BY a.UserId
 		,a.UserName
-		,a.EventDate
-
+		 
 	MERGE dbo.LSTReport AS TARGET
 	USING #tblReportTypeGeneral AS SOURCE
 		ON (
 				TARGET.UserId = SOURCE.UserId
-				AND TARGET.ReportDate = SOURCE.EventDate
+				AND TARGET.ReportDate = @EventDate
 				)
 	WHEN MATCHED
 		AND TARGET.UserId = SOURCE.UserId
-		AND TARGET.ReportDate = SOURCE.EventDate
+		AND TARGET.ReportDate = @EventDate
 		THEN
 			UPDATE
 			SET TARGET.PH_1X2_Others = SOURCE.FT_HDP_OU
@@ -2712,7 +2495,7 @@ BEGIN
 				,PH_1X2_Others
 				)
 			VALUES (
-				SOURCE.EventDate
+				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
@@ -2723,4 +2506,6 @@ BEGIN
 	DROP TABLE #tblTempAssignmentReportMainMatch
 
 	DROP TABLE #tblTempAssignmentReportMinorMatch
+ 
+
 END

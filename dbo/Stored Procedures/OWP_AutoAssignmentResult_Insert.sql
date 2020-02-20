@@ -3,6 +3,8 @@
 CREATE PROCEDURE [dbo].[OWP_AutoAssignmentResult_Insert] @RequestId VARCHAR(50)
 	,@Status INT
 	,@AutoAssignmentResultDoc NVARCHAR(MAX)
+	,@ErrCode INT  OUTPUT
+	,@ErrMsg NVARCHAR(50) OUTPUT
 AS
 /*
 Created: 20181221@Raymond.Le
@@ -18,6 +20,7 @@ Revisions:
 	20181221@Raymond.Le: Initial SP - [Redmine: #106196]
 	20190503@Leo.Vo: Save request when failure - [Redmine: #112737]
 	20191015@Kane.Le: update statusCode - [Redmine: #121765]
+	20200601@Carlos.Nguyen: Return ErrorCode, ErrorMessage - [Redmine: #124448]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -52,4 +55,6 @@ BEGIN
 
 		EXEC sp_xml_removedocument @idoc
 	END
+	
+	SET @ErrCode=0
 END
