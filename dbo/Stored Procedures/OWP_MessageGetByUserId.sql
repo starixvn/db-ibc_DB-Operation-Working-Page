@@ -19,6 +19,7 @@ Revisions:
   20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
   20190222@Leo.Vo: support watcher - [Redmine: #108723]
   20200105@Kane.Le: Fix High CPU - [Redmine: #108723]
+  20200228@Jacob: Revise Index - [Redmine: #129435]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -63,7 +64,7 @@ BEGIN
 		,SystemMessageType
 		)
 	SELECT TOP 10 ROW_NUMBER() OVER (
-			ORDER BY m.MessageId DESC
+			ORDER BY mu.MessageId DESC
 			) AS RowNumber
 		,mu.MessageId
 		,mu.IsViewed
