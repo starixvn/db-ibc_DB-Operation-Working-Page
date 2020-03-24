@@ -28,6 +28,7 @@ BEGIN
 		,@Provider_RTS INT = 2
 		,@Provider_Other INT = 3
 
+
 	CREATE TABLE #tblMatch (
 		OWPMatchId INT
 		,ParentMatchId INT
@@ -102,6 +103,7 @@ BEGIN
 		LEFT JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON m.ParentMatchId = ms.OWPMatchId
 		AND ms.Bettype = @BettypeHDP
 
+	
 	-- update maxbet from MaxbetManagement setting
 	UPDATE m
 	SET m.Maxbet = dbo.OWP_MaxBetGet(m.ParentMatchId, m.LeagueId, @BettypeHDP)
@@ -217,10 +219,15 @@ BEGIN
 				ELSE 0
 				END AS ExtraTime				 
 		,mi.Venue AS Venue
+		,CASE 
+			WHEN owpl.OWPLeagueId IS NOT NULL THEN 1
+			ELSE 0
+		END AS IsFantasy
 	FROM #tblMatch AS m
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.ParentMatchId = om.OWPMatchId
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
 		LEFT JOIN #tblSchedulingProvider AS p ON m.OWPMatchId = p.OWPMatchId
+		LEFT JOIN OWPLeague AS owpl WITH(NOLOCK) ON om.OWPLeagueId=owpl.OWPLeagueId AND owpl.OWPLeagueName LIKE '%FANTASY'
 	WHERE m.Maxbet IS NOT NULL
 		AND mi.MatchStatus = 'Live'
 
