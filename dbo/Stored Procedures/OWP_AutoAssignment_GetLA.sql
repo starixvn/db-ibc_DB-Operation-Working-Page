@@ -14,22 +14,33 @@ Revisions:
 */
 BEGIN
 	
-	DECLARE @ResponseDateMax VARCHAR(500),
-		@RequestId VARCHAR(MAX)
-	
-	SELECT @ResponseDateMax= MAX(au.ResponseDate)
-	FROM AutoAssignmentRequest AS au WITH(NOLOCK)
-	WHERE au.EventDate=@EventDate
-	
-	SELECT @RequestId= au.RequestId
-	FROM AutoAssignmentRequest AS au WITH(NOLOCK)
-	WHERE au.EventDate=@ResponseDateMax
-	
-	
-	SELECT ISNULL(m.MinorMatchId, au.OWPMatchId) AS OWPMatchId
-		,u.Username
+	CREATE TABLE #tblRequest(
+		RequestId VARCHAR(500),
+		OWPMatchId INT,
+		UserId INT,
+		Bettype INT
+	)
+	INSERT INTO #tblRequest(
+		RequestId,
+		OWPMatchId,
+		UserId,
+		Bettype
+		)
+	SELECT DISTINCT
+		aur.RequestId,
+		au.OWPMatchId,
+		au.UserId,
+		au.Bettype
 	FROM dbo.AutoAssignmentResult AS au WITH(NOLOCK)
+	INNER JOIN dbo.AutoAssignmentRequest AS aur WITH (NOLOCK)
+	ON aur.EventDate=@EventDate AND aur.ResponseDate IS NOT NULL
+	
+	SELECT DISTINCT ISNULL(m.MinorMatchId, au.OWPMatchId) AS OWPMatchId
+		,u.Username
+	FROM #tblRequest AS au WITH(NOLOCK)
 	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON au.UserId = u.UserId
 	LEFT JOIN dbo.MinorMatch AS m WITH (NOLOCK) On m.ParentMatchId = au.OWPMatchId AND m.MinorBettypeId = au.Bettype
-	WHERE au.RequestId = @RequestId
+	
+	SELECT * FROM  #tblRequest
+	DROP TABLE #tblRequest
 END

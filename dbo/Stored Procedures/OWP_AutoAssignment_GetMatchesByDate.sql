@@ -223,11 +223,20 @@ BEGIN
 			WHEN owpl.OWPLeagueId IS NOT NULL THEN 1
 			ELSE 0
 		END AS IsFantasy
+		,CASE
+			WHEN LEN(mi.Phone)>10 THEN 1
+			ELSE 0
+		END AS HasReporter
+		,CASE
+			WHEN mi.Channel IS NOT NULL THEN 1
+			ELSE 0
+		END AS HasChannel
 	FROM #tblMatch AS m
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.ParentMatchId = om.OWPMatchId
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
 		LEFT JOIN #tblSchedulingProvider AS p ON m.OWPMatchId = p.OWPMatchId
 		LEFT JOIN OWPLeague AS owpl WITH(NOLOCK) ON om.OWPLeagueId=owpl.OWPLeagueId AND owpl.OWPLeagueName LIKE '%FANTASY'
+		
 	WHERE m.Maxbet IS NOT NULL
 		AND mi.MatchStatus = 'Live'
 
