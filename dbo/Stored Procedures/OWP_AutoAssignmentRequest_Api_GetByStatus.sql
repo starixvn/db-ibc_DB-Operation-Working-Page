@@ -14,7 +14,7 @@ BEGIN
 	SELECT RequestId
 		,EventDate
 	FROM dbo.AutoAssignmentRequest AS r WITH (NOLOCK)
-	WHERE r.Status=1
+	WHERE r.Status = 1
 	ORDER BY r.Id ASC
 	
 	SET NOCOUNT ON
