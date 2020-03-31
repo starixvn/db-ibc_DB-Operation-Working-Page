@@ -198,6 +198,7 @@ BEGIN
 	GROUP BY t.OWPMatchId
 
 	-- return match list
+	-- Addition HasReporter/HasChannel
 	SELECT m.ParentMatchId AS MatchId
 		,om.EventDateTime AS KOTime
 		,om.OtherTime
