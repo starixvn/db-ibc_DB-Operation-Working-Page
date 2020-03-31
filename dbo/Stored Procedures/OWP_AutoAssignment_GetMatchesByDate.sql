@@ -224,11 +224,11 @@ BEGIN
 			ELSE 0
 		END AS IsFantasy
 		,CASE
-			WHEN LEN(mi.Phone)>10 THEN 1
+			WHEN LEN(REPLACE(mi.Phone, ' ', ''))>10 THEN 1
 			ELSE 0
 		END AS HasReporter
 		,CASE
-			WHEN mi.Channel IS NOT NULL THEN 1
+			WHEN LEN(LTRIM(RTRIM(mi.Channel)))>0 THEN 1
 			ELSE 0
 		END AS HasChannel
 	FROM #tblMatch AS m

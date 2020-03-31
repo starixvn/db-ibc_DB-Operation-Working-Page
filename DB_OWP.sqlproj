@@ -405,6 +405,7 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetAllMatchIsAssigned.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_LSTReport_MultipleMatches.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_UpdateStatusRequestId_1.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_MaxBetManagement_Get_New.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
