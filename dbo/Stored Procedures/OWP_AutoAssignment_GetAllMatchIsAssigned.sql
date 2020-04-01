@@ -12,8 +12,6 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
-
-	SELECT DISTINCT ar.OWPMatchId
+	SELECT DISTINCT ar.OWPMatchId, ar.Bettype
 	FROM AutoAssignmentResult AS ar WITH (NOLOCK)
-	WHERE ar.UserId IS NOT NULL
 END
