@@ -1,6 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_Query] @EventDate DATE
-	,@Username NVARCHAR(30) = NULL
+ALTER PROCEDURE [dbo].[OWP_LiveGameAssignment_Query] @EventDate DATE
 	,@MatchStatusIds NVARCHAR(100) = NULL
 AS
 /*
@@ -17,13 +16,9 @@ AS
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20190910@Leo.Vo: Include EventDateTime - [Feature: #119650]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
+	20200305@Jacob.Phan: Remove Param @Username - [Redmine: #129761] 
 */
-BEGIN
 	SET NOCOUNT ON
-
-	DECLARE @UserId INT = NULL
-
-	SELECT @UserId = dbo.OWP_GetUserIdByUsername(@Username)
 
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
@@ -188,55 +183,7 @@ BEGIN
 			OR minor.IsRepresented IS NULL
 			)
 
-	CREATE TABLE #tblMatchIdsFilterByUserId (
-		OWPMatchId INT
-		,UserId INT
-		)
-
-	INSERT INTO #tblMatchIdsFilterByUserId (
-		OWPMatchId
-		,UserId
-		)
-	SELECT a.OWPMatchId
-		,a.UserId
-	FROM dbo.Assignment AS a WITH (NOLOCK)
-	INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON a.OWPMatchId = ml.OWPMatchId
-	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
-	WHERE ml.IsMinorMatch = 0
-		AND (
-			@UserId IS NULL
-			OR u.UserId = @UserId
-			)
-		AND (
-			@MatchStatusIds IS NULL
-			OR ml.MatchStatus IN (
-				SELECT [Value]
-				FROM @tblRefResourceMatchStatus
-				)
-			)
 	
-	UNION
-	
-	SELECT ml.OWPMatchId
-		,a.UserId
-	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
-	INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON mb.IsActive = 1
-		AND mb.ParentBettypeId = ml.MinorBettypeId
-	LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON a.OWPMatchId = ml.OWPMatchId
-		AND a.Bettype = mb.InheritedBettypeId
-	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
-	WHERE ml.IsMinorMatch = 1
-		AND (
-			@UserId IS NULL
-			OR u.UserId = @UserId
-			)
-		AND (
-			@MatchStatusIds IS NULL
-			OR ml.MatchStatus IN (
-				SELECT [Value]
-				FROM @tblRefResourceMatchStatus
-				)
-			)
 
 	-- SELECT * FROM #owpMatchListByDate
 	CREATE TABLE #tblOWPMatchFilter (OWPMatchId INT)
@@ -259,14 +206,7 @@ BEGIN
 				,@AllInOne
 				)
 			OR ml.MinorBettypeId IS NOT NULL
-			)
-		AND (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
+			)		
 		AND (
 			@MatchStatusIds IS NULL
 			OR ml.MatchStatus IN (
@@ -294,14 +234,7 @@ BEGIN
 				,@AllInOne
 				)
 			OR ml.MinorBettypeId IS NULL
-			)
-		AND (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
+			)		
 		AND (
 			@MatchStatusIds IS NULL
 			OR ml.MatchStatus IN (
@@ -309,6 +242,7 @@ BEGIN
 				FROM @tblRefResourceMatchStatus
 				)
 			)
+
 
 	-- Return Matches info
 	SELECT ml.OWPMatchId
@@ -382,21 +316,14 @@ BEGIN
 	WHERE ml.OWPMatchId IN (
 			SELECT OWPMatchId
 			FROM #tblOWPMatchFilter
-			)
-		AND (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
+			)		
 		AND (
 			@MatchStatusIds IS NULL
 			OR ml.MatchStatus IN (
 				SELECT [Value]
 				FROM @tblRefResourceMatchStatus
 				)
-			)
+			)		
 	ORDER BY ml.EventDate
 		,ml.KickOffTime
 		,ml.MatchNo
@@ -419,14 +346,7 @@ BEGIN
 	FROM dbo.Assignment AS a WITH (NOLOCK)
 	INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON a.OWPMatchId = ml.owpmatchid
 	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
-	WHERE ml.IsMinorMatch = 0
-		AND (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
+	WHERE ml.IsMinorMatch = 0		
 		AND (
 			@MatchStatusIds IS NULL
 			OR ml.MatchStatus IN (
@@ -455,13 +375,6 @@ BEGIN
 	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON a.UserId = u.UserId
 	WHERE ml.IsMinorMatch = 1
 		AND (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
-		AND (
 			@MatchStatusIds IS NULL
 			OR ml.MatchStatus IN (
 				SELECT [Value]
@@ -481,13 +394,6 @@ BEGIN
 	INNER JOIN #owpMatchListByDate AS ml WITH (NOLOCK) ON mn.OWPMatchId = ml.OWPMatchId
 	INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON mn.CreatedBy = u.UserId
 	WHERE (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
-		AND (
 			@MatchStatusIds IS NULL
 			OR ml.MatchStatus IN (
 				SELECT [Value]
@@ -533,13 +439,6 @@ BEGIN
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.owpmatchid = ms.OWPMatchId
 	WHERE (
-			@UserId IS NULL
-			OR ml.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
-		AND (
 			@MatchStatusIds IS NULL
 			OR ml.MatchStatus IN (
 				SELECT [Value]
@@ -661,20 +560,13 @@ BEGIN
 	INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
 	LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
 	WHERE (
-			@UserId IS NULL
-			OR mf.OWPMatchId IN (
-				SELECT OWPMatchId
-				FROM #tblMatchIdsFilterByUserId
-				)
-			)
-		AND (
 			@MatchStatusIds IS NULL
 			OR mf.MatchStatus IN (
 				SELECT [Value]
 				FROM @tblRefResourceMatchStatus
 				)
 			)
-
+	
 	DROP TABLE #owpMatchListByDate
 
 	DROP TABLE #tblMaxBet
@@ -683,7 +575,4 @@ BEGIN
 
 	DROP TABLE #tblNoOfHDPResource
 
-	DROP TABLE #tblMatchIdsFilterByUserId
-
 	DROP TABLE #tblOWPMatchFilter
-END

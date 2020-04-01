@@ -26,6 +26,7 @@ AS
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20190718@Leo.Vo: Add total row uploaded - [Redmine: #117098]
 	20191113@Carlos.Nguyen: BE/FE/DB Upload FM & AIO - [Redmine: #123790]
+	20200305@Jacob.Phan: Delete Old AssignmentUploadingOtherTrader - [Redmine: #129761] 
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,6 +50,14 @@ BEGIN
 
 	DELETE
 	FROM dbo.AssignmentUploadingResult WITH (ROWLOCK)
+	WHERE SessionId IN (
+			SELECT SessionId
+			FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
+			WHERE CreatedDate < DATEADD(DAY, - @NumberDayDeleteOldData, @Today)
+			)
+
+	DELETE
+	FROM dbo.AssignmentUploadingOtherTrader WITH (ROWLOCK)
 	WHERE SessionId IN (
 			SELECT SessionId
 			FROM dbo.AssignmentUploadingLog WITH (NOLOCK)
