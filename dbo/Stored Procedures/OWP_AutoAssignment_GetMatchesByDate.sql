@@ -23,10 +23,11 @@ BEGIN
 		,@FastMarket INT = - 88
 		,@AllInOne INT = - 89
 		,@BettypeHDP INT = 1
-		,@Provider_IPSD INT = 0
-		,@Provider_RB2 INT = 1
-		,@Provider_RTS INT = 2
-		,@Provider_Other INT = 3
+		,@Provider_IPSD INT = 1
+		,@Provider_RB2 INT = 2
+		,@Provider_RTS INT = 3
+		,@Provider_Other INT = 0
+		,@Provider_BET INT = 4
 
 
 	CREATE TABLE #tblMatch (
@@ -44,12 +45,14 @@ BEGIN
 		,IsIPSD BIT
 		,IsRB2 BIT
 		,IsRTS BIT
+		,IsBET BIT
 		)
 	CREATE TABLE #tblOtherProvider (
 		OWPMatchId INT
 		,IsIPSD BIT
 		,IsRB2 BIT
 		,IsRTS BIT
+		,IsBET BIT
 		)
 
 	CREATE TABLE #tblMatchProvider (
@@ -115,6 +118,7 @@ BEGIN
 		,IsIPSD
 		,IsRB2
 		,IsRTS
+		,IsBET
 		)
 	SELECT m.OWPMatchId
 		,MAX(CASE 
@@ -129,6 +133,10 @@ BEGIN
 				WHEN p.ProviderName LIKE '%rts%' THEN 1
 				ELSE 0
 				END)
+		,MAX(CASE 
+				WHEN p.ProviderName LIKE '%bet%' THEN 1
+				ELSE 0
+				END)
 	FROM #tblMatch AS m
 		INNER JOIN dbo.MatchProvider AS ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
 		INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON ms.ProviderId = p.ProviderId
@@ -139,6 +147,7 @@ BEGIN
 		,IsIPSD
 		,IsRB2
 		,IsRTS
+		,IsBET
 		)
 	SELECT m.OWPMatchId
 		,MAX(CASE 
@@ -151,6 +160,10 @@ BEGIN
 				END)
 		,MAX(CASE 
 				WHEN p.OtherProviderName LIKE '%rts%' THEN 1
+				ELSE 0
+				END)
+		,MAX(CASE 
+				WHEN p.OtherProviderName LIKE '%bet%' THEN 1
 				ELSE 0
 				END)
 	FROM #tblMatch AS m
@@ -178,6 +191,10 @@ BEGIN
 				WHEN p.IsRTS = 1 OR op.IsRTS = 1 THEN @Provider_RTS
 				ELSE NULL
 				END AS Provider_RTS
+			,CASE 
+				WHEN p.IsBET = 1 OR op.IsBET = 1 THEN @Provider_BET
+				ELSE NULL
+				END AS Provider_BET
 		FROM #tblProvider AS p
 		FULL OUTER JOIN #tblOtherProvider AS op ON p.OWPMatchId = op.OWPMatchId
 		) p
@@ -237,7 +254,6 @@ BEGIN
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
 		LEFT JOIN #tblSchedulingProvider AS p ON m.OWPMatchId = p.OWPMatchId
 		LEFT JOIN OWPLeague AS owpl WITH(NOLOCK) ON om.OWPLeagueId=owpl.OWPLeagueId AND owpl.OWPLeagueName LIKE '%FANTASY%'
-		
 	WHERE m.Maxbet IS NOT NULL
 		AND mi.MatchStatus = 'Live'
 
