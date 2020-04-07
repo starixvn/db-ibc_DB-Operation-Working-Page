@@ -14,6 +14,7 @@ Revisions:
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20190512@Kane.Le: Update ExtraTime, Venue [Redmine: #124940]
+	20200704@Carlos.Nguyen: Update Id provider IPSD, RB2, RTS, Other, BET [Redmine: #131928]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -198,7 +199,7 @@ BEGIN
 		FROM #tblProvider AS p
 		FULL OUTER JOIN #tblOtherProvider AS op ON p.OWPMatchId = op.OWPMatchId
 		) p
-	UNPIVOT(Provider FOR ProviderType IN (Provider_IPSD, Provider_RB2, Provider_RTS)) AS unpvt;
+	UNPIVOT(Provider FOR ProviderType IN (Provider_IPSD, Provider_RB2, Provider_RTS, Provider_BET)) AS unpvt;
 
 	INSERT INTO #tblSchedulingProvider (
 		OWPMatchId
