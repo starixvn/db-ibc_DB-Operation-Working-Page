@@ -26,9 +26,9 @@ BEGIN
 				OperatorType,
 				Value
 			)
-		SELECT [ResourceId]
+		SELECT [Label]
 			,[Value]
-		FROM OPENXML(@idoc, '/Root/TVList', 1) WITH ([ResourceId] int, [Value] nvarchar(50))
+		FROM OPENXML(@idoc, '/Root/TVList', 1) WITH ([Label] nvarchar(50), [Value] nvarchar(50))
 
 		EXEC sp_xml_removedocument @idoc
 END

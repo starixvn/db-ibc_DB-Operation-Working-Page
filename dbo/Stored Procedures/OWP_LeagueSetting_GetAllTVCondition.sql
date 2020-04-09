@@ -14,9 +14,7 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON
 
-	SELECT rf.ResourceId,
-		rf.Value as Label,
+	SELECT tv.OperatorType as Label,
 		tv.Value
-	FROM RefResource AS rf WITH (NOLOCK) INNER JOIN
-		LeagueSettingTVCondition AS tv WITH (NOLOCK) ON rf.RefName='Condition' AND rf.ResourceId=tv.OperatorType
+	FROM LeagueSettingTVCondition AS tv WITH (NOLOCK)
 END

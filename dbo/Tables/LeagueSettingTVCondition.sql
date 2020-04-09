@@ -1,7 +1,9 @@
 ﻿CREATE TABLE [dbo].[LeagueSettingTVCondition] (
-    [OperatorType] TINYINT       NOT NULL,
+    [OperatorType] NVARCHAR (50) NOT NULL,
     [Value]        NVARCHAR (50) NOT NULL
 );
+
+
 
 
 
