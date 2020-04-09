@@ -4,7 +4,8 @@
 );
 
 
+
+
 GO
-CREATE NONCLUSTERED INDEX [IX_LeagueSettingTVCondition]
-    ON [dbo].[LeagueSettingTVCondition]([OperatorType] ASC);
+
 

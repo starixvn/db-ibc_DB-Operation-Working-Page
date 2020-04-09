@@ -11,7 +11,7 @@ Task : Get max bet, spread of league
 DB: bodb_OWP
 
 Revisions:
-   20200330@Tyler.Dang: Init
+   20200330@Tyler.Dang: Init [Redmine: #131598]
 
 */
 BEGIN
@@ -46,6 +46,11 @@ BEGIN
 		CN88MaxFT1X2 MONEY
 		)
 	
+	CREATE TABLE #tblLeagueLastUse (
+		OWPLeagueId INT,
+		LastUse DATETIME
+		)
+
 	-- Filter league
 	INSERT INTO #tblLeagueIds(
 		OWPLeagueId,
@@ -91,27 +96,39 @@ BEGIN
 		CN88MinFT1X2,
 		CN88MaxFT1X2
 	)
-	SELECT owpl.OWPLeagueId AS LeagueId,
-		min(ls.Spread_HDP) as MinSpread,
-		max(ls.Spread_HDP) as MaxSpread,
-		min(ls.MaxbetWD_HDP) as MinMaxbetWD,
-		max(ls.MaxbetWD_HDP) as MaxMaxbetWD,
-		min(ls.MaxbetWK_HDP) as MinMaxbetWK,
-		max(ls.MaxbetWK_HDP) as MaxMaxbetWK,
-		min(ls.MaxBet_FT1X2) as MinFT1X2,
-		max(ls.MaxBet_FT1X2) as MaxFT1X2,
-		min(ls.CN88Spread_HDP) as CN88MinSpread,
-		max(ls.CN88Spread_HDP) as CN88MaxSpread,
-		min(ls.CN88MaxbetWD_HDP) as CN88MinMaxbetWD,
-		max(ls.CN88MaxbetWD_HDP) as CN88MaxMaxbetWD,
-		min(ls.CN88MaxbetWK_HDP) as CN88MinMaxbetWK,
-		max(ls.CN88MaxbetWK_HDP) as CN88MaxMaxbetWK,
-		min(ls.CN88MaxBet_FT1X2) as CN88MinFT1X2,
-		max(ls.CN88MaxBet_FT1X2) as CN88MaxFT1X2
+	SELECT owpl.OWPLeagueId,
+		min(ls.Spread_HDP),
+		max(ls.Spread_HDP),
+		min(ls.MaxbetWD_HDP),
+		max(ls.MaxbetWD_HDP),
+		min(ls.MaxbetWK_HDP),
+		max(ls.MaxbetWK_HDP),
+		min(ls.MaxBet_FT1X2),
+		max(ls.MaxBet_FT1X2),
+		min(ls.CN88Spread_HDP),
+		max(ls.CN88Spread_HDP),
+		min(ls.CN88MaxbetWD_HDP),
+		max(ls.CN88MaxbetWD_HDP),
+		min(ls.CN88MaxbetWK_HDP),
+		max(ls.CN88MaxbetWK_HDP),
+		min(ls.CN88MaxBet_FT1X2),
+		max(ls.CN88MaxBet_FT1X2)
 	FROM #tblLeagueIds AS owpl WITH (NOLOCK)
 		LEFT JOIN NewLeagueSetting AS ls WITH (NOLOCK)
 			ON owpl.OWPLeagueId = ls.OWPLeagueId
 	WHERE ls.OptionId = @LeagueCategoryId
+	GROUP BY owpl.OWPLeagueId
+
+	-- Calculate LastUse
+	INSERT INTO #tblLeagueLastUse(
+		OWPLeagueId,
+		LastUse
+	)
+	SELECT owpl.OWPLeagueId,
+		max(owpm.EventDate)
+	FROM #tblLeagueIds AS owpl WITH (NOLOCK)
+		LEFT JOIN OWPMatch AS owpm WITH (NOLOCK)
+			ON owpl.OWPLeagueId = owpm.OWPLeagueId
 	GROUP BY owpl.OWPLeagueId
 
 	SELECT owpl.OWPLeagueId,
@@ -135,11 +152,14 @@ BEGIN
 		ls.CN88MinMaxbetWK,
 		ls.CN88MaxMaxbetWK,
 		ls.CN88MinFT1X2,
-		ls.CN88MaxFT1X2
+		ls.CN88MaxFT1X2,
+		llu.LastUse
 	FROM #tblLeagueIds AS owpl WITH (NOLOCK)
 		LEFT JOIN #tblLeagueSetting AS ls WITH (NOLOCK)
 			ON owpl.OWPLeagueId = ls.OWPLeagueId
-			
+		LEFT JOIN #tblLeagueLastUse AS llu WITH (NOLOCK)
+			ON owpl.OWPLeagueId = llu.OWPLeagueId	
+
 	DROP TABLE #tblLeagueIds
 	DROP TABLE #tblLeagueSetting
 END

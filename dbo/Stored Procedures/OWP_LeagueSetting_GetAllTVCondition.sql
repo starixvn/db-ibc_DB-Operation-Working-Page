@@ -1,0 +1,22 @@
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_LeagueSetting_GetAllTVCondition]
+AS
+/*
+Created: 20200408@Tyler.Dang
+Task : Update TVlist
+DB: bodb_OWP
+  
+Revisions:
+	20200408@Tyler.Dang: Init [Redmine: #131923]
+	
+*/
+BEGIN
+	SET NOCOUNT ON
+
+	SELECT rf.ResourceId,
+		rf.Value as Label,
+		tv.Value
+	FROM RefResource AS rf WITH (NOLOCK) INNER JOIN
+		LeagueSettingTVCondition AS tv WITH (NOLOCK) ON rf.RefName='Condition' AND rf.ResourceId=tv.OperatorType
+END
