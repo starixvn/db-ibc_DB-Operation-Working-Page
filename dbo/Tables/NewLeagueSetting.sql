@@ -1,13 +1,10 @@
 ﻿CREATE TABLE [dbo].[NewLeagueSetting] (
     [LeagueSettingId]           INT             IDENTITY (1, 1) NOT NULL,
     [OWPLeagueId]               INT             NOT NULL,
-    [OptionId]                  INT             NOT NULL,
     [TimeDesc]                  NVARCHAR (50)   NULL,
     [Remark]                    NVARCHAR (2000) NULL,
     [TV]                        NVARCHAR (50)   NULL,
     [HasTV]                     BIT             NULL,
-    [RoundIds]                  VARCHAR (100)   NULL,
-    [DivisionIds]               VARCHAR (100)   NULL,
     [LSTNote]                   VARCHAR (200)   NULL,
     [Spread_HDP]                SMALLMONEY      NULL,
     [Spread_OU]                 SMALLMONEY      NULL,
@@ -46,6 +43,9 @@
     [CN88MaxBet_FT1X2]          MONEY           NULL,
     [CN88MaxBet_1H1X2]          MONEY           NULL,
     [CN88MaxBet_1X2_MatchOffer] VARCHAR (100)   NULL,
+    [Category]                  NVARCHAR (20)   DEFAULT (N'Live') NOT NULL,
     CONSTRAINT [PK_NewLeagueSetting] PRIMARY KEY CLUSTERED ([LeagueSettingId] ASC)
 );
+
+
 

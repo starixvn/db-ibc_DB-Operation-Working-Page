@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_MaxBetManagement_Get_New] @League NVARCHAR(500) = ''
 	,@LeagueGroupId INT = -1
-	,@LeagueCategoryId INT = 1
+	,@Category NVARCHAR(50)
 	,@IsActive BIT = 1
 AS
 /*
@@ -74,7 +74,7 @@ BEGIN
 		AND owpl.IsActive=@IsActive
 		AND SUBSTRING(owpl.OWPLeagueName,CHARINDEX('-', owpl.OWPLeagueName)+2, LEN(owpl.OWPLeagueName))
 			 NOT IN (SELECT mb.MinorBettypeName FROM MinorBettype AS mb WITH (NOLOCK))
-	ORDER BY owpl.CategoryId DESC
+	ORDER BY owpl.CategoryId ASC
 
 	-- Calculate min max
 	INSERT INTO #tblLeagueSetting(
@@ -116,7 +116,7 @@ BEGIN
 	FROM #tblLeagueIds AS owpl WITH (NOLOCK)
 		LEFT JOIN NewLeagueSetting AS ls WITH (NOLOCK)
 			ON owpl.OWPLeagueId = ls.OWPLeagueId
-	WHERE ls.OptionId = @LeagueCategoryId
+	WHERE ls.Category = @Category
 	GROUP BY owpl.OWPLeagueId
 
 	-- Calculate LastUse
@@ -162,4 +162,5 @@ BEGIN
 
 	DROP TABLE #tblLeagueIds
 	DROP TABLE #tblLeagueSetting
+	DROP TABLE #tblLeagueLastUse
 END
