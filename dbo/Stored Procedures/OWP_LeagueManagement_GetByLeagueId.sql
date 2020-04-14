@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_MaxBetManagement_GetByLeagueId]
+CREATE PROCEDURE [dbo].[OWP_LeagueManagement_GetByLeagueId]
 	@OWPLeagueId INT
 AS
 /*

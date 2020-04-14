@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_MaxBetManagement_Get_New] @League NVARCHAR(500) = ''
+CREATE PROCEDURE [dbo].[OWP_LeagueManagement_Get] @League NVARCHAR(500) = ''
 	,@LeagueGroupId INT = -1
 	,@Category NVARCHAR(50)
 	,@IsActive BIT = 1
