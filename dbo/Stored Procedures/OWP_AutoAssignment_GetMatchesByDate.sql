@@ -18,7 +18,8 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
-
+	
+	/* Declare variable*/
 	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 		,@FastMarket INT = - 88
@@ -267,4 +268,5 @@ BEGIN
 	DROP TABLE #tblMatchProvider
 
 	DROP TABLE #tblSchedulingProvider
+	
 END
