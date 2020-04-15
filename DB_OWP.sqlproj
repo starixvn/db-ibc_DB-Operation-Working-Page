@@ -405,9 +405,17 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetAllMatchIsAssigned.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_LSTReport_MultipleMatches.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_UpdateStatusRequestId_1.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_MaxBetManagement_Get_New.sql" />
+    <Build Include="dbo\Tables\LeagueSettingDivisionCondition.sql" />
+    <Build Include="dbo\Tables\LeagueSettingRoundCondition.sql" />
+    <Build Include="dbo\Tables\LeagueSettingTVCondition.sql" />
+    <Build Include="dbo\Tables\NewLeagueSetting.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LeagueSetting_GetAllTVCondition.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LeagueSetting_UpdateTVCondition.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateGroup.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateGroup.sql" />
+    <Build Include="dbo\Tables\LeagueSettingRounds.sql" />
+    <Build Include="dbo\Tables\LeagueSettingDivisions.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetByLeagueId.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_Get.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
