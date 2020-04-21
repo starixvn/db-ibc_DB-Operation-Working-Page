@@ -28,6 +28,7 @@ BEGIN
 		,[Round] = @Round
 		,[Division] = @Division
 		,[FullConditionDescription] = @FullConditionDescription
+		,[LastModifiedBy] = @ActorId
 	WHERE LeagueSettingId = @LeagueSettingId
 
 	SELECT @ErrCode = 0
