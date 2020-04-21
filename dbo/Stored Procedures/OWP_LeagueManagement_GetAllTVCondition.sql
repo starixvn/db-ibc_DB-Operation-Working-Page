@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LeagueSetting_GetAllTVCondition]
+CREATE PROCEDURE [dbo].[OWP_LeagueManagement_GetAllTVCondition]
 AS
 /*
 Created: 20200408@Tyler.Dang
