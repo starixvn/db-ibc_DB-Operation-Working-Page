@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LeagueManagement_Get] @League NVARCHAR(500) = ''
 	,@LeagueGroupId INT = -1
-	,@Category NVARCHAR(50)
+	,@Category NVARCHAR(50) = 'Live'
 	,@IsActive BIT = 1
 AS
 /*
@@ -23,7 +23,8 @@ BEGIN
 		GroupLabel NVARCHAR(20),
 		LeagueName NVARCHAR(500),
 		IsActive BIT,
-		IsBlackList BIT
+		IsBlackList BIT,
+		OrderValue INT
 		)
 
 	CREATE TABLE #tblLeagueSetting (
@@ -58,14 +59,16 @@ BEGIN
 		GroupLabel,
 		LeagueName,
 		IsActive,
-		IsBlackList
+		IsBlackList,
+		OrderValue
 	)
 	SELECT owpl.OWPLeagueId,
 		owpl.CategoryId,
 		ref.Value,
 		owpl.OWPLeagueName,
 		owpl.IsActive,
-		owpl.IsBlackList
+		owpl.IsBlackList,
+		'OrderValue' = CASE WHEN owpl.CategoryId IS NULL THEN 100 ELSE owpl.CategoryId END
 	FROM OWPLeague AS owpl WITH (NOLOCK)
 		LEFT JOIN RefResource AS ref WITH (NOLOCK)
 			ON ref.RefName='LeagueCategory' AND ref.ResourceId = owpl.CategoryId
@@ -74,7 +77,7 @@ BEGIN
 		AND owpl.IsActive=@IsActive
 		AND SUBSTRING(owpl.OWPLeagueName,CHARINDEX('-', owpl.OWPLeagueName)+2, LEN(owpl.OWPLeagueName))
 			 NOT IN (SELECT mb.MinorBettypeName FROM MinorBettype AS mb WITH (NOLOCK))
-	ORDER BY owpl.CategoryId ASC
+	ORDER BY 'OrderValue' ASC
 
 	-- Calculate min max
 	INSERT INTO #tblLeagueSetting(

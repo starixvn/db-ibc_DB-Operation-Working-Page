@@ -22,6 +22,8 @@ BEGIN
       ,ls.Remark
       ,ls.TV
       ,ls.HasTV
+	  ,ls.[Round]
+	  ,ls.Division
       ,ls.LSTNote
       ,ls.Spread_HDP
       ,ls.Spread_OU
@@ -61,28 +63,9 @@ BEGIN
       ,ls.CN88MaxBet_1H1X2
       ,ls.CN88MaxBet_1X2_MatchOffer
 	  ,ls.IsApplied
+	  ,u.Username AS LastModifiedBy
 	FROM dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
+		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) 
+		ON ls.LastModifiedBy = u.UserId
 	WHERE @OWPLeagueId = ls.OWPLeagueId 
-	
-	SELECT ldi.LeagueSettingId
-		,ldi.DivisionConditionId
-		,ld.OperatorType AS Condition
-		,ld.[Value]
-	FROM dbo.[LeagueSettingDivisions] AS ldi WITH (NOLOCK)
-		LEFT JOIN dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
-			ON ls.LeagueSettingId = ldi.LeagueSettingId
-		INNER JOIN dbo.[LeagueSettingDivisionCondition] AS ld WITH (NOLOCK)
-			ON ld.DivisionConditionId = ldi.DivisionConditionId
-	WHERE ls.OWPLeagueId = @OWPLeagueId
-
-	SELECT lri.LeagueSettingId
-		,lri.RoundConditionId
-		,lr.OperatorType AS Condition
-		,lr.[Value]
-	FROM dbo.[LeagueSettingRounds] AS lri WITH (NOLOCK)
-		LEFT JOIN dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
-			ON ls.LeagueSettingId = lri.LeagueSettingId
-		INNER JOIN dbo.[LeagueSettingRoundCondition] AS lr WITH (NOLOCK)
-			ON lr.RoundConditionId = lri.RoundConditionId
-	WHERE ls.OWPLeagueId = @OWPLeagueId
 END
