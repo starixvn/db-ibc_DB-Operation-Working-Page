@@ -17,6 +17,7 @@ Revisions:
 	20200704@Carlos.Nguyen: Update Id provider IPSD, RB2, RTS, Other, BET [Redmine: #131928]
 	20200421@Lita.Tang: Remove Other Provider  [Redmine: #131928]
 	20200421@Lita.Tang: Remove Matches do not have Provider [Redmine: #131928]
+	20200427@Carlos.Nguyen: Order Provider [Redmine: #133245]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -27,12 +28,6 @@ BEGIN
 		,@FastMarket INT = - 88
 		,@AllInOne INT = - 89
 		,@BettypeHDP INT = 1
-		,@Provider_IPSD INT = 1
-		,@Provider_RB2 INT = 2
-		,@Provider_RTS INT = 3
-		,@Provider_Other INT = 0
-		,@Provider_BET INT = 4
-
 
 	CREATE TABLE #tblMatch (
 		OWPMatchId INT
@@ -42,24 +37,6 @@ BEGIN
 		,IsMajorLeague BIT
 		,HasTV BIT
 		,Maxbet MONEY
-		)
-
-	CREATE TABLE #tblProvider (
-		OWPMatchId INT
-		,IsIPSD BIT
-		,IsRB2 BIT
-		,IsRTS BIT
-		,IsBET BIT
-		)
-
-	CREATE TABLE #tblMatchProvider (
-		OWPMatchId INT
-		,Provider INT
-		)
-
-	CREATE TABLE #tblSchedulingProvider (
-		OWPMatchId INT
-		,Provider VARCHAR(10)
 		)
 
 	INSERT INTO #tblMatch (
@@ -110,78 +87,6 @@ BEGIN
 	FROM #tblMatch AS m
 	WHERE m.Maxbet IS NULL
 
-	INSERT INTO #tblProvider (
-		OWPMatchId
-		,IsIPSD
-		,IsRB2
-		,IsRTS
-		,IsBET
-		)
-	SELECT m.OWPMatchId
-		,MAX(CASE 
-				WHEN p.ProviderName LIKE '%ipsd%' THEN 1
-				ELSE 0
-				END)
-		,MAX(CASE 
-				WHEN p.ProviderName LIKE '%rb2%' THEN 1
-				ELSE 0
-				END)
-		,MAX(CASE 
-				WHEN p.ProviderName LIKE '%rts%' THEN 1
-				ELSE 0
-				END)
-		,MAX(CASE 
-				WHEN p.ProviderName LIKE '%bet%' THEN 1
-				ELSE 0
-				END)
-	FROM #tblMatch AS m
-		INNER JOIN dbo.MatchProvider AS ms WITH (NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
-		INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON ms.ProviderId = p.ProviderId
-	GROUP BY m.OWPMatchId
-	
-	
-	INSERT INTO #tblMatchProvider (
-		OWPMatchId
-		,Provider
-		)
-	SELECT OWPMatchId
-		,Provider
-	FROM (
-		SELECT p.OWPMatchId AS OWPMatchId
-			,CASE 
-				WHEN p.IsIPSD = 1 THEN @Provider_IPSD
-				ELSE NULL
-				END AS Provider_IPSD
-			,CASE 
-				WHEN p.IsRB2 = 1 THEN @Provider_RB2
-				ELSE NULL
-				END AS Provider_RB2
-			,CASE 
-				WHEN p.IsRTS = 1 THEN @Provider_RTS
-				ELSE NULL
-				END AS Provider_RTS
-			,CASE 
-				WHEN p.IsBET = 1  THEN @Provider_BET
-				ELSE NULL
-				END AS Provider_BET
-		FROM #tblProvider AS p
-		) p
-	UNPIVOT(Provider FOR ProviderType IN (Provider_IPSD, Provider_RB2, Provider_RTS, Provider_BET)) AS unpvt;
-
-	INSERT INTO #tblSchedulingProvider (
-		OWPMatchId
-		,Provider
-		)
-	SELECT t.OWPMatchId
-		,STUFF((
-				SELECT ',' + CAST(o.Provider AS VARCHAR(10))
-				FROM #tblMatchProvider AS o
-				WHERE o.OWPMatchId = t.OWPMatchId
-				FOR XML PATH('')
-				), 1, 1, '') AS Provider
-	FROM #tblMatchProvider AS t
-	GROUP BY t.OWPMatchId
-
 	-- return match list
 	-- Addition HasReporter/HasChannel
 	SELECT m.ParentMatchId AS MatchId
@@ -192,14 +97,7 @@ BEGIN
 		,m.Maxbet
 		,mi.IsSoloMatch
 		,m.IsMajorLeague		
-		,ISNULL(p.Provider, CASE 
-				WHEN EXISTS (
-						SELECT 1
-						FROM dbo.MatchProvider AS mp WITH (NOLOCK)
-						WHERE mp.OWPMatchId = m.OWPMatchId
-						) THEN CAST(@Provider_Other AS VARCHAR(10))
-				ELSE ''
-				END) AS Provider
+		,p.ProviderName AS Provider
 		,CASE 
 				WHEN LOWER(mi.Remark) LIKE '%et%' OR LOWER(mi.Remark) LIKE '%pk%' THEN 1
 				ELSE 0
@@ -220,17 +118,10 @@ BEGIN
 	FROM #tblMatch AS m
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.ParentMatchId = om.OWPMatchId
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
-		INNER JOIN #tblSchedulingProvider AS p ON m.OWPMatchId = p.OWPMatchId
+		INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON m.OWPMatchId = mp.OWPMatchId
+		INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON p.ProviderId=mp.ProviderId
 		LEFT JOIN OWPLeague AS owpl WITH(NOLOCK) ON om.OWPLeagueId=owpl.OWPLeagueId AND owpl.OWPLeagueName LIKE '%FANTASY%'
 	WHERE m.Maxbet IS NOT NULL
 		AND mi.MatchStatus = 'Live'
-
 	DROP TABLE #tblMatch
-
-	DROP TABLE #tblProvider
-
-	DROP TABLE #tblMatchProvider
-
-	DROP TABLE #tblSchedulingProvider
-	
 END
