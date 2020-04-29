@@ -14,10 +14,10 @@ Revisions:
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20190819@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20190512@Kane.Le: Update ExtraTime, Venue [Redmine: #124940]
-	20200704@Carlos.Nguyen: Update Id provider IPSD, RB2, RTS, Other, BET [Redmine: #131928]
-	20200421@Lita.Tang: Remove Other Provider  [Redmine: #131928]
-	20200421@Lita.Tang: Remove Matches do not have Provider [Redmine: #131928]
-	20200427@Carlos.Nguyen: Order Provider [Redmine: #133245]
+	20200704@Carlos.Nguyen: Update Id provider IPSD, RB2, RTS, Other, BET [Redmine: #118861]
+	20200421@Lita.Tang: Remove Other Provider  [Redmine: #118861]
+	20200421@Lita.Tang: Remove Matches do not have Provider [Redmine: #118861]
+	20200427@Carlos.Nguyen: Order Provider [Redmine: #118861]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -87,7 +87,6 @@ BEGIN
 	FROM #tblMatch AS m
 	WHERE m.Maxbet IS NULL
 
-	-- return match list
 	-- Addition HasReporter/HasChannel
 	SELECT m.ParentMatchId AS MatchId
 		,om.EventDateTime AS KOTime
