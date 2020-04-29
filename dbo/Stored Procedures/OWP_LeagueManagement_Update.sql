@@ -5,11 +5,11 @@ CREATE PROCEDURE [dbo].[OWP_LeagueManagement_Update] @ActorId INT
 	,@TimeDesc NVARCHAR(50) = NULL
 	,@Remark NVARCHAR(2000) = NULL
 	,@LSTNote NVARCHAR(200) = NULL
-	,@Spread_HDP SMALLMONEY = NULL
-	,@Spread_OU SMALLMONEY = NULL
-	,@Spread_1HHDP SMALLMONEY = NULL
-	,@Spread_1HOU SMALLMONEY = NULL
-	,@Speard_1X2 SMALLMONEY = NULL
+	,@Spread_HDP MONEY = NULL
+	,@Spread_OU MONEY = NULL
+	,@Spread_1HHDP MONEY = NULL
+	,@Spread_1HOU MONEY = NULL
+	,@Speard_1X2 MONEY = NULL
 	,@MaxbetWD_HDP MONEY = NULL
 	,@MaxbetWD_OU MONEY = NULL
 	,@MaxbetWD_1H MONEY = NULL
@@ -20,14 +20,14 @@ CREATE PROCEDURE [dbo].[OWP_LeagueManagement_Update] @ActorId INT
 	,@MaxbetWK_1H MONEY = NULL
 	,@MaxbetWK_NoOfHDP NVARCHAR(20) = NULL
 	,@MaxbetWK_MatchOffer NVARCHAR(200) = NULL
-	,@MaxBet_1X2Spread SMALLMONEY = NULL
+	,@MaxBet_1X2Spread MONEY = NULL
 	,@MaxBet_FT1X2 MONEY = NULL
 	,@MaxBet_1H1X2 MONEY = NULL
 	,@MaxBet_1X2_MatchOffer NVARCHAR(200) = NULL
-	,@CN88Spread_HDP SMALLMONEY = NULL
-	,@CN88Spread_OU SMALLMONEY = NULL
-	,@CN88Spread_1HHDP SMALLMONEY = NULL
-	,@CN88Spread_1HOU SMALLMONEY = NULL
+	,@CN88Spread_HDP MONEY = NULL
+	,@CN88Spread_OU MONEY = NULL
+	,@CN88Spread_1HHDP MONEY = NULL
+	,@CN88Spread_1HOU MONEY = NULL
 	,@CN88MaxbetWD_HDP MONEY = NULL
 	,@CN88MaxbetWD_OU MONEY = NULL
 	,@CN88MaxbetWD_1H MONEY = NULL
@@ -38,7 +38,7 @@ CREATE PROCEDURE [dbo].[OWP_LeagueManagement_Update] @ActorId INT
 	,@CN88MaxbetWK_1H MONEY = NULL
 	,@CN88MaxbetWK_NoOfHDP NVARCHAR(20) = NULL
 	,@CN88MaxbetWK_MatchOffer NVARCHAR(200) = NULL
-	,@CN88MaxBet_1X2Spread SMALLMONEY = NULL
+	,@CN88MaxBet_1X2Spread MONEY = NULL
 	,@CN88MaxBet_FT1X2 MONEY = NULL
 	,@CN88MaxBet_1H1X2 MONEY = NULL
 	,@CN88MaxBet_1X2_MatchOffer NVARCHAR(200) = NULL
@@ -56,6 +56,76 @@ BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
 	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
+
+	DECLARE @StartRun DATETIME
+		,@EndRun DATETIME
+		,@Duration INT
+		,@LogDataOld NVARCHAR(MAX)
+		,@LogData NVARCHAR(MAX)
+		,@Xml XML
+		,@OWPLeagueId INT
+
+		-- Log  
+		SET @StartRun = GETDATE()
+		SET @Xml = (
+				SELECT ls.LeagueSettingId AS '@lsid'
+				  ,ls.OWPLeagueId AS '@olid'
+				  ,ls.Category AS '@c'
+				  ,ls.TimeDesc AS '@td'
+				  ,ls.Remark AS '@rm'
+				  ,ls.TV AS '@tv'
+				  ,ls.HasTV AS '@htv'
+				  ,ls.[Round] AS '@r'
+				  ,ls.Division AS '@d'
+				  ,ls.LSTNote AS '@ln'
+				  ,ls.Spread_HDP AS '@shdp'
+				  ,ls.Spread_OU AS '@sou'
+				  ,ls.Spread_1HHDP AS '@s1hhdp'
+				  ,ls.Spread_1HOU AS '@s1hou'
+				  ,ls.Speard_1X2 AS '@s1x2'
+				  ,ls.MaxbetWD_HDP AS '@mwdhdp'
+				  ,ls.MaxbetWD_OU AS '@mwdou'
+				  ,ls.MaxbetWD_1H AS '@mwd1h'
+				  ,ls.MaxbetWD_NoOfHDP AS '@mwdnohdp'
+				  ,ls.MaxbetWD_MatchOffer AS '@mwdmo'
+				  ,ls.MaxbetWK_HDP AS '@mwkhdp'
+				  ,ls.MaxbetWK_OU AS '@mwkou'
+				  ,ls.MaxbetWK_1H AS '@mwk1h'
+				  ,ls.MaxbetWK_NoOfHDP AS '@mwknohdp'
+				  ,ls.MaxbetWK_MatchOffer AS '@mwkmo'
+				  ,ls.MaxBet_1X2Spread AS '@mb1x2s'
+				  ,ls.MaxBet_FT1X2 AS '@mbft1x2'
+				  ,ls.MaxBet_1H1X2 AS '@mb1h1x2'
+				  ,ls.MaxBet_1X2_MatchOffer AS '@mb1x2mo'
+				  ,ls.CN88Spread_HDP AS '@cn88shdp'
+				  ,ls.CN88Spread_OU AS '@cn88sou'
+				  ,ls.CN88Spread_1HHDP AS '@cn88s1hhdp'
+				  ,ls.CN88Spread_1HOU AS '@cn88s1hou'
+				  ,ls.CN88MaxbetWD_HDP AS '@cn88mwdhdp'
+				  ,ls.CN88MaxbetWD_OU AS '@cn88mwdou'
+				  ,ls.CN88MaxbetWD_1H AS '@cn88mwd1h'
+				  ,ls.CN88MaxbetWD_NoOfHDP AS '@cn88mwdnohdp'
+				  ,ls.CN88MaxbetWD_MatchOffer AS '@cn88mwdmo'
+				  ,ls.CN88MaxbetWK_HDP AS '@cn88mwkhdp'
+				  ,ls.CN88MaxbetWK_OU AS '@cn88mwkou'
+				  ,ls.CN88MaxbetWK_1H AS '@cn88mwk1h'
+				  ,ls.CN88MaxbetWK_NoOfHDP AS '@cn88mwknohdp'
+				  ,ls.CN88MaxbetWK_MatchOffer AS '@cn88mwkmo'
+				  ,ls.CN88MaxBet_1X2Spread AS '@cn88mb1x2s'
+				  ,ls.CN88MaxBet_FT1X2 AS '@cn88mbft1x2'
+				  ,ls.CN88MaxBet_1H1X2 AS '@cn88mb1h1x2'
+				  ,ls.CN88MaxBet_1X2_MatchOffer AS '@cn88mb1x2mo'
+				  ,ls.IsApplied AS '@ia'
+				FROM dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
+				WHERE @LeagueSettingId = ls.LeagueSettingId 
+				FOR XML PATH('z')
+					,ROOT('r')
+				)
+		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+
+	SELECT @OWPLeagueId = OWPLeagueId
+	FROM dbo.[NewLeagueSetting]
+    WHERE LeagueSettingId = @LeagueSettingId
 
 	UPDATE dbo.[NewLeagueSetting] WITH (ROWLOCK)
 	SET [TimeDesc] = @TimeDesc
@@ -102,4 +172,75 @@ BEGIN
       ,[IsApplied] = @IsApplied
 	  ,[LastModifiedBy] = @ActorId
 	WHERE LeagueSettingId = @LeagueSettingId
+
+	-- For write log  
+		SET @Xml = (
+				SELECT ls.LeagueSettingId AS '@lsid'
+				  ,ls.OWPLeagueId AS '@olid'
+				  ,ls.Category AS '@c'
+				  ,ls.TimeDesc AS '@td'
+				  ,ls.Remark AS '@rm'
+				  ,ls.TV AS '@tv'
+				  ,ls.HasTV AS '@htv'
+				  ,ls.[Round] AS '@r'
+				  ,ls.Division AS '@d'
+				  ,ls.LSTNote AS '@ln'
+				  ,ls.Spread_HDP AS '@shdp'
+				  ,ls.Spread_OU AS '@sou'
+				  ,ls.Spread_1HHDP AS '@s1hhdp'
+				  ,ls.Spread_1HOU AS '@s1hou'
+				  ,ls.Speard_1X2 AS '@s1x2'
+				  ,ls.MaxbetWD_HDP AS '@mwdhdp'
+				  ,ls.MaxbetWD_OU AS '@mwdou'
+				  ,ls.MaxbetWD_1H AS '@mwd1h'
+				  ,ls.MaxbetWD_NoOfHDP AS '@mwdnohdp'
+				  ,ls.MaxbetWD_MatchOffer AS '@mwdmo'
+				  ,ls.MaxbetWK_HDP AS '@mwkhdp'
+				  ,ls.MaxbetWK_OU AS '@mwkou'
+				  ,ls.MaxbetWK_1H AS '@mwk1h'
+				  ,ls.MaxbetWK_NoOfHDP AS '@mwknohdp'
+				  ,ls.MaxbetWK_MatchOffer AS '@mwkmo'
+				  ,ls.MaxBet_1X2Spread AS '@mb1x2s'
+				  ,ls.MaxBet_FT1X2 AS '@mbft1x2'
+				  ,ls.MaxBet_1H1X2 AS '@mb1h1x2'
+				  ,ls.MaxBet_1X2_MatchOffer AS '@mb1x2mo'
+				  ,ls.CN88Spread_HDP AS '@cn88shdp'
+				  ,ls.CN88Spread_OU AS '@cn88sou'
+				  ,ls.CN88Spread_1HHDP AS '@cn88s1hhdp'
+				  ,ls.CN88Spread_1HOU AS '@cn88s1hou'
+				  ,ls.CN88MaxbetWD_HDP AS '@cn88mwdhdp'
+				  ,ls.CN88MaxbetWD_OU AS '@cn88mwdou'
+				  ,ls.CN88MaxbetWD_1H AS '@cn88mwd1h'
+				  ,ls.CN88MaxbetWD_NoOfHDP AS '@cn88mwdnohdp'
+				  ,ls.CN88MaxbetWD_MatchOffer AS '@cn88mwdmo'
+				  ,ls.CN88MaxbetWK_HDP AS '@cn88mwkhdp'
+				  ,ls.CN88MaxbetWK_OU AS '@cn88mwkou'
+				  ,ls.CN88MaxbetWK_1H AS '@cn88mwk1h'
+				  ,ls.CN88MaxbetWK_NoOfHDP AS '@cn88mwknohdp'
+				  ,ls.CN88MaxbetWK_MatchOffer AS '@cn88mwkmo'
+				  ,ls.CN88MaxBet_1X2Spread AS '@cn88mb1x2s'
+				  ,ls.CN88MaxBet_FT1X2 AS '@cn88mbft1x2'
+				  ,ls.CN88MaxBet_1H1X2 AS '@cn88mb1h1x2'
+				  ,ls.CN88MaxBet_1X2_MatchOffer AS '@cn88mb1x2mo'
+				  ,ls.IsApplied AS '@ia'
+				FROM dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
+				WHERE @LeagueSettingId = ls.LeagueSettingId 
+				FOR XML PATH('z')
+					,ROOT('r')
+				)
+		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+		SET @EndRun = GETDATE()
+		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+
+		IF ISNULL(@LogData, '') <> ''
+			OR ISNULL(@LogDataOld, '') <> ''
+		BEGIN
+			EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
+				,@SPName = 'OWP_LeagueManagement_Update'
+				,@LoggedDate = @StartRun
+				,@Duration = @Duration
+				,@ObjectId = @OWPLeagueId
+				,@Data = @LogData
+				,@DataOld = @LogDataOld
+		END
 END
