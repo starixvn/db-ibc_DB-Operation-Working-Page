@@ -26,10 +26,12 @@ BEGIN
 	INSERT INTO [dbo].[NewLeagueSetting]
            ([OWPLeagueId]
            ,[Category]
+		   ,[IsApplied]
 		   ,[LastModifiedBy])
     VALUES
            (@OWPLeagueId
            ,N'Live'
+		   ,0
 		   ,@ActorId)
 
 	SET @Xml = (
