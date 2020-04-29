@@ -47,11 +47,12 @@
     [IsApplied]                 BIT             DEFAULT ((0)) NOT NULL,
     [Round]                     NVARCHAR (200)  NULL,
     [Division]                  NVARCHAR (200)  NULL,
-    [LeagueSettingConditionId]  INT             NULL,
     [FullConditionDescription]  NVARCHAR (MAX)  NULL,
     [LastModifiedBy]            INT             DEFAULT ((0)) NOT NULL,
     CONSTRAINT [PK_NewLeagueSetting] PRIMARY KEY CLUSTERED ([LeagueSettingId] ASC)
 );
+
+
 
 
 
