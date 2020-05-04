@@ -1,8 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetLA]
-@EventDate DATE
---@RequestId NVARCHAR (MAX)
+CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetLA] @EventDate DATE
 AS
 /*
 Created: @Carlos.Nguyen
@@ -10,10 +8,11 @@ Task : Get data LA for report
 DB: bodb_OWP
 
 Revisions:
-	20191004@Carlos.Nguyen: Initial SP - [Redmine: #121452]	 
+	20191004@Carlos.Nguyen: Initial SP - [Redmine: #121452]
+	20200427@Carlos.Nguyen: Update param [Redmine: #133428]
 */
 BEGIN
-	
+	SET NOCOUNT ON
 	CREATE TABLE #tblRequest(
 		RequestId VARCHAR(500),
 		OWPMatchId INT,

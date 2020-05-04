@@ -8,7 +8,7 @@ Task : Sp get status by request id
 DB: bodb_OWP
 
 Revisions:
-	20191228@Carlos.Nguyen: Initial SP - [Redmine: #126420]
+	20191228@Carlos.Nguyen: Initial SP - [Redmine: #133428]
 */
 BEGIN
 	SET NOCOUNT ON
