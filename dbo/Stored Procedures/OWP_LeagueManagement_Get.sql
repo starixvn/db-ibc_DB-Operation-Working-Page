@@ -129,7 +129,6 @@ BEGIN
 		AND owpl.IsActive=@IsActive
 		AND SUBSTRING(owpl.OWPLeagueName,CHARINDEX('-', owpl.OWPLeagueName)+2, LEN(owpl.OWPLeagueName))
 			 NOT IN (SELECT mb.MinorBettypeName FROM MinorBettype AS mb WITH (NOLOCK))
-	ORDER BY 'OrderValue' ASC
 
 	-- Calculate min max
 	INSERT INTO #tblTempLeagueSetting(
@@ -332,6 +331,7 @@ BEGIN
 			ON owpl.OWPLeagueId = ls.OWPLeagueId
 		LEFT JOIN #tblLeagueLastUse AS llu WITH (NOLOCK)
 			ON owpl.OWPLeagueId = llu.OWPLeagueId	
+	ORDER BY owpl.OrderValue ASC, owpl.LeagueName ASC
 
 	DROP TABLE #tblLeagueIds
 	DROP TABLE #tblTempLeagueSetting
