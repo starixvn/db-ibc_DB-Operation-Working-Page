@@ -1,9 +1,7 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_OWPLeague_UpdateIsActive] @UserId INT
+CREATE PROCEDURE [dbo].[OWP_OWPLeague_UpdateIsActive] @ActorId INT
 	,@OWPLeagueId INT
 	,@IsActive BIT
-	,@ErrCode INT = 0 OUTPUT
-	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
 /*  
 Created: 20170302@Tim.Trinh
@@ -12,7 +10,7 @@ DB: bodb_OWP
   
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
-     
+	20200407@Tyler.Dang: New structure of Maxbet Management - [Redmine: #131923]   
 */
 BEGIN
 	SET NOCOUNT ON
@@ -24,7 +22,6 @@ BEGIN
 		,@LogDataOld NVARCHAR(MAX)
 		,@Xml XML
 
-	BEGIN TRY
 		-- Log  
 		SET @StartRun = GETDATE()
 		SET @Xml = (
@@ -59,20 +56,12 @@ BEGIN
 		IF ISNULL(@LogData, '') <> ''
 			OR ISNULL(@LogDataOld, '') <> ''
 		BEGIN
-			EXEC dbo.OWP_WriteLog @CreatorId = @UserId
+			EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
 				,@SPName = 'OWP_OWPLeague_UpdateIsActive'
 				,@LoggedDate = @StartRun
 				,@Duration = @Duration
-				,@ObjectId = NULL
+				,@ObjectId = @OWPLeagueId
 				,@Data = @LogData
 				,@DataOld = @LogDataOld
 		END
-	END TRY
-
-	BEGIN CATCH
-		SELECT @ErrMsg = 'Update IsActive failed. Please try again.'
-			,@ErrCode = 6001
-
-		RETURN
-	END CATCH
 END

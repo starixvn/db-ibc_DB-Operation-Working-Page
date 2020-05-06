@@ -1,0 +1,62 @@
+﻿CREATE TABLE [dbo].[NewLeagueSetting] (
+    [LeagueSettingId]           INT             IDENTITY (1, 1) NOT NULL,
+    [OWPLeagueId]               INT             NOT NULL,
+    [TimeDesc]                  NVARCHAR (50)   NULL,
+    [Remark]                    NVARCHAR (2000) NULL,
+    [TV]                        NVARCHAR (50)   NULL,
+    [HasTV]                     BIT             NULL,
+    [LSTNote]                   VARCHAR (200)   NULL,
+    [Spread_HDP]                MONEY           NULL,
+    [Spread_OU]                 MONEY           NULL,
+    [Spread_1HHDP]              MONEY           NULL,
+    [Spread_1HOU]               MONEY           NULL,
+    [Speard_1X2]                MONEY           NULL,
+    [MaxbetWD_HDP]              MONEY           NULL,
+    [MaxbetWD_OU]               MONEY           NULL,
+    [MaxbetWD_1H]               MONEY           NULL,
+    [MaxbetWD_NoOfHDP]          NVARCHAR (20)   NULL,
+    [MaxbetWD_MatchOffer]       NVARCHAR (200)  NULL,
+    [MaxbetWK_HDP]              MONEY           NULL,
+    [MaxbetWK_OU]               MONEY           NULL,
+    [MaxbetWK_1H]               MONEY           NULL,
+    [MaxbetWK_NoOfHDP]          NVARCHAR (20)   NULL,
+    [MaxbetWK_MatchOffer]       NVARCHAR (200)  NULL,
+    [MaxBet_1X2Spread]          MONEY           NULL,
+    [MaxBet_FT1X2]              MONEY           NULL,
+    [MaxBet_1H1X2]              MONEY           NULL,
+    [MaxBet_1X2_MatchOffer]     NVARCHAR (200)  NULL,
+    [CN88Spread_HDP]            MONEY           NULL,
+    [CN88Spread_OU]             MONEY           NULL,
+    [CN88Spread_1HHDP]          MONEY           NULL,
+    [CN88Spread_1HOU]           MONEY           NULL,
+    [CN88MaxbetWD_HDP]          MONEY           NULL,
+    [CN88MaxbetWD_OU]           MONEY           NULL,
+    [CN88MaxbetWD_1H]           MONEY           NULL,
+    [CN88MaxbetWD_NoOfHDP]      NVARCHAR (20)   NULL,
+    [CN88MaxbetWD_MatchOffer]   NVARCHAR (200)  NULL,
+    [CN88MaxbetWK_HDP]          MONEY           NULL,
+    [CN88MaxbetWK_OU]           MONEY           NULL,
+    [CN88MaxbetWK_1H]           MONEY           NULL,
+    [CN88MaxbetWK_NoOfHDP]      NVARCHAR (20)   NULL,
+    [CN88MaxbetWK_MatchOffer]   NVARCHAR (200)  NULL,
+    [CN88MaxBet_1X2Spread]      MONEY           NULL,
+    [CN88MaxBet_FT1X2]          MONEY           NULL,
+    [CN88MaxBet_1H1X2]          MONEY           NULL,
+    [CN88MaxBet_1X2_MatchOffer] NVARCHAR (200)  NULL,
+    [Category]                  NVARCHAR (20)   DEFAULT (N'Live') NOT NULL,
+    [IsApplied]                 BIT             DEFAULT ((0)) NOT NULL,
+    [Round]                     NVARCHAR (200)  NULL,
+    [Division]                  NVARCHAR (200)  NULL,
+    [FullConditionDescription]  NVARCHAR (MAX)  NULL,
+    [LastModifiedBy]            INT             DEFAULT ((0)) NOT NULL,
+    CONSTRAINT [PK_NewLeagueSetting] PRIMARY KEY CLUSTERED ([LeagueSettingId] ASC)
+);
+
+
+
+
+
+
+
+
+
