@@ -1,0 +1,56 @@
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
+ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchOtherProvidersInsertOrUpdate] @MatchProviders NVARCHAR(MAX)
+AS
+
+/*
+Created: 20200310@Jacob
+Task : Assignment Uploading
+DB: bodb_OWP
+
+Revisions:
+	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
+	
+*/
+
+     SET NOCOUNT ON;
+     CREATE TABLE #tmpTable
+     (MatchId    INT, 
+      [Provider] NVARCHAR(500)
+     );
+     DECLARE @idoc INT;
+     EXEC sp_xml_preparedocument 
+          @idoc OUTPUT, 
+          @MatchProviders;
+     INSERT INTO #tmpTable
+            SELECT MatchId, 
+                   [Provider]
+            FROM OPENXML(@idoc, '/Root/MatchProvider', 1) WITH(MatchId INT, [Provider] NVARCHAR(500));
+     EXEC sp_xml_removedocument 
+          @idoc;
+
+     -- INSERT [OtherProvider]
+     INSERT INTO dbo.[OtherProvider]([OtherProviderName])
+            SELECT t.[Provider]
+            FROM #tmpTable t
+                 LEFT JOIN dbo.[OtherProvider] a WITH(NOLOCK) ON t.[Provider] = a.OtherProviderName
+            WHERE a.OtherProviderName IS NULL;
+
+     -- DELETE MatchOtherProvider
+     DELETE ma
+     FROM dbo.MatchOtherProvider ma
+          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId;
+
+     -- INSERT MatchOtherProvider
+     INSERT INTO dbo.MatchOtherProvider
+     (OWPMatchId, 
+      OtherProviderId
+     )
+            SELECT t.MatchId, 
+                   a.OtherProviderId
+            FROM #tmpTable t
+                 INNER JOIN dbo.[OtherProvider] a WITH(NOLOCK) ON t.[Provider] = a.OtherProviderName;
+
+     -- DROP tmpTable
+     DROP TABLE #tmpTable;

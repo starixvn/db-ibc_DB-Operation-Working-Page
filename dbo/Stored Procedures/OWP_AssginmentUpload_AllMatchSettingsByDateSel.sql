@@ -19,7 +19,7 @@ Revisions:
      DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
 
      -- Result
-     SELECT s.[OWPMatchId], 
+     SELECT s.[OWPMatchId] MatchId, 
             [Bettype], 
             [Spread], 
             [Maxbet], 
@@ -27,4 +27,10 @@ Revisions:
             [SpreadCN88]
      FROM [dbo].[MatchSetting] s WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
-     WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime;
+     WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
+           AND EXISTS
+     (
+         SELECT 1
+         FROM Assignment s WITH(NOLOCK)
+         WHERE s.OWPMatchId = m.OWPMatchId
+     );
