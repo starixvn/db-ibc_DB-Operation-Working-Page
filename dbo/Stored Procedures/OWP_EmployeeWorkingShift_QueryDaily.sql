@@ -163,29 +163,7 @@ BEGIN
 		LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
 		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
 	WHERE mi.MatchStatus <> 'Cancel'
-		AND m.EventDateTime >= @EventDateFrom
-		AND m.EventDateTime <= @EventDateTo
-		AND mm.ParentMatchId IS NULL
-
-	INSERT INTO #tblUserBettype (
-		UserId
-		,OWPMatchId
-		,Bettype
-		,EventDateTime
-		,AssignmentNote
-		)
-	SELECT DISTINCT NULL
-		,a.OWPMatchId
-		,a.Bettype
-		,m.EventDateTime
-		,a.AssignmentNote
-	FROM dbo.Assignment AS a WITH (NOLOCK)
-		LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
-		LEFT JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
-		LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
-		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
-	WHERE mi.MatchStatus <> 'Cancel'
-		AND a.AssignmentNote LIKE '%Same%'
+		AND a.UserId IS NOT NULL
 		AND m.EventDateTime >= @EventDateFrom
 		AND m.EventDateTime <= @EventDateTo
 		AND mm.ParentMatchId IS NULL
@@ -211,29 +189,7 @@ BEGIN
 		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
 		AND mm.MinorBettypeId = mb.ParentBettypeId
 	WHERE mi.MatchStatus <> 'Cancel'
-		AND m.EventDateTime >= @EventDateFrom
-		AND m.EventDateTime <= @EventDateTo
-
-	INSERT INTO #tblUserBettype (
-		UserId
-		,OWPMatchId
-		,Bettype
-		,EventDateTime
-		,AssignmentNote
-		)
-	SELECT DISTINCT NULL
-		,mm.ParentMatchId
-		,mb.ParentBettypeId
-		,m.EventDateTime
-		,a.AssignmentNote
-	FROM dbo.Assignment AS a WITH (NOLOCK)
-		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
-		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
-		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
-		AND mm.MinorBettypeId = mb.ParentBettypeId
-	WHERE mi.MatchStatus <> 'Cancel'
-		AND a.AssignmentNote LIKE '%Same%'
+		AND a.UserId IS NOT NULL
 		AND m.EventDateTime >= @EventDateFrom
 		AND m.EventDateTime <= @EventDateTo
 

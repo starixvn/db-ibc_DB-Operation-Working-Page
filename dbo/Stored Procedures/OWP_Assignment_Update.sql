@@ -21,6 +21,7 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -90,6 +91,40 @@ BEGIN
 			UserId <> @UserId
 			OR AssignmentNote <> @AssignmentNote
 			)
+
+	IF(@UserId IS NOT NULL AND @UserId <> ISNULL(@OldUserId, 0) AND ISNULL(@AssignmentNote, '') = ''
+		AND EXISTS(
+				SELECT 1 
+				FROM dbo.Assignment WITH(NOLOCK) 
+				WHERE OWPMatchId = @OWPMatchId 
+					AND Bettype = @Bettype 
+					AND AssignmentType = 2 
+					AND AssignmentNote LIKE '%Same%')
+					)
+	BEGIN
+		DECLARE @UpdatedAssignmentNote NVARCHAR(200)
+			,@RemoveAssigmentId INT
+		
+		SELECT @UpdatedAssignmentNote = AssignmentNote
+			, @RemoveAssigmentId = AssignmentId
+		FROM dbo.[Assignment] WITH(NOLOCK) 
+		WHERE OWPMatchId = @OWPMatchId 
+			AND Bettype = @BetType 
+			AND AssignmentType = 2 
+			AND AssignmentNote LIKE '%Same%'
+		
+		EXEC dbo.OWP_Assignment_Delete @ActorId = @ActorId
+				,@SessionId = @SessionId
+				,@AssignmentId = @RemoveAssigmentId
+
+		EXEC dbo.OWP_Assignment_Create @ActorId = @ActorId
+				,@SessionId = @SessionId
+				,@OWPMatchId = @OWPMatchId
+				,@BetType = @Bettype
+				,@AssignmentType = 2
+				,@UserId = @UserId
+				,@AssignmentNote = @UpdatedAssignmentNote
+	END
 
 	IF (@@ROWCOUNT = 0) RETURN
 
