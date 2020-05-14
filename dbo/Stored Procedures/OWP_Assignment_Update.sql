@@ -83,15 +83,26 @@ BEGIN
 		RETURN
 	END
 
-	UPDATE dbo.Assignment WITH (ROWLOCK)
-	SET UserId = @UserId
-		,AssignmentNote = @AssignmentNote
-	WHERE AssignmentId = @AssignmentId
-		AND (
-			UserId <> @UserId
-			OR AssignmentNote <> @AssignmentNote
-			)
+	IF(@UserId IS NOT NULL)
+	BEGIN
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+			SET UserId = @UserId
+				,AssignmentNote = @AssignmentNote
+			WHERE AssignmentId = @AssignmentId
+				AND (
+					UserId <> @UserId
+					OR AssignmentNote <> @AssignmentNote
+					)
+	END
 
+	IF(ISNULL(@AssignmentNote, '') <> '' AND @UserId IS NULL)
+	BEGIN
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+		SET AssignmentNote = @AssignmentNote
+		WHERE AssignmentId = @AssignmentId
+			AND AssignmentNote <> @AssignmentNote
+	END
+	
 	IF(@UserId IS NOT NULL AND @UserId <> ISNULL(@OldUserId, 0) AND ISNULL(@AssignmentNote, '') = ''
 		AND EXISTS(
 				SELECT 1 
