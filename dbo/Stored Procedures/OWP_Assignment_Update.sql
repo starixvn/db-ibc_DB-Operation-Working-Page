@@ -21,7 +21,6 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
-	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -81,11 +80,6 @@ BEGIN
 			,@ErrMsg = 'Assignment is not existed or deleted'
 
 		RETURN
-	END
-
-	IF(@AssignmentNote LIKE '%Same%')
-	BEGIN
-		SELECT @UserId = UserId FROM dbo.[Assignment] WITH(NOLOCK) WHERE OWPMatchId = @OWPMatchId AND Bettype = @BetType AND AssignmentType = 1
 	END
 
 	UPDATE dbo.Assignment WITH (ROWLOCK)

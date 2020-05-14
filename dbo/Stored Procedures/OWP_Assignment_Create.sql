@@ -24,7 +24,6 @@ Revisions:
 	20190325@Kane.Le: add @ErrMsg = @@IDENTITY - [Redmine: #110322]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
-	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -90,11 +89,6 @@ BEGIN
 		MemberId INT
 		,UserReceivedWatcherId INT
 		)
-
-	IF(@AssignmentNote LIKE '%Same%')
-	BEGIN
-		SELECT @UserId = UserId FROM dbo.[Assignment] WITH(NOLOCK) WHERE OWPMatchId = @OWPMatchId AND Bettype = @BetType AND AssignmentType = 1
-	END
 
 	-- insert new assignment
 	INSERT INTO dbo.Assignment (
