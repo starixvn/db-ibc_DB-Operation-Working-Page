@@ -24,6 +24,7 @@ AS
 	20190703@Kane.Le: Add MinorBettypeId - [Feature: #115390]
 	20191011@Tyler.Dang: Add EmployeeWorkingShiftNote & UserRemark - [Feature: #121901]
 	20191021@Leo.Vo: Edit Provider/ Other Provider upload - [Redmine: #122211]
+	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -54,6 +55,7 @@ BEGIN
 		,OWPMatchId INT
 		,BetType INT
 		,EventDateTime DATETIME
+		,AssignmentNote NVARCHAR(100)
 		)
 
 	 
@@ -147,11 +149,13 @@ BEGIN
 		,OWPMatchId
 		,Bettype
 		,EventDateTime
+		,AssignmentNote
 		)
 	SELECT DISTINCT u.UserId
 		,a.OWPMatchId
 		,a.Bettype
 		,m.EventDateTime
+		,a.AssignmentNote
 	FROM @tblUser u
 		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
 		LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
@@ -170,11 +174,13 @@ BEGIN
 		,OWPMatchId
 		,Bettype
 		,EventDateTime
+		,AssignmentNote
 		)
 	SELECT DISTINCT u.UserId
 		,mm.ParentMatchId
 		,mb.ParentBettypeId
 		,m.EventDateTime
+		,a.AssignmentNote
 	FROM @tblUser u
 		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
 		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
@@ -256,6 +262,7 @@ BEGIN
 		,OWPMatchId
 		,Bettype
 		,EventDateTime
+		,AssignmentNote
 	FROM #tblUserBettype WITH (NOLOCK)
 
 	-- return MatchInfo
