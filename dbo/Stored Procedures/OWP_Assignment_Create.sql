@@ -91,7 +91,9 @@ BEGIN
 		,UserReceivedWatcherId INT
 		)
 
-	IF(@AssignmentNote LIKE '%Same%' AND ISNULL(@UserId, 0) = 0)
+	IF(CHARINDEX('Same',@AssignmentNote) > 0
+		AND (CHARINDEX('ET',@AssignmentNote) > 0 OR CHARINDEX('PK',@AssignmentNote) > 0)
+		AND ISNULL(@UserId, 0) = 0)
 	BEGIN
 		SELECT @UserId = UserId FROM dbo.[Assignment] WITH(NOLOCK) WHERE OWPMatchId = @OWPMatchId AND Bettype = @BetType AND AssignmentType = 1
 	END

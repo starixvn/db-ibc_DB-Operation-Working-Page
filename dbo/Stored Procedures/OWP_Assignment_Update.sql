@@ -95,10 +95,15 @@ BEGIN
 		IF (@@ROWCOUNT = 0) RETURN
 	END
 
-	IF(ISNULL(@AssignmentNote, '') <> '' AND @UserId IS NULL AND @OldUserId IS NOT NULL AND @AssignmentNote LIKE '%Same%')
-	BEGIN
-		DECLARE @OldOtherAssignmentUserId INT
+	DECLARE @OldOtherAssignmentUserId INT
 
+	IF(ISNULL(@AssignmentNote, '') <> '' 
+		AND @UserId IS NULL 
+		AND @OldUserId IS NULL 
+		AND CHARINDEX('Same',@AssignmentNote) > 0
+		AND (CHARINDEX('ET',@AssignmentNote) > 0 OR CHARINDEX('PK',@AssignmentNote) > 0)
+		)
+	BEGIN
 		SELECT @OldOtherAssignmentUserId = UserId
 		FROM dbo.Assignment WITH (NOLOCK)
 		WHERE OWPMatchId = @OWPMatchId
@@ -114,6 +119,42 @@ BEGIN
 		IF (@@ROWCOUNT = 0) RETURN
 	END
 
+	IF(ISNULL(@AssignmentNote, '') <> '' 
+		AND @UserId IS NULL 
+		AND @OldUserId IS NOT NULL 
+		AND CHARINDEX('Same',@AssignmentNote) > 0
+		AND (CHARINDEX('ET',@AssignmentNote) > 0 OR CHARINDEX('PK',@AssignmentNote) > 0)
+		)
+	BEGIN
+		SELECT @OldOtherAssignmentUserId = UserId
+		FROM dbo.Assignment WITH (NOLOCK)
+		WHERE OWPMatchId = @OWPMatchId
+			AND Bettype = @Bettype
+			AND AssignmentType = 1
+		
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+		SET AssignmentNote = @AssignmentNote
+			,UserId = @OldOtherAssignmentUserId
+			,@UserId = @OldOtherAssignmentUserId
+		WHERE AssignmentId = @AssignmentId
+			AND AssignmentNote <> @AssignmentNote
+		IF (@@ROWCOUNT = 0) RETURN
+	END
+
+	IF(ISNULL(@AssignmentNote, '') <> '' 
+		AND @UserId IS NULL 
+		AND @OldUserId IS NOT NULL 
+		AND CHARINDEX('Same',@AssignmentNote) = 0
+		)
+	BEGIN
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+		SET AssignmentNote = @AssignmentNote
+			,UserId = NULL
+		WHERE AssignmentId = @AssignmentId
+			AND AssignmentNote <> @AssignmentNote
+		IF (@@ROWCOUNT = 0) RETURN
+	END
+
 	IF(@UserId IS NOT NULL AND @UserId <> ISNULL(@OldUserId, 0) AND ISNULL(@AssignmentNote, '') = ''
 		AND EXISTS(
 				SELECT 1 
@@ -121,7 +162,8 @@ BEGIN
 				WHERE OWPMatchId = @OWPMatchId 
 					AND Bettype = @Bettype 
 					AND AssignmentType = 2 
-					AND AssignmentNote LIKE '%Same%')
+					AND CHARINDEX('Same',AssignmentNote) > 0
+					AND (CHARINDEX('ET',AssignmentNote) > 0 OR CHARINDEX('PK',AssignmentNote) > 0))
 					)
 	BEGIN
 		DECLARE @UpdatedAssignmentNote NVARCHAR(200)
@@ -133,7 +175,8 @@ BEGIN
 		WHERE OWPMatchId = @OWPMatchId 
 			AND Bettype = @BetType 
 			AND AssignmentType = 2 
-			AND AssignmentNote LIKE '%Same%'
+			AND CHARINDEX('Same',AssignmentNote) > 0
+			AND (CHARINDEX('ET',AssignmentNote) > 0 OR CHARINDEX('PK',AssignmentNote) > 0)
 		
 		EXEC dbo.OWP_Assignment_Delete @ActorId = @ActorId
 				,@SessionId = @SessionId
