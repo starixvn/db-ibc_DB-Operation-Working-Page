@@ -21,7 +21,6 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
-	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -93,16 +92,28 @@ BEGIN
 					UserId <> @UserId
 					OR AssignmentNote <> @AssignmentNote
 					)
+		IF (@@ROWCOUNT = 0) RETURN
 	END
 
-	IF(ISNULL(@AssignmentNote, '') <> '' AND @UserId IS NULL)
+	IF(ISNULL(@AssignmentNote, '') <> '' AND @UserId IS NULL AND @OldUserId IS NOT NULL AND @AssignmentNote LIKE '%Same%')
 	BEGIN
+		DECLARE @OldOtherAssignmentUserId INT
+
+		SELECT @OldOtherAssignmentUserId = UserId
+		FROM dbo.Assignment WITH (NOLOCK)
+		WHERE OWPMatchId = @OWPMatchId
+			AND Bettype = @Bettype
+			AND AssignmentType = 1
+		
 		UPDATE dbo.Assignment WITH (ROWLOCK)
 		SET AssignmentNote = @AssignmentNote
+			,UserId = @OldOtherAssignmentUserId
+			,@UserId = @OldOtherAssignmentUserId
 		WHERE AssignmentId = @AssignmentId
 			AND AssignmentNote <> @AssignmentNote
+		IF (@@ROWCOUNT = 0) RETURN
 	END
-	
+
 	IF(@UserId IS NOT NULL AND @UserId <> ISNULL(@OldUserId, 0) AND ISNULL(@AssignmentNote, '') = ''
 		AND EXISTS(
 				SELECT 1 
@@ -136,8 +147,6 @@ BEGIN
 				,@UserId = @UserId
 				,@AssignmentNote = @UpdatedAssignmentNote
 	END
-
-	IF (@@ROWCOUNT = 0) RETURN
 
 	DECLARE @UserReceivedAssigneeMessageChangeAssignment TVP_INT
 		,@UserReceivedWatcherMessageChangeAssignment TVP_INT
