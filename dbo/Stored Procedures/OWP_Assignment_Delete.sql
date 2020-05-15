@@ -201,7 +201,7 @@ BEGIN
 						REPLACE(
 							REPLACE(CASE 
 									WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
-									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
+									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(REPLACE(a.AssignmentNote, '#<user>', ''), 'Same', ''))))
 									END
 							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 						,'<Bettype>', @BettypeName)
@@ -281,7 +281,7 @@ BEGIN
 										REPLACE(@MessageChangeOfAssignment
 										,'<Old>', CASE 
 													WHEN s.AssignmentNote IS NULL THEN '#' + us.Username
-													ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE WHEN us.UserId IS NULL THEN '' ELSE '#' + us.Username END)))
+													ELSE RTRIM(LTRIM(REPLACE(REPLACE(s.AssignmentNote, '#<user>', CASE WHEN us.UserId IS NULL THEN '' ELSE '#' + us.Username END), 'Same', '')))
 													END)
 									,'<New>', '')
 								,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)

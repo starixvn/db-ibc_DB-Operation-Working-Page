@@ -265,7 +265,7 @@ BEGIN
 								REPLACE(
 									REPLACE(CASE 
 											WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignment
-											ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
+											ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(REPLACE(@OldAssignmentNote, '#<user>', ''), 'Same', ''))))
 											END
 									,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
@@ -306,7 +306,7 @@ BEGIN
 								REPLACE(
 									REPLACE(CASE 
 											WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
-											ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
+											ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', ''), 'Same', ''))))
 											END
 									,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
@@ -348,8 +348,8 @@ BEGIN
 									REPLACE(
 										REPLACE(
 											REPLACE(@MessageUpdateOtherAssignment,
-											'<New>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
-										,'<Old>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
+											'<New>', RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', ''), 'Same', ''))))
+										,'<Old>', RTRIM(LTRIM(REPLACE(REPLACE(@OldAssignmentNote, '#<user>', ''), 'Same', ''))))
 									,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
 							,'<League>', @LeagueName)
@@ -411,11 +411,11 @@ BEGIN
 									REPLACE(@MessageChangeOfAssignment
 									,'<New>', CASE 
 												WHEN @AssignmentNote IS NULL THEN @Username
-												ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
+												ELSE RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', @Username), 'Same', '')))
 												END)
 								,'<Old>', CASE 
 											WHEN @OldAssignmentNote IS NULL THEN @OldUsername
-											ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername)))
+											ELSE RTRIM(LTRIM(REPLACE(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername), 'Same', '')))
 											END)
 							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 						,'<Bettype>', @BettypeName)
