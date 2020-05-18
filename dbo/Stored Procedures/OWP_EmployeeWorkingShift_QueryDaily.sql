@@ -52,6 +52,7 @@ BEGIN
 
 	CREATE TABLE #tblUserBettype (
 		UserId INT
+		,AssignmentId INT
 		,OWPMatchId INT
 		,BetType INT
 		,EventDateTime DATETIME
@@ -146,15 +147,20 @@ BEGIN
 	-- Major bet types
 	INSERT INTO #tblUserBettype (
 		UserId
+		,AssignmentId
 		,OWPMatchId
 		,Bettype
 		,EventDateTime
 		,AssignmentNote
 		)
 	SELECT DISTINCT u.UserId
+		,a.AssignmentId
 		,a.OWPMatchId
 		,a.Bettype
-		,m.EventDateTime
+		,CASE 
+			WHEN a.AssignmentType = 1 THEN m.EventDateTime
+			ELSE DATEADD(HOUR, 2, m.EventDateTime)
+		END
 		,a.AssignmentNote
 	FROM @tblUser u
 		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
@@ -168,18 +174,53 @@ BEGIN
 		AND m.EventDateTime <= @EventDateTo
 		AND mm.ParentMatchId IS NULL
 
-	-- Minor bet types
 	INSERT INTO #tblUserBettype (
 		UserId
+		,AssignmentId
 		,OWPMatchId
 		,Bettype
 		,EventDateTime
 		,AssignmentNote
 		)
 	SELECT DISTINCT u.UserId
+		,a.AssignmentId
+		,a.OWPMatchId
+		,a.Bettype
+		,CASE 
+			WHEN a.AssignmentType = 1 THEN m.EventDateTime
+			ELSE DATEADD(HOUR, 2, m.EventDateTime)
+		END
+		,a.AssignmentNote
+	FROM @tblUser u
+		LEFT JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
+		LEFT JOIN dbo.MajorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.BettypeId
+		LEFT JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+		LEFT JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
+		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mi.OWPMatchId = mm.MinorMatchId
+	WHERE mi.MatchStatus <> 'Cancel'
+		AND a.UserId IS NOT NULL
+		AND (CHARINDEX('ET', a.AssignmentNote) > 0 OR CHARINDEX('PK', a.AssignmentNote) > 0)
+		AND m.EventDateTime >= DATEADD(HOUR, -1, @EventDateFrom)
+		AND m.EventDateTime <= @EventDateTo
+		AND mm.ParentMatchId IS NULL
+
+	-- Minor bet types
+	INSERT INTO #tblUserBettype (
+		UserId
+		,AssignmentId
+		,OWPMatchId
+		,Bettype
+		,EventDateTime
+		,AssignmentNote
+		)
+	SELECT DISTINCT u.UserId
+		,a.AssignmentId
 		,mm.ParentMatchId
 		,mb.ParentBettypeId
-		,m.EventDateTime
+		,CASE 
+			WHEN a.AssignmentType = 1 THEN m.EventDateTime
+			ELSE DATEADD(HOUR, 2, m.EventDateTime)
+		END
 		,a.AssignmentNote
 	FROM @tblUser u
 		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
@@ -191,6 +232,36 @@ BEGIN
 	WHERE mi.MatchStatus <> 'Cancel'
 		AND a.UserId IS NOT NULL
 		AND m.EventDateTime >= @EventDateFrom
+		AND m.EventDateTime <= @EventDateTo
+
+	INSERT INTO #tblUserBettype (
+		UserId
+		,AssignmentId
+		,OWPMatchId
+		,Bettype
+		,EventDateTime
+		,AssignmentNote
+		)
+	SELECT DISTINCT u.UserId
+		,a.AssignmentId
+		,mm.ParentMatchId
+		,mb.ParentBettypeId
+		,CASE 
+			WHEN a.AssignmentType = 1 THEN m.EventDateTime
+			ELSE DATEADD(HOUR, 2, m.EventDateTime)
+		END
+		,a.AssignmentNote
+	FROM @tblUser u
+		INNER JOIN dbo.Assignment AS a WITH (NOLOCK) ON u.UserId = a.UserId
+		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON a.Bettype = mb.InheritedBettypeId
+		INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
+		INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+		AND mm.MinorBettypeId = mb.ParentBettypeId
+	WHERE mi.MatchStatus <> 'Cancel'
+		AND a.UserId IS NOT NULL
+		AND (CHARINDEX('ET', a.AssignmentNote) > 0 OR CHARINDEX('PK', a.AssignmentNote) > 0)
+		AND m.EventDateTime >= DATEADD(HOUR, -1, @EventDateFrom)
 		AND m.EventDateTime <= @EventDateTo
 
 	INSERT INTO @tblMatch
@@ -258,12 +329,15 @@ BEGIN
 	WHERE @QueryDateFrom <= ws.ShiftEndTime AND @QueryDateTo >= ws.ShiftStartTime
 
 	-- return UserBettype
-	SELECT UserId
+	SELECT DISTINCT AssignmentId 
+		,UserId
 		,OWPMatchId
 		,Bettype
 		,EventDateTime
 		,AssignmentNote
 	FROM #tblUserBettype WITH (NOLOCK)
+	WHERE EventDateTime >= @EventDateFrom
+		AND EventDateTime <= @EventDateTo
 
 	-- return MatchInfo
 	SELECT m.OWPMatchId
