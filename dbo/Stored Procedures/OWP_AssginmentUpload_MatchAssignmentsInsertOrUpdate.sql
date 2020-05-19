@@ -52,10 +52,11 @@ Revisions:
             SELECT MatchId, 
                    t.BetType, 
                    AssignmentType, 
-                   UserId, 
+                   CASE WHEN UserId = 0 THEN NULL ELSE UserId END, 
                    AssignmentNote
             FROM #tmpTable t
-                 INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId;
+                 INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
+				 WHERE UserId > 0 OR LEN(AssignmentNote) > 0;
 
      -- DROP tmpTable
      DROP TABLE #tmpTable;

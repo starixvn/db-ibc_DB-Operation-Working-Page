@@ -19,13 +19,13 @@ Revisions:
      DECLARE @EventFromDateTime DATETIME= DATEADD(HOUR, 12, CAST(@EventDate AS DATETIME));
      DECLARE @EventToDateTime DATETIME= DATEADD(DAY, 1, @EventFromDateTime);
      CREATE TABLE #tmpTable
-     (HashKey         VARCHAR(200), 
+     (MinorBettypeId  INT, 
+      HashKey         VARCHAR(200), 
       InfoSiteMatchId INT, 
       League          NVARCHAR(500), 
       Home            NVARCHAR(200), 
       Away            NVARCHAR(200), 
       EventDate       DATETIME, 
-      EventDateTime   DATETIME, 
       MatchNo         VARCHAR(50), 
       OtherTime       TIME(7), 
       KickOffTime     TIME(7), 
@@ -33,7 +33,7 @@ Revisions:
       Division        NVARCHAR(2000), 
       MatchOffer      NVARCHAR(100), 
       MatchStatus     VARCHAR(15), 
-      NoOfHDP         VARCHAR(50), 
+      NoHDP           VARCHAR(50), 
       Phone           NVARCHAR(200), 
       Remark          NVARCHAR(2000), 
       [Round]         NVARCHAR(2000), 
@@ -42,7 +42,6 @@ Revisions:
       Website2        NVARCHAR(1000), 
       Website3        NVARCHAR(1000), 
       Website4        NVARCHAR(1000), 
-      MinorBettypeId  INT, 
       ParentHashKey   VARCHAR(200), 
       HomeId          INT, 
       AwayId          INT, 
@@ -54,13 +53,13 @@ Revisions:
           @idoc OUTPUT, 
           @Assignments;
      INSERT INTO #tmpTable
-            SELECT HashKey, 
+            SELECT ISNULL(MinorBettypeId, 0), 
+                   HashKey, 
                    InfoSiteMatchId, 
                    League, 
                    Home, 
                    Away, 
                    EventDate, 
-                   EventDateTime, 
                    MatchNo, 
                    OtherTime, 
                    KickOffTime, 
@@ -68,7 +67,7 @@ Revisions:
                    Division, 
                    MatchOffer, 
                    MatchStatus, 
-                   NoOfHDP, 
+                   NoHDP, 
                    Phone, 
                    Remark, 
                    [Round], 
@@ -77,13 +76,13 @@ Revisions:
                    Website2, 
                    Website3, 
                    Website4, 
-                   MinorBettypeId, 
                    ParentHashKey, 
                    0, 
                    0, 
                    0, 
                    0
-            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, EventDateTime DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoOfHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200));
+            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200))
+            ORDER BY ISNULL(MinorBettypeId, 0) DESC;
      EXEC sp_xml_removedocument 
           @idoc;
 
@@ -125,7 +124,7 @@ Revisions:
      -- UPDATE AwayId to temp table
      UPDATE m
        SET 
-           m.HomeId = t.OWPTeamId
+           m.AwayId = t.OWPTeamId
      FROM #tmpTable m
           INNER JOIN dbo.OWPTeam t WITH(NOLOCK) ON m.Home = t.OWPTeamName;
 
@@ -200,11 +199,12 @@ Revisions:
            i.[Website3] = m.[Website3], 
            i.[Website4] = m.[Website4], 
            i.[MatchStatus] = m.[MatchStatus], 
-           i.NoOfHDPId = r.ResourceId
+           i.[NoOfHDPId] = r.[ResourceId], 
+           i.[IsSelected] = 1
      FROM #tmpTable AS m
           INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.MatchId = i.OWPMatchId
-          INNER JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'NoOfHDP'
-                                                       AND r.[Value] = m.NoOfHDP;
+          LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'NoOfHDP'
+                                                      AND r.[Value] = m.NoHDP;
 
      -- DELETE MinorMatch
      DELETE mm

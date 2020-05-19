@@ -20,8 +20,8 @@ Revisions:
       BetType     INT, 
       Spread      MONEY, 
       MaxBet      MONEY, 
-      MaxBet_CN88 MONEY, 
-      Spread_CN88 MONEY
+      MaxBetCN88 MONEY, 
+      SpreadCN88 MONEY
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -32,9 +32,9 @@ Revisions:
                    BetType, 
                    Spread, 
                    MaxBet, 
-                   MaxBet_CN88, 
-                   Spread_CN88
-            FROM OPENXML(@idoc, '/Root/MatchSetting', 1) WITH(MatchId INT, BetType INT, Spread MONEY, MaxBet MONEY, MaxBet_CN88 MONEY, Spread_CN88 MONEY);
+                   MaxBetCN88, 
+                   SpreadCN88
+            FROM OPENXML(@idoc, '/Root/MatchSetting', 1) WITH(MatchId INT, BetType INT, Spread MONEY, MaxBet MONEY, MaxBetCN88 MONEY, SpreadCN88 MONEY);
      EXEC sp_xml_removedocument 
           @idoc;
 
@@ -56,8 +56,8 @@ Revisions:
                    BetType, 
                    Spread, 
                    MaxBet, 
-                   MaxBet_CN88, 
-                   Spread_CN88
+                   MaxBetCN88, 
+                   SpreadCN88
             FROM #tmpTable t;
 
      -- DROP tmpTable
