@@ -1,8 +1,16 @@
+USE [bodb_OWP_DEV]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_AssginmentUpload_MatchInsertOrUpdate]    Script Date: 05/19/2020 14:16:55 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchInsertOrUpdate] @Assignments NVARCHAR(MAX), 
-                                                                 @EventDate   DATE
+                                                                 @EventDate   DATE,
+                                                                 @UserId INT
 AS
 
 /*
@@ -200,7 +208,9 @@ Revisions:
            i.[Website4] = m.[Website4], 
            i.[MatchStatus] = m.[MatchStatus], 
            i.[NoOfHDPId] = r.[ResourceId], 
-           i.[IsSelected] = 1
+           i.[IsSelected] = 1,
+           i.[SelectedBy] = @UserId,
+           i.IsSelectedUpdatedDate = GETDATE()
      FROM #tmpTable AS m
           INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.MatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'NoOfHDP'
