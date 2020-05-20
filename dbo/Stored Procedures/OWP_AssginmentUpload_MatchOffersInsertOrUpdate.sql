@@ -27,7 +27,7 @@ Revisions:
             SELECT DISTINCT 
                    MatchId, 
                    [Name]
-            FROM OPENXML(@idoc, '/Root/MatchAgent', 1) WITH(MatchId INT, [Name] NVARCHAR(500));
+            FROM OPENXML(@idoc, '/Root/MatchOffer', 1) WITH(MatchId INT, [Name] NVARCHAR(500));
      EXEC sp_xml_removedocument 
           @idoc;
 
