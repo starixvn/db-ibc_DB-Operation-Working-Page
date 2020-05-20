@@ -18,6 +18,7 @@ Revisions:
 	20200421@Lita.Tang: Remove Other Provider  [Redmine: #133428]
 	20200421@Lita.Tang: Remove Matches do not have Provider [Redmine: #133428]
 	20200427@Carlos.Nguyen: Order Provider [Redmine: #133428]
+	20200520@Tyler.Dang: Update RequireChinese rule [Redmine: #133428]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -114,6 +115,10 @@ BEGIN
 			WHEN LEN(LTRIM(RTRIM(mi.Channel)))>0 THEN 1
 			ELSE 0
 		END AS HasChannel
+		,CASE
+			WHEN CHARINDEX('Chinese', mi.Phone) > 0 OR CHARINDEX('C Only', mi.Phone) > 0 THEN 1
+			ELSE 0
+		END AS RequireChinese
 	FROM #tblMatch AS m
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.ParentMatchId = om.OWPMatchId
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId

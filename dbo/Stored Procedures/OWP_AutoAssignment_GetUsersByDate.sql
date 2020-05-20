@@ -14,6 +14,7 @@ Revisions:
 	20190917@Leo.Vo: Update rule Auto Assignment [Redmine: #118861]
 	20191015@Kane.Le: Update rule User Staff Level - [Redmine: #121765]
 	20190512@Kane.Le: Update ExtraTime, Venue [Redmine: #124940]
+	20200520@Tyler.Dang: Update User SpeakChinese and English [Redmine: #133428]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -62,11 +63,11 @@ BEGIN
 	SELECT UserId
 		,[Level]
 		,(CASE 
-			WHEN LanguageId LIKE '%1%' THEN 1
+			WHEN CHARINDEX('1', LanguageId) > 0 OR LanguageId IS NULL THEN 1
 			ELSE 0
 			END) AS SpeakChinese
 			,(CASE 
-			WHEN LanguageId LIKE '%2%' THEN 1
+			WHEN CHARINDEX('2', LanguageId) > 0 OR LanguageId IS NULL THEN 1
 			ELSE 0
 			END) AS SpeakEnglish
 		 
