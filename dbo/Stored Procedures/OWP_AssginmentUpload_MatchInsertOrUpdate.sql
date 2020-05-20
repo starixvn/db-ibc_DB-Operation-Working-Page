@@ -1,3 +1,4 @@
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchInsertOrUpdate] @Assignments NVARCHAR(MAX), 
@@ -55,8 +56,12 @@ Revisions:
      INSERT INTO #tmpTable
             SELECT DISTINCT 
                    ISNULL(MinorBettypeId, 0), 
-                   HashKey, 
-                   InfoSiteMatchId, 
+                   HashKey,
+                   CASE
+                       WHEN InfoSiteMatchId = 0
+                       THEN NULL
+                       ELSE InfoSiteMatchId
+                   END, 
                    League, 
                    Home, 
                    Away, 
