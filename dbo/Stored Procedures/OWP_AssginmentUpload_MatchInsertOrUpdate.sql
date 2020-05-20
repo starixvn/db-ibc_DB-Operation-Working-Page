@@ -136,7 +136,7 @@ Revisions:
        SET 
            m.AwayId = t.OWPTeamId
      FROM #tmpTable m
-          INNER JOIN dbo.OWPTeam t WITH(NOLOCK) ON m.Home = t.OWPTeamName;
+          INNER JOIN dbo.OWPTeam t WITH(NOLOCK) ON m.Away = t.OWPTeamName;
 
      -- Insert or UPDATE OWPMatch
      MERGE INTO dbo.OWPMatch WITH(ROWLOCK) AS om
