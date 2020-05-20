@@ -67,7 +67,11 @@ Revisions:
                    Away, 
                    EventDate, 
                    MatchNo, 
-                   OtherTime, 
+				   CASE
+                       WHEN OtherTime = '00:00:00.0000000'
+                       THEN NULL
+                       ELSE OtherTime
+                   END,
                    KickOffTime, 
                    Channel, 
                    Division, 
