@@ -3,12 +3,12 @@
 CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetAllMatchIsAssigned]
 AS
 /*
-Created: 2020110@Carlos.Nguyen
+Created: 20200110@Carlos.Nguyen
 Task : Get all match is assigned
 DB: bodb_OWP
 
 Revisions:
-	2020110@Carlos.Nguyen: Initial SP - [Redmine: #124448]
+	20200110@Carlos.Nguyen: Initial SP - [Redmine: #133428]
 */
 BEGIN
 	SET NOCOUNT ON
