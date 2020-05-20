@@ -68,7 +68,7 @@ Revisions:
             WHERE(UserId > 0
                   OR LEN(AssignmentNote) > 0)
                  AND (@IsUploadFMAndAIO = 1
-                      OR t.BetType IN(-1003, -1004));
+                      OR t.BetType NOT IN(-1003, -1004));
 
      -- DROP tmpTable
      DROP TABLE #tmpTable;
