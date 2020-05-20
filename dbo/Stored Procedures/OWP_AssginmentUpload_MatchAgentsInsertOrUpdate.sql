@@ -24,7 +24,8 @@ Revisions:
           @idoc OUTPUT, 
           @MatchAgents;
      INSERT INTO #tmpTable
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    Agent
             FROM OPENXML(@idoc, '/Root/MatchAgent', 1) WITH(MatchId INT, Agent NVARCHAR(500));
      EXEC sp_xml_removedocument 
@@ -40,7 +41,8 @@ Revisions:
      (OWPMatchId, 
       AgentId
      )
-            SELECT t.MatchId, 
+            SELECT DISTINCT 
+                   t.MatchId, 
                    a.AgentId
             FROM #tmpTable t
                  INNER JOIN dbo.Agent a WITH(NOLOCK) ON t.Agent = a.AgentName;

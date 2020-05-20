@@ -1,7 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchAssignmentsInsertOrUpdate] @MatchAssignments NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchAssignmentsInsertOrUpdate] @MatchAssignments NVARCHAR(MAX), 
+                                                                            @IsUploadFMAndAIO BIT
 AS
 
 /*
@@ -27,7 +28,8 @@ Revisions:
           @idoc OUTPUT, 
           @MatchAssignments;
      INSERT INTO #tmpTable
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    BetType, 
                    AssignmentType, 
                    UserId, 
@@ -39,7 +41,9 @@ Revisions:
      -- DELETE Assignment
      DELETE ma
      FROM dbo.Assignment ma
-          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId;
+          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
+     WHERE @IsUploadFMAndAIO = 1
+           OR ma.Bettype NOT IN(-1003, -1004);
 
      -- INSERT Assignment
      INSERT INTO [dbo].[Assignment]
@@ -49,14 +53,22 @@ Revisions:
       [UserId], 
       [AssignmentNote]
      )
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    t.BetType, 
-                   AssignmentType, 
-                   CASE WHEN UserId = 0 THEN NULL ELSE UserId END, 
+                   AssignmentType,
+                   CASE
+                       WHEN UserId = 0
+                       THEN NULL
+                       ELSE UserId
+                   END, 
                    AssignmentNote
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
-				 WHERE UserId > 0 OR LEN(AssignmentNote) > 0;
+            WHERE(UserId > 0
+                  OR LEN(AssignmentNote) > 0)
+                 AND (@IsUploadFMAndAIO = 1
+                      OR t.BetType IN(-1003, -1004));
 
      -- DROP tmpTable
      DROP TABLE #tmpTable;

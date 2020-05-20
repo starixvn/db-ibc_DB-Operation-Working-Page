@@ -25,7 +25,8 @@ Revisions:
           @idoc OUTPUT, 
           @MatchNotes;
      INSERT INTO #tmpTable
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    [Note]
             FROM OPENXML(@idoc, '/Root/MatchNote', 1) WITH(MatchId INT, Note NVARCHAR(500));
      EXEC sp_xml_removedocument 
@@ -43,7 +44,8 @@ Revisions:
       CreatedBy, 
       [Note]
      )
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    GETDATE(), 
                    @UserId, 
                    [Note]

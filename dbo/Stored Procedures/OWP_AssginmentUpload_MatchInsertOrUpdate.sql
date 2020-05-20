@@ -1,16 +1,8 @@
-USE [bodb_OWP_DEV]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_AssginmentUpload_MatchInsertOrUpdate]    Script Date: 05/19/2020 14:16:55 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchInsertOrUpdate] @Assignments NVARCHAR(MAX), 
-                                                                 @EventDate   DATE,
-                                                                 @UserId INT
+                                                                 @EventDate   DATE, 
+                                                                 @UserId      INT
 AS
 
 /*
@@ -61,7 +53,8 @@ Revisions:
           @idoc OUTPUT, 
           @Assignments;
      INSERT INTO #tmpTable
-            SELECT ISNULL(MinorBettypeId, 0), 
+            SELECT DISTINCT 
+                   ISNULL(MinorBettypeId, 0), 
                    HashKey, 
                    InfoSiteMatchId, 
                    League, 
@@ -188,7 +181,8 @@ Revisions:
 
      -- INSERT missing MatchInfo
      INSERT INTO dbo.MatchInfo(OWPMatchId)
-            SELECT MatchId
+            SELECT DISTINCT 
+                   MatchId
             FROM #tmpTable AS m
                  LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.MatchId = i.OWPMatchId
             WHERE i.OWPMatchId IS NULL;
@@ -208,8 +202,8 @@ Revisions:
            i.[Website4] = m.[Website4], 
            i.[MatchStatus] = m.[MatchStatus], 
            i.[NoOfHDPId] = r.[ResourceId], 
-           i.[IsSelected] = 1,
-           i.[SelectedBy] = @UserId,
+           i.[IsSelected] = 1, 
+           i.[SelectedBy] = @UserId, 
            i.IsSelectedUpdatedDate = GETDATE()
      FROM #tmpTable AS m
           INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.MatchId = i.OWPMatchId
@@ -229,7 +223,8 @@ Revisions:
       [IsRepresented], 
       [GroupId]
      )
-            SELECT t.MatchId, 
+            SELECT DISTINCT 
+                   t.MatchId, 
                    m.MatchId, 
                    t.MinorBettypeId, 
                    1, 

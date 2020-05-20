@@ -24,7 +24,8 @@ Revisions:
           @idoc OUTPUT, 
           @MatchProviders;
      INSERT INTO #tmpTable
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    [Provider]
             FROM OPENXML(@idoc, '/Root/MatchProvider', 1) WITH(MatchId INT, [Provider] NVARCHAR(500));
      EXEC sp_xml_removedocument 
@@ -32,7 +33,8 @@ Revisions:
 
      -- INSERT [OtherProvider]
      INSERT INTO dbo.[OtherProvider]([OtherProviderName])
-            SELECT t.[Provider]
+            SELECT DISTINCT 
+                   t.[Provider]
             FROM #tmpTable t
                  LEFT JOIN dbo.[OtherProvider] a WITH(NOLOCK) ON t.[Provider] = a.OtherProviderName
             WHERE a.OtherProviderName IS NULL;
@@ -47,7 +49,8 @@ Revisions:
      (OWPMatchId, 
       OtherProviderId
      )
-            SELECT t.MatchId, 
+            SELECT DISTINCT 
+                   t.MatchId, 
                    a.OtherProviderId
             FROM #tmpTable t
                  INNER JOIN dbo.[OtherProvider] a WITH(NOLOCK) ON t.[Provider] = a.OtherProviderName;

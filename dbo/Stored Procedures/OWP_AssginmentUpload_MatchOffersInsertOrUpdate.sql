@@ -24,7 +24,8 @@ Revisions:
           @idoc OUTPUT, 
           @MatchOffers;
      INSERT INTO #tmpTable
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    [Name]
             FROM OPENXML(@idoc, '/Root/MatchAgent', 1) WITH(MatchId INT, [Name] NVARCHAR(500));
      EXEC sp_xml_removedocument 
@@ -40,7 +41,8 @@ Revisions:
      (OWPMatchId, 
       MatchOfferId
      )
-            SELECT t.MatchId, 
+            SELECT DISTINCT 
+                   t.MatchId, 
                    a.ResourceId
             FROM #tmpTable t
                  INNER JOIN dbo.RefResource a WITH(NOLOCK) ON t.[Name] = a.[Value]

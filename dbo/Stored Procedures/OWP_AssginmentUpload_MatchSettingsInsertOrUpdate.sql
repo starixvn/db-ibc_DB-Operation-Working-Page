@@ -16,10 +16,10 @@ Revisions:
 
      SET NOCOUNT ON;
      CREATE TABLE #tmpTable
-     (MatchId     INT, 
-      BetType     INT, 
-      Spread      MONEY, 
-      MaxBet      MONEY, 
+     (MatchId    INT, 
+      BetType    INT, 
+      Spread     MONEY, 
+      MaxBet     MONEY, 
       MaxBetCN88 MONEY, 
       SpreadCN88 MONEY
      );
@@ -28,7 +28,8 @@ Revisions:
           @idoc OUTPUT, 
           @MatchSettings;
      INSERT INTO #tmpTable
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    BetType, 
                    Spread, 
                    MaxBet, 
@@ -52,7 +53,8 @@ Revisions:
       [MaxbetCN88], 
       [SpreadCN88]
      )
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    BetType, 
                    Spread, 
                    MaxBet, 

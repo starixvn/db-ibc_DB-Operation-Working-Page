@@ -24,7 +24,8 @@ Revisions:
           @idoc OUTPUT, 
           @MatchTVs;
      INSERT INTO #tmpTable
-            SELECT MatchId, 
+            SELECT DISTINCT 
+                   MatchId, 
                    [TV]
             FROM OPENXML(@idoc, '/Root/MatchTelevision', 1) WITH(MatchId INT, [TV] NVARCHAR(500));
      EXEC sp_xml_removedocument 
@@ -32,7 +33,8 @@ Revisions:
 
      -- INSERT Television
      INSERT INTO dbo.[Television](TVCode)
-            SELECT t.[TV]
+            SELECT DISTINCT 
+                   t.[TV]
             FROM #tmpTable t
                  LEFT JOIN dbo.[Television] a WITH(NOLOCK) ON t.TV = a.TVCode
             WHERE a.TVCode IS NULL;
@@ -47,7 +49,8 @@ Revisions:
      (OWPMatchId, 
       TVId
      )
-            SELECT t.MatchId, 
+            SELECT DISTINCT 
+                   t.MatchId, 
                    a.TVId
             FROM #tmpTable t
                  INNER JOIN dbo.[Television] a WITH(NOLOCK) ON t.TV = a.TVCode;
