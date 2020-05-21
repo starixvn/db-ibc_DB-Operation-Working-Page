@@ -33,16 +33,8 @@ Revisions:
                    BetType, 
                    AssignmentType, 
                    UserId,
-                   CASE
-                       WHEN LEN(AssignmentNote) = 0
-                       THEN NULL
-                       ELSE AssignmentNote
-                   END
-            FROM OPENXML(@idoc, '/Root/MatchAssignment', 1) WITH(MatchId INT, BetType INT, AssignmentType TINYINT, UserId INT, AssignmentNote NVARCHAR(200))
-            WHERE(UserId > 0
-                  OR LEN(AssignmentNote) > 0)
-                 AND (BetType > 0
-                      OR BetType = -1002);
+                   NULLIF(AssignmentNote,'')                       
+            FROM OPENXML(@idoc, '/Root/MatchAssignment', 1) WITH(MatchId INT, BetType INT, AssignmentType TINYINT, UserId INT, AssignmentNote NVARCHAR(200));
      EXEC sp_xml_removedocument 
           @idoc;
 
@@ -73,11 +65,7 @@ Revisions:
                    MatchId, 
                    t.BetType, 
                    AssignmentType,
-                   CASE
-                       WHEN UserId = 0
-                       THEN NULL
-                       ELSE UserId
-                   END, 
+				   NULLIF(UserId, 0),
                    AssignmentNote
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
@@ -96,11 +84,7 @@ Revisions:
                    MatchId, 
                    t.BetType, 
                    AssignmentType,
-                   CASE
-                       WHEN UserId = 0
-                       THEN NULL
-                       ELSE UserId
-                   END, 
+				   NULLIF(UserId, 0),
                    AssignmentNote
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId

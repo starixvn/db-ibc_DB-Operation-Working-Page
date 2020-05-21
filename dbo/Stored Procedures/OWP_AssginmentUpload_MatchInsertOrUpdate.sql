@@ -57,21 +57,13 @@ Revisions:
             SELECT DISTINCT 
                    ISNULL(MinorBettypeId, 0), 
                    HashKey,
-                   CASE
-                       WHEN InfoSiteMatchId = 0
-                       THEN NULL
-                       ELSE InfoSiteMatchId
-                   END, 
+				   NULLIF(InfoSiteMatchId,0),
                    League, 
                    Home, 
                    Away, 
                    EventDate, 
                    MatchNo, 
-				   CASE
-                       WHEN OtherTime = '00:00:00.0000000'
-                       THEN NULL
-                       ELSE OtherTime
-                   END,
+				   NULLIF(OtherTime,'00:00:00.0000000'),
                    KickOffTime, 
                    Channel, 
                    Division, 
