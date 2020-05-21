@@ -32,20 +32,36 @@ Revisions:
                    MatchId, 
                    BetType, 
                    AssignmentType, 
-                   UserId, 
-                   AssignmentNote
-            FROM OPENXML(@idoc, '/Root/MatchAssignment', 1) WITH(MatchId INT, BetType INT, AssignmentType TINYINT, UserId INT, AssignmentNote NVARCHAR(200));
+                   UserId,
+                   CASE
+                       WHEN LEN(AssignmentNote) = 0
+                       THEN NULL
+                       ELSE AssignmentNote
+                   END
+            FROM OPENXML(@idoc, '/Root/MatchAssignment', 1) WITH(MatchId INT, BetType INT, AssignmentType TINYINT, UserId INT, AssignmentNote NVARCHAR(200))
+            WHERE(UserId > 0
+                  OR LEN(AssignmentNote) > 0)
+                 AND (BetType > 0
+                      OR BetType = -1002);
      EXEC sp_xml_removedocument 
           @idoc;
 
-     -- DELETE Assignment
+     -- DELETE Main Assignment
      DELETE ma
      FROM dbo.Assignment ma
           INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
-     WHERE @IsUploadFMAndAIO = 1
-           OR ma.Bettype NOT IN(-1003, -1004);
+          LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+     WHERE mm.ParentMatchId IS NULL;
 
-     -- INSERT Assignment
+     -- DELETE Minor Assignment	 
+     DELETE ma
+     FROM dbo.Assignment ma
+          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
+          INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+     WHERE @IsUploadFMAndAIO = 1
+           OR (mm.MinorBettypeId NOT IN(-88, -89));
+
+     -- INSERT Main Assignment
      INSERT INTO [dbo].[Assignment]
      ([OWPMatchId], 
       [Bettype], 
@@ -65,10 +81,31 @@ Revisions:
                    AssignmentNote
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
-            WHERE(UserId > 0
-                  OR LEN(AssignmentNote) > 0)
-                 AND (@IsUploadFMAndAIO = 1
-                      OR t.BetType NOT IN(-1003, -1004));
+                 LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+            WHERE mm.ParentMatchId IS NULL;
 
+     -- INSERT MINOR Assignment
+     INSERT INTO [dbo].[Assignment]
+     ([OWPMatchId], 
+      [Bettype], 
+      [AssignmentType], 
+      [UserId], 
+      [AssignmentNote]
+     )
+            SELECT DISTINCT 
+                   MatchId, 
+                   t.BetType, 
+                   AssignmentType,
+                   CASE
+                       WHEN UserId = 0
+                       THEN NULL
+                       ELSE UserId
+                   END, 
+                   AssignmentNote
+            FROM #tmpTable t
+                 INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
+                 INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+            WHERE @IsUploadFMAndAIO = 1
+                  OR (mm.MinorBettypeId NOT IN(-88, -89));
      -- DROP tmpTable
      DROP TABLE #tmpTable;
