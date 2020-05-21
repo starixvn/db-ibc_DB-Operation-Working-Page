@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-
-ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchSettingsInsertOrUpdate] @MatchSettings NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchSettingsInsertOrUpdate] @MatchSettings NVARCHAR(MAX), 
+                                                                           @IsUploadFMAndAIO BIT
 AS
 
 /*
@@ -13,8 +13,7 @@ Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	
 */
-
-     SET NOCOUNT ON;
+    SET NOCOUNT ON;
      CREATE TABLE #tmpTable
      (MatchId    INT, 
       BetType    INT, 
@@ -27,7 +26,7 @@ Revisions:
      EXEC sp_xml_preparedocument 
           @idoc OUTPUT, 
           @MatchSettings;
-     INSERT INTO #tmpTable
+    INSERT INTO #tmpTable
             SELECT DISTINCT 
                    MatchId, 
                    BetType, 
@@ -39,12 +38,22 @@ Revisions:
      EXEC sp_xml_removedocument 
           @idoc;
 
-     -- DELETE MatchSetting
+     -- DELETE Main MatchSetting
      DELETE ma
      FROM dbo.MatchSetting ma
-          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId;
+          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
+		  LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+	 WHERE mm.ParentMatchId IS NULL;
 
-     -- INSERT MatchSetting
+	 -- DELETE Minor MatchSetting	 
+     DELETE ma
+     FROM dbo.MatchSetting ma
+          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
+          INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+     WHERE @IsUploadFMAndAIO = 1
+           OR (mm.MinorBettypeId NOT IN(-88, -89));
+  
+      -- INSERT Main MatchSetting
      INSERT INTO [dbo].[MatchSetting]
      ([OWPMatchId], 
       [Bettype], 
@@ -53,14 +62,38 @@ Revisions:
       [MaxbetCN88], 
       [SpreadCN88]
      )
-            SELECT DISTINCT 
+              SELECT DISTINCT 
                    MatchId, 
-                   BetType, 
+                   t.BetType, 
                    Spread, 
                    MaxBet, 
                    MaxBetCN88, 
                    SpreadCN88
-            FROM #tmpTable t;
+            FROM #tmpTable t
+                 INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
+                 LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+            WHERE mm.ParentMatchId IS NULL;
 
+     -- INSERT MINOR MatchSetting
+     INSERT INTO [dbo].[MatchSetting]
+     ([OWPMatchId], 
+      [Bettype], 
+      [Spread], 
+      [Maxbet], 
+      [MaxbetCN88], 
+      [SpreadCN88]
+     )
+             SELECT DISTINCT 
+                   MatchId, 
+                   t.BetType, 
+                   Spread, 
+                   MaxBet, 
+                   MaxBetCN88, 
+                   SpreadCN88
+            FROM #tmpTable t
+                 INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
+                 INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+            WHERE @IsUploadFMAndAIO = 1
+                  OR (mm.MinorBettypeId NOT IN(-88, -89));
      -- DROP tmpTable
      DROP TABLE #tmpTable;
