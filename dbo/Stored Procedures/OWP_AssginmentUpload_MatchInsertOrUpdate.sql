@@ -214,7 +214,7 @@ Revisions:
      -- DELETE MinorMatch
      DELETE mm
      FROM dbo.MinorMatch mm
-          INNER JOIN #tmpTable t ON mm.ParentMatchId = t.MatchId;
+          INNER JOIN #tmpTable t ON mm.ParentMatchId = t.MatchId OR mm.MinorMatchId = t.MatchId;
 
      -- INSERT MinorMatch
      INSERT INTO [dbo].[MinorMatch]
