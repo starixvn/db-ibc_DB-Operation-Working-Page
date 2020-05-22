@@ -2,7 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchNotesInsertOrUpdate] @MatchNotes NVARCHAR(MAX), 
-                                                                      @UserId     INT
+                                                                      @UserId     INT, 
+                                                                      @MatchIds   VARCHAR(MAX)
 AS
 
 /*
@@ -16,6 +17,11 @@ Revisions:
 */
 
      SET NOCOUNT ON;
+     DECLARE @allMatchIds TABLE(MatchId INT);
+     INSERT INTO @allMatchIds
+            SELECT DISTINCT 
+                   val
+            FROM fnc_SplitStrings(@MatchIds, ',') u OPTION(MAXRECURSION 0);
      CREATE TABLE #tmpTable
      (MatchId INT, 
       Note    NVARCHAR(500)
@@ -35,7 +41,7 @@ Revisions:
      -- DELETE Match Note
      DELETE m
      FROM dbo.MatchNote m
-          INNER JOIN #tmpTable t ON t.MatchId = m.OWPMatchId;
+          INNER JOIN @allMatchIds t ON t.MatchId = m.OWPMatchId;
 
      -- INSERT Match Note
      INSERT INTO dbo.MatchNote

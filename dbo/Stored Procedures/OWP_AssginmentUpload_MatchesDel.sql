@@ -27,8 +27,10 @@ Revisions:
           INNER JOIN @tempMatch t ON m.OWPMatchId = t.MatchId;
      DELETE m
      FROM dbo.MinorMatch m
-          INNER JOIN @tempMatch t ON m.MinorMatchId = t.MatchId
-                                     OR m.ParentMatchId = t.MatchId;
+          INNER JOIN @tempMatch t ON m.MinorMatchId = t.MatchId;
+     DELETE m
+     FROM dbo.MinorMatch m
+          INNER JOIN @tempMatch t ON m.ParentMatchId = t.MatchId;
      DELETE m
      -- Match Info
      FROM MatchInfo m

@@ -56,14 +56,14 @@ Revisions:
      INSERT INTO #tmpTable
             SELECT DISTINCT 
                    ISNULL(MinorBettypeId, 0), 
-                   HashKey,
-				   NULLIF(InfoSiteMatchId,0),
+                   HashKey, 
+                   NULLIF(InfoSiteMatchId, 0), 
                    League, 
                    Home, 
                    Away, 
                    EventDate, 
                    MatchNo, 
-				   NULLIF(OtherTime,'00:00:00.0000000'),
+                   NULLIF(OtherTime, '00:00:00.0000000'), 
                    KickOffTime, 
                    Channel, 
                    Division, 
@@ -214,7 +214,10 @@ Revisions:
      -- DELETE MinorMatch
      DELETE mm
      FROM dbo.MinorMatch mm
-          INNER JOIN #tmpTable t ON mm.ParentMatchId = t.MatchId OR mm.MinorMatchId = t.MatchId;
+          INNER JOIN #tmpTable t ON mm.MinorMatchId = t.MatchId;
+     DELETE mm
+     FROM dbo.MinorMatch mm
+          INNER JOIN #tmpTable t ON mm.ParentMatchId = t.MatchId;
 
      -- INSERT MinorMatch
      INSERT INTO [dbo].[MinorMatch]

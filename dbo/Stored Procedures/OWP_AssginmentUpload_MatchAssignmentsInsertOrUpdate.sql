@@ -2,7 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchAssignmentsInsertOrUpdate] @MatchAssignments NVARCHAR(MAX), 
-                                                                            @IsUploadFMAndAIO BIT
+                                                                            @IsUploadFMAndAIO BIT, 
+                                                                            @MatchIds         VARCHAR(MAX)
 AS
 
 /*
@@ -16,6 +17,11 @@ Revisions:
 */
 
      SET NOCOUNT ON;
+     DECLARE @allMatchIds TABLE(MatchId INT);
+     INSERT INTO @allMatchIds
+            SELECT DISTINCT 
+                   val
+            FROM fnc_SplitStrings(@MatchIds, ',') u OPTION(MAXRECURSION 0);
      CREATE TABLE #tmpTable
      (MatchId        INT, 
       BetType        INT, 
@@ -32,8 +38,8 @@ Revisions:
                    MatchId, 
                    BetType, 
                    AssignmentType, 
-                   UserId,
-                   NULLIF(AssignmentNote,'')                       
+                   UserId, 
+                   NULLIF(AssignmentNote, '')
             FROM OPENXML(@idoc, '/Root/MatchAssignment', 1) WITH(MatchId INT, BetType INT, AssignmentType TINYINT, UserId INT, AssignmentNote NVARCHAR(200));
      EXEC sp_xml_removedocument 
           @idoc;
@@ -41,14 +47,14 @@ Revisions:
      -- DELETE Main Assignment
      DELETE ma
      FROM dbo.Assignment ma
-          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
+          INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId
           LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
      WHERE mm.ParentMatchId IS NULL;
 
      -- DELETE Minor Assignment	 
      DELETE ma
      FROM dbo.Assignment ma
-          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
+          INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId
           INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
      WHERE @IsUploadFMAndAIO = 1
            OR (mm.MinorBettypeId NOT IN(-88, -89));
@@ -64,8 +70,8 @@ Revisions:
             SELECT DISTINCT 
                    MatchId, 
                    t.BetType, 
-                   AssignmentType,
-				   NULLIF(UserId, 0),
+                   AssignmentType, 
+                   NULLIF(UserId, 0), 
                    AssignmentNote
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
@@ -83,8 +89,8 @@ Revisions:
             SELECT DISTINCT 
                    MatchId, 
                    t.BetType, 
-                   AssignmentType,
-				   NULLIF(UserId, 0),
+                   AssignmentType, 
+                   NULLIF(UserId, 0), 
                    AssignmentNote
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId

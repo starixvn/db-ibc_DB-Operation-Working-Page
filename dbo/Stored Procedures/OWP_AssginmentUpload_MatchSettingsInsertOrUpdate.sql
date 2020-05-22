@@ -1,7 +1,9 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchSettingsInsertOrUpdate] @MatchSettings NVARCHAR(MAX), 
-                                                                           @IsUploadFMAndAIO BIT
+
+ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchSettingsInsertOrUpdate] @MatchSettings    NVARCHAR(MAX), 
+                                                                         @IsUploadFMAndAIO BIT, 
+                                                                         @MatchIds         VARCHAR(MAX)
 AS
 
 /*
@@ -13,7 +15,13 @@ Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	
 */
-    SET NOCOUNT ON;
+
+     SET NOCOUNT ON;
+     DECLARE @allMatchIds TABLE(MatchId INT);
+     INSERT INTO @allMatchIds
+            SELECT DISTINCT 
+                   val
+            FROM fnc_SplitStrings(@MatchIds, ',') u OPTION(MAXRECURSION 0);
      CREATE TABLE #tmpTable
      (MatchId    INT, 
       BetType    INT, 
@@ -26,7 +34,7 @@ Revisions:
      EXEC sp_xml_preparedocument 
           @idoc OUTPUT, 
           @MatchSettings;
-    INSERT INTO #tmpTable
+     INSERT INTO #tmpTable
             SELECT DISTINCT 
                    MatchId, 
                    BetType, 
@@ -41,19 +49,19 @@ Revisions:
      -- DELETE Main MatchSetting
      DELETE ma
      FROM dbo.MatchSetting ma
-          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
-		  LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
-	 WHERE mm.ParentMatchId IS NULL;
+          INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId
+          LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
+     WHERE mm.ParentMatchId IS NULL;
 
-	 -- DELETE Minor MatchSetting	 
+     -- DELETE Minor MatchSetting	 
      DELETE ma
      FROM dbo.MatchSetting ma
-          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId
+          INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId
           INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
      WHERE @IsUploadFMAndAIO = 1
            OR (mm.MinorBettypeId NOT IN(-88, -89));
-  
-      -- INSERT Main MatchSetting
+
+     -- INSERT Main MatchSetting
      INSERT INTO [dbo].[MatchSetting]
      ([OWPMatchId], 
       [Bettype], 
@@ -62,7 +70,7 @@ Revisions:
       [MaxbetCN88], 
       [SpreadCN88]
      )
-              SELECT DISTINCT 
+            SELECT DISTINCT 
                    MatchId, 
                    t.BetType, 
                    Spread, 
@@ -83,7 +91,7 @@ Revisions:
       [MaxbetCN88], 
       [SpreadCN88]
      )
-             SELECT DISTINCT 
+            SELECT DISTINCT 
                    MatchId, 
                    t.BetType, 
                    Spread, 

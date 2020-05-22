@@ -1,7 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchOffersInsertOrUpdate] @MatchOffers NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_MatchOffersInsertOrUpdate] @MatchOffers NVARCHAR(MAX), 
+                                                                       @MatchIds    VARCHAR(MAX)
 AS
 
 /*
@@ -15,6 +16,11 @@ Revisions:
 */
 
      SET NOCOUNT ON;
+     DECLARE @allMatchIds TABLE(MatchId INT);
+     INSERT INTO @allMatchIds
+            SELECT DISTINCT 
+                   val
+            FROM fnc_SplitStrings(@MatchIds, ',') u OPTION(MAXRECURSION 0);
      CREATE TABLE #tmpTable
      (MatchId INT, 
       [Name]  NVARCHAR(500)
@@ -34,7 +40,7 @@ Revisions:
      -- DELETE Match Offer
      DELETE ma
      FROM dbo.MatchOfferDetail ma
-          INNER JOIN #tmpTable t ON t.MatchId = ma.OWPMatchId;
+          INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId;
 
      -- INSERT Match Offer
      INSERT INTO dbo.MatchOfferDetail
