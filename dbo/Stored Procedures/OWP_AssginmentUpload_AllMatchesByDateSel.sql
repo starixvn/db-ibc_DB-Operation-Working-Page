@@ -93,10 +93,4 @@ Revisions:
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource hdp WITH(NOLOCK) ON i.NoOfHDPId = hdp.ResourceId
                                                         AND hdp.RefName = 'NoOfHDP'
-     WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
-           AND EXISTS
-     (
-         SELECT 1
-         FROM Assignment s WITH(NOLOCK)
-         WHERE s.OWPMatchId = m.OWPMatchId
-     );
+     WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime;
