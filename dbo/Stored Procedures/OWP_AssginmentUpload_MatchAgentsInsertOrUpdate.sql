@@ -37,6 +37,15 @@ Revisions:
      EXEC sp_xml_removedocument 
           @idoc;
 
+
+	 -- INSERT Agent
+     INSERT INTO dbo.Agent
+            SELECT DISTINCT 
+                   t.Agent
+            FROM #tmpTable t
+                 LEFT JOIN dbo.Agent a WITH(NOLOCK) ON t.Agent = a.AgentName
+            WHERE a.AgentName IS NULL;
+
      -- DELETE Match Agent
      DELETE ma
      FROM dbo.MatchAgent ma
