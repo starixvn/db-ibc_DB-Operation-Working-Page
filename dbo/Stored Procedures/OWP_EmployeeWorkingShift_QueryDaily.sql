@@ -333,7 +333,10 @@ BEGIN
 		,UserId
 		,OWPMatchId
 		,Bettype
-		,EventDateTime
+		,CASE 
+			WHEN (CHARINDEX('ET', AssignmentNote) > 0 OR CHARINDEX('PK', AssignmentNote) > 0) THEN DATEADD(HOUR, -2, EventDateTime)
+			ELSE EventDateTime
+		END AS EventDateTime
 		,AssignmentNote
 	FROM #tblUserBettype WITH (NOLOCK)
 	WHERE EventDateTime >= @EventDateFrom
