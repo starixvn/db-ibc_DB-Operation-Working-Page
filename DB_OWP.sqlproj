@@ -408,6 +408,7 @@
     <Build Include="dbo\Tables\LeagueSettingTVCondition.sql" />
     <Build Include="dbo\Tables\NewLeagueSetting.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateGroup.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetRequestIsWaiting.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetByLeagueId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_UpdateTVCondition.sql" />
