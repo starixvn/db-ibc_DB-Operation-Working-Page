@@ -20,6 +20,7 @@ Revisions:
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20200514@Tyler.Dang: Remove Same for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON

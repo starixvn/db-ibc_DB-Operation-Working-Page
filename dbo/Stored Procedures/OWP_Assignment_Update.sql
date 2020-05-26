@@ -21,6 +21,7 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS ET/PK Same- [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
