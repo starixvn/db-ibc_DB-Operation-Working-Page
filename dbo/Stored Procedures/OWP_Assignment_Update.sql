@@ -21,6 +21,7 @@ Revisions:
 	20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS ET/PK Same- [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -82,16 +83,114 @@ BEGIN
 		RETURN
 	END
 
-	UPDATE dbo.Assignment WITH (ROWLOCK)
-	SET UserId = @UserId
-		,AssignmentNote = @AssignmentNote
-	WHERE AssignmentId = @AssignmentId
-		AND (
-			UserId <> @UserId
-			OR AssignmentNote <> @AssignmentNote
-			)
+	IF(@UserId IS NOT NULL)
+	BEGIN
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+			SET UserId = @UserId
+				,AssignmentNote = @AssignmentNote
+			WHERE AssignmentId = @AssignmentId
+				AND (
+					UserId <> @UserId
+					OR AssignmentNote <> @AssignmentNote
+					)
+		IF (@@ROWCOUNT = 0) RETURN
+	END
 
-	IF (@@ROWCOUNT = 0) RETURN
+	DECLARE @OldOtherAssignmentUserId INT
+
+	IF(ISNULL(@AssignmentNote, '') <> '' 
+		AND @UserId IS NULL 
+		AND @OldUserId IS NULL 
+		AND CHARINDEX('Same',@AssignmentNote) > 0
+		AND (CHARINDEX('ET',@AssignmentNote) > 0 OR CHARINDEX('PK',@AssignmentNote) > 0)
+		)
+	BEGIN
+		SELECT @OldOtherAssignmentUserId = UserId
+		FROM dbo.Assignment WITH (NOLOCK)
+		WHERE OWPMatchId = @OWPMatchId
+			AND Bettype = @Bettype
+			AND AssignmentType = 1
+		
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+		SET AssignmentNote = @AssignmentNote
+			,UserId = @OldOtherAssignmentUserId
+			,@UserId = @OldOtherAssignmentUserId
+		WHERE AssignmentId = @AssignmentId
+			AND AssignmentNote <> @AssignmentNote
+		IF (@@ROWCOUNT = 0) RETURN
+	END
+
+	IF(ISNULL(@AssignmentNote, '') <> '' 
+		AND @UserId IS NULL 
+		AND @OldUserId IS NOT NULL 
+		AND CHARINDEX('Same',@AssignmentNote) > 0
+		AND (CHARINDEX('ET',@AssignmentNote) > 0 OR CHARINDEX('PK',@AssignmentNote) > 0)
+		)
+	BEGIN
+		SELECT @OldOtherAssignmentUserId = UserId
+		FROM dbo.Assignment WITH (NOLOCK)
+		WHERE OWPMatchId = @OWPMatchId
+			AND Bettype = @Bettype
+			AND AssignmentType = 1
+		
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+		SET AssignmentNote = @AssignmentNote
+			,UserId = @OldOtherAssignmentUserId
+			,@UserId = @OldOtherAssignmentUserId
+		WHERE AssignmentId = @AssignmentId
+			AND AssignmentNote <> @AssignmentNote
+		IF (@@ROWCOUNT = 0) RETURN
+	END
+
+	IF(ISNULL(@AssignmentNote, '') <> '' 
+		AND @UserId IS NULL 
+		AND @OldUserId IS NOT NULL 
+		AND CHARINDEX('Same',@AssignmentNote) = 0
+		)
+	BEGIN
+		UPDATE dbo.Assignment WITH (ROWLOCK)
+		SET AssignmentNote = @AssignmentNote
+			,UserId = NULL
+		WHERE AssignmentId = @AssignmentId
+			AND AssignmentNote <> @AssignmentNote
+		IF (@@ROWCOUNT = 0) RETURN
+	END
+
+	IF(@UserId IS NOT NULL AND @UserId <> ISNULL(@OldUserId, 0) AND ISNULL(@AssignmentNote, '') = ''
+		AND EXISTS(
+				SELECT 1 
+				FROM dbo.Assignment WITH(NOLOCK) 
+				WHERE OWPMatchId = @OWPMatchId 
+					AND Bettype = @Bettype 
+					AND AssignmentType = 2 
+					AND CHARINDEX('Same',AssignmentNote) > 0
+					AND (CHARINDEX('ET',AssignmentNote) > 0 OR CHARINDEX('PK',AssignmentNote) > 0))
+					)
+	BEGIN
+		DECLARE @UpdatedAssignmentNote NVARCHAR(200)
+			,@RemoveAssigmentId INT
+		
+		SELECT @UpdatedAssignmentNote = AssignmentNote
+			, @RemoveAssigmentId = AssignmentId
+		FROM dbo.[Assignment] WITH(NOLOCK) 
+		WHERE OWPMatchId = @OWPMatchId 
+			AND Bettype = @BetType 
+			AND AssignmentType = 2 
+			AND CHARINDEX('Same',AssignmentNote) > 0
+			AND (CHARINDEX('ET',AssignmentNote) > 0 OR CHARINDEX('PK',AssignmentNote) > 0)
+		
+		EXEC dbo.OWP_Assignment_Delete @ActorId = @ActorId
+				,@SessionId = @SessionId
+				,@AssignmentId = @RemoveAssigmentId
+
+		EXEC dbo.OWP_Assignment_Create @ActorId = @ActorId
+				,@SessionId = @SessionId
+				,@OWPMatchId = @OWPMatchId
+				,@BetType = @Bettype
+				,@AssignmentType = 2
+				,@UserId = @UserId
+				,@AssignmentNote = @UpdatedAssignmentNote
+	END
 
 	DECLARE @UserReceivedAssigneeMessageChangeAssignment TVP_INT
 		,@UserReceivedWatcherMessageChangeAssignment TVP_INT
@@ -210,7 +309,7 @@ BEGIN
 								REPLACE(
 									REPLACE(CASE 
 											WHEN @OldAssignmentNote IS NULL THEN @MessageDeleteAssignment
-											ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
+											ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(REPLACE(@OldAssignmentNote, '#<user>', ''), 'Same', ''))))
 											END
 									,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
@@ -251,7 +350,7 @@ BEGIN
 								REPLACE(
 									REPLACE(CASE 
 											WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
-											ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
+											ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', ''), 'Same', ''))))
 											END
 									,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
@@ -293,8 +392,8 @@ BEGIN
 									REPLACE(
 										REPLACE(
 											REPLACE(@MessageUpdateOtherAssignment,
-											'<New>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
-										,'<Old>', RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', ''))))
+											'<New>', RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', ''), 'Same', ''))))
+										,'<Old>', RTRIM(LTRIM(REPLACE(REPLACE(@OldAssignmentNote, '#<user>', ''), 'Same', ''))))
 									,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
 							,'<League>', @LeagueName)
@@ -356,11 +455,11 @@ BEGIN
 									REPLACE(@MessageChangeOfAssignment
 									,'<New>', CASE 
 												WHEN @AssignmentNote IS NULL THEN @Username
-												ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
+												ELSE RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', @Username), 'Same', '')))
 												END)
 								,'<Old>', CASE 
 											WHEN @OldAssignmentNote IS NULL THEN @OldUsername
-											ELSE RTRIM(LTRIM(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername)))
+											ELSE RTRIM(LTRIM(REPLACE(REPLACE(@OldAssignmentNote, '#<user>', @OldUsername), 'Same', '')))
 											END)
 							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 						,'<Bettype>', @BettypeName)

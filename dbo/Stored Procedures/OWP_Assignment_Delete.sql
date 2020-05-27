@@ -20,6 +20,7 @@ Revisions:
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20200514@Tyler.Dang: Remove Same for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -201,7 +202,7 @@ BEGIN
 						REPLACE(
 							REPLACE(CASE 
 									WHEN a.AssignmentType = 1 THEN @MessageDeleteAssignment
-									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
+									ELSE REPLACE(@MessageDeleteOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(REPLACE(a.AssignmentNote, '#<user>', ''), 'Same', ''))))
 									END
 							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 						,'<Bettype>', @BettypeName)
@@ -281,7 +282,7 @@ BEGIN
 										REPLACE(@MessageChangeOfAssignment
 										,'<Old>', CASE 
 													WHEN s.AssignmentNote IS NULL THEN '#' + us.Username
-													ELSE RTRIM(LTRIM(REPLACE(s.AssignmentNote, '#<user>', CASE WHEN us.UserId IS NULL THEN '' ELSE '#' + us.Username END)))
+													ELSE RTRIM(LTRIM(REPLACE(REPLACE(s.AssignmentNote, '#<user>', CASE WHEN us.UserId IS NULL THEN '' ELSE '#' + us.Username END), 'Same', '')))
 													END)
 									,'<New>', '')
 								,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)

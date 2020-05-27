@@ -47,7 +47,7 @@ AS
 	20200203@Kane.Le: Fix  Lost asssignment of the 10mins and 15mins when changing Match No and uploading on second times - [Redmine: #127741]
 	20200204@Kane.Le: Fix Lost Odds Compiler values when changing MatchNo and re-uploading event- [Redmine: #127800]
 	20200210@Kane.Le: Fix Lost REMOVE Messages- [Redmine: #127800]
-	
+	20200521@Tyler.Dang: Add ET/PK Same for AssignmentNote- [Redmine: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -3024,7 +3024,7 @@ BEGIN
 			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(CASE 
 									WHEN a.AssignmentType = 1
 										THEN @MessageDeleteAssignment
-									ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.OldAssignmentNote, '#<user>', ''))))
+									ELSE REPLACE(@MessageDeleteOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(REPLACE(a.OldAssignmentNote, '#<user>', ''), 'same', ''))))
 									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', a.MatchNo), '<User>', '#' + @Username)
 			,CASE 
 				WHEN a.AssignmentType = 1
@@ -3052,7 +3052,7 @@ BEGIN
 			,REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(CASE 
 									WHEN a.AssignmentType = 1
 										THEN @MessageInsertAssignment
-									ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', ''))))
+									ELSE REPLACE(@MessageInsertOtherAssignment, '<note>', RTRIM(LTRIM(REPLACE(REPLACE(a.AssignmentNote, '#<user>', ''), 'same', ''))))
 									END, '<Event>', a.EventName), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', a.MatchNo), '<User>', '#' + @Username)
 			,CASE 
 				WHEN a.AssignmentType = 1
@@ -3247,11 +3247,11 @@ BEGIN
 												THEN CASE 
 														WHEN a.AssignmentType = 1
 															THEN '#' + a.Username
-														ELSE RTRIM(LTRIM(REPLACE(a.AssignmentNote, '#<user>', CASE 
+														ELSE RTRIM(LTRIM(REPLACE(REPLACE(a.AssignmentNote, '#<user>', CASE 
 																			WHEN a.Username IS NOT NULL
 																				THEN '#' + a.Username
 																			ELSE ''
-																			END)))
+																			END), 'same', '')))
 														END
 											ELSE ''
 											END), '<Old>', CASE 
@@ -3259,11 +3259,11 @@ BEGIN
 											THEN CASE 
 													WHEN a.AssignmentType = 1
 														THEN '#' + a.OldUsername
-													ELSE RTRIM(LTRIM(REPLACE(a.OldAssignmentNote, '#<user>', CASE 
+													ELSE RTRIM(LTRIM(REPLACE(REPLACE(a.OldAssignmentNote, '#<user>', CASE 
 																		WHEN a.OldUsername IS NOT NULL
 																			THEN '#' + a.OldUsername
 																		ELSE ''
-																		END)))
+																		END), 'same' ,'')))
 													END
 										ELSE ''
 										END), '<Event>', a.EventName), '<User>', @Username), '<League>', a.LeagueName), '<Bettype>', a.BettypeName), '<Match.No>', CASE 

@@ -24,6 +24,7 @@ Revisions:
 	20190325@Kane.Le: add @ErrMsg = @@IDENTITY - [Redmine: #110322]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
+	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -89,6 +90,13 @@ BEGIN
 		MemberId INT
 		,UserReceivedWatcherId INT
 		)
+
+	IF(CHARINDEX('Same',@AssignmentNote) > 0
+		AND (CHARINDEX('ET',@AssignmentNote) > 0 OR CHARINDEX('PK',@AssignmentNote) > 0)
+		AND ISNULL(@UserId, 0) = 0)
+	BEGIN
+		SELECT @UserId = UserId FROM dbo.[Assignment] WITH(NOLOCK) WHERE OWPMatchId = @OWPMatchId AND Bettype = @BetType AND AssignmentType = 1
+	END
 
 	-- insert new assignment
 	INSERT INTO dbo.Assignment (
@@ -198,7 +206,7 @@ BEGIN
 								REPLACE(
 									REPLACE(CASE 
 										WHEN @AssignmentNote IS NULL THEN @MessageInsertAssignment
-										ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', ''))))
+										ELSE REPLACE(@MessageInsertOtherAssignment, '<Note>', RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', ''), 'Same', ''))))
 										END, 
 									'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
 								,'<Bettype>', @BettypeName)
@@ -255,7 +263,7 @@ BEGIN
 									REPLACE(@MessageChangeOfAssignment
 										,'<New>', CASE
 													WHEN @AssignmentNote IS NULL THEN @Username
-													ELSE RTRIM(LTRIM(REPLACE(@AssignmentNote, '#<user>', @Username)))
+													ELSE RTRIM(LTRIM(REPLACE(REPLACE(@AssignmentNote, '#<user>', @Username), 'Same', '')))
 													END)
 								,'<Old>', '')
 							,'<Event>', @HomeTeam + ' -vs- ' + @AwayTeam)
