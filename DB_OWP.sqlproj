@@ -418,7 +418,10 @@
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetCondition.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetAllTVCondition.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_Delete.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetByLeagueId.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetByLeagueId.sql" />    
+    <Build Include="dbo\Tables\AutoAssignmentSuspenderHistory.sql" />
+    <Build Include="dbo\Tables\AutoAssignmentMatchHistory.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetRequestExtra.sql" />
     <Build Include="dbo\Tables\SpecialProduct.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Update.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Get.sql" />
