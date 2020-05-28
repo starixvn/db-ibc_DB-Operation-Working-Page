@@ -28,16 +28,18 @@ BEGIN
 			KOTime,
 			OtherTime,
 			Venue,
-			RequireChinese
+			RequireChinese,
+			MaxBet
 		)
 		SELECT MatchId,
 			Bettype,
 			KOTime,
 			OtherTime,
 			Venue,
-			RequireChinese
+			RequireChinese,
+			MaxBet
 		FROM OPENXML(@idoc, '/Root/Row', 1)
-			WITH (MatchId [int], Bettype [int], KOTime [DATETIME], OtherTime [TIME], Venue [NVARCHAR], RequireChinese [BIT])
+			WITH (MatchId [int], Bettype [int], KOTime [DATETIME], OtherTime [TIME], Venue [NVARCHAR], RequireChinese [BIT], MaxBet [MONEY])
 
 		EXEC sp_xml_removedocument @idoc
 END
