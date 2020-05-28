@@ -4,7 +4,9 @@
     [KOTime]         DATETIME       NOT NULL,
     [OtherTime]      TIME (7)       NULL,
     [Venue]          NVARCHAR (100) NULL,
-    [ReportLanguage] NVARCHAR (100) NULL,
+    [RequireChinese] BIT            NULL,
     PRIMARY KEY CLUSTERED ([MatchId] ASC, [Bettype] ASC)
 );
+
+
 

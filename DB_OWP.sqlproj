@@ -424,6 +424,8 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetRequestExtra.sql" />
     <Build Include="dbo\Tables\SpecialProduct.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Update.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_WriteHistorySuspender.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_WriteHistoryMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Delete.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_GetLog.sql" />
