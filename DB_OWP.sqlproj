@@ -428,6 +428,8 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_WriteHistoryMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Delete.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetHistoryMatchToday.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_FilterMatchTodayMissArrange.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_GetLog.sql" />
   </ItemGroup>
   <ItemGroup>

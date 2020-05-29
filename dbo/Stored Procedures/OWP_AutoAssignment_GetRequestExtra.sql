@@ -20,5 +20,5 @@ BEGIN
 	FROM AutoAssignmentRequest AS req WITH (NOLOCK)
 	WHERE req.EventDate IN (SELECT req1.EventDate
 							FROM AutoAssignmentRequest req1 WITH (NOLOCK)
-							WHERE req1.Status=1 AND req1.EventDate=@EventDate)
+							WHERE req1.EventDate=@EventDate AND req1.Status=1)
 END
