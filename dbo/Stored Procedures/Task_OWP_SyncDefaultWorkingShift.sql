@@ -17,6 +17,7 @@ Revisions:
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
 	20191025@Carlos.Nguyen: Manual public working shift - [Redmine: #122661]
+	20200529@Tyler.Dang: Change week from Tuesday to next Monday - [Redmine: #134337]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -34,7 +35,7 @@ BEGIN
 	SET @StartRun = GETDATE()
 	SET @CurrentDate = ISNULL(@CurrentDate, GETDATE())
 	SET @CurrentDateGMTplus8 = DATEADD(HOUR, 12, @CurrentDate)
-	SET @NextWeekStartDate = DATEADD(DAY, 7 + 2 - DATEPART(WEEKDAY, @CurrentDateGMTplus8), CAST(@CurrentDateGMTplus8 AS DATE))
+	SET @NextWeekStartDate = DATEADD(DAY, 7 + 3 - DATEPART(WEEKDAY, @CurrentDateGMTplus8), CAST(@CurrentDateGMTplus8 AS DATE))
 	SET @NextWeekEndDate = DATEADD(DAY, 6, @NextWeekStartDate)
 
 	CREATE TABLE #tblDefaultWorkingShift (
@@ -63,7 +64,7 @@ BEGIN
 		,LogData NVARCHAR(MAX)
 		)
 
-	-- Insert default working shift from Monday to Sunday for all user (must ignore disable... user)
+	-- Insert default working shift from Tuesday to Monday for all user (must ignore disable... user)
 	INSERT INTO #tblDefaultWorkingShift (
 		UserId
 		,ShiftId
@@ -76,13 +77,13 @@ BEGIN
 	SELECT u.UserId
 		,ds.ShiftId
 		,CASE 
-			WHEN ds.DayOfTheWeek = 1 THEN @NextWeekStartDate
-			WHEN ds.DayOfTheWeek = 2 THEN DATEADD(DAY, 1, @NextWeekStartDate)
-			WHEN ds.DayOfTheWeek = 3 THEN DATEADD(DAY, 2, @NextWeekStartDate)
-			WHEN ds.DayOfTheWeek = 4 THEN DATEADD(DAY, 3, @NextWeekStartDate)
-			WHEN ds.DayOfTheWeek = 5 THEN DATEADD(DAY, 4, @NextWeekStartDate)
-			WHEN ds.DayOfTheWeek = 6 THEN DATEADD(DAY, 5, @NextWeekStartDate)
-			WHEN ds.DayOfTheWeek = 7 THEN DATEADD(DAY, 6, @NextWeekStartDate)
+			WHEN ds.DayOfTheWeek = 1 THEN @NextWeekEndDate
+			WHEN ds.DayOfTheWeek = 2 THEN @NextWeekStartDate
+			WHEN ds.DayOfTheWeek = 3 THEN DATEADD(DAY, 1, @NextWeekStartDate)
+			WHEN ds.DayOfTheWeek = 4 THEN DATEADD(DAY, 2, @NextWeekStartDate)
+			WHEN ds.DayOfTheWeek = 5 THEN DATEADD(DAY, 3, @NextWeekStartDate)
+			WHEN ds.DayOfTheWeek = 6 THEN DATEADD(DAY, 4, @NextWeekStartDate)
+			WHEN ds.DayOfTheWeek = 7 THEN DATEADD(DAY, 5, @NextWeekStartDate)
 			END AS ShiftDate
 		,sc.StartTime
 		,sc.EndTime
@@ -201,8 +202,9 @@ BEGIN
 		,@Duration
 		,LogData
 		,NULL
+		
 	FROM #tblUserLog
-
+	
 	DROP TABLE #tblDefaultWorkingShift
 
 	DROP TABLE #tblInsertWorkingShift

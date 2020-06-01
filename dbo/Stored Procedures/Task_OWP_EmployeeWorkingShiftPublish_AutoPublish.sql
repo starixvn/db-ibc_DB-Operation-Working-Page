@@ -9,18 +9,19 @@ AS
 
  Revisions:
 	20190530@Kane.Le: Initial SP - [Redmine: #110322]	
+	20200529@Tyler.Dang: Change week from Tuesday to next Monday - [Redmine: #134337]	
 */
 BEGIN
 	SET NOCOUNT ON;
 
-	DECLARE @RunDate DATE = DATEADD(HOUR, 11, GETDATE())
+	DECLARE @RunDate DATE = DATEADD(HOUR, 11, '2021-05-27T13:00:00')
 		,@FromDate DATE
 		,@ToDate DATE
 		,@NextWeek DATE
 		,@ExcludeSections NVARCHAR(500) = 'LA' -- LA, LG, LST
 
-	SET @FromDate = DATEADD(DD, 0 - (@@DATEFIRST + 5 + DATEPART(DW, @RunDate)) % 7, @RunDate) -- Monday
-	SET @ToDate = DATEADD(DD, 6 - (@@DATEFIRST + 5 + DATEPART(DW, @RunDate)) % 7, @RunDate) -- Sunday
+	SET @FromDate = DATEADD(DD, 1 - (@@DATEFIRST + 5 + DATEPART(DW, @RunDate)) % 7, @RunDate) -- Tuesday
+	SET @ToDate = DATEADD(DD, 7 - (@@DATEFIRST + 5 + DATEPART(DW, @RunDate)) % 7, @RunDate) -- Monday
 	SET @FromDate = DATEADD(DAY, 1, @ToDate)
 	SET @ToDate = DATEADD(DAY, 6, @FromDate)
 
