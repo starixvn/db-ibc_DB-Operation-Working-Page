@@ -24,6 +24,7 @@ Revisions:
             [Bettype], 
             [AssignmentType], 
             [UserId], 
+			dbo.fnc_GetUsernameByUserId(UserId) 'UserName',
             [AssignmentNote]
      FROM [dbo].[Assignment] a WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
