@@ -22,7 +22,8 @@ Revisions:
      SELECT m.[OWPMatchId] AS MatchId, 
             m.[InfoSiteMatchId], 
             mm.[ParentMatchId] AS ParentMatchId, 
-            mm.[MinorBettypeId] AS MatchType, 
+            mm.[MinorBettypeId] AS MatchType,
+		    mb.[MinorBettypeName] AS MinorBettypeName,			
             l.[OWPLeagueName] AS LeagueName, 
             h.[OWPTeamName] AS Home, 
             a.[OWPTeamName] AS Away, 
@@ -32,7 +33,7 @@ Revisions:
             m.[KickOffTime], 
             STUFF(
      (
-         SELECT ',' + an.AgentName
+         SELECT ', ' + an.AgentName
          FROM dbo.Agent AS an WITH(NOLOCK)
               INNER JOIN dbo.MatchAgent AS ma WITH(NOLOCK) ON an.AgentId = ma.AgentId
          WHERE ma.OWPMatchId = m.OWPMatchId FOR XML PATH('')
@@ -87,6 +88,7 @@ Revisions:
             i.[Website4]
      FROM dbo.OWPMatch m WITH(NOLOCK)
           LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+		  LEFT JOIN dbo.MinorBettype mb WITH(NOLOCK) ON mm.MinorBettypeId = mb.MinorBettypeId
           INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
           INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
