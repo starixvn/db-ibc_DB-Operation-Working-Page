@@ -402,7 +402,6 @@
     <Build Include="dbo\Stored Procedures\OWP_LSTReport_GetTraderAssignmentByDate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_GetStatusByRequestId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_GetByStatus.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetAllMatchIsAssigned.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_LSTReport_MultipleMatches.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_UpdateStatusRequestId_1.sql" />
     <Build Include="dbo\Tables\LeagueSettingTVCondition.sql" />
@@ -429,8 +428,9 @@
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Delete.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetHistoryMatchToday.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_FilterMatchTodayMissArrange.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetMatctIsAssignedToday.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_GetLog.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetHistorySuspenderToday.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
