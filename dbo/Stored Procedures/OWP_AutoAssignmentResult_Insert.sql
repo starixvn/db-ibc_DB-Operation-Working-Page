@@ -21,17 +21,27 @@ Revisions:
 	20190503@Leo.Vo: Save request when failure - [Redmine: #112737]
 	20191015@Kane.Le: update statusCode - [Redmine: #121765]
 	20200601@Carlos.Nguyen: Return ErrorCode, ErrorMessage - [Redmine: #124448]
+	20200528@Carlos.Nguyen: Update status code for request last - [Redmine: #126964]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @idoc INT
 
+	DECLARE @requestLast VARCHAR(255)
+		
+	SELECT TOP 1 @requestLast=req.RequestId
+	FROM AutoAssignmentRequest AS req WITH (NOLOCK)
+	WHERE req.EventDate IN (SELECT req1.EventDate
+							FROM AutoAssignmentRequest AS req1 WITH (NOLOCK)
+							WHERE req1.RequestId=@RequestId)
+	ORDER BY req.CreatedDate DESC
+	
 	UPDATE dbo.AutoAssignmentRequest WITH (ROWLOCK)
 	SET [Status] = @Status,
 		ResponseDate= GETDATE()
-	WHERE RequestId = @RequestId
-		AND [Status] <> @Status
+	WHERE RequestId = @requestLast
+		AND [Status] <> @Status 
 
 	IF @@ROWCOUNT = 1
 		AND @Status = 0 -- save result if success
