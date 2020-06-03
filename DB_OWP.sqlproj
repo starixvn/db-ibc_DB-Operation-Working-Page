@@ -431,6 +431,7 @@
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetMatctIsAssignedToday.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_GetLog.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetHistorySuspenderToday.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_DeleteMatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
