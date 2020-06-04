@@ -46,7 +46,7 @@ BEGIN
 			OR mm.MinorBettypeId IS NULL
 			)
 			
-	SELECT r.OWPMatchId,
+	SELECT DISTINCT r.OWPMatchId AS MatchId,
 		r.Bettype,
 		r.UserId
 	FROM #tblMatch AS tblm WITH (NOLOCK)
