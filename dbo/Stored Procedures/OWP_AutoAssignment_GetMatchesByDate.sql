@@ -52,7 +52,7 @@ BEGIN
 			END AS MatchId
 		,mm.MinorBettypeId
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId AND mi.MatchStatus= 'Live'
 		LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON om.OWPMatchId = mm.MinorMatchId
 	WHERE mi.IsSelected = 1
 		AND om.EventDateTime BETWEEN @FromDate
