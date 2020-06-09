@@ -15,6 +15,7 @@ Revisions:
 	20191015@Kane.Le: Update rule User Staff Level - [Redmine: #121765]
 	20190512@Kane.Le: Update ExtraTime, Venue [Redmine: #124940]
 	20200520@Tyler.Dang: Update User SpeakChinese and English [Redmine: #133428]
+	20200528@Carlos.Nguyen: Get distinct user - [Redmine: #126964]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -60,7 +61,7 @@ BEGIN
 		AND (ur.RoleId = 1 OR ur.RoleId IS NULL)
 
 
-	SELECT UserId
+	SELECT DISTINCT UserId
 		,[Level]
 		,(CASE 
 			WHEN CHARINDEX('1', LanguageId) > 0 OR LanguageId IS NULL THEN 1
@@ -74,7 +75,7 @@ BEGIN
 		,[Location]		
 	FROM #tblUser
 
-	SELECT u.UserId
+	SELECT DISTINCT u.UserId
 		,(CASE 
 			WHEN ws.ShiftStartTime < @FromDate THEN @FromDate
 			ELSE ws.ShiftStartTime END
