@@ -22,7 +22,7 @@ Revisions:
   20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
   20190521@Leo.Vo: Add Username value - [Feature: #113765]
   20190920@Leo.Vo: Update permission - [Feature: #120415]
-  20200906@Carlos.Nguyen: Include bettype - [Redmine: #135527]
+  20200906@Carlos.Nguyen: Include bettype, get distinct match suggest - [Redmine: #135527]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -484,7 +484,6 @@ BEGIN
 		,er.IsAllowedToViewDetail
 		,NULL
 		,er.Bettype
-		--,er.be
 	FROM (
 		SELECT DISTINCT fr.OWPMatchId
 			,fr.ParentMatchId
@@ -520,7 +519,7 @@ BEGIN
 	SET @CurrentRow = ISNULL(@CurrentRow, 0)
 	SET @SelectTop = ISNULL(@SelectTop, 0)
 
-	SELECT ot.RowNumber
+	SELECT DISTINCT ot.RowNumber
 		,ot.OWPMatchId
 		,ot.ParentMatchId
 		,ot.MatchNo
