@@ -22,6 +22,7 @@ Revisions:
   20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
   20190521@Leo.Vo: Add Username value - [Feature: #113765]
   20190920@Leo.Vo: Update permission - [Feature: #120415]
+  20200906@Carlos.Nguyen: Include bettype - [Redmine: #135527]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -436,6 +437,7 @@ BEGIN
 		,IsToday BIT
 		,IsAllowedToViewDetail BIT
 		,IsHasAssignee BIT
+		,Bettype INT
 		)
 
 	INSERT INTO #tblOrderedResult (
@@ -449,6 +451,7 @@ BEGIN
 		,IsToday
 		,IsAllowedToViewDetail
 		,IsHasAssignee
+		, Bettype
 		)
 	SELECT ROW_NUMBER() OVER (
 			ORDER BY er.IsToday DESC
@@ -480,6 +483,8 @@ BEGIN
 		,er.IsToday
 		,er.IsAllowedToViewDetail
 		,NULL
+		,er.Bettype
+		--,er.be
 	FROM (
 		SELECT DISTINCT fr.OWPMatchId
 			,fr.ParentMatchId
@@ -488,6 +493,7 @@ BEGIN
 			,fr.EventDate
 			,fr.IsToday
 			,fr.IsAllowedToViewDetail
+			,fr.Bettype
 		FROM #tblFinalResults AS fr WITH (NOLOCK)
 		) AS er
 
