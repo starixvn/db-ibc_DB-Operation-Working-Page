@@ -309,7 +309,8 @@ BEGIN
 			FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 				INNER JOIN #tblAssignedMatches AS am WITH (NOLOCK) ON mm.MinorMatchId = am.OWPMatchId
 			) AS b ON a.OWPMatchId = b.OWPMatchId
-		WHERE a.EventDate BETWEEN @FromTime
+		WHERE a.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND a.EventDate BETWEEN @FromTime
 				AND @ToTimeViewDetailForSpecialBettype
 		ORDER BY a.IsToday DESC
 			,(CASE 
@@ -326,7 +327,7 @@ BEGIN
 			,(CASE 
 				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
 				) DESC
-			
+		
 			-- get events can not view detail
 		INSERT INTO #tblFinalResults (
 			OWPMatchId
