@@ -73,10 +73,26 @@ Revisions:
             SELECT DISTINCT 
                    MatchId, 
                    t.BetType, 
-                   Spread, 
-                   MaxBet, 
-                   MaxBetCN88, 
-                   SpreadCN88
+                   CASE 
+						WHEN Spread = ''
+							THEN NULL
+						ELSE Spread
+						END 
+                   ,CASE 
+						WHEN MaxBet = ''
+							THEN NULL
+						ELSE MaxBet
+						END  
+                   ,CASE 
+						WHEN MaxBetCN88 = ''
+							THEN NULL
+						ELSE MaxBetCN88
+						END 
+                   ,CASE 
+						WHEN SpreadCN88 = ''
+							THEN NULL
+						ELSE SpreadCN88
+						END 
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
@@ -94,10 +110,26 @@ Revisions:
             SELECT DISTINCT 
                    MatchId, 
                    t.BetType, 
-                   Spread, 
-                   MaxBet, 
-                   MaxBetCN88, 
-                   SpreadCN88
+                   CASE 
+						WHEN Spread = ''
+							THEN NULL
+						ELSE Spread
+						END 
+                   ,CASE 
+						WHEN MaxBet = ''
+							THEN NULL
+						ELSE MaxBet
+						END  
+                   ,CASE 
+						WHEN MaxBetCN88 = ''
+							THEN NULL
+						ELSE MaxBetCN88
+						END 
+                   ,CASE 
+						WHEN SpreadCN88 = ''
+							THEN NULL
+						ELSE SpreadCN88
+						END 
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
