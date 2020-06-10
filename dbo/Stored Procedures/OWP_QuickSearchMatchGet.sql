@@ -324,62 +324,6 @@ BEGIN
 			,(CASE 
 				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
 				) DESC
-
-		-- get events can not view detail
-		INSERT INTO #tblFinalResults (
-			OWPMatchId
-			,ParentMatchId
-			,MatchNo
-			,EventDate
-			,[Event]
-			,IsToday
-			,IsAllowedToViewDetail
-			,UserId
-			,AssigneeName
-			,Bettype
-			,AssignmentType
-			)
-		SELECT sm.OWPMatchId
-			,sm.ParentMatchId
-			,sm.MatchNo
-			,sm.EventDate
-			,sm.[Event]
-			,sm.IsToday
-			,0 AS IsAllowedToViewDetail
-			,sm.UserId
-			,sm.AssigneeName
-			,sm.Bettype
-			,sm.AssignmentType
-		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
-		WHERE sm.EventDate > @ToTimeViewDetailForSpecialBettype
-			AND sm.EventDate <= @ToTimeForSpecialBettype
-			AND EXISTS (
-				SELECT 1
-				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-				WHERE sm.OWPMatchId = minor.MinorMatchId
-					AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-					AND minor.IsRepresented = 1
-				)
-			AND NOT EXISTS (
-				SELECT 1
-				FROM #tblFinalResults WITH (NOLOCK)
-				WHERE OWPMatchId = sm.OWPMatchId
-				)
-		ORDER BY sm.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN sm.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate >= @owpTodayFrom THEN sm.EventDate END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
-				) DESC
 	END
 	ELSE
 	BEGIN
@@ -451,7 +395,6 @@ BEGIN
 		,IsToday
 		,IsAllowedToViewDetail
 		,IsHasAssignee
-		, Bettype
 		)
 	SELECT ROW_NUMBER() OVER (
 			ORDER BY er.IsToday DESC
@@ -483,7 +426,6 @@ BEGIN
 		,er.IsToday
 		,er.IsAllowedToViewDetail
 		,NULL
-		,er.Bettype
 	FROM (
 		SELECT DISTINCT fr.OWPMatchId
 			,fr.ParentMatchId
@@ -492,7 +434,6 @@ BEGIN
 			,fr.EventDate
 			,fr.IsToday
 			,fr.IsAllowedToViewDetail
-			,fr.Bettype
 		FROM #tblFinalResults AS fr WITH (NOLOCK)
 		) AS er
 
@@ -529,7 +470,11 @@ BEGIN
 		,ot.IsToday
 		,ot.IsAllowedToViewDetail
 		,ot.IsHasAssignee
+		,mm.MinorBettypeId AS Bettype
 	FROM #tblOrderedResult AS ot WITH (NOLOCK)
+	LEFT JOIN MinorMatch AS mm WITH (NOLOCK)
+	ON ot.OWPMatchId=mm.MinorMatchId
+		AND mm.MinorBettypeId IN ( -3, -4, -6, -7, -90, -91, -94, -95 )
 	WHERE ot.RowNumber >= (1 + @CurrentRow)
 		AND ot.RowNumber <= (@SelectTop + @CurrentRow)
 
