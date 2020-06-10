@@ -2,6 +2,7 @@
 CREATE PROCEDURE [dbo].[OWP_OddsCompiler_Get] @Date DATE
 	,@League NVARCHAR(500) = ''
 	,@MatchStatusIds NVARCHAR(20) = ''
+	,@IsExcludeSpecialProducts BIT = 0
 AS
 /*          
  Created: 20170317@Alvin.Nguyen
@@ -19,6 +20,7 @@ AS
 	20191105@Tyler.Dang: Add OherTime, MatchStatus, MB and Spread CN88, Markets - [Redmine: #123331]
 	20191111@Kane.Le: Get All Bettype - [Redmine: #123331]
 	20191218@Kane.Le: Get WatchBet - [Redmine: #124448]
+	20200609@Tyler.Dang: Get match television - [Redmine: #135526]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -106,6 +108,7 @@ BEGIN
 				,@FastMarket
 				,@AllInOne)
 			)
+		AND (@IsExcludeSpecialProducts = 0 OR minor.MinorMatchId IS NULL)
 	
 	CREATE TABLE #tblFilterMatch (
 		OWPMatchId INT
@@ -130,6 +133,8 @@ BEGIN
 		,mi.[Round]
 		,mi.Division
 		,mi.Market
+		,mi.Channel
+		,r.Value AS 'NoOfHDP'
 		,STUFF((
 				SELECT ', ' + rs.ProviderName
 				FROM dbo.[Provider] rs WITH (NOLOCK)
@@ -144,6 +149,20 @@ BEGIN
 				WHERE m.OWPMatchId = f.OWPMatchId
 				FOR XML PATH('')
 				), 1, 2, '') AS 'OtherProvider'
+		,STUFF((
+				SELECT ', ' + rs.TVCode
+				FROM dbo.Television rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchTelevision AS f WITH (NOLOCK) ON rs.TVId = f.TVId
+				WHERE m.OWPMatchId = f.OWPMatchId
+				FOR XML PATH('')
+				), 1, 2, '') AS 'TVCode'
+		,STUFF((
+				SELECT ', ' + rs.Value
+				FROM dbo.RefResource rs WITH (NOLOCK)
+					INNER JOIN dbo.MatchOfferDetail AS f WITH (NOLOCK) ON rs.ResourceId = f.MatchOfferId AND rs.RefName = 'MatchOffer'
+				WHERE m.OWPMatchId = f.OWPMatchId
+				FOR XML PATH('')
+				), 1, 2, '') AS 'MatchOffer'
 		,mi.WB AS WatchBet
 		,mi.Website1
 		,mi.Website2
@@ -151,7 +170,7 @@ BEGIN
 		,mi.Website4
 		,m.OtherTime
 		,m1.MatchStatus
-		,m.InfoSiteMatchId
+		,m.InfoSiteMatchId AS 'InfoSiteID'
 		,(CASE WHEN m.InfoSiteMatchId IS NULL THEN NULL ELSE CASE WHEN im.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END END) AS IsInfoSiteLinked
 	FROM dbo.OWPMatch AS m
 	INNER JOIN #tblMatch AS m1 ON m.OWPMatchId = m1.OWPMatchId
@@ -160,6 +179,7 @@ BEGIN
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON m.OWPHomeId = h.OWPTeamId
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON m.OWPAwayId = a.OWPTeamId
+	LEFT JOIN dbo.RefResource as r WITH(NOLOCK) ON r.ResourceId = mi.NoOfHDPId AND r.RefName = 'NoOfHDP'
 	LEFT JOIN dbo.InfoSiteMatch as im WITH (NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
 	ORDER BY m.EventDate
 		,m.KickOffTime
