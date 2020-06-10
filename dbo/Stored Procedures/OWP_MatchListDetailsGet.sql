@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_MatchListDetailsGet] @EventDate DATE
-AS
+ALTER PROCEDURE [dbo].[OWP_MatchListDetailsGet] @EventDate DATE, @MatchStatusIds VARCHAR(MAX)
+AS;
 /*
  Created: 20161018@Julien
  Task : get match list
@@ -23,6 +23,7 @@ AS
 	20190521@Lita.Tang: Add Username value - [Feature: #113765]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
+	20200610@Jack.Nguyen: add EventDateTime @MatchStatusIds- [Feature: #135525]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -37,6 +38,24 @@ BEGIN
 		,@FastMarket INT = - 88
 		,@AllInOne INT = - 89
 
+	DECLARE @tblRefResourceMatchStatus TABLE
+	(Id    INT NOT NULL, 
+	 Value NVARCHAR(50) NOT NULL
+	);
+	INSERT INTO @tblRefResourceMatchStatus
+	(Id, 
+	 Value
+	)
+		   SELECT ResourceId, 
+				  Value
+		   FROM dbo.RefResource WITH(NOLOCK)
+		   WHERE RefName = 'MatchStatus'
+				 AND (ISNULL(@MatchStatusIds, '') = ''
+					  OR ResourceId IN
+		   (
+			   SELECT val
+			   FROM dbo.fnc_SplitStrings(@MatchStatusIds, ',')
+		   ));
 	CREATE TABLE #tblMatchOfferResource (
 		Id INT NOT NULL
 		,Value NVARCHAR(50) NOT NULL
@@ -70,6 +89,7 @@ BEGIN
 		OWPMatchId INT
 		,MatchNo NVARCHAR(50)
 		,EventDate DATE
+		,EventDateTime DATETIME
 		,KickOffTime TIME(7)
 		,OtherTime TIME(7)
 		,OWPLeagueId INT
@@ -99,6 +119,7 @@ BEGIN
 		OWPMatchId
 		,MatchNo
 		,EventDate
+		,EventDateTime
 		,KickOffTime
 		,OtherTime
 		,OWPLeagueId
@@ -126,6 +147,7 @@ BEGIN
 	SELECT om.OWPMatchId
 		,om.MatchNo
 		,om.EventDate
+		,om.EventDateTime
 		,om.KickOffTime
 		,om.OtherTime
 		,om.OWPLeagueId
@@ -167,6 +189,10 @@ BEGIN
 			OR minor.IsRepresented IS NULL
 			)
 
+	DELETE t
+	FROM #owpMatchListByDate t
+	WHERE NOT EXISTS(SELECT 1 FROM @tblRefResourceMatchStatus ms WHERE t.MatchStatus = ms.[Value])
+	
 	-- Return Matches info
 	SELECT ml.OWPMatchId
 		,ml.MatchNo
@@ -227,6 +253,8 @@ BEGIN
 		,ml.MinorBettypeId
 		,ml.ParentMatchId
 		,ml.InfoSiteMatchId
+		,ml.EventDate
+		,ml.EventDateTime
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -338,6 +366,7 @@ BEGIN
 		,0
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.LeagueSetting AS ls WITH (NOLOCK) ON ml.OWPLeagueId = ls.LeagueId
+		
 	WHERE ml.OWPMatchId NOT IN (
 			SELECT OWPMatchId
 			FROM #tblMaxBet WITH (NOLOCK)
