@@ -22,7 +22,7 @@ Revisions:
   20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
   20190521@Leo.Vo: Add Username value - [Feature: #113765]
   20190920@Leo.Vo: Update permission - [Feature: #120415]
-  20200906@Carlos.Nguyen: Include bettype, get distinct match suggest - [Redmine: #135527]
+  20200906@Carlos.Nguyen: Split full time/timerange/ony match is assign - [Redmine: #135527]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -268,6 +268,8 @@ BEGIN
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON a.OWPMatchId = om.OWPMatchId
 		AND om.EventDateTime > @FromTimeToGetData
 	WHERE a.UserId = @UserId
+	--SELECT @UserId
+	--SELECT * FROM #tblAssignedMatches
 
 	-- FILTER RESULTS
 	IF @IsFullTimeView = 0
@@ -323,6 +325,63 @@ BEGIN
 				) ASC
 			,(CASE 
 				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
+				) DESC
+			
+			-- get events can not view detail
+		INSERT INTO #tblFinalResults (
+			OWPMatchId
+			,ParentMatchId
+			,MatchNo
+			,EventDate
+			,[Event]
+			,IsToday
+			,IsAllowedToViewDetail
+			,UserId
+			,AssigneeName
+			,Bettype
+			,AssignmentType
+			)
+		SELECT sm.OWPMatchId
+			,sm.ParentMatchId
+			,sm.MatchNo
+			,sm.EventDate
+			,sm.[Event]
+			,sm.IsToday
+			,0 AS IsAllowedToViewDetail
+			,sm.UserId
+			,sm.AssigneeName
+			,sm.Bettype
+			,sm.AssignmentType
+		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
+		WHERE sm.EventDate > @ToTimeViewDetailForSpecialBettype
+			AND sm.EventDate <= @ToTimeForSpecialBettype
+			AND sm.UserId=@UserId
+			AND EXISTS (
+				SELECT 1
+				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
+				WHERE sm.OWPMatchId = minor.MinorMatchId
+					AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
+					AND minor.IsRepresented = 1
+				)
+			AND NOT EXISTS (
+				SELECT 1
+				FROM #tblFinalResults WITH (NOLOCK)
+				WHERE OWPMatchId = sm.OWPMatchId
+				)
+		ORDER BY sm.IsToday DESC
+			,(CASE 
+				WHEN ISNUMERIC(@SearchKeywords) = 1
+					AND sm.MatchNo = @SearchKeywords THEN 1
+				WHEN ISNUMERIC(@SearchKeywords) = 1
+					AND sm.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
+				WHEN sm.EventDate >= @owpTodayFrom THEN 3
+				ELSE 4 END
+				) ASC
+			,(CASE 
+				WHEN sm.EventDate >= @owpTodayFrom THEN sm.EventDate END
+				) ASC
+			,(CASE 
+				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
 				) DESC
 	END
 	ELSE
