@@ -270,7 +270,6 @@ BEGIN
 		AND om.EventDateTime > @FromTimeToGetData
 	WHERE a.UserId = @UserId
 	--SELECT @UserId
-	--SELECT * FROM #tblAssignedMatches
 
 	-- FILTER RESULTS
 	IF @IsFullTimeView = 0 AND @IsTimeRange=0
@@ -311,6 +310,7 @@ BEGIN
 				INNER JOIN #tblAssignedMatches AS am WITH (NOLOCK) ON mm.MinorMatchId = am.OWPMatchId
 			) AS b ON a.OWPMatchId = b.OWPMatchId
 		WHERE a.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND a.UserId=@UserId
 			AND a.EventDate BETWEEN @FromTime
 				AND @ToTimeViewDetailForSpecialBettype
 		ORDER BY a.IsToday DESC
@@ -355,7 +355,8 @@ BEGIN
 			,sm.Bettype
 			,sm.AssignmentType
 		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
-		WHERE sm.EventDate > @ToTimeViewDetailForSpecialBettype
+		WHERE sm.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
 			AND sm.EventDate <= @ToTimeForSpecialBettype
 			AND sm.UserId=@UserId
 			AND EXISTS (
