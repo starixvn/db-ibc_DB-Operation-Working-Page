@@ -5,6 +5,7 @@ CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
 	,@SelectTop INT = NULL
 	,@LastOWPMatchId INT = NULL
 	,@IsFullTimeView BIT = 0
+	,@IsTimeRange BIT =0
 AS
 /*    
 Created: 20161005@Simon.Huynh    
@@ -272,7 +273,7 @@ BEGIN
 	--SELECT * FROM #tblAssignedMatches
 
 	-- FILTER RESULTS
-	IF @IsFullTimeView = 0
+	IF @IsFullTimeView = 0 AND @IsTimeRange=0
 	BEGIN
 		-- get events can view detail
 		INSERT INTO #tblFinalResults (
@@ -385,7 +386,8 @@ BEGIN
 				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
 				) DESC
 	END
-	ELSE
+	
+	IF @IsFullTimeView=1 OR @IsTimeRange=1
 	BEGIN
 		INSERT INTO #tblFinalResults (
 			OWPMatchId
@@ -412,6 +414,11 @@ BEGIN
 			,a.Bettype
 			,a.AssignmentType
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
+		WHERE 1=CASE
+			WHEN @IsFullTimeView=1 THEN 1
+			WHEN @IsTimeRange=1 AND a.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00') THEN 1
+			ELSE 0
+			END
 		ORDER BY a.IsToday DESC
 			,(CASE 
 				WHEN ISNUMERIC(@SearchKeywords) = 1
