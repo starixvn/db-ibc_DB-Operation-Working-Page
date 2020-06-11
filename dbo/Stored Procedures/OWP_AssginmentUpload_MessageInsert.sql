@@ -16,12 +16,19 @@ Revisions:
 
      SET NOCOUNT ON;
      CREATE TABLE #tmpMessage
-     (MessageContent NVARCHAR(MAX), 
-      IsImportant    BIT, 
-      MessageType    TINYINT, 
-      IsWatcher      BIT, 
-      AssigneeId     INT, 
-      AssigneeName   NVARCHAR(MAX)
+     (MessageContent   NVARCHAR(MAX), 
+      IsImportant      BIT, 
+      MessageType      TINYINT, 
+      IsWatcher        BIT, 
+      ReceivedUserList NVARCHAR(MAX)
+     );
+     CREATE TABLE #tblMessageUser
+     (MessageId        INT, 
+      ReceivedUserList NVARCHAR(MAX)
+     );
+     CREATE TABLE #tblMessageUser2
+     (MessageId    INT, 
+      ReceivedUser NVARCHAR(MAX)
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -33,9 +40,8 @@ Revisions:
                    IsImportant, 
                    MessageType, 
                    IsWatcher, 
-                   AssigneeId, 
-                   AssigneeName
-            FROM OPENXML(@idoc, '/Root/MessageTemplate', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, AssigneeId INT, AssigneeName NVARCHAR(MAX));
+                   ReceivedUserIdList
+            FROM OPENXML(@idoc, '/Root/MessageTemplate', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX));
      EXEC sp_xml_removedocument 
           @idoc;
 
@@ -43,7 +49,7 @@ Revisions:
      MERGE dbo.[Message] WITH(ROWLOCK) AS ms
      USING
      (
-         SELECT m.AssigneeId, 
+         SELECT m.ReceivedUserList, 
                 m.MessageContent, 
                 m.MessageType, 
                 m.IsImportant, 
@@ -68,9 +74,22 @@ Revisions:
       msn.IsWatcher
      )
      OUTPUT inserted.MessageId, 
-            msn.AssigneeId, 
-            @SessionId
-            INTO dbo.MessageUser([MessageId], 
-                                 [UserId], 
-                                 [SessionId]);
+            msn.ReceivedUserList
+            INTO #tblMessageUser(MessageId, 
+                                 ReceivedUserList);
+
+     -- insert messageUser
+     INSERT INTO dbo.MessageUser
+     ([MessageId], 
+      [UserId], 
+      [SessionId]
+     )
+            SELECT mu.MessageId, 
+                   val, 
+                   @SessionId
+            FROM #tblMessageUser mu
+                 CROSS APPLY fnc_SplitStrings(mu.ReceivedUserList, ',');
+
+     -- drop temp table
      DROP TABLE #tmpMessage;
+     DROP TABLE #tblMessageUser;
