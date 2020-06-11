@@ -199,10 +199,7 @@ BEGIN
 				,minor.MinorBettypeId
 				,ISNULL(om.MatchNo, '') AS MatchNo
 				,om.EventDateTime AS EventDate
-				,(CASE 
-					WHEN minor.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne) THEN NULL
-					ELSE home.OWPTeamName + ' -vs- ' + away.OWPTeamName END
-					) AS [Event]
+				,(home.OWPTeamName + ' -vs- ' + away.OWPTeamName) AS [Event]
 				,(CASE 
 					WHEN om.EventDateTime BETWEEN @owpTodayFrom
 							AND @owpTodayTo THEN 1
@@ -227,7 +224,10 @@ BEGIN
 				OR us.Username LIKE '%' + @SearchKeywords + '%'
 				OR us.Nickname LIKE '%' + @SearchKeywords + '%'
 				)
+				--AND sm.OWPMatchId IN (440007,440147)
 	END
+	
+	--SELECT * FROM #tblSuggestedMatches
 
 	-- Merge specific 15', 10', FM, AIO to main match
 	UPDATE sm
@@ -245,8 +245,7 @@ BEGIN
 
 	-- Merge NoC 15' to NoC, Total booking 15' to Total Booking 
 	UPDATE sm
-	SET sm.OWPMatchId = om.OWPMatchId
-		,sm.MatchNo = ISNULL(om.MatchNo, '')
+	SET sm.MatchNo = ISNULL(om.MatchNo, '')
 		,sm.MinorBettypeId = minor.MinorBettypeId
 		,sm.EventDate = om.EventDateTime
 		,sm.[Event] = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
@@ -262,6 +261,7 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON away.OWPTeamId = om.OWPAwayId
 	WHERE sm.MinorBettypeId IN (@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
 
+	--SELECT * FROM #tblSuggestedMatches
 	-- GET USER'S ASSIGNED MATCHES
 	INSERT INTO #tblAssignedMatches (OWPMatchId)
 	SELECT DISTINCT a.OWPMatchId
@@ -359,13 +359,13 @@ BEGIN
 			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
 			AND sm.EventDate <= @ToTimeForSpecialBettype
 			AND sm.UserId=@UserId
-			AND EXISTS (
-				SELECT 1
-				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-				WHERE sm.OWPMatchId = minor.MinorMatchId
-					AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-					AND minor.IsRepresented = 1
-				)
+			--AND EXISTS (
+			--	SELECT 1
+			--	FROM dbo.MinorMatch AS minor WITH (NOLOCK)
+			--	WHERE sm.OWPMatchId = minor.MinorMatchId
+			--		AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
+			--		AND minor.IsRepresented = 1
+			--	)
 			AND NOT EXISTS (
 				SELECT 1
 				FROM #tblFinalResults WITH (NOLOCK)
@@ -386,6 +386,9 @@ BEGIN
 			,(CASE 
 				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
 				) DESC
+		--SELECT * FROM #tblFinalResults
+		--SELECT @ToTimeViewDetailForSpecialBettype
+		--SELECT @ToTimeForSpecialBettype
 	END
 	
 	IF @IsFullTimeView=1 OR @IsTimeRange=1
