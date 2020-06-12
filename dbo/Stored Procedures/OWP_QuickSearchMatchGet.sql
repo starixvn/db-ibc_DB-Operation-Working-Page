@@ -270,8 +270,117 @@ BEGIN
 		AND om.EventDateTime > @FromTimeToGetData
 	WHERE a.UserId = @UserId
 	--SELECT @UserId
-
+	
+	-- TIME RANGE
+	IF @IsTimeRange=1 AND @IsFullTimeView = 0 
+	BEGIN
+		-- get events can view detail
+		INSERT INTO #tblFinalResults (
+			OWPMatchId
+			,ParentMatchId
+			,MatchNo
+			,EventDate
+			,[Event]
+			,IsToday
+			,IsAllowedToViewDetail
+			,UserId
+			,AssigneeName
+			,Bettype
+			,AssignmentType
+			)
+		SELECT a.OWPMatchId
+			,a.ParentMatchId
+			,a.MatchNo
+			,a.EventDate
+			,a.[Event]
+			,a.IsToday
+			,1
+			,a.UserId
+			,a.AssigneeName
+			,a.Bettype
+			,a.AssignmentType
+		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
+		WHERE a.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND a.EventDate BETWEEN @FromTime AND @ToTimeViewDetailForSpecialBettype
+		ORDER BY a.IsToday DESC
+			,(CASE 
+				WHEN ISNUMERIC(@SearchKeywords) = 1
+					AND a.MatchNo = @SearchKeywords THEN 1
+				WHEN ISNUMERIC(@SearchKeywords) = 1
+					AND a.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
+				WHEN a.EventDate >= @owpTodayFrom THEN 3
+				ELSE 4 END
+				) ASC
+			,(CASE 
+				WHEN a.EventDate >= @owpTodayFrom THEN a.EventDate END
+				) ASC
+			,(CASE 
+				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
+				) DESC
+		
+			-- get events can not view detail
+		INSERT INTO #tblFinalResults (
+			OWPMatchId
+			,ParentMatchId
+			,MatchNo
+			,EventDate
+			,[Event]
+			,IsToday
+			,IsAllowedToViewDetail
+			,UserId
+			,AssigneeName
+			,Bettype
+			,AssignmentType
+			)
+		SELECT sm.OWPMatchId
+			,sm.ParentMatchId
+			,sm.MatchNo
+			,sm.EventDate
+			,sm.[Event]
+			,sm.IsToday
+			,0 AS IsAllowedToViewDetail
+			,sm.UserId
+			,sm.AssigneeName
+			,sm.Bettype
+			,sm.AssignmentType
+		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
+		WHERE sm.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
+			AND sm.EventDate <= @ToTimeForSpecialBettype
+			AND EXISTS (
+				SELECT 1
+				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
+				WHERE sm.OWPMatchId = minor.MinorMatchId
+					AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
+					AND minor.IsRepresented = 1
+				)
+			AND NOT EXISTS (
+				SELECT 1
+				FROM #tblFinalResults WITH (NOLOCK)
+				WHERE OWPMatchId = sm.OWPMatchId
+				)
+		ORDER BY sm.IsToday DESC
+			,(CASE 
+				WHEN ISNUMERIC(@SearchKeywords) = 1
+					AND sm.MatchNo = @SearchKeywords THEN 1
+				WHEN ISNUMERIC(@SearchKeywords) = 1
+					AND sm.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
+				WHEN sm.EventDate >= @owpTodayFrom THEN 3
+				ELSE 4 END
+				) ASC
+			,(CASE 
+				WHEN sm.EventDate >= @owpTodayFrom THEN sm.EventDate END
+				) ASC
+			,(CASE 
+				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
+				) DESC
+		--SELECT * FROM #tblFinalResults
+		--SELECT @ToTimeViewDetailForSpecialBettype
+		--SELECT @ToTimeForSpecialBettype
+	END
+	
 	-- FILTER RESULTS
+	-- ONLY ASSIGN TO TRADER
 	IF @IsFullTimeView = 0 AND @IsTimeRange=0
 	BEGIN
 		-- get events can view detail
@@ -359,13 +468,13 @@ BEGIN
 			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
 			AND sm.EventDate <= @ToTimeForSpecialBettype
 			AND sm.UserId=@UserId
-			--AND EXISTS (
-			--	SELECT 1
-			--	FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-			--	WHERE sm.OWPMatchId = minor.MinorMatchId
-			--		AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-			--		AND minor.IsRepresented = 1
-			--	)
+			AND EXISTS (
+				SELECT 1
+				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
+				WHERE sm.OWPMatchId = minor.MinorMatchId
+					AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
+					AND minor.IsRepresented = 1
+				)
 			AND NOT EXISTS (
 				SELECT 1
 				FROM #tblFinalResults WITH (NOLOCK)
@@ -391,7 +500,8 @@ BEGIN
 		--SELECT @ToTimeForSpecialBettype
 	END
 	
-	IF @IsFullTimeView=1 OR @IsTimeRange=1
+	-- FULL TIME
+	IF @IsFullTimeView=1 AND @IsTimeRange=0
 	BEGIN
 		INSERT INTO #tblFinalResults (
 			OWPMatchId
@@ -418,11 +528,6 @@ BEGIN
 			,a.Bettype
 			,a.AssignmentType
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
-		WHERE 1=CASE
-			WHEN @IsFullTimeView=1 THEN 1
-			WHEN @IsTimeRange=1 AND a.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00') THEN 1
-			ELSE 0
-			END
 		ORDER BY a.IsToday DESC
 			,(CASE 
 				WHEN ISNUMERIC(@SearchKeywords) = 1
