@@ -299,21 +299,6 @@ BEGIN
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
 		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND a.EventDate BETWEEN @FromTime AND @ToTimeViewDetailForSpecialBettype
-		ORDER BY a.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN a.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate >= @owpTodayFrom THEN a.EventDate END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
-				) DESC
 
 			-- get events can not view detail
 		INSERT INTO #tblFinalResults (
@@ -356,22 +341,6 @@ BEGIN
 				FROM #tblFinalResults WITH (NOLOCK)
 				WHERE OWPMatchId = sm.OWPMatchId
 				)
-		ORDER BY sm.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN sm.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate >= @owpTodayFrom THEN sm.EventDate END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
-				) DESC
-		
 	END
 	
 	-- FILTER RESULTS
@@ -417,21 +386,6 @@ BEGIN
 			AND a.UserId=@UserId
 			AND a.EventDate BETWEEN @FromTime
 				AND @ToTimeViewDetailForSpecialBettype
-		ORDER BY a.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN a.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate >= @owpTodayFrom THEN a.EventDate END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
-				) DESC
 		
 			-- get events can not view detail
 		INSERT INTO #tblFinalResults (
@@ -475,22 +429,6 @@ BEGIN
 				FROM #tblFinalResults WITH (NOLOCK)
 				WHERE OWPMatchId = sm.OWPMatchId
 				)
-		ORDER BY sm.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN sm.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate >= @owpTodayFrom THEN sm.EventDate END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
-				) DESC
-			--SELECT * FROM #tblSuggestedMatches
 	END
 	
 	-- FULL TIME
@@ -521,21 +459,6 @@ BEGIN
 			,a.Bettype
 			,a.AssignmentType
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
-		ORDER BY a.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN a.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate >= @owpTodayFrom THEN a.EventDate END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
-				) DESC
 	END
 
 	--- Order Table Final Result for load scroll ---
@@ -649,8 +572,7 @@ BEGIN
 	LEFT JOIN MinorMatch AS mm WITH (NOLOCK)
 	ON ot.OWPMatchId=mm.MinorMatchId
 		AND mm.MinorBettypeId IN ( -3, -4, -6, -7, -90, -91, -94, -95)
-	ORDER BY ot.EventDate ASC
-
+	
 	--- Select List Result search User 
 	SELECT DISTINCT fr.OWPMatchId
 		,fr.UserId
