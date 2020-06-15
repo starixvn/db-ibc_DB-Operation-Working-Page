@@ -649,6 +649,7 @@ BEGIN
 	LEFT JOIN MinorMatch AS mm WITH (NOLOCK)
 	ON ot.OWPMatchId=mm.MinorMatchId
 		AND mm.MinorBettypeId IN ( -3, -4, -6, -7, -90, -91, -94, -95)
+	ORDER BY ot.EventDate ASC
 
 	--- Select List Result search User 
 	SELECT DISTINCT fr.OWPMatchId
