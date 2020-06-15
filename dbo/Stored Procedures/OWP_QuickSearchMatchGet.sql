@@ -10,7 +10,7 @@ Created: 20161005@Simon.Huynh
 Task : select match with search string   
 DB: bodb_OWP    
 
-Revisions:    
+Revisions:  
   20161011@Long.Luu: restructure
   20161103@Long.Luu: support search by role
   20170411@Raymond.Le: Change Order search and not show minor match
@@ -297,7 +297,7 @@ BEGIN
 			,a.Bettype
 			,a.AssignmentType
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
-		WHERE a.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND a.EventDate BETWEEN @FromTime AND @ToTimeViewDetailForSpecialBettype
 		ORDER BY a.IsToday DESC
 			,(CASE 
@@ -341,7 +341,7 @@ BEGIN
 			,sm.Bettype
 			,sm.AssignmentType
 		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
-		WHERE sm.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
 			AND sm.EventDate <= @ToTimeForSpecialBettype
 			AND EXISTS (
@@ -413,7 +413,7 @@ BEGIN
 			FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 				INNER JOIN #tblAssignedMatches AS am WITH (NOLOCK) ON mm.MinorMatchId = am.OWPMatchId
 			) AS b ON a.OWPMatchId = b.OWPMatchId
-		WHERE a.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND a.UserId=@UserId
 			AND a.EventDate BETWEEN @FromTime
 				AND @ToTimeViewDetailForSpecialBettype
@@ -459,7 +459,7 @@ BEGIN
 			,sm.Bettype
 			,sm.AssignmentType
 		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
-		WHERE sm.EventDate>DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
 			AND sm.EventDate <= @ToTimeForSpecialBettype
 			AND sm.UserId=@UserId
