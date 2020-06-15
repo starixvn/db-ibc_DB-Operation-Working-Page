@@ -2,8 +2,6 @@
 CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
 	,@SearchKeywords NVARCHAR(100)
 	,@IsNumericKeywords BIT = 0
-	,@SelectTop INT = NULL
-	,@LastOWPMatchId INT = NULL
 	,@IsFullTimeView BIT = 0
 	,@IsTimeRange BIT =0
 AS
@@ -23,14 +21,14 @@ Revisions:
   20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
   20190521@Leo.Vo: Add Username value - [Feature: #113765]
   20190920@Leo.Vo: Update permission - [Feature: #120415]
-  20200906@Carlos.Nguyen: Split full time/timerange/ony match is assign - [Redmine: #135527]
+  20200609@Carlos.Nguyen: Split full time/timerange/ony match is assign - [Redmine: #135527]
+  20200609@Carlos.Nguyen: Change paging to server - [Redmine: #135527]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @owpTodayFrom DATETIME
 		,@owpTodayTo DATETIME
-		,@CurrentRow INT = NULL
 		,@FromTimeToGetData DATETIME
 		,@FromTimePM TIME = '12:00:00'
 		,@ToTimePM TIME = '23:59:59'
@@ -542,8 +540,7 @@ BEGIN
 
 	--- Order Table Final Result for load scroll ---
 	CREATE TABLE #tblOrderedResult (
-		RowNumber INT
-		,OWPMatchId INT
+		OWPMatchId INT
 		,ParentMatchId INT
 		,MatchNo NVARCHAR(50)
 		,[Event] NVARCHAR(500)
@@ -556,8 +553,7 @@ BEGIN
 		)
 
 	INSERT INTO #tblOrderedResult (
-		RowNumber
-		,OWPMatchId
+		OWPMatchId
 		,ParentMatchId
 		,MatchNo
 		,[Event]
@@ -567,28 +563,7 @@ BEGIN
 		,IsAllowedToViewDetail
 		,IsHasAssignee
 		)
-	SELECT ROW_NUMBER() OVER (
-			ORDER BY er.IsToday DESC
-				,(CASE 
-					WHEN ISNUMERIC(@SearchKeywords) = 1
-						AND er.MatchNo = @SearchKeywords THEN 1
-					WHEN ISNUMERIC(@SearchKeywords) = 1
-						AND er.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-					WHEN er.EventDate >= @owpTodayFrom THEN 3
-					ELSE 4 END
-					) ASC
-				,(CASE 
-					WHEN er.EventDate >= @owpTodayFrom THEN er.EventDate END
-					) ASC
-				,(CASE 
-					WHEN er.EventDate < @owpTodayFrom THEN er.EventDate END
-					) DESC
-				,(CASE 
-					WHEN er.ParentMatchId IS NULL THEN 0
-					ELSE 1 END
-					) ASC
-			) AS RowNumber
-		,er.OWPMatchId
+	SELECT er.OWPMatchId
 		,er.ParentMatchId
 		,er.MatchNo
 		,er.[Event]
@@ -624,12 +599,6 @@ BEGIN
 		LEFT JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = re.OWPMatchId
 		LEFT JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON om.OWPLeagueId = ol.OWPLeagueId
 
-	SELECT @CurrentRow = RowNumber
-	FROM #tblOrderedResult WITH (NOLOCK)
-	WHERE OWPMatchId = @LastOWPMatchId
-
-	SET @CurrentRow = ISNULL(@CurrentRow, 0)
-	SET @SelectTop = ISNULL(@SelectTop, 0)
 	
 	-- UPDATE ID match SPECIFIC 15 MINS TOTAL BOOKINGS to ID match BOOKINGS/SPECIFIC 15 MINS TOTAL CORNER to ID match corner
 	-- 1.Update bettype
@@ -638,6 +607,7 @@ BEGIN
 	FROM #tblOrderedResult AS ot WITH (NOLOCK)
 		INNER JOIN MinorMatch AS mm WITH (NOLOCK)
 		ON ot.OWPMatchId=mm.MinorMatchId
+		
 		
 	-- 2. update ID match SPECIFIC 15 MINS TOTAL BOOKINGS to ID match bookings
 	UPDATE #tblOrderedResult
@@ -664,8 +634,8 @@ BEGIN
 					END
 	WHERE ParentMatchId IS NOT NULL AND Bettype IN (-5,-8)
 	
-	SELECT DISTINCT ot.RowNumber
-		,ot.OWPMatchId
+	SELECT DISTINCT
+		ot.OWPMatchId
 		,ot.ParentMatchId
 		,ot.MatchNo
 		,ot.[Event]
@@ -679,8 +649,6 @@ BEGIN
 	LEFT JOIN MinorMatch AS mm WITH (NOLOCK)
 	ON ot.OWPMatchId=mm.MinorMatchId
 		AND mm.MinorBettypeId IN ( -3, -4, -6, -7, -90, -91, -94, -95)
-	--WHERE ot.RowNumber >= (1 + @CurrentRow)
-		--AND ot.RowNumber <= (@SelectTop + @CurrentRow)
 
 	--- Select List Result search User 
 	SELECT DISTINCT fr.OWPMatchId
