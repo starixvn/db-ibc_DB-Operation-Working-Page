@@ -9,6 +9,15 @@ ALTER TABLE [dbo].[NewLeagueSetting]
 ALTER COLUMN LSTNote NVARCHAR(500)
 GO
 
+ALTER TABLE [dbo].[NewLeagueSetting] ADD  DEFAULT (N'Live') FOR [Category]
+GO
+
+ALTER TABLE [dbo].[NewLeagueSetting] ADD  DEFAULT ((0)) FOR [IsApplied]
+GO
+
+ALTER TABLE [dbo].[NewLeagueSetting] ADD  DEFAULT ((0)) FOR [LastModifiedBy]
+GO
+
 INSERT INTO [dbo].[RefResource]
            ([RefName]
            ,[ResourceId]
