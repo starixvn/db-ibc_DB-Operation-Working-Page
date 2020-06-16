@@ -17,13 +17,33 @@ Revisions:
      SET NOCOUNT ON;
      DECLARE @EventFromDateTime DATETIME= DATEADD(HOUR, 12, CONVERT(DATETIME, @EventDate));
      DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
+     -- Time Range
+     DECLARE @FromTimeSendMessage DATETIME, @ToTimeSendMessage DATETIME, @FromTimeSendMessageSpecialBettype DATETIME, @ToTimeSendMessageSpecialBettype DATETIME;
 
+     -- Bettypes Corner & Booking but not 15 mins: -3, -4, -6, -7, -90, -91, -94, -95
+     SELECT @FromTimeSendMessage = FromTime, 
+            @ToTimeSendMessage = ToTime, 
+            @FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype, 
+            @ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
+     FROM dbo.fnc_GetDateTimeForTraderViewTime();
+     DECLARE @MatchInTimeRange TABLE(OWPMatchId INT);
+     INSERT INTO @MatchInTimeRange
+            SELECT m.OWPMatchId
+            FROM dbo.OWPMatch m WITH(NOLOCK)
+                 INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+                 LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+            WHERE mi.IsSelected = 1
+                  AND m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
+                  AND ((mm.MinorBettypeId IN(-3, -4, -6, -7, -90, -91, -94, -95)
+                  AND m.EventDateTime BETWEEN @FromTimeSendMessageSpecialBettype AND @ToTimeSendMessageSpecialBettype)
+            OR (mm.MinorBettypeId NOT IN(-3, -4, -6, -7, -90, -91, -94, -95)
+                 AND m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage));
      -- Result
      SELECT m.[OWPMatchId] AS MatchId, 
             m.[InfoSiteMatchId], 
             mm.[ParentMatchId] AS ParentMatchId, 
-            mm.[MinorBettypeId] AS MatchType,
-		    mb.[MinorBettypeName] AS MinorBettypeName,			
+            mm.[MinorBettypeId] AS MatchType, 
+            mb.[MinorBettypeName] AS MinorBettypeName, 
             l.[OWPLeagueName] AS LeagueName, 
             h.[OWPTeamName] AS Home, 
             a.[OWPTeamName] AS Away, 
@@ -88,11 +108,11 @@ Revisions:
             i.[Website4]
      FROM dbo.OWPMatch m WITH(NOLOCK)
           LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
-		  LEFT JOIN dbo.MinorBettype mb WITH(NOLOCK) ON mm.MinorBettypeId = mb.MinorBettypeId
+          LEFT JOIN dbo.MinorBettype mb WITH(NOLOCK) ON mm.MinorBettypeId = mb.MinorBettypeId
           INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
           INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource hdp WITH(NOLOCK) ON i.NoOfHDPId = hdp.ResourceId
                                                         AND hdp.RefName = 'NoOfHDP'
-     WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime;
+          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId;
