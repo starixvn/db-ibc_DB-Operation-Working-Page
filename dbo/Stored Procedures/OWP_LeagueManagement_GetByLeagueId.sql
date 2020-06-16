@@ -9,6 +9,7 @@ DB: bodb_OWP
 
 Revisions:
    20200410@Tyler.Dang: Init Redmine: #132234
+   20200616@Tyler.Dang: Check default modifier (System): #135658
 */
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -63,7 +64,7 @@ BEGIN
       ,ls.CN88MaxBet_1H1X2
       ,ls.CN88MaxBet_1X2_MatchOffer
 	  ,ls.IsApplied
-	  ,u.Username AS LastModifiedBy
+	  ,(CASE WHEN ls.LastModifiedBy = 0 THEN 'System' ELSE u.Username END) AS LastModifiedBy
 	FROM dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
 		LEFT JOIN dbo.[User] AS u WITH (NOLOCK) 
 		ON ls.LastModifiedBy = u.UserId
