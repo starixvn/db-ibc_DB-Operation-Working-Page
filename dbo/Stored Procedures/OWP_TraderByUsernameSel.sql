@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_UserListByUsernameSel] @Username NVARCHAR(MAX) = ''
+CREATE PROCEDURE [dbo].[OWP_TraderByUsernameSel] @Username NVARCHAR(MAX) = ''
 AS
 
 /*
@@ -10,7 +10,7 @@ Task : Assignment Uploading
 DB: bodb_OWP
 
 Revisions:
-	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #xxx]
+	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	
 */
 
@@ -40,6 +40,6 @@ Revisions:
                 ELSE 1
             END AS IsDuplicate
      FROM @tempUser t
-          LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON t.Username = u.Username
-                                                    OR t.Username = u.NickName
+          LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON (t.Username = u.Username
+                                                    OR t.Username = u.NickName) AND u.IsSecondAccount = 0
           LEFT JOIN @duplicatedUser d ON d.Username = t.Username;
