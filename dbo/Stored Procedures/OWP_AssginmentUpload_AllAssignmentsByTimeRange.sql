@@ -45,9 +45,10 @@ Revisions:
             a.[OWPMatchId] MatchId, 
             [Bettype], 
             [AssignmentType], 
-            [UserId], 
-            dbo.fnc_GetUsernameByUserId(UserId) 'UserName', 
+            a.[UserId], 
+            u.Username, 
             [AssignmentNote]
      FROM [dbo].[Assignment] a WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
-          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId;
+          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
+		  LEFT JOIN dbo.[User] u ON u.UserId = a.UserId

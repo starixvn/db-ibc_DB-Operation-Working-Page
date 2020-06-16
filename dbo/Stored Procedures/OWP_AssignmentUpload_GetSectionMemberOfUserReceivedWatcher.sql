@@ -28,12 +28,13 @@ Revisions:
 			
      SELECT ISNULL(mem.UserId, r.UserId) 'UserId', 
             r.UserId 'UserWatcherId', 
-			dbo.fnc_GetUsernameByUserId(r.UserId) 'UserWatcherName',
+			r.Username 'UserWatcherName',
             r.NotificationSettingId
      FROM
      (
          SELECT DISTINCT 
                 nm.UserId, 
+				u.Username,
                 u.SectionId, 
                 ns.NotificationSettingId
          FROM dbo.NotificationSetting AS ns WITH(NOLOCK)
