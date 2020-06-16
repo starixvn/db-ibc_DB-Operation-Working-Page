@@ -2,16 +2,15 @@
 CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
 	,@SearchKeywords NVARCHAR(100)
 	,@IsNumericKeywords BIT = 0
-	,@SelectTop INT = NULL
-	,@LastOWPMatchId INT = NULL
 	,@IsFullTimeView BIT = 0
+	,@IsTimeRange BIT =0
 AS
 /*    
 Created: 20161005@Simon.Huynh    
 Task : select match with search string   
 DB: bodb_OWP    
 
-Revisions:    
+Revisions:  
   20161011@Long.Luu: restructure
   20161103@Long.Luu: support search by role
   20170411@Raymond.Le: Change Order search and not show minor match
@@ -22,13 +21,14 @@ Revisions:
   20180806@Raymond.Le: New structure of event assignment - [Redmine: #92868]
   20190521@Leo.Vo: Add Username value - [Feature: #113765]
   20190920@Leo.Vo: Update permission - [Feature: #120415]
+  20200609@Carlos.Nguyen: Split full time/timerange/ony match is assign - [Redmine: #135527]
+  20200609@Carlos.Nguyen: Change paging to server - [Redmine: #135527]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	DECLARE @owpTodayFrom DATETIME
 		,@owpTodayTo DATETIME
-		,@CurrentRow INT = NULL
 		,@FromTimeToGetData DATETIME
 		,@FromTimePM TIME = '12:00:00'
 		,@ToTimePM TIME = '23:59:59'
@@ -197,10 +197,7 @@ BEGIN
 				,minor.MinorBettypeId
 				,ISNULL(om.MatchNo, '') AS MatchNo
 				,om.EventDateTime AS EventDate
-				,(CASE 
-					WHEN minor.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne) THEN NULL
-					ELSE home.OWPTeamName + ' -vs- ' + away.OWPTeamName END
-					) AS [Event]
+				,(home.OWPTeamName + ' -vs- ' + away.OWPTeamName) AS [Event]
 				,(CASE 
 					WHEN om.EventDateTime BETWEEN @owpTodayFrom
 							AND @owpTodayTo THEN 1
@@ -243,7 +240,10 @@ BEGIN
 
 	-- Merge NoC 15' to NoC, Total booking 15' to Total Booking 
 	UPDATE sm
-	SET sm.OWPMatchId = om.OWPMatchId
+	SET sm.OWPMatchId= CASE
+						WHEN @IsTimeRange=1 AND @IsFullTimeView = 0 THEN om.OWPMatchId
+						ELSE sm.OWPMatchId
+						END
 		,sm.MatchNo = ISNULL(om.MatchNo, '')
 		,sm.MinorBettypeId = minor.MinorBettypeId
 		,sm.EventDate = om.EventDateTime
@@ -267,9 +267,85 @@ BEGIN
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON a.OWPMatchId = om.OWPMatchId
 		AND om.EventDateTime > @FromTimeToGetData
 	WHERE a.UserId = @UserId
+	
+	-- TIME RANGE
+	IF @IsTimeRange=1 AND @IsFullTimeView = 0 
+	BEGIN
+		-- get events can view detail
+		INSERT INTO #tblFinalResults (
+			OWPMatchId
+			,ParentMatchId
+			,MatchNo
+			,EventDate
+			,[Event]
+			,IsToday
+			,IsAllowedToViewDetail
+			,UserId
+			,AssigneeName
+			,Bettype
+			,AssignmentType
+			)
+		SELECT a.OWPMatchId
+			,a.ParentMatchId
+			,a.MatchNo
+			,a.EventDate
+			,a.[Event]
+			,a.IsToday
+			,1
+			,a.UserId
+			,a.AssigneeName
+			,a.Bettype
+			,a.AssignmentType
+		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
+		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND a.EventDate BETWEEN @FromTime AND @ToTimeViewDetailForSpecialBettype
 
+			-- get events can not view detail
+		INSERT INTO #tblFinalResults (
+			OWPMatchId
+			,ParentMatchId
+			,MatchNo
+			,EventDate
+			,[Event]
+			,IsToday
+			,IsAllowedToViewDetail
+			,UserId
+			,AssigneeName
+			,Bettype
+			,AssignmentType
+			)
+		SELECT sm.OWPMatchId
+			,sm.ParentMatchId
+			,sm.MatchNo
+			,sm.EventDate
+			,sm.[Event]
+			,sm.IsToday
+			,0 AS IsAllowedToViewDetail
+			,sm.UserId
+			,sm.AssigneeName
+			,sm.Bettype
+			,sm.AssignmentType
+		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
+		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
+			AND sm.EventDate <= @ToTimeForSpecialBettype
+			AND EXISTS (
+				SELECT 1
+				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
+				WHERE sm.OWPMatchId = minor.MinorMatchId
+					AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners,@Specific15MinsTotalBooking,@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
+					AND minor.IsRepresented = 1
+				)
+			AND NOT EXISTS (
+				SELECT 1
+				FROM #tblFinalResults WITH (NOLOCK)
+				WHERE OWPMatchId = sm.OWPMatchId
+				)
+	END
+	
 	-- FILTER RESULTS
-	IF @IsFullTimeView = 0
+	-- ONLY ASSIGN TO TRADER
+	IF @IsFullTimeView = 0 AND @IsTimeRange=0
 	BEGIN
 		-- get events can view detail
 		INSERT INTO #tblFinalResults (
@@ -306,25 +382,12 @@ BEGIN
 			FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 				INNER JOIN #tblAssignedMatches AS am WITH (NOLOCK) ON mm.MinorMatchId = am.OWPMatchId
 			) AS b ON a.OWPMatchId = b.OWPMatchId
-		WHERE a.EventDate BETWEEN @FromTime
+		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND a.UserId=@UserId
+			AND a.EventDate BETWEEN @FromTime
 				AND @ToTimeViewDetailForSpecialBettype
-		ORDER BY a.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN a.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate >= @owpTodayFrom THEN a.EventDate END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
-				) DESC
-
-		-- get events can not view detail
+		
+			-- get events can not view detail
 		INSERT INTO #tblFinalResults (
 			OWPMatchId
 			,ParentMatchId
@@ -350,13 +413,15 @@ BEGIN
 			,sm.Bettype
 			,sm.AssignmentType
 		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
-		WHERE sm.EventDate > @ToTimeViewDetailForSpecialBettype
+		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
 			AND sm.EventDate <= @ToTimeForSpecialBettype
+			AND sm.UserId=@UserId
 			AND EXISTS (
 				SELECT 1
 				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
 				WHERE sm.OWPMatchId = minor.MinorMatchId
-					AND minor.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
+					AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners,@Specific15MinsTotalBooking,@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
 					AND minor.IsRepresented = 1
 				)
 			AND NOT EXISTS (
@@ -364,23 +429,10 @@ BEGIN
 				FROM #tblFinalResults WITH (NOLOCK)
 				WHERE OWPMatchId = sm.OWPMatchId
 				)
-		ORDER BY sm.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND sm.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN sm.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate >= @owpTodayFrom THEN sm.EventDate END
-				) ASC
-			,(CASE 
-				WHEN sm.EventDate < @owpTodayFrom THEN sm.EventDate END
-				) DESC
 	END
-	ELSE
+	
+	-- FULL TIME
+	IF @IsFullTimeView=1
 	BEGIN
 		INSERT INTO #tblFinalResults (
 			OWPMatchId
@@ -407,27 +459,11 @@ BEGIN
 			,a.Bettype
 			,a.AssignmentType
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
-		ORDER BY a.IsToday DESC
-			,(CASE 
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo = @SearchKeywords THEN 1
-				WHEN ISNUMERIC(@SearchKeywords) = 1
-					AND a.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-				WHEN a.EventDate >= @owpTodayFrom THEN 3
-				ELSE 4 END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate >= @owpTodayFrom THEN a.EventDate END
-				) ASC
-			,(CASE 
-				WHEN a.EventDate < @owpTodayFrom THEN a.EventDate END
-				) DESC
 	END
 
 	--- Order Table Final Result for load scroll ---
 	CREATE TABLE #tblOrderedResult (
-		RowNumber INT
-		,OWPMatchId INT
+		OWPMatchId INT
 		,ParentMatchId INT
 		,MatchNo NVARCHAR(50)
 		,[Event] NVARCHAR(500)
@@ -436,11 +472,11 @@ BEGIN
 		,IsToday BIT
 		,IsAllowedToViewDetail BIT
 		,IsHasAssignee BIT
+		,Bettype INT
 		)
 
 	INSERT INTO #tblOrderedResult (
-		RowNumber
-		,OWPMatchId
+		OWPMatchId
 		,ParentMatchId
 		,MatchNo
 		,[Event]
@@ -450,28 +486,7 @@ BEGIN
 		,IsAllowedToViewDetail
 		,IsHasAssignee
 		)
-	SELECT ROW_NUMBER() OVER (
-			ORDER BY er.IsToday DESC
-				,(CASE 
-					WHEN ISNUMERIC(@SearchKeywords) = 1
-						AND er.MatchNo = @SearchKeywords THEN 1
-					WHEN ISNUMERIC(@SearchKeywords) = 1
-						AND er.MatchNo LIKE '%' + @SearchKeywords + '%' THEN 2
-					WHEN er.EventDate >= @owpTodayFrom THEN 3
-					ELSE 4 END
-					) ASC
-				,(CASE 
-					WHEN er.EventDate >= @owpTodayFrom THEN er.EventDate END
-					) ASC
-				,(CASE 
-					WHEN er.EventDate < @owpTodayFrom THEN er.EventDate END
-					) DESC
-				,(CASE 
-					WHEN er.ParentMatchId IS NULL THEN 0
-					ELSE 1 END
-					) ASC
-			) AS RowNumber
-		,er.OWPMatchId
+	SELECT er.OWPMatchId
 		,er.ParentMatchId
 		,er.MatchNo
 		,er.[Event]
@@ -507,15 +522,43 @@ BEGIN
 		LEFT JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = re.OWPMatchId
 		LEFT JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON om.OWPLeagueId = ol.OWPLeagueId
 
-	SELECT @CurrentRow = RowNumber
-	FROM #tblOrderedResult WITH (NOLOCK)
-	WHERE OWPMatchId = @LastOWPMatchId
-
-	SET @CurrentRow = ISNULL(@CurrentRow, 0)
-	SET @SelectTop = ISNULL(@SelectTop, 0)
-
-	SELECT ot.RowNumber
-		,ot.OWPMatchId
+	
+	-- UPDATE ID match SPECIFIC 15 MINS TOTAL BOOKINGS to ID match BOOKINGS/SPECIFIC 15 MINS TOTAL CORNER to ID match corner
+	-- 1.Update bettype
+	UPDATE #tblOrderedResult
+	SET Bettype=mm.MinorBettypeId
+	FROM #tblOrderedResult AS ot WITH (NOLOCK)
+		INNER JOIN MinorMatch AS mm WITH (NOLOCK)
+		ON ot.OWPMatchId=mm.MinorMatchId
+		
+		
+	-- 2. update ID match SPECIFIC 15 MINS TOTAL BOOKINGS to ID match bookings
+	UPDATE #tblOrderedResult
+	SET OWPMatchId=mm.MinorMatchId
+	FROM #tblOrderedResult AS ot WITH (NOLOCK)
+		INNER JOIN MinorMatch AS mm WITH (NOLOCK)
+		ON ot.ParentMatchId=mm.ParentMatchId
+	WHERE mm.MinorBettypeId=-6 AND ot.Bettype=-8
+	
+	-- 3. update ID match SPECIFIC 15 MINS TOTAL CORNER to ID match corner
+	UPDATE #tblOrderedResult
+	SET OWPMatchId=mm.MinorMatchId
+	FROM #tblOrderedResult AS ot WITH (NOLOCK)
+		INNER JOIN MinorMatch AS mm WITH (NOLOCK)
+		ON ot.ParentMatchId=mm.ParentMatchId
+	WHERE mm.MinorBettypeId=-3 AND ot.Bettype=-5
+	
+	-- Correct league name 'SPECIFIC 15 MINS TOTAL BOOKINGS'=> BOOKINGS, 'SPECIFIC 15 MINS CORNER'=>"CORNER"
+	UPDATE #tblOrderedResult
+	SET LeagueName=CASE
+					WHEN LeagueName LIKE '%SPECIFIC 15 MINS TOTAL BOOKINGS' THEN REPLACE(LeagueName,'SPECIFIC 15 MINS TOTAL BOOKINGS','BOOKING')
+					WHEN LeagueName LIKE '%SPECIFIC 15 MINS NUMBER OF CORNERS' THEN REPLACE(LeagueName,'SPECIFIC 15 MINS NUMBER OF CORNERS','CORNERS')
+					ELSE LeagueName
+					END
+	WHERE ParentMatchId IS NOT NULL AND Bettype IN (-5,-8)
+	
+	SELECT DISTINCT
+		ot.OWPMatchId
 		,ot.ParentMatchId
 		,ot.MatchNo
 		,ot.[Event]
@@ -524,10 +567,12 @@ BEGIN
 		,ot.IsToday
 		,ot.IsAllowedToViewDetail
 		,ot.IsHasAssignee
+		,mm.MinorBettypeId AS Bettype
 	FROM #tblOrderedResult AS ot WITH (NOLOCK)
-	WHERE ot.RowNumber >= (1 + @CurrentRow)
-		AND ot.RowNumber <= (@SelectTop + @CurrentRow)
-
+	LEFT JOIN MinorMatch AS mm WITH (NOLOCK)
+	ON ot.OWPMatchId=mm.MinorMatchId
+		AND mm.MinorBettypeId IN ( -3, -4, -6, -7, -90, -91, -94, -95)
+	
 	--- Select List Result search User 
 	SELECT DISTINCT fr.OWPMatchId
 		,fr.UserId
