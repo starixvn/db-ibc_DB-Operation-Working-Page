@@ -6,8 +6,8 @@
     [Maxbet_NextCorner] MONEY           NULL,
     [Maxbet_10_15Mins]  MONEY           NULL,
     [Spread_10_15Mins]  MONEY           NULL,
-    [Maxbet_NoOfTB]     MONEY           NULL,
-    [Spread_NoOfTB]     MONEY           NULL,
+    [Maxbet_TB]         MONEY           NULL,
+    [Spread_TB]         MONEY           NULL,
     [Maxbet_NextTB]     MONEY           NULL,
     [Spread_NextTB]     MONEY           NULL,
     [Maxbet_PS]         MONEY           NULL,
@@ -19,4 +19,6 @@
     [Type]              VARCHAR (10)    NULL,
     PRIMARY KEY CLUSTERED ([ProductId] ASC)
 );
+
+
 
