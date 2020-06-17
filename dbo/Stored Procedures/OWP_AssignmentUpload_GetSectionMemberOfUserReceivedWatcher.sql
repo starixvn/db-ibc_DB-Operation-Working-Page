@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_GetSectionMemberOfUserReceivedWatcher] @UserIdList VARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_GetSectionMemberOfUserReceivedWatcher]
 AS
 
 /*
@@ -16,16 +16,6 @@ Revisions:
 
      SET NOCOUNT ON;
      
-	 -- temp User
-     CREATE TABLE #tempUser
-     (UserId INT
-     );
-
-     INSERT INTO #tempUser
-            SELECT DISTINCT 
-                   val
-            FROM fnc_SplitStrings(@UserIdList, ',') u OPTION(MAXRECURSION 0);
-			
      SELECT ISNULL(mem.UserId, r.UserId) 'UserId', 
             r.UserId 'UserWatcherId', 
 			r.Username 'UserWatcherName',
@@ -45,12 +35,4 @@ Revisions:
      ) AS r
      LEFT JOIN dbo.[User] AS mem WITH(NOLOCK) ON r.SectionId = mem.SectionId
                                                  AND mem.SectionId IS NOT NULL
-     WHERE ISNULL(mem.UserId, r.UserId) IN
-     (
-         SELECT UserId
-         FROM #tempUser
-     )
      ORDER BY UserId;
-
-     --drop temp table
-     DROP TABLE #tempUser;
