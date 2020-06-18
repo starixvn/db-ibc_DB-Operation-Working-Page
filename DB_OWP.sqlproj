@@ -422,6 +422,7 @@
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Delete.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Create.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_ViewLog.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />

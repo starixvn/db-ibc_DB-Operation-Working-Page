@@ -1,6 +1,7 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_SpecialProduct_Update]
-	@ProductId INT
+	@ActorId INT
+	,@ProductId INT
 	,@Maxbet_FTHDP MONEY
 	,@Maxbet_NoOfCorner MONEY
 	,@Spread_NoOfCorner MONEY
@@ -16,7 +17,6 @@ CREATE PROCEDURE [dbo].[OWP_SpecialProduct_Update]
 	,@Maxbet_Winner MONEY
 	,@Spread_Winner MONEY
 	,@Remark NVARCHAR(2000)
-	,@LastUpdate VARCHAR(255)
 	,@Type VARCHAR(10)
 AS
 /*
@@ -30,6 +30,12 @@ Revisions:
 
 BEGIN
 	SET NOCOUNT ON
+	
+	DECLARE @LastUpdate VARCHAR(255)
+	
+	SELECT @LastUpdate= u.Username
+	FROM [User] AS u WITH (NOLOCK)
+	WHERE u.UserId=@ActorId
 	
 	DELETE FROM SpecialProduct
 	WHERE ProductId=@ProductId
