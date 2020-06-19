@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_SpecialProduct_ViewLog]
+CREATE PROCEDURE [dbo].[OWP_SpecialProduct_GetLog]
 	@ObjectId INT,
 	@PageSize INT
 AS
