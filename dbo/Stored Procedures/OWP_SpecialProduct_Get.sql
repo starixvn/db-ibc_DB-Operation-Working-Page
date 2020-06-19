@@ -18,6 +18,7 @@ BEGIN
 	,sp.Maxbet_NoOfCorner 
 	,sp.Spread_NoOfCorner 
 	,sp.Maxbet_NextCorner 
+	,sp.Spread_NextCorner 
 	,sp.Maxbet_10_15Mins 
 	,sp.Spread_10_15Mins 
 	,sp.Maxbet_TB 

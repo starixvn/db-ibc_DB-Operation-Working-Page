@@ -8,6 +8,7 @@ CREATE TABLE SpecialProduct
 	,Maxbet_NoOfCorner MONEY
 	,Spread_NoOfCorner MONEY
 	,Maxbet_NextCorner MONEY
+	,Spread_NextCorner MONEY
 	,Maxbet_10_15Mins MONEY
 	,Spread_10_15Mins MONEY
 	,Maxbet_TB MONEY
