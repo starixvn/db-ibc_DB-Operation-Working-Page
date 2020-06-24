@@ -1,23 +1,23 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_SpecialProduct_Update]
-	@ActorId INT
+	@ActorId INT 
 	,@ProductId INT
 	,@Maxbet_FTHDP MONEY
-	,@Maxbet_NoOfCorner MONEY
-	,@Spread_NoOfCorner MONEY
-	,@Maxbet_NextCorner MONEY
-	,@Spread_NextCorner MONEY
-	,@Maxbet_10_15Mins MONEY
-	,@Spread_10_15Mins MONEY
-	,@Maxbet_TB MONEY
-	,@Spread_TB MONEY
-	,@Maxbet_NextTB MONEY
-	,@Spread_NextTB MONEY
-	,@Maxbet_PS MONEY
-	,@Spread_PS MONEY
-	,@Maxbet_Winner MONEY
-	,@Spread_Winner MONEY
-	,@Remark NVARCHAR(2000)
+	,@Maxbet_NoOfCorner MONEY = NULL
+	,@Spread_NoOfCorner MONEY = NULL
+	,@Maxbet_NextCorner MONEY = NULL
+	,@Spread_NextCorner MONEY = NULL
+	,@Maxbet_10_15Mins MONEY = NULL
+	,@Spread_10_15Mins MONEY = NULL
+	,@Maxbet_TB MONEY = NULL
+	,@Spread_TB MONEY = NULL
+	,@Maxbet_NextTB MONEY = NULL
+	,@Spread_NextTB MONEY = NULL
+	,@Maxbet_PS MONEY = NULL
+	,@Spread_PS MONEY = NULL
+	,@Maxbet_Winner MONEY = NULL
+	,@Spread_Winner MONEY = NULL
+	,@Remark NVARCHAR(2000) = NULL
 	,@Type VARCHAR(10)
 AS
 /*
@@ -52,8 +52,8 @@ BEGIN
 			,@RemarkOld NVARCHAR(2000)
 			,@ProductSetting VARCHAR(255)
 			,@Action INT
-			,@OldValue MONEY
-			,@NewValue MONEY
+			,@OldValue NVARCHAR(2000)
+			,@NewValue NVARCHAR(2000)
 			,@ModifyDate DATETIME
 			,@ModifyBy INT
 	
@@ -126,8 +126,7 @@ BEGIN
 			,@Type
 		)
 		
-		SELECT @ProductId=MAX(sp.ProductId)
-		FROM SpecialProduct AS sp WITH (NOLOCK)
+		
 	END
 	ELSE
 	BEGIN -- UPDATE PRODUCT
@@ -155,8 +154,6 @@ BEGIN
 	END
 	END -- END ADD/UPDATE PRODUCT
 	
-	SELECT @ProductId
-	
 	SET @Maxbet_FTHDP=ISNULL(@Maxbet_FTHDP,-1)
 	SET @Maxbet_NoOfCorner =ISNULL(@Maxbet_NoOfCorner,-1)
 	SET @Spread_NoOfCorner =ISNULL(@Spread_NoOfCorner,-1)
@@ -172,7 +169,7 @@ BEGIN
 	SET @Spread_PS =ISNULL(@Spread_PS,-1)
 	SET @Maxbet_Winner =ISNULL(@Maxbet_Winner,-1)
 	SET @Spread_Winner =ISNULL(@Spread_Winner,-1)
-	SET @Remark =ISNULL(@Maxbet_FTHDP,'')
+	SET @Remark =ISNULL(@Remark,'')
 	
 	SET @Maxbet_FTHDPOld=ISNULL(@Maxbet_FTHDPOld,-1)
 	SET @Maxbet_NoOfCornerOld =ISNULL(@Maxbet_NoOfCornerOld,-1)
@@ -189,7 +186,7 @@ BEGIN
 	SET @Spread_PSOld =ISNULL(@Spread_PSOld,-1)
 	SET @Maxbet_WinnerOld =ISNULL(@Maxbet_WinnerOld,-1)
 	SET @Spread_WinnerOld =ISNULL(@Spread_WinnerOld,-1)
-	SET @RemarkOld =ISNULL(@Maxbet_FTHDPOld,'')
+	SET @RemarkOld =ISNULL(@RemarkOld,'')
 	
 	DECLARE @Pivot MONEY=-1
 	
@@ -478,24 +475,24 @@ BEGIN
 		END
 	END
 	
-	--IF @RemarkOld<>@Remark
-	--BEGIN
-	--	IF @RemarkOld IS NULL
-	--	BEGIN
-	--		SET @ProductSetting='MB of FT.HDP'
-	--		SET @Action=1
-	--	END
-	--	IF @Maxbet_FTHDP IS NULL
-	--	BEGIN
-	--		SET @ProductSetting='MB of FT.HDP'
-	--		SET @Action=2
-	--	END
-	--	IF @Maxbet_FTHDPOld<>@Maxbet_FTHDP
-	--	BEGIN
-	--		SET @ProductSetting='MB of FT.HDP'
-	--		SET @Action=3
-	--	END
-	--END
+	IF @RemarkOld<>@Remark
+	BEGIN
+		SET @ProductSetting='Remark'
+		SET @OldValue=CASE WHEN @RemarkOld<>'' THEN @RemarkOld ELSE NULL END
+		SET @NewValue=CASE WHEN @Remark<>'' THEN @Remark ELSE NULL END
+		IF @RemarkOld =''
+		BEGIN
+			SET @Action=1
+		END
+		IF @RemarkOld <> '' AND @Remark <> ''
+		BEGIN
+			SET @Action=2
+		END
+		IF @Remark =''
+		BEGIN
+			SET @Action=3
+		END
+	END
 	
 	DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
@@ -537,6 +534,9 @@ BEGIN
 					WHEN @Action=3 THEN 'OWP_SpecialProductDelete'
 					ELSE NULL
 				END
+	SELECT @ProductId = MAX(sp.ProductId)
+	FROM SpecialProduct AS sp WITH (NOLOCK)
+	
 	EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
 		,@SPName = @SPName
 		,@LoggedDate = @StartRun
@@ -545,4 +545,6 @@ BEGIN
 		,@Data = @LogData
 		,@DataOld = @LogDataOld
 	END -- END WRITE LOG
+	
+	SELECT @ProductId AS ProductId
 END
