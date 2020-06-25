@@ -193,8 +193,8 @@ BEGIN
 	IF @Maxbet_FTHDPOld<>@Maxbet_FTHDP
 	BEGIN
 		SET @ProductSetting='Maxbet Of FT.HDP'
-		SET @OldValue=CASE WHEN @Maxbet_FTHDPOld<>@Pivot THEN @Maxbet_FTHDPOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_FTHDP<>@Pivot THEN @Maxbet_FTHDP ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_FTHDPOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_FTHDPOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_FTHDP<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_FTHDP)) ELSE NULL END
 		IF @Maxbet_FTHDPOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -212,8 +212,8 @@ BEGIN
 	IF @Maxbet_NoOfCornerOld<>@Maxbet_NoOfCorner
 	BEGIN
 		SET @ProductSetting='Maxbet No.Of Corner'
-		SET @OldValue=CASE WHEN @Maxbet_NoOfCornerOld<>@Pivot THEN @Maxbet_NoOfCornerOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_NoOfCorner<>@Pivot THEN @Maxbet_NoOfCorner ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_NoOfCornerOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_NoOfCornerOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_NoOfCorner<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_NoOfCorner)) ELSE NULL END
 		IF @Maxbet_NoOfCornerOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -231,8 +231,8 @@ BEGIN
 	IF @Spread_NoOfCornerOld<>@Spread_NoOfCorner
 	BEGIN
 		SET @ProductSetting='Spread No.Of Corner'
-		SET @OldValue=CASE WHEN @Spread_NoOfCornerOld<>@Pivot THEN @Spread_NoOfCornerOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Spread_NoOfCorner<>@Pivot THEN @Spread_NoOfCorner ELSE NULL END
+		SET @OldValue=CASE WHEN @Spread_NoOfCornerOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_NoOfCornerOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Spread_NoOfCorner<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_NoOfCorner)) ELSE NULL END
 		IF @Spread_NoOfCornerOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -250,8 +250,8 @@ BEGIN
 	IF @Maxbet_NextCornerOld<>@Maxbet_NextCorner
 	BEGIN
 		SET @ProductSetting='Spread Next Corner'
-		SET @OldValue=CASE WHEN @Maxbet_NextCornerOld<>@Pivot THEN @Maxbet_NextCornerOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_NextCorner<>@Pivot THEN @Maxbet_NextCorner ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_NextCornerOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_NextCornerOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_NextCorner<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_NextCorner)) ELSE NULL END
 		IF @Maxbet_NextCornerOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -269,8 +269,8 @@ BEGIN
 	IF @Spread_NextCornerOld<>@Spread_NextCorner
 	BEGIN
 		SET @ProductSetting='Spread Next Corner'
-		SET @OldValue=CASE WHEN @Spread_NextCornerOld<>@Pivot THEN @Spread_NextCornerOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Spread_NextCorner<>@Pivot THEN @Spread_NextCorner ELSE NULL END
+		SET @OldValue=CASE WHEN @Spread_NextCornerOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_NextCornerOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Spread_NextCorner<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_NextCorner)) ELSE NULL END
 		IF @Spread_NextCornerOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -288,8 +288,8 @@ BEGIN
 	IF @Maxbet_10_15MinsOld<>@Maxbet_10_15Mins
 	BEGIN
 		SET @ProductSetting='Maxbet 10-15 mins'
-		SET @OldValue=CASE WHEN @Maxbet_10_15MinsOld<>@Pivot THEN @Maxbet_10_15MinsOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_10_15Mins<>@Pivot THEN @Maxbet_10_15Mins ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_10_15MinsOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_10_15MinsOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_10_15Mins<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_10_15Mins)) ELSE NULL END
 		IF @Maxbet_10_15MinsOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -307,8 +307,8 @@ BEGIN
 	IF @Spread_10_15MinsOld<>@Spread_10_15Mins
 	BEGIN
 		SET @ProductSetting='Spread 10-15 mins'
-		SET @OldValue=CASE WHEN @Spread_10_15MinsOld<>@Pivot THEN @Spread_10_15MinsOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Spread_10_15Mins<>@Pivot THEN @Spread_10_15Mins ELSE NULL END
+		SET @OldValue=CASE WHEN @Spread_10_15MinsOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_10_15MinsOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Spread_10_15Mins<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_10_15Mins)) ELSE NULL END
 		IF @Spread_10_15MinsOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -326,8 +326,8 @@ BEGIN
 	IF @Maxbet_TBOld<>@Maxbet_TB
 	BEGIN
 		SET @ProductSetting='Maxbet Total Booking'
-		SET @OldValue=CASE WHEN @Maxbet_TBOld<>@Pivot THEN @Maxbet_TBOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_TB<>@Pivot THEN @Maxbet_TB ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_TBOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_TBOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_TB<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_TB)) ELSE NULL END
 		IF @Maxbet_TBOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -345,8 +345,8 @@ BEGIN
 	IF @Spread_TBOld<>@Spread_TB
 	BEGIN
 		SET @ProductSetting='Spread Total Booking'
-		SET @OldValue=CASE WHEN @Spread_TBOld<>@Pivot THEN @Spread_TBOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Spread_TB<>@Pivot THEN @Spread_TB ELSE NULL END
+		SET @OldValue=CASE WHEN @Spread_TBOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_TBOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Spread_TB<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_TB)) ELSE NULL END
 		IF @Spread_TBOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -364,8 +364,8 @@ BEGIN
 	IF @Maxbet_NextTBOld<>@Maxbet_NextTB
 	BEGIN
 		SET @ProductSetting='Maxbet of Next Total Booking'
-		SET @OldValue=CASE WHEN @Maxbet_NextTBOld<>@Pivot THEN @Maxbet_NextTBOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_NextTB<>@Pivot THEN @Maxbet_NextTB ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_NextTBOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_NextTBOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_NextTB<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_NextTB)) ELSE NULL END
 		IF @Maxbet_NextTBOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -383,8 +383,8 @@ BEGIN
 	IF @Spread_NextTBOld<>@Spread_NextTB
 	BEGIN
 		SET @ProductSetting='Spread of Next Total Booking'
-		SET @OldValue=CASE WHEN @Spread_NextTBOld<>@Pivot THEN @Spread_NextTBOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Spread_NextTB<>@Pivot THEN @Spread_NextTB ELSE NULL END
+		SET @OldValue=CASE WHEN @Spread_NextTBOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_NextTBOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Spread_NextTB<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_NextTB)) ELSE NULL END
 		IF @Spread_NextTBOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -402,8 +402,8 @@ BEGIN
 	IF @Maxbet_PSOld<>@Maxbet_PS
 	BEGIN
 		SET @ProductSetting='Maxbet of Penalty Shootout'
-		SET @OldValue=CASE WHEN @Maxbet_PSOld<>@Pivot THEN @Maxbet_PSOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_PS<>@Pivot THEN @Maxbet_PS ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_PSOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_PSOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_PS<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_PS)) ELSE NULL END
 		IF @Maxbet_PSOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -421,8 +421,8 @@ BEGIN
 	IF @Spread_PSOld<>@Spread_PS
 	BEGIN
 		SET @ProductSetting='Spread of Penalty Shootout'
-		SET @OldValue=CASE WHEN @Spread_PSOld<>@Pivot THEN @Spread_PSOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Spread_PS<>@Pivot THEN @Spread_PS ELSE NULL END
+		SET @OldValue=CASE WHEN @Spread_PSOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_PSOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Spread_PS<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_PS)) ELSE NULL END
 		IF @Spread_PSOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -440,8 +440,8 @@ BEGIN
 	IF @Maxbet_WinnerOld<>@Maxbet_Winner
 	BEGIN
 		SET @ProductSetting='MB of Winner'
-		SET @OldValue=CASE WHEN @Maxbet_WinnerOld<>@Pivot THEN @Maxbet_WinnerOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Maxbet_Winner<>@Pivot THEN @Maxbet_Winner ELSE NULL END
+		SET @OldValue=CASE WHEN @Maxbet_WinnerOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_WinnerOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Maxbet_Winner<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Maxbet_Winner)) ELSE NULL END
 		IF @Maxbet_WinnerOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -459,8 +459,8 @@ BEGIN
 	IF @Spread_WinnerOld<>@Spread_Winner
 	BEGIN
 		SET @ProductSetting='Spread of Winner'
-		SET @OldValue=CASE WHEN @Spread_WinnerOld<>@Pivot THEN @Spread_WinnerOld ELSE NULL END
-		SET @NewValue=CASE WHEN @Spread_Winner<>@Pivot THEN @Spread_Winner ELSE NULL END
+		SET @OldValue=CASE WHEN @Spread_WinnerOld<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_WinnerOld)) ELSE NULL END
+		SET @NewValue=CASE WHEN @Spread_Winner<>@Pivot THEN CONVERT(NVARCHAR(50),CONVERT(decimal(10,5),@Spread_Winner)) ELSE NULL END
 		IF @Spread_WinnerOld =@Pivot
 		BEGIN
 			SET @Action=1
@@ -523,6 +523,7 @@ BEGIN
 			)
 			ELSE NULL
 		END
+
 	SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
 	SET @EndRun = GETDATE()
 	SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
@@ -534,9 +535,12 @@ BEGIN
 					WHEN @Action=3 THEN 'OWP_SpecialProductDelete'
 					ELSE NULL
 				END
-	SELECT @ProductId = MAX(sp.ProductId)
-	FROM SpecialProduct AS sp WITH (NOLOCK)
-	
+	IF @ProductId = -1
+	BEGIN
+		SELECT @ProductId = MAX(sp.ProductId)
+		FROM SpecialProduct AS sp WITH (NOLOCK)
+	END
+
 	EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
 		,@SPName = @SPName
 		,@LoggedDate = @StartRun
