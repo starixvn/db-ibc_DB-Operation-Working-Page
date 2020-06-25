@@ -20,15 +20,11 @@ Revisions:
       IsImportant      BIT, 
       MessageType      TINYINT, 
       IsWatcher        BIT, 
-      ReceivedUserList NVARCHAR(MAX)
+      ReceivedUserIdList NVARCHAR(MAX)
      );
      CREATE TABLE #tblMessageUser
      (MessageId        INT, 
-      ReceivedUserList NVARCHAR(MAX)
-     );
-     CREATE TABLE #tblMessageUser2
-     (MessageId    INT, 
-      ReceivedUser NVARCHAR(MAX)
+      ReceivedUserIdList NVARCHAR(MAX)
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -41,7 +37,7 @@ Revisions:
                    MessageType, 
                    IsWatcher, 
                    ReceivedUserIdList
-            FROM OPENXML(@idoc, '/Root/MessageTemplate', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX));
+            FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX));
      EXEC sp_xml_removedocument 
           @idoc;
 
@@ -49,7 +45,7 @@ Revisions:
      MERGE dbo.[Message] WITH(ROWLOCK) AS ms
      USING
      (
-         SELECT m.ReceivedUserList, 
+         SELECT m.ReceivedUserIdList, 
                 m.MessageContent, 
                 m.MessageType, 
                 m.IsImportant, 
@@ -74,9 +70,9 @@ Revisions:
       msn.IsWatcher
      )
      OUTPUT inserted.MessageId, 
-            msn.ReceivedUserList
+            msn.ReceivedUserIdList
             INTO #tblMessageUser(MessageId, 
-                                 ReceivedUserList);
+                                 ReceivedUserIdList);
 
      -- insert messageUser
      INSERT INTO dbo.MessageUser
@@ -88,7 +84,7 @@ Revisions:
                    val, 
                    @SessionId
             FROM #tblMessageUser mu
-                 CROSS APPLY fnc_SplitStrings(mu.ReceivedUserList, ',');
+                 CROSS APPLY fnc_SplitStrings(mu.ReceivedUserIdList, ',');
 
      -- drop temp table
      DROP TABLE #tmpMessage;
