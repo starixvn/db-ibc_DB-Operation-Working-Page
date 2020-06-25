@@ -52,3 +52,5 @@ Revisions:
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
           INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
 		  LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
+		  LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
+	 WHERE i.MatchStatus = 'Live'

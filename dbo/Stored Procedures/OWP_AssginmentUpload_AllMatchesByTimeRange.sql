@@ -115,4 +115,5 @@ Revisions:
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource hdp WITH(NOLOCK) ON i.NoOfHDPId = hdp.ResourceId
                                                         AND hdp.RefName = 'NoOfHDP'
-          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId;
+          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
+	WHERE i.MatchStatus = 'Live'

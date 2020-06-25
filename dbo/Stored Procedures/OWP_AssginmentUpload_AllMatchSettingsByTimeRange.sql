@@ -17,7 +17,7 @@ Revisions:
      SET NOCOUNT ON;
      DECLARE @EventFromDateTime DATETIME= DATEADD(HOUR, 12, CONVERT(DATETIME, @EventDate));
      DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
-	 -- Time Range
+     -- Time Range
      DECLARE @FromTimeSendMessage DATETIME, @ToTimeSendMessage DATETIME, @FromTimeSendMessageSpecialBettype DATETIME, @ToTimeSendMessageSpecialBettype DATETIME;
 
      -- Bettypes Corner & Booking but not 15 mins: -3, -4, -6, -7, -90, -91, -94, -95
@@ -47,10 +47,12 @@ Revisions:
             [SpreadCN88]
      FROM [dbo].[MatchSetting] s WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
-		  INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
+          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
+          LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
      WHERE EXISTS
      (
          SELECT 1
          FROM Assignment s WITH(NOLOCK)
          WHERE s.OWPMatchId = m.OWPMatchId
-     );
+     )
+           AND i.MatchStatus = 'Live';
