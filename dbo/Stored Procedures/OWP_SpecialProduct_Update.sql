@@ -441,7 +441,7 @@ BEGIN
 	------------------------
 	IF @Maxbet_WinnerOld<>@Maxbet_Winner
 	BEGIN
-		SET @ProductSetting='MB of Winner'
+		SET @ProductSetting='Maxbet of Winner'
 		SET @OldValue=CASE WHEN @Maxbet_WinnerOld<>@Pivot THEN @Maxbet_WinnerOld ELSE NULL END
 		SET @NewValue=CASE WHEN @Maxbet_Winner<>@Pivot THEN @Maxbet_Winner ELSE NULL END
 		IF @Maxbet_WinnerOld =@Pivot
