@@ -58,6 +58,7 @@ BEGIN
 			,@NewRemarkLog NVARCHAR(2000)=NULL
 			,@ModifyDate DATETIME
 			,@ModifyBy INT
+			,@ErrorMessage VARCHAR(255) = NULL
 	
 	SELECT @Maxbet_FTHDPOld=ISNULL(sp.Maxbet_FTHDP,-1)
 			,@Maxbet_NoOfCornerOld=ISNULL(sp.Maxbet_NoOfCorner,-1)
@@ -77,6 +78,39 @@ BEGIN
 			,@RemarkOld=ISNULL(sp.Remark,'')
 	FROM SpecialProduct AS sp WITH (NOLOCK)
 	WHERE sp.ProductId=@ProductId
+	
+	SET @Maxbet_FTHDPOld=ISNULL(@Maxbet_FTHDPOld,-1)
+	SET @Maxbet_NoOfCornerOld =ISNULL(@Maxbet_NoOfCornerOld,-1)
+	SET @Spread_NoOfCornerOld =ISNULL(@Spread_NoOfCornerOld,-1)
+	SET @Maxbet_NextCornerOld =ISNULL(@Maxbet_NextCornerOld,-1)
+	SET @Spread_NextCornerOld =ISNULL(@Spread_NextCornerOld,-1)
+	SET @Maxbet_10_15MinsOld =ISNULL(@Maxbet_10_15MinsOld,-1)
+	SET @Spread_10_15MinsOld =ISNULL(@Spread_10_15MinsOld,-1)
+	SET @Maxbet_TBOld =ISNULL(@Maxbet_TBOld,-1)
+	SET @Spread_TBOld =ISNULL(@Spread_TBOld,-1)
+	SET @Maxbet_NextTBOld =ISNULL(@Maxbet_NextTBOld,-1)
+	SET @Spread_NextTBOld =ISNULL(@Spread_NextTBOld,-1)
+	SET @Maxbet_PSOld =ISNULL(@Maxbet_PSOld,-1)
+	SET @Spread_PSOld =ISNULL(@Spread_PSOld,-1)
+	SET @Maxbet_WinnerOld =ISNULL(@Maxbet_WinnerOld,-1)
+	SET @Spread_WinnerOld =ISNULL(@Spread_WinnerOld,-1)
+	SET @RemarkOld =ISNULL(@RemarkOld,'')
+	
+	DECLARE @Pivot MONEY=-1
+	
+	---- Check exists @Maxbet_FTHDP
+	IF @Maxbet_FTHDPOld<>@Maxbet_FTHDP
+	BEGIN
+		SELECT @ErrorMessage= 'Duplicate maxbet FTHDP'
+		FROM SpecialProduct AS sp WITH (NOLOCK)
+		WHERE sp.Maxbet_FTHDP = @Maxbet_FTHDP
+		IF @ErrorMessage IS NOT NULL
+		BEGIN
+			SELECT @ErrorMessage AS ErrorMessage
+				,@ProductId AS ProductId
+			RETURN
+		END
+	END
 	
 	BEGIN -- ADD/UPDATE PRODUCT
 	DECLARE @LastUpdate VARCHAR(255)
@@ -127,8 +161,6 @@ BEGIN
 			,@LastUpdate
 			,@Type
 		)
-		
-		
 	END
 	ELSE
 	BEGIN -- UPDATE PRODUCT
@@ -173,25 +205,7 @@ BEGIN
 	SET @Spread_Winner =ISNULL(@Spread_Winner,-1)
 	SET @Remark =ISNULL(@Remark,'')
 	
-	SET @Maxbet_FTHDPOld=ISNULL(@Maxbet_FTHDPOld,-1)
-	SET @Maxbet_NoOfCornerOld =ISNULL(@Maxbet_NoOfCornerOld,-1)
-	SET @Spread_NoOfCornerOld =ISNULL(@Spread_NoOfCornerOld,-1)
-	SET @Maxbet_NextCornerOld =ISNULL(@Maxbet_NextCornerOld,-1)
-	SET @Spread_NextCornerOld =ISNULL(@Spread_NextCornerOld,-1)
-	SET @Maxbet_10_15MinsOld =ISNULL(@Maxbet_10_15MinsOld,-1)
-	SET @Spread_10_15MinsOld =ISNULL(@Spread_10_15MinsOld,-1)
-	SET @Maxbet_TBOld =ISNULL(@Maxbet_TBOld,-1)
-	SET @Spread_TBOld =ISNULL(@Spread_TBOld,-1)
-	SET @Maxbet_NextTBOld =ISNULL(@Maxbet_NextTBOld,-1)
-	SET @Spread_NextTBOld =ISNULL(@Spread_NextTBOld,-1)
-	SET @Maxbet_PSOld =ISNULL(@Maxbet_PSOld,-1)
-	SET @Spread_PSOld =ISNULL(@Spread_PSOld,-1)
-	SET @Maxbet_WinnerOld =ISNULL(@Maxbet_WinnerOld,-1)
-	SET @Spread_WinnerOld =ISNULL(@Spread_WinnerOld,-1)
-	SET @RemarkOld =ISNULL(@RemarkOld,'')
-	
-	DECLARE @Pivot MONEY=-1
-	
+	-- Build log Info
 	IF @Maxbet_FTHDPOld<>@Maxbet_FTHDP
 	BEGIN
 		SET @ProductSetting='Maxbet Of FT.HDP'
@@ -558,5 +572,6 @@ BEGIN
 		,@DataOld = @LogDataOld
 	END -- END WRITE LOG
 	
-	SELECT @ProductId AS ProductId
+	SELECT @ProductId AS ProductId,
+		@ErrorMessage
 END
