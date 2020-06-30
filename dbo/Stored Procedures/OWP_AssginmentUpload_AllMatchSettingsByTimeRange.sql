@@ -48,11 +48,5 @@ Revisions:
      FROM [dbo].[MatchSetting] s WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
           INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
-          LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
-     WHERE EXISTS
-     (
-         SELECT 1
-         FROM Assignment s WITH(NOLOCK)
-         WHERE s.OWPMatchId = m.OWPMatchId
-     )
-           AND i.MatchStatus = 'Live';
+          LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId   
+          AND i.MatchStatus = 'Live';
