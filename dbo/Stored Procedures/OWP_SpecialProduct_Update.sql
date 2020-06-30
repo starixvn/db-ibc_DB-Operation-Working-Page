@@ -103,7 +103,8 @@ BEGIN
 	BEGIN
 		SELECT @ErrorMessage= 'Duplicate maxbet FTHDP'
 		FROM SpecialProduct AS sp WITH (NOLOCK)
-		WHERE sp.Maxbet_FTHDP = @Maxbet_FTHDP
+		WHERE sp.Maxbet_FTHDP = @Maxbet_FTHDP AND sp.[Type]=@Type
+		AND sp.[Type] = @Type
 		IF @ErrorMessage IS NOT NULL
 		BEGIN
 			SELECT @ErrorMessage AS ErrorMessage
