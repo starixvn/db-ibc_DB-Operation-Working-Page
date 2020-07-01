@@ -15,50 +15,6 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON
 	BEGIN -- WRITE LOG
-	
-	-- Declare variable old data
-	DECLARE @Maxbet_FTHDPOld MONEY
-			,@Maxbet_NoOfCornerOld MONEY
-			,@Spread_NoOfCornerOld MONEY
-			,@Maxbet_NextCornerOld MONEY
-			,@Spread_NextCornerOld MONEY
-			,@Maxbet_10_15MinsOld MONEY 
-			,@Spread_10_15MinsOld MONEY 
-			,@Maxbet_TBOld MONEY 
-			,@Spread_TBOld MONEY 
-			,@Maxbet_NextTBOld MONEY
-			,@Spread_NextTBOld MONEY 
-			,@Maxbet_PSOld MONEY 
-			,@Spread_PSOld MONEY 
-			,@Maxbet_WinnerOld MONEY
-			,@Spread_WinnerOld MONEY 
-			,@RemarkOld NVARCHAR(2000)
-			,@ProductSetting VARCHAR(255)
-			,@Action INT
-			,@OldValue MONEY
-			,@NewValue MONEY
-			,@ModifyDate DATETIME
-			,@ModifyBy INT
-			
-	SELECT @Maxbet_FTHDPOld=sp.Maxbet_FTHDP
-			,@Maxbet_NoOfCornerOld=sp.Maxbet_NoOfCorner
-			,@Spread_NoOfCornerOld=sp.Spread_NoOfCorner
-			,@Maxbet_NextCornerOld=sp.Maxbet_NextCorner
-			,@Spread_NextCornerOld=sp.Spread_NextCorner
-			,@Maxbet_10_15MinsOld=sp.Maxbet_10_15Mins
-			,@Spread_10_15MinsOld=sp.Spread_10_15Mins
-			,@Maxbet_TBOld=sp.Maxbet_TB
-			,@Spread_TBOld=sp.Spread_TB
-			,@Maxbet_NextTBOld=sp.Maxbet_NextTB
-			,@Spread_NextTBOld=sp.Spread_NextTB
-			,@Maxbet_PSOld=sp.Maxbet_PS
-			,@Spread_PSOld=sp.Spread_PS
-			,@Maxbet_WinnerOld=sp.Maxbet_Winner
-			,@Spread_WinnerOld=sp.Spread_Winner
-			,@RemarkOld=sp.Remark
-	FROM SpecialProduct AS sp WITH (NOLOCK)
-	WHERE sp.ProductId=@ProductId
-	
 	DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
 		,@Duration INT
@@ -70,26 +26,33 @@ BEGIN
 	-- Old data
 	SET @Xml = (
 			SELECT @ProductId AS '@pid'
-				,ISNULL(@Maxbet_FTHDPOld,'') AS '@fthdp'
-				,ISNULL(@Maxbet_NoOfCornerOld,'') AS '@mbnoofcorner'
-				,ISNULL(@Spread_NoOfCornerOld,'') AS '@spreadnoofcorner'
-				,ISNULL(@Maxbet_NextCornerOld,'') AS '@mbnextcorner'
-				,ISNULL(@Spread_NextCornerOld,'') AS '@spreadnextcorner'
-				,ISNULL(@Maxbet_10_15MinsOld,'') AS '@mb1015mins'
-				,ISNULL(@Spread_10_15MinsOld,'') AS '@sp1015mins'
-				,ISNULL(@Maxbet_TBOld,'') AS '@mbtb'
-				,ISNULL(@Spread_TBOld,'') AS '@spreadtb'
-				,ISNULL(@Maxbet_NextTBOld,'') AS '@mbntb'
-				,ISNULL(@Spread_NextTBOld,'') AS '@spreadntb'
-				,ISNULL(@Maxbet_PSOld,'') AS '@mbps'
-				,ISNULL(@Spread_PSOld,'') AS '@spreadps'
-				,ISNULL(@Maxbet_WinnerOld,'') AS '@mbwinner'
-				,ISNULL(@Spread_WinnerOld,'') AS '@spreadwinner'
-				,ISNULL(@RemarkOld,'') AS '@remark'
+				,ISNULL(sp.Maxbet_FTHDP,'') AS '@fthdp'
+				,ISNULL(sp.Maxbet_NoOfCorner,'') AS '@mbnoofcorner'
+				,ISNULL(sp.Spread_NoOfCorner,'') AS '@spreadnoofcorner'
+				,ISNULL(sp.Maxbet_NextCorner,'') AS '@mbnextcorner'
+				,ISNULL(sp.Spread_NextCorner,'') AS '@spreadnextcorner'
+				,ISNULL(sp.Maxbet_10_15Mins,'') AS '@mb1015mins'
+				,ISNULL(sp.Spread_10_15Mins,'') AS '@sp1015mins'
+				,ISNULL(sp.Maxbet_TB,'') AS '@mbtb'
+				,ISNULL(sp.Spread_TB,'') AS '@spreadtb'
+				,ISNULL(sp.Maxbet_NextTB,'') AS '@mbntb'
+				,ISNULL(sp.Spread_NextTB,'') AS '@spreadntb'
+				,ISNULL(sp.Maxbet_PS,'') AS '@mbps'
+				,ISNULL(sp.Spread_PS,'') AS '@spreadps'
+				,ISNULL(sp.Maxbet_Winner,'') AS '@mbwinner'
+				,ISNULL(sp.Spread_Winner,'') AS '@spreadwinner'
+				,ISNULL(sp.Remark,'') AS '@remark'
+			FROM SpecialProduct AS sp WITH (NOLOCK)
+			WHERE sp.ProductId=@ProductId
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
 	SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+	
+	-- DELETE DATA
+	DELETE FROM SpecialProduct
+	WHERE ProductId=@ProductId
+	-- END DELETE
 	
 	--New data
 	SET @LogData = NULL
@@ -104,7 +67,5 @@ BEGIN
 			,@Data = @LogData
 			,@DataOld = @LogDataOld
 	END -- END WRITE LOG
-	
-	DELETE FROM SpecialProduct
-	WHERE ProductId=@ProductId
+
 END
