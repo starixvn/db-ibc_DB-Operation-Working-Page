@@ -34,9 +34,9 @@ Revisions:
                  LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
             WHERE mi.IsSelected = 1
                   AND m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
-                  AND ((mm.MinorBettypeId IN(-3, -4, -6, -7, -90, -91, -94, -95)
+                  AND ((mm.MinorBettypeId IS NOT NULL AND mm.MinorBettypeId IN(-3, -4, -6, -7, -90, -91, -94, -95)
                   AND m.EventDateTime BETWEEN @FromTimeSendMessageSpecialBettype AND @ToTimeSendMessageSpecialBettype)
-            OR (mm.MinorBettypeId NOT IN(-3, -4, -6, -7, -90, -91, -94, -95)
+            OR (mm.MinorBettypeId IS NULL OR mm.MinorBettypeId NOT IN(-3, -4, -6, -7, -90, -91, -94, -95)
                  AND m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage));
      -- Result
      SELECT s.[OWPMatchId] MatchId, 
