@@ -116,4 +116,3 @@ Revisions:
           LEFT JOIN dbo.RefResource hdp WITH(NOLOCK) ON i.NoOfHDPId = hdp.ResourceId
                                                         AND hdp.RefName = 'NoOfHDP'
           INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
-	WHERE i.MatchStatus = 'Live' OR i.MatchStatus = 'Suspended' OR i.MatchStatus = 'Postponed'

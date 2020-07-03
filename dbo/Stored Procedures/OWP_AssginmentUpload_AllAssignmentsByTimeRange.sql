@@ -53,4 +53,3 @@ Revisions:
           INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
 		  LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
 		  LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
-	 WHERE i.MatchStatus = 'Live' OR i.MatchStatus = 'Suspended' OR i.MatchStatus = 'Postponed'

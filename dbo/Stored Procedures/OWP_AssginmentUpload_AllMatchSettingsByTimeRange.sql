@@ -49,4 +49,3 @@ Revisions:
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
           INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId   
-          AND (i.MatchStatus = 'Live' OR i.MatchStatus = 'Suspended' OR i.MatchStatus = 'Postponed')
