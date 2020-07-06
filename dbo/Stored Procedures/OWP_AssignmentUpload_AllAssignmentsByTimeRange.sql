@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_AllMatchSettingsByTimeRange] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_AllAssignmentsByTimeRange] @EventDate DATE
 AS
 
 /*
@@ -17,7 +17,8 @@ Revisions:
      SET NOCOUNT ON;
      DECLARE @EventFromDateTime DATETIME= DATEADD(HOUR, 12, CONVERT(DATETIME, @EventDate));
      DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
-     -- Time Range
+
+	 -- Time Range
      DECLARE @FromTimeSendMessage DATETIME, @ToTimeSendMessage DATETIME, @FromTimeSendMessageSpecialBettype DATETIME, @ToTimeSendMessageSpecialBettype DATETIME;
 
      -- Bettypes Corner & Booking but not 15 mins: -3, -4, -6, -7, -90, -91, -94, -95
@@ -32,20 +33,23 @@ Revisions:
             FROM dbo.OWPMatch m WITH(NOLOCK)
                  INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
                  LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
-            WHERE mi.IsSelected = 1
+               WHERE mi.IsSelected = 1
                   AND m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
                   AND ((mm.MinorBettypeId IS NOT NULL AND mm.MinorBettypeId IN(-3, -4, -6, -7, -90, -91, -94, -95)
                   AND m.EventDateTime BETWEEN @FromTimeSendMessageSpecialBettype AND @ToTimeSendMessageSpecialBettype)
             OR (mm.MinorBettypeId IS NULL OR mm.MinorBettypeId NOT IN(-3, -4, -6, -7, -90, -91, -94, -95)
                  AND m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage));
+
      -- Result
-     SELECT s.[OWPMatchId] MatchId, 
+     SELECT [AssignmentId], 
+            a.[OWPMatchId] MatchId, 
             [Bettype], 
-            [Spread], 
-            [Maxbet], 
-            [MaxbetCN88], 
-            [SpreadCN88]
-     FROM [dbo].[MatchSetting] s WITH(NOLOCK)
-          INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
+            [AssignmentType], 
+            a.[UserId], 
+            u.Username, 
+            [AssignmentNote]
+     FROM [dbo].[Assignment] a WITH(NOLOCK)
+          INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
           INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
-          LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId   
+		  LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
+		  LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId

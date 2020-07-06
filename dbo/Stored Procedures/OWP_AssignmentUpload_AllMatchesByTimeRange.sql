@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssginmentUpload_AllMatchesByTimeRange] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_AllMatchesByTimeRange] @EventDate DATE
 AS
 
 /*
