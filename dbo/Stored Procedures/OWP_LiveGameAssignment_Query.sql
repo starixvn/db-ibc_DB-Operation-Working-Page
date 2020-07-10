@@ -17,6 +17,7 @@ AS
 	20190910@Leo.Vo: Include EventDateTime - [Feature: #119650]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200305@Jacob.Phan: Remove Param @Username - [Redmine: #129761] 
+	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
 */
 	SET NOCOUNT ON
 
@@ -324,9 +325,9 @@ AS
 				FROM @tblRefResourceMatchStatus
 				)
 			)		
-	ORDER BY ml.EventDate
+	ORDER BY ml.MatchNo
+		,ml.EventDate
 		,ml.KickOffTime
-		,ml.MatchNo
 		,l.OWPLeagueName
 		,h.OWPTeamName
 		,ml.ParentMatchId
