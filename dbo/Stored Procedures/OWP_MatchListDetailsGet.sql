@@ -24,6 +24,7 @@ AS;
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
 	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
 	20200610@Jack.Nguyen: add EventDateTime @MatchStatusIds- [Feature: #135525]
+	20200713@Tyler.Dang: sort follow MatchNo - [Feature: #137416]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -265,13 +266,13 @@ BEGIN
 			ml.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 			OR ml.MinorBettypeId IS NULL
 			)
-	ORDER BY ma.EventDate
+	ORDER BY ml.MatchNo
+		,ma.EventDate
 		,ma.KickOffTime
-		,ml.ParentMatchId
-		,ml.IsMinorMatch
 		,l.OWPLeagueName
 		,h.OWPTeamName
-		,ml.MatchNo
+		,ml.ParentMatchId
+		,ml.IsMinorMatch
 
 	-- Return assignment for LIVE assignment uploading
 	SELECT a.OWPMatchId
