@@ -13,6 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
+	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 	
 */
 
@@ -44,6 +45,7 @@ Revisions:
       Website3        NVARCHAR(1000), 
       Website4        NVARCHAR(1000), 
       ParentHashKey   VARCHAR(200), 
+	  IsNeutral		  BIT,
       HomeId          INT, 
       AwayId          INT, 
       LeagueId        INT, 
@@ -78,12 +80,13 @@ Revisions:
                    Website2, 
                    Website3, 
                    Website4, 
-                   ParentHashKey, 
+                   ParentHashKey,
+				   IsNeutral,
                    0, 
                    0, 
                    0, 
                    0
-            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200))
+            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT)
             ORDER BY ISNULL(MinorBettypeId, 0) DESC;
      EXEC sp_xml_removedocument 
           @idoc;
@@ -136,6 +139,7 @@ Revisions:
      ON m.LeagueId = om.OWPLeagueId
         AND m.HomeId = om.OWPHomeId
         AND m.AwayId = om.OWPAwayId
+		AND m.IsNeutral = om.IsNeutral
         AND om.EventDateTime >= @EventFromDateTime
         AND om.EventDateTime < @EventToDateTime
          WHEN MATCHED
@@ -156,7 +160,8 @@ Revisions:
                   [OWPAwayId], 
                   [OtherTime], 
                   [EventDateTime], 
-                  [InfoSiteMatchId])
+                  [InfoSiteMatchId],
+				  [IsNeutral])
            VALUES
      (m.[MatchNo], 
       m.[EventDate], 
@@ -166,7 +171,8 @@ Revisions:
       m.[AwayId], 
       m.[OtherTime], 
       m.EventDate + m.KickOffTime, 
-      m.[InfoSiteMatchId]
+      m.[InfoSiteMatchId],
+	  m.[IsNeutral]
      );
 
      -- UPDATE MatchId to temp table
@@ -177,6 +183,7 @@ Revisions:
           INNER JOIN dbo.OWPMatch om WITH(NOLOCK) ON m.LeagueId = om.OWPLeagueId
                                                      AND m.HomeId = om.OWPHomeId
                                                      AND m.AwayId = om.OWPAwayId
+													 AND m.IsNeutral = om.IsNeutral
                                                      AND om.EventDateTime >= @EventFromDateTime
                                                      AND om.EventDateTime < @EventToDateTime;
 

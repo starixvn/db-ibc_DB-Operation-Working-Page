@@ -18,6 +18,8 @@ AS
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200305@Jacob.Phan: Remove Param @Username - [Redmine: #129761] 
 	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
+	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
+	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
 */
 	SET NOCOUNT ON
 
@@ -251,8 +253,8 @@ AS
 		,ml.EventDateTime
 		,ml.KickOffTime
 		,ml.OtherTime
-		,l.OWPLeagueName AS League
-		,h.OWPTeamName AS Home
+		,l.OWPLeagueName AS League,
+		(CASE WHEN ml.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END) AS Home 
 		,a.OWPTeamName AS Away
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId
