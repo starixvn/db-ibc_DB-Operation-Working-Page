@@ -49,6 +49,7 @@ Revisions:
 	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
+	20200713@Carlos.Nguyen:  Build HomeName inLiveGameList - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -907,7 +908,9 @@ BEGIN
 		,tm.EventDate
 		,tm.KickOffTime
 		,tm.League
-		,tm.Home
+		,(CASE
+			WHEN ma.IsNeutral = 1 THEN tm.Home + '(N)'
+			ELSE tm.Home END) AS Home 
 		,tm.Away
 		,tm.MatchNo
 		,tm.OtherTime
@@ -939,6 +942,7 @@ BEGIN
 		,tm.IsAllowedToViewDetail
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS tm ON mf.OWPMatchId = tm.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON tm.ParentMatchId = ma.OWPMatchId
 		LEFT JOIN #tblNoOfHDPResource AS ref ON ref.Id = tm.NoOfHDPId
 	WHERE mf.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 		OR mf.MinorBettypeId IS NULL
