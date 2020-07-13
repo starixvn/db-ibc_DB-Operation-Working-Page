@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date DATE
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date DATE
 	,@User VARCHAR(2000) = ''
 	,@SectionId VARCHAR(2000) = ''
 	,@DepartmentId VARCHAR(2000) = ''
@@ -26,6 +26,7 @@ AS
 	20191021@Leo.Vo: Edit Provider/ Other Provider upload - [Redmine: #122211]
 	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 	20200714@Tyler.Dang: Add department filter [Redmine: #137416]
+	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -395,7 +396,7 @@ BEGIN
 		,m.EventDateTime		
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'
-		,h.OWPTeamName AS 'HomeName'
+		,(CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END) AS 'HomeName'
 		,a.OWPTeamName AS 'AwayName'
 		,(CASE 
 			WHEN ms.Maxbet IS NOT NULL THEN ms.Maxbet

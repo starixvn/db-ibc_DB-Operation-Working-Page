@@ -25,6 +25,7 @@ AS;
 	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
 	20200610@Jack.Nguyen: add EventDateTime @MatchStatusIds- [Feature: #135525]
 	20200713@Tyler.Dang: sort follow MatchNo - [Feature: #137416]
+	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -200,7 +201,7 @@ BEGIN
 		,ml.KickOffTime
 		,ml.OtherTime
 		,l.OWPLeagueName AS League
-		,h.OWPTeamName AS Home
+		,(CASE WHEN ma.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END) AS Home 
 		,a.OWPTeamName AS Away
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId
