@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
 AS
 /*    
  Created: 20181030@Leo.Vo
@@ -17,6 +17,7 @@ AS
 	20190918@Kane.Le: Update AgentIds - [Redmine: #120415]
 	20191014@Leo.Vo: Fix issue job failed - [Redmine: #121722]
 	20191108@Leo.Vo: Add venue - [Redmine: #123167]
+	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -62,6 +63,7 @@ BEGIN
 		,[OWPAwayId] INT NULL
 		,[TVIds] VARCHAR(200) NULL
 		,AgentIds VARCHAR(200) NULL		
+		,[IsNeutral] BIT NULL
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -82,6 +84,7 @@ BEGIN
 		,[Website2]
 		,[Website3]
 		,[Website4]
+		,[IsNeutral]
 		)
 	SELECT [InfoSiteMatchId]
 		,[EventDateTime]
@@ -100,6 +103,7 @@ BEGIN
 		,[Website2]
 		,[Website3]
 		,[Website4]
+		,[IsNeutral]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			[InfoSiteMatchId] [int]
 			,[EventDateTime] [datetime]
@@ -118,6 +122,7 @@ BEGIN
 			,[Website2] [nvarchar](1000)
 			,[Website3] [nvarchar](1000)
 			,[Website4] [nvarchar](1000)
+			,[IsNeutral] BIT
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -296,6 +301,7 @@ BEGIN
 			,[OWPAwayId]
 			,[TVIds]
 			,[AgentIds]
+			,[IsNeutral]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -325,6 +331,7 @@ BEGIN
 				,t.[TVIds] = s.[TVIds]
 				,t.[AgentIds] = s.[AgentIds]
 				,t.[IsDeleted] = 0
+				,t.[IsNeutral] = s.[IsNeutral]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -351,6 +358,7 @@ BEGIN
 				,[TVIds]
 				,[AgentIds]
 				,[IsDeleted]
+				,[IsNeutral]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -376,6 +384,7 @@ BEGIN
 				,s.[TVIds]
 				,s.[AgentIds]
 				,0
+				,[IsNeutral]
 				);
 
 	DROP TABLE #tblInfoSiteMatch
