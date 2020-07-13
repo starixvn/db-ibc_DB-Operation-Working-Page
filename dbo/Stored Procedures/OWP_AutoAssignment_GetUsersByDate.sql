@@ -16,23 +16,18 @@ Revisions:
 	20190512@Kane.Le: Update ExtraTime, Venue [Redmine: #124940]
 	20200520@Tyler.Dang: Update User SpeakChinese and English [Redmine: #133428]
 	20200528@Carlos.Nguyen: Get distinct user - [Redmine: #126964]
+	20200713@Carlos.Nguyen: Update LA session ID from (2)=> to (2,30)- [Redmine: #126964]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @LASection INT
-		,@FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
+	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '12:00:00')
 		,@NullLevelId INT
 	
 	SELECT @NullLevelId = MAX(ResourceId) + 1
 	FROM dbo.RefResource WITH (NOLOCK)
 	WHERE RefName = 'UserLevel'
-
-	SELECT @LASection = ResourceId
-	FROM dbo.RefResource WITH (NOLOCK)
-	WHERE RefName = 'Section'
-		AND Value = 'LA'
 
 	CREATE TABLE #tblUser (
 		UserId INT
@@ -57,7 +52,7 @@ BEGIN
 	FROM dbo.[User] AS ou WITH (NOLOCK)  
 	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 	WHERE LocationCode IS NOT NULL
-		AND SectionId = @LASection
+		AND SectionId IN (2,30)
 		AND (ur.RoleId = 1 OR ur.RoleId IS NULL)
 
 
