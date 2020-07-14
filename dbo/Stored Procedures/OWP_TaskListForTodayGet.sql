@@ -171,7 +171,7 @@ BEGIN
 	WHERE ass.UserId = @UserId
 		AND mi.IsSelected = 1
 		AND mm.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-		AND om.EventDateTime > @ToTime
+		AND om.EventDateTime > @FromTime
 		AND om.EventDateTime <= @ToTime
 		AND NOT EXISTS (
 			SELECT 1
