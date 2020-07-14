@@ -21,6 +21,7 @@ AS
 	20191111@Kane.Le: Get All Bettype - [Redmine: #123331]
 	20191218@Kane.Le: Get WatchBet - [Redmine: #124448]
 	20200609@Tyler.Dang: Get match television - [Redmine: #135526]
+	20200713@Carlos.Nguyen: Build HomeName - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -127,7 +128,10 @@ BEGIN
 		,m.EventDate
 		,m.KickOffTime
 		,l.OWPLeagueName AS League
-		,h.OWPTeamName AS Home
+		,(CASE
+			WHEN m.IsNeutral=1 THEN h.OWPTeamName+'(N)'
+			ELSE h.OWPTeamName
+			END) AS Home
 		,a.OWPTeamName AS Away
 		,mi.Remark
 		,mi.[Round]
