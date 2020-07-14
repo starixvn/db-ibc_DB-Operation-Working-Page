@@ -25,6 +25,7 @@ AS
 	20190910@Leo.Vo: Fix issue Fatal error 605 - [Feature: #119987]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20200714@Esther.Nguyen: Build Home Name(N) - [Redmine: #137417]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
@@ -387,7 +388,7 @@ BEGIN
 		,om.EventDate
 		,om.KickOffTime
 		,league.OWPLeagueName AS League
-		,home.OWPTeamName AS Home
+		,CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + '(N)' ELSE home.OWPTeamName END AS Home
 		,away.OWPTeamName AS Away
 		,om.MatchNo
 		,om.OtherTime
