@@ -11,33 +11,19 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
-	20200710@Mira: Bug of time range - [Redmine: #129397]
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 
      SET NOCOUNT ON;
      DECLARE @EventFromDateTime DATETIME= DATEADD(HOUR, 12, CONVERT(DATETIME, @EventDate));
      DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
      -- Time Range
-     DECLARE @FromTimeSendMessage DATETIME, @ToTimeSendMessage DATETIME, @FromTimeSendMessageSpecialBettype DATETIME, @ToTimeSendMessageSpecialBettype DATETIME;
-
-     -- Bettypes Corner & Booking but not 15 mins: -3, -4, -6, -7, -90, -91, -94, -95
-     SELECT @FromTimeSendMessage = FromTime, 
-            @ToTimeSendMessage = ToTime, 
-            @FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype, 
-            @ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
+     DECLARE @FromTimeSendMessage DATETIME, @ToTimeSendMessage DATETIME;
+	 
+	 SELECT @FromTimeSendMessage = FromTime, 
+            @ToTimeSendMessage = ToTime
      FROM dbo.fnc_GetDateTimeForTraderViewTime();
-     DECLARE @MatchInTimeRange TABLE(OWPMatchId INT);
-     INSERT INTO @MatchInTimeRange
-            SELECT m.OWPMatchId
-            FROM dbo.OWPMatch m WITH(NOLOCK)
-                 INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
-                 LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
-               WHERE mi.IsSelected = 1
-                  AND m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
-                  AND (
-					 (mm.MinorBettypeId IN(-3, -4, -6, -7, -90, -91, -94, -95) AND m.EventDateTime BETWEEN @FromTimeSendMessageSpecialBettype AND @ToTimeSendMessageSpecialBettype)
-					 OR ((mm.MinorBettypeId IS NULL OR mm.MinorBettypeId NOT IN(-3, -4, -6, -7, -90, -91, -94, -95)) AND m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage)
-				  );
+
      -- Result
      SELECT m.[OWPMatchId] AS MatchId, 
             m.[InfoSiteMatchId], 
@@ -115,4 +101,6 @@ Revisions:
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource hdp WITH(NOLOCK) ON i.NoOfHDPId = hdp.ResourceId
                                                         AND hdp.RefName = 'NoOfHDP'
-          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
+     WHERE i.IsSelected = 1
+           AND m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
+           AND m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage

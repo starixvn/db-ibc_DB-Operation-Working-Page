@@ -24,14 +24,11 @@ AS
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20190910@Leo.Vo: Fix issue Fatal error 605 - [Feature: #119987]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
-
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
 		,@ToTime DATETIME
-		,@FromTimeForSpecialBettype DATETIME
-		,@ToTimeViewDetailForSpecialBettype DATETIME
-		,@ToTimeForSpecialBettype DATETIME
 		-----
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
@@ -103,17 +100,11 @@ BEGIN
 	BEGIN
 		SET @FromTime = DATEADD(DAY, DATEDIFF(DAY, 0, @Today) - 1, '12:00:00')
 		SET @ToTime = DATEADD(DAY, DATEDIFF(DAY, - 1, @Today) - 1, '11:59:59')
-		SET @FromTimeForSpecialBettype = @FromTime
-		SET @ToTimeForSpecialBettype = @ToTime
-		SET @ToTimeViewDetailForSpecialBettype = @ToTime
 	END
 	ELSE -- If not get yesterday event, set FromTime-ToTime in Time Range
 	BEGIN
 		SELECT @FromTime = FromTime
 			,@ToTime = ToTime
-			,@FromTimeForSpecialBettype = FromTimeForSpecialBettype
-			,@ToTimeForSpecialBettype = ToTimeForSpecialBettype
-			,@ToTimeViewDetailForSpecialBettype = ToTimeViewDetailForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 	END
 
@@ -180,8 +171,8 @@ BEGIN
 	WHERE ass.UserId = @UserId
 		AND mi.IsSelected = 1
 		AND mm.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-		AND om.EventDateTime > @ToTimeViewDetailForSpecialBettype
-		AND om.EventDateTime <= @ToTimeForSpecialBettype
+		AND om.EventDateTime > @ToTime
+		AND om.EventDateTime <= @ToTime
 		AND NOT EXISTS (
 			SELECT 1
 			FROM #tblTodayMatch

@@ -29,6 +29,7 @@ Revisions:
 	20190820@Kane.Le: init SP - [Redmine: #117960]
 	20190823@Carlos.Nguyen: Prevent send notification - [Redmine: #120415]
 	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -105,8 +106,6 @@ BEGIN
 	
 	DECLARE @FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
-		,@FromTimeSendMessageSpecialBettype DATETIME
-		,@ToTimeSendMessageSpecialBettype DATETIME
 		,@ParentMatchId INT
 		,@MinorBettypeId INT
 		
@@ -117,8 +116,6 @@ BEGIN
 	
 	SELECT @FromTimeSendMessage = FromTime
 		,@ToTimeSendMessage = ToTime
-		,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-		,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 	FROM dbo.fnc_GetDateTimeForTraderViewTime()
 	
 	DECLARE @tblRelevantMatches TABLE (
@@ -182,20 +179,6 @@ BEGIN
 		,@RelevantMatchId INT
 		,@RelevantMinorBettypeId INT
 		,@MaxRowCount INT
-		
-	-- list of minor bettypes Corner & Booking but not 15 mins
-	DECLARE @tblCornerBookingBetTypes TABLE (MinorBettypeId INT NOT NULL)
-
-	INSERT INTO @tblCornerBookingBetTypes
-	SELECT MinorBettypeId
-	FROM dbo.MinorBettype WITH (NOLOCK)
-	WHERE ParentBetTypeId IS NULL
-		AND IsActive = 1
-		AND MinorBettypeName NOT LIKE '%15 mins%'
-		AND (
-			MinorBettypeName LIKE '%corner%'
-			OR MinorBettypeName LIKE '%booking%'
-			)
 			
 	DECLARE @tblTVIds TVP_INT
 	INSERT INTO @tblTVIds (
@@ -229,15 +212,10 @@ BEGIN
 		
 		IF @RelevantMatchId IS NULL BREAK
 		
-		DECLARE @IsMatchInTimeRange BIT = CASE WHEN (@EventDateTime >= @FromTimeSendMessage AND @EventDateTime <= @ToTimeSendMessage)
-			OR ( @RelevantMinorBettypeId IS NOT NULL AND EXISTS (
-				SELECT 1
-				FROM @tblCornerBookingBetTypes
-				WHERE MinorBettypeId = @RelevantMinorBettypeId
-					AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
-					AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
-				)
-			) THEN 1 ELSE 0 END
+		DECLARE @IsMatchInTimeRange BIT = CASE 
+			WHEN (@EventDateTime >= @FromTimeSendMessage AND @EventDateTime <= @ToTimeSendMessage)
+				THEN 1 
+			ELSE 0 END
 			
 		DECLARE @RelevantIsUpdateTVs BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateTVs END)
 			,@RelevantIsUpdateChannel BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateChannel END)

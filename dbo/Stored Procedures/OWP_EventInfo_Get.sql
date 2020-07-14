@@ -55,9 +55,6 @@ BEGIN
 
 	DECLARE @FromTime DATETIME
 		,@ToTime DATETIME
-		,@FromTimeForSpecialBettype DATETIME
-		,@ToTimeViewDetailForSpecialBettype DATETIME
-		,@ToTimeForSpecialBettype DATETIME
 		-----
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
@@ -92,9 +89,6 @@ BEGIN
 
 	SELECT @FromTime = FromTime
 		,@ToTime = ToTime
-		,@FromTimeForSpecialBettype = FromTimeForSpecialBettype
-		,@ToTimeForSpecialBettype = ToTimeForSpecialBettype
-		,@ToTimeViewDetailForSpecialBettype = ToTimeViewDetailForSpecialBettype
 	FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
 	IF (@FilterToDateTime < @FromTime)
@@ -270,8 +264,8 @@ BEGIN
 			INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
 		WHERE mi.IsSelected = 1
 			AND mm.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
-			AND om.EventDateTime > @ToTimeViewDetailForSpecialBettype
-			AND om.EventDateTime <= @ToTimeForSpecialBettype
+			AND om.EventDateTime > @FromTime
+			AND om.EventDateTime <= @ToTime
 	END
 
 	-- get match setting

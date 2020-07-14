@@ -21,6 +21,7 @@ Revisions:
 	20190822@yTyler.Dang: Write log - [Feature: #118566]
 	20190924@Tyler.Dang: Update relevant matchs - [Redmine: #120496]
 	20190927@Kane.Le: Write log - [Feature: #120415]
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -48,8 +49,6 @@ BEGIN
 		-- send message by condition date
 		,@FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
-		,@FromTimeSendMessageSpecialBettype DATETIME
-		,@ToTimeSendMessageSpecialBettype DATETIME
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
 		,@FastMarket INT = - 88
@@ -108,20 +107,6 @@ BEGIN
 			MemberId INT
 			,UserReceivedWatcherId INT
 			)
-
-		-- list of minor bettypes Corner & Booking but not 15 mins
-		CREATE TABLE #tblCornerBookingBetTypes (MinorBettypeId INT NOT NULL)
-
-		INSERT INTO #tblCornerBookingBetTypes
-		SELECT MinorBettypeId
-		FROM dbo.MinorBettype WITH (NOLOCK)
-		WHERE ParentBetTypeId IS NULL
-			AND IsActive = 1
-			AND MinorBettypeName NOT LIKE '%15 mins%'
-			AND (
-				MinorBettypeName LIKE '%corner%'
-				OR MinorBettypeName LIKE '%booking%'
-				)
 
 		-- Log  
 		SET @StartRun = GETDATE()
@@ -187,8 +172,6 @@ BEGIN
 		-- send message by condition date
 		SELECT @FromTimeSendMessage = FromTime
 			,@ToTimeSendMessage = ToTime
-			,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
 		SELECT @Username = dbo.fnc_GetUsernameByUserId(@UserId)
@@ -281,35 +264,7 @@ BEGIN
 					,m.MessageContent
 					,m.MessageTypeId
 				FROM #tblMessage AS m
-				WHERE (
-						m.MinorBettypeId IS NULL
-						AND m.EventDateTime >= @FromTimeSendMessage
-						AND m.EventDateTime <= @ToTimeSendMessage
-						)
-					OR (
-						m.MinorBettypeId IS NOT NULL
-						AND 1 = (
-							CASE 
-								WHEN EXISTS (
-										SELECT 1
-										FROM #tblCornerBookingBetTypes
-										WHERE MinorBettypeId = m.MinorBettypeId
-										)
-									THEN CASE 
-											WHEN m.EventDateTime >= @FromTimeSendMessageSpecialBettype
-												AND m.EventDateTime <= @ToTimeSendMessageSpecialBettype
-												THEN 1
-											ELSE 0
-											END
-								ELSE CASE 
-										WHEN m.EventDateTime >= @FromTimeSendMessage
-											AND m.EventDateTime <= @ToTimeSendMessage
-											THEN 1
-										ELSE 0
-										END
-								END
-							)
-						)
+				WHERE m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage
 				) AS msn
 				ON 1 = 0
 			WHEN NOT MATCHED
@@ -467,37 +422,7 @@ BEGIN
 			INNER JOIN dbo.MatchInfo AS info WITH (NOLOCK) ON asm.OWPMatchId = info.OWPMatchId
 			LEFT JOIN #tblOldMatchInfo AS oldinfo ON asm.OWPMatchId = oldinfo.OWPMatchId
 			WHERE info.MatchStatus <> oldinfo.MatchStatus -- NOTE: (to send message to match has diff status)
-				AND (
-					(
-						asm.MinorBettypeId IS NULL
-						AND asm.EventDateTime >= @FromTimeSendMessage
-						AND asm.EventDateTime <= @ToTimeSendMessage
-						)
-					OR (
-						asm.MinorBettypeId IS NOT NULL
-						AND 1 = (
-							CASE 
-								WHEN EXISTS (
-										SELECT 1
-										FROM #tblCornerBookingBetTypes
-										WHERE MinorBettypeId = asm.MinorBettypeId
-										)
-									THEN CASE 
-											WHEN asm.EventDateTime >= @FromTimeSendMessageSpecialBettype
-												AND asm.EventDateTime <= @ToTimeSendMessageSpecialBettype
-												THEN 1
-											ELSE 0
-											END
-								ELSE CASE 
-										WHEN asm.EventDateTime >= @FromTimeSendMessage
-											AND asm.EventDateTime <= @ToTimeSendMessage
-											THEN 1
-										ELSE 0
-										END
-								END
-							)
-						)
-					)
+				AND asm.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage
 
 			DECLARE @TotalMessage INT
 				,@LoopId INT = 1
@@ -587,8 +512,6 @@ BEGIN
 		DROP TABLE #tblOldMatchInfo
 
 		DROP TABLE #tblNewMatchInfo
-
-		DROP TABLE #tblCornerBookingBetTypes
 
 		DROP TABLE #tbChangeMatchStatusMessage
 

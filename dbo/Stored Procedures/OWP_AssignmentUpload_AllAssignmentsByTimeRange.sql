@@ -19,26 +19,11 @@ Revisions:
      DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
 
 	 -- Time Range
-     DECLARE @FromTimeSendMessage DATETIME, @ToTimeSendMessage DATETIME, @FromTimeSendMessageSpecialBettype DATETIME, @ToTimeSendMessageSpecialBettype DATETIME;
+     DECLARE @FromTimeSendMessage DATETIME, @ToTimeSendMessage DATETIME;
 
-     -- Bettypes Corner & Booking but not 15 mins: -3, -4, -6, -7, -90, -91, -94, -95
      SELECT @FromTimeSendMessage = FromTime, 
-            @ToTimeSendMessage = ToTime, 
-            @FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype, 
-            @ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
+            @ToTimeSendMessage = ToTime
      FROM dbo.fnc_GetDateTimeForTraderViewTime();
-     DECLARE @MatchInTimeRange TABLE(OWPMatchId INT);
-     INSERT INTO @MatchInTimeRange
-            SELECT m.OWPMatchId
-            FROM dbo.OWPMatch m WITH(NOLOCK)
-                 INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
-                 LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
-               WHERE mi.IsSelected = 1
-                  AND m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
-                  AND (
-					 (mm.MinorBettypeId IN(-3, -4, -6, -7, -90, -91, -94, -95) AND m.EventDateTime BETWEEN @FromTimeSendMessageSpecialBettype AND @ToTimeSendMessageSpecialBettype)
-					 OR ((mm.MinorBettypeId IS NULL OR mm.MinorBettypeId NOT IN(-3, -4, -6, -7, -90, -91, -94, -95)) AND m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage)
-				  );
 
      -- Result
      SELECT [AssignmentId], 
@@ -50,6 +35,8 @@ Revisions:
             [AssignmentNote]
      FROM [dbo].[Assignment] a WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
-          INNER JOIN @MatchInTimeRange mt ON m.OWPMatchId = mt.OWPMatchId
 		  LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
 		  LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
+	 WHERE i.IsSelected = 1
+           AND m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
+           AND m.EventDateTime BETWEEN @FromTimeSendMessage AND @ToTimeSendMessage	  

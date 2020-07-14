@@ -48,6 +48,7 @@ AS
 	20200204@Kane.Le: Fix Lost Odds Compiler values when changing MatchNo and re-uploading event- [Redmine: #127800]
 	20200210@Kane.Le: Fix Lost REMOVE Messages- [Redmine: #127800]
 	20200521@Tyler.Dang: Add ET/PK Same for AssignmentNote- [Redmine: #132709]
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -104,8 +105,6 @@ BEGIN
 		-- send message by condition date
 		,@FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
-		,@FromTimeSendMessageSpecialBettype DATETIME
-		,@ToTimeSendMessageSpecialBettype DATETIME
 		,@NextCornerId INT = - 4
 		,@NextBookingId INT = - 7
 		,@NoOfCorners INT = - 3
@@ -2018,8 +2017,6 @@ BEGIN
 		-- send message by condition date
 		SELECT @FromTimeSendMessage = FromTime
 			,@ToTimeSendMessage = ToTime
-			,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
 		--Store list matches edited in Time Range
@@ -2054,8 +2051,8 @@ BEGIN
 									WHERE MinorBettypeId = mm.MinorBettypeId
 									)
 								THEN CASE 
-										WHEN om.EventDateTime >= @FromTimeSendMessageSpecialBettype
-											AND om.EventDateTime <= @ToTimeSendMessageSpecialBettype
+										WHEN om.EventDateTime >= @FromTimeSendMessage
+											AND om.EventDateTime <= @ToTimeSendMessage
 											THEN 1
 										ELSE 0
 										END
@@ -2889,8 +2886,8 @@ BEGIN
 									WHERE MinorBettypeId = mm.MinorBettypeId
 									)
 								THEN CASE 
-										WHEN om.EventDateTime >= @FromTimeSendMessageSpecialBettype
-											AND om.EventDateTime <= @ToTimeSendMessageSpecialBettype
+										WHEN om.EventDateTime >= @FromTimeSendMessage
+											AND om.EventDateTime <= @ToTimeSendMessage
 											THEN 1
 										ELSE 0
 										END
@@ -2930,8 +2927,8 @@ BEGIN
 									WHERE MinorBettypeId = mm.MinorBettypeId
 									)
 								THEN CASE 
-										WHEN om.EventDateTime >= @FromTimeSendMessageSpecialBettype
-											AND om.EventDateTime <= @ToTimeSendMessageSpecialBettype
+										WHEN om.EventDateTime >= @FromTimeSendMessage
+											AND om.EventDateTime <= @ToTimeSendMessage
 											THEN 1
 										ELSE 0
 										END
