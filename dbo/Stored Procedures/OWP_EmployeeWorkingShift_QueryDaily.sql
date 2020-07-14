@@ -1,8 +1,8 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date DATE
 	,@User VARCHAR(2000) = ''
 	,@SectionId VARCHAR(2000) = ''
+	,@DepartmentId VARCHAR(2000) = ''
 	,@ShiftId VARCHAR(MAX) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
@@ -25,6 +25,7 @@ AS
 	20191011@Tyler.Dang: Add EmployeeWorkingShiftNote & UserRemark - [Feature: #121901]
 	20191021@Leo.Vo: Edit Provider/ Other Provider upload - [Redmine: #122211]
 	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
+	20200714@Tyler.Dang: Add department filter [Redmine: #137416]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -38,12 +39,17 @@ BEGIN
 	DECLARE @tblUser TABLE (
 		UserId INT
 		,SectionId SMALLINT
+		,DepartmentId SMALLINT
 		,LocationCode VARCHAR(10)
 		,IsSecondAccount BIT
 		)
 	DECLARE @tblSection TABLE (
 		SectionId INT
 		,SectionName VARCHAR(50)
+		)
+	DECLARE @tblDepartment TABLE (
+		DepartmentId INT
+		,DepartmentName VARCHAR(50)
 		)
 	DECLARE @tblLocation TABLE (LocationCode VARCHAR(10))
 	DECLARE @tblMatch TABLE (OWPMatchId INT)
@@ -65,9 +71,17 @@ BEGIN
 		SectionId
 		,SectionName
 		)
-	SELECT SectionId
-		,SectionName
-	FROM dbo.fnc_GetSectionByIds(@SectionId)
+	SELECT RefResourceId
+		,RefResourceValue
+	FROM dbo.fnc_GetRefResourceByIds(@SectionId, 'Section')
+
+	INSERT INTO @tblDepartment (
+		DepartmentId
+		,DepartmentName
+		)
+	SELECT RefResourceId
+		,RefResourceValue
+	FROM dbo.fnc_GetRefResourceByIds(@DepartmentId, 'Department')
 
 	-- Get LocationCode filter
 	INSERT INTO @tblLocation (LocationCode)
@@ -95,11 +109,13 @@ BEGIN
 	INSERT INTO @tblUser (
 		UserId
 		,SectionId
+		,DepartmentId
 		,LocationCode
 		,IsSecondAccount
 		)
 	SELECT u.UserId
 		,ISNULL(u.SectionId, 0)
+		,ISNULL(u.DepartmentId, 0)
 		,ISNULL(u.LocationCode, 'None')
 		,u.IsSecondAccount
 	FROM dbo.[User] AS u WITH (NOLOCK)
@@ -127,6 +143,15 @@ BEGIN
 				OR (
 					u.SectionId IS NULL
 					AND s.SectionId = 0
+					)
+			)
+		AND EXISTS (
+			SELECT 1
+			FROM @tblDepartment AS d
+			WHERE u.DepartmentId = d.DepartmentId
+				OR (
+					u.DepartmentId IS NULL
+					AND d.DepartmentId = 0
 					)
 			)
 		AND EXISTS (
@@ -282,6 +307,7 @@ BEGIN
 	-- return UserList
 	SELECT u.UserId AS EmployeeId
 		,u.SectionId
+		,u.DepartmentId
 		,ts.SectionName
 		,us.Username
 		,us.Nickname
@@ -293,6 +319,7 @@ BEGIN
 	FROM @tblUser AS u
 		INNER JOIN dbo.[User] AS us WITH (NOLOCK) ON u.UserId = us.UserId
 		INNER JOIN @tblSection AS ts ON ts.SectionId = u.SectionId
+		INNER JOIN @tblDepartment AS td ON td.DepartmentId = u.DepartmentId
 		LEFT JOIN (
 			SELECT ResourceId AS GroupId
 				,Value AS GroupName
