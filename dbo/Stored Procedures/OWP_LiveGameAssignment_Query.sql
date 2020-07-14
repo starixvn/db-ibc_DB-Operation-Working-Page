@@ -108,6 +108,7 @@ AS
 		,MinorBettypeId INT
 		,ParentMatchId INT
 		,InfoSiteMatchId INT
+		,IsNeutral BIT
 		)
 
 	INSERT INTO #owpMatchListByDate (
@@ -138,6 +139,7 @@ AS
 		,MinorBettypeId
 		,ParentMatchId
 		,InfoSiteMatchId
+		,IsNeutral
 		)
 	SELECT om.OWPMatchId
 		,om.MatchNo
@@ -174,6 +176,7 @@ AS
 			ELSE minor.ParentMatchId
 			END AS ParentMatchId
 		,om.InfoSiteMatchId
+		,om.IsNeutral
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 	LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
