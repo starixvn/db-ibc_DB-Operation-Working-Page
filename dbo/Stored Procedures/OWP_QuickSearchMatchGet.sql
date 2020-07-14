@@ -322,7 +322,7 @@ BEGIN
 			,sm.AssignmentType
 		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
 		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
-			AND sm.EventDate > @ToTime
+			AND sm.EventDate > @FromTime
 			AND sm.EventDate <= @ToTime
 			AND EXISTS (
 				SELECT 1
@@ -409,7 +409,7 @@ BEGIN
 			,sm.AssignmentType
 		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
 		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
-			AND sm.EventDate > @ToTime
+			AND sm.EventDate > @FromTime
 			AND sm.EventDate <= @ToTime
 			AND sm.UserId=@UserId
 			AND EXISTS (
