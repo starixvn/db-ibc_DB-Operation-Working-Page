@@ -40,7 +40,8 @@ SELECT ls.LeagueSettingId,
        ls.CN88MaxbetWK_MatchOffer, 
        ls.CN88MaxbetWK_HDP, 
        ls.CN88MaxbetWK_OU, 
-       ls.CN88MaxbetWK_NoOfHDP
+       ls.CN88MaxbetWK_NoOfHDP,
+	   ls.FullConditionDescription
 FROM OWPLeague AS l WITH(NOLOCK)
      INNER JOIN dbo.[NewLeagueSetting] AS ls WITH(NOLOCK) ON ls.OWPLeagueId = l.OWPLeagueId
 ORDER BY l.OWPLeagueName;
