@@ -23,6 +23,7 @@ Revisions:
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS ET/PK Same- [Feature: #132709]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20200714@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -208,7 +209,7 @@ BEGIN
 		,UserReceivedWatcherId INT
 		)
 
-	SELECT @HomeTeam = h.OWPTeamName
+	SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END
 		,@AwayTeam = a.OWPTeamName
 		,@BettypeName = al.BetTypeName
 		,@EventDateTime = m.EventDateTime

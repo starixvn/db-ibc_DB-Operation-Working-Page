@@ -21,6 +21,7 @@ Revisions:
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20200514@Tyler.Dang: Remove Same for OtherAssignment DWS - [Feature: #132709]
+	20200714@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -140,7 +141,7 @@ BEGIN
 
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
-		SELECT @HomeTeam = h.OWPTeamName
+		SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END
 			,@AwayTeam = a.OWPTeamName
 			,@BettypeName = al.BetTypeName
 			,@LeagueName = l.OWPLeagueName

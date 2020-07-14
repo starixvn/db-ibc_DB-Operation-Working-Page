@@ -18,8 +18,8 @@ AS
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200305@Jacob.Phan: Remove Param @Username - [Redmine: #129761] 
 	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
-	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
+	20200713@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
 */
 	SET NOCOUNT ON
 
