@@ -12,6 +12,7 @@ AS
     
  Revisions:
 	20200226@Kane.Le: Initial SP - [Redmine: #124448]	
+	20200715@Jacob: Initial SP - [Redmine: #137210]	
 */
 
      SET NOCOUNT ON;
@@ -28,7 +29,7 @@ AS
      WHERE mn.MinorMatchId IS NULL
            AND ass.AssignmentType = 1
            AND ass.Bettype IN(1, 3)
-          AND mi.MatchStatus NOT IN('Cancel', 'Postponed', 'Suspended')
+          AND mi.MatchStatus = 'Live'
      AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
      ORDER BY ma.EventDateTime ASC, 
               UserId ASC;
