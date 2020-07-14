@@ -24,7 +24,7 @@ Revisions:
   20200609@Carlos.Nguyen: Split full time/timerange/ony match is assign - [Redmine: #135527]
   20200609@Carlos.Nguyen: Change paging to server - [Redmine: #135527]
   20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
-  20200713@Carlos.Nguyen: Apply new time range - [Redmine: #137410]
+  20200714@Esther.Nguyen: Build Home Name (N) - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -132,7 +132,7 @@ BEGIN
 				,om.EventDateTime AS EventDate
 				,(CASE 
 					WHEN minor.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne) THEN NULL
-					ELSE home.OWPTeamName + ' -vs- ' + away.OWPTeamName END
+					ELSE CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + '(N)' ELSE home.OWPTeamName END + ' -vs- ' + away.OWPTeamName END
 					) AS [Event]
 				,(CASE 
 					WHEN om.EventDateTime BETWEEN @owpTodayFrom
@@ -193,7 +193,7 @@ BEGIN
 				,minor.MinorBettypeId
 				,ISNULL(om.MatchNo, '') AS MatchNo
 				,om.EventDateTime AS EventDate
-				,(home.OWPTeamName + ' -vs- ' + away.OWPTeamName) AS [Event]
+				,((CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + '(N)' ELSE home.OWPTeamName END) + ' -vs- ' + away.OWPTeamName) AS [Event]
 				,(CASE 
 					WHEN om.EventDateTime BETWEEN @owpTodayFrom
 							AND @owpTodayTo THEN 1
@@ -227,7 +227,7 @@ BEGIN
 		,sm.MatchNo = ISNULL(om.MatchNo, '')
 		,sm.MinorBettypeId = NULL
 		,sm.EventDate = om.EventDateTime
-		,sm.[Event] = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+		,sm.[Event] = (CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + '(N)' ELSE home.OWPTeamName END) + ' -vs- ' + away.OWPTeamName
 	FROM #tblSuggestedMatches AS sm WITH (ROWLOCK)
 		LEFT JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = sm.ParentMatchId
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId
@@ -243,7 +243,7 @@ BEGIN
 		,sm.MatchNo = ISNULL(om.MatchNo, '')
 		,sm.MinorBettypeId = minor.MinorBettypeId
 		,sm.EventDate = om.EventDateTime
-		,sm.[Event] = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+		,sm.[Event] = (CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + '(N)' ELSE home.OWPTeamName END) + ' -vs- ' + away.OWPTeamName
 	FROM #tblSuggestedMatches AS sm WITH (ROWLOCK)
 		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON minor.ParentMatchId = sm.ParentMatchId
 		AND minor.MinorBettypeId = (CASE 
