@@ -151,34 +151,6 @@ BEGIN
 		AND minor.IsRepresented = 1
 		AND ass.UserId = @UserId
 
-	-- get events can not view detail
-	INSERT INTO #tblTodayMatch (
-		OWPMatchId
-		,ParentMatchId
-		,MinorBettypeId
-		,IsMinorMatch
-		,IsAllowedToViewDetail
-		)
-	SELECT DISTINCT om.OWPMatchId
-		,mm.ParentMatchId
-		,mm.MinorBettypeId
-		,1
-		,0
-	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
-		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-		INNER JOIN dbo.Assignment AS ass WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
-	WHERE ass.UserId = @UserId
-		AND mi.IsSelected = 1
-		AND mm.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-		AND om.EventDateTime > @FromTime
-		AND om.EventDateTime <= @ToTime
-		AND NOT EXISTS (
-			SELECT 1
-			FROM #tblTodayMatch
-			WHERE OWPMatchId = mm.MinorMatchId
-			)
-
 	-- insert parent Match of match 10, 15 mins
 	INSERT INTO #tblTodayMatch (
 		OWPMatchId

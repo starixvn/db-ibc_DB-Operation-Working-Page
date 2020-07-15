@@ -20,13 +20,18 @@ Revisions:
 */
 
      BEGIN
-         DECLARE @FakeDate DATETIME = GETDATE()
-		 DECLARE @GMT8 DATETIME = DATEADD(hh, 12, @FakeDate)
-		 DECLARE @Today DATETIME= DATEADD(dd, 0, DATEDIFF(dd, 0, @GMT8));
-         DECLARE @FromTime DATETIME= @Today;
-         DECLARE @NextDays DATETIME= DATEADD(hh, 36, @Today);
-         DECLARE @ToTime DATETIME= DATEADD(ss, -1, @NextDays); 
-		 
+         DECLARE @Today DATETIME= DATEADD(dd, 0, DATEDIFF(dd, 0, GETDATE()));
+         DECLARE @OWPToday DATETIME= DATEADD(hh, 12, GETDATE());
+         DECLARE @FromTime DATETIME= DATEADD(hh, 12, @Today);
+         DECLARE @NextDays DATETIME= DATEADD(hh, 24, @FromTime);
+         DECLARE @ToTime DATETIME= DATEADD(ss, -1, @NextDays);
+
+         IF(DATEDIFF(SECOND, DATEADD(DAY, DATEDIFF(DAY, 0, @OWPToday), '11:59:59'), @OWPToday) < 0)
+             BEGIN
+                 SELECT @FromTime = @FromTime, 
+                        @ToTime = DATEADD(dd, 1, @ToTime);
+         END;
+
          INSERT INTO @TraderViewTime
          (FromTime, 
           ToTime

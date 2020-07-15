@@ -250,22 +250,7 @@ BEGIN
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
 		WHERE om.EventDateTime BETWEEN @FromTime
 				AND @ToTime
-			AND mi.IsSelected = 1
-		
-		UNION
-		--get match can NOT view Live Detail
-		SELECT DISTINCT om.OWPMatchId
-			,mm.ParentMatchId
-			,mm.MinorBettypeId
-			,1
-			,0
-		FROM dbo.OWPMatch AS om WITH (NOLOCK)
-			INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-			INNER JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
-		WHERE mi.IsSelected = 1
-			AND mm.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
-			AND om.EventDateTime > @FromTime
-			AND om.EventDateTime <= @ToTime
+			AND mi.IsSelected = 1		
 	END
 
 	-- get match setting
