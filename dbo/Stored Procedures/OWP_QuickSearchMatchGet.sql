@@ -1,11 +1,5 @@
-﻿USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_QuickSearchMatchGet]    Script Date: 07/15/2020 10:56:23 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-ALTER PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
 	,@SearchKeywords NVARCHAR(100)
 	,@IsNumericKeywords BIT = 0
 	,@IsFullTimeView BIT = 0
@@ -13,7 +7,7 @@ ALTER PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId INT = 0
 AS
 /*    
 Created: 20161005@Simon.Huynh    
-Task : select match with search string
+Task : select match with search string   
 DB: bodb_OWP    
 
 Revisions:  
@@ -233,7 +227,7 @@ BEGIN
 		,sm.MatchNo = ISNULL(om.MatchNo, '')
 		,sm.MinorBettypeId = NULL
 		,sm.EventDate = om.EventDateTime
-		,sm.[Event]= home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+		,sm.[Event] = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
 	FROM #tblSuggestedMatches AS sm WITH (ROWLOCK)
 		LEFT JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = sm.ParentMatchId
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON home.OWPTeamId = om.OWPHomeId
@@ -301,6 +295,7 @@ BEGIN
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
 		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND a.EventDate <= @ToTime
+
 	END
 	
 	-- FILTER RESULTS
@@ -343,8 +338,9 @@ BEGIN
 				INNER JOIN #tblAssignedMatches AS am WITH (NOLOCK) ON mm.MinorMatchId = am.OWPMatchId
 			) AS b ON a.OWPMatchId = b.OWPMatchId
 		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
-			AND a.EventDate <= @ToTime
 			AND a.UserId=@UserId
+			AND a.EventDate <= @ToTime
+
 	END
 	
 	-- FULL TIME
