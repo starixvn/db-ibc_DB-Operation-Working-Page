@@ -12,7 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
-	
+	20200715@Jacob: Bug Provider name in NVARCHAR  - [Redmine: #137418]
 */
 
      SET NOCOUNT ON;
@@ -23,7 +23,7 @@ Revisions:
             FROM fnc_SplitStrings(@MatchIds, ',') u OPTION(MAXRECURSION 0);
      CREATE TABLE #tmpTable
      (MatchId    INT, 
-      [Provider] NVARCHAR(500)
+      [Provider] VARCHAR(500)
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -33,7 +33,7 @@ Revisions:
             SELECT DISTINCT 
                    MatchId, 
                    [Provider]
-            FROM OPENXML(@idoc, '/Root/MatchProvider', 1) WITH(MatchId INT, [Provider] NVARCHAR(500));
+            FROM OPENXML(@idoc, '/Root/MatchProvider', 1) WITH(MatchId INT, [Provider] VARCHAR(500));
      EXEC sp_xml_removedocument 
           @idoc;
 
