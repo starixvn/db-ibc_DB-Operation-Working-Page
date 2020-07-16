@@ -19,6 +19,7 @@ Revisions:
 	20200421@Lita.Tang: Remove Matches do not have Provider [Redmine: #133428]
 	20200427@Carlos.Nguyen: Order Provider [Redmine: #133428]
 	20200520@Tyler.Dang: Update RequireChinese rule [Redmine: #133428]
+	20200716@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
 */
 BEGIN
 	SET NOCOUNT ON

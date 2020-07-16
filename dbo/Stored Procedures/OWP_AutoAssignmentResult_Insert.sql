@@ -28,13 +28,16 @@ BEGIN
 
 	DECLARE @idoc INT
 
-	DECLARE @requestLast VARCHAR(255)
+	DECLARE @requestLast VARCHAR(255),
+		@eventDateGetRequest DATE
+	
+	SELECT TOP 1 @eventDateGetRequest=req.EventDate
+							FROM AutoAssignmentRequest AS req WITH (NOLOCK)
+							WHERE req.RequestId=@RequestId
 		
 	SELECT TOP 1 @requestLast=req.RequestId
 	FROM AutoAssignmentRequest AS req WITH (NOLOCK)
-	WHERE req.EventDate IN (SELECT req1.EventDate
-							FROM AutoAssignmentRequest AS req1 WITH (NOLOCK)
-							WHERE req1.RequestId=@RequestId)
+	WHERE req.EventDate =@eventDateGetRequest
 	ORDER BY req.CreatedDate DESC
 	
 	UPDATE dbo.AutoAssignmentRequest WITH (ROWLOCK)

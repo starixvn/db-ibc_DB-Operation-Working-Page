@@ -17,12 +17,7 @@ BEGIN
 		req.EventDate,
 		req.CreatedDate
 	FROM AutoAssignmentRequest AS req WITH (NOLOCK)
-	WHERE req.EventDate IN (SELECT req1.EventDate
-							FROM AutoAssignmentRequest req1 WITH (NOLOCK)
-							WHERE req1.Status=1)
-	
-	--UPDATE dbo.AutoAssignmentRequest
-	--SET RequestDate = GETDATE(),
-	--	Status=2
-	--WHERE Status=1
+	WHERE req.EventDate IN (SELECT re.EventDate
+							FROM AutoAssignmentRequest AS re WITH (NOLOCK)
+							WHERE re.Status=1)
 END

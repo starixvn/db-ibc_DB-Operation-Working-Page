@@ -14,11 +14,15 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON
 	
+	DECLARE @eventDateGetRequest DATE
+	
+	SELECT TOP 1 @eventDateGetRequest=req.EventDate
+		FROM AutoAssignmentRequest AS req WITH (NOLOCK)
+		WHERE req.EventDate=@EventDate AND req.Status=1
+	
 	SELECT req.RequestId,
 		req.EventDate,
 		req.CreatedDate
 	FROM AutoAssignmentRequest AS req WITH (NOLOCK)
-	WHERE req.EventDate IN (SELECT req1.EventDate
-							FROM AutoAssignmentRequest req1 WITH (NOLOCK)
-							WHERE req1.EventDate=@EventDate AND req1.Status=1)
+	WHERE req.EventDate = @eventDateGetRequest
 END
