@@ -24,14 +24,11 @@ AS
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20190910@Leo.Vo: Fix issue Fatal error 605 - [Feature: #119987]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
-
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
 		,@ToTime DATETIME
-		,@FromTimeForSpecialBettype DATETIME
-		,@ToTimeViewDetailForSpecialBettype DATETIME
-		,@ToTimeForSpecialBettype DATETIME
 		-----
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
@@ -103,17 +100,11 @@ BEGIN
 	BEGIN
 		SET @FromTime = DATEADD(DAY, DATEDIFF(DAY, 0, @Today) - 1, '12:00:00')
 		SET @ToTime = DATEADD(DAY, DATEDIFF(DAY, - 1, @Today) - 1, '11:59:59')
-		SET @FromTimeForSpecialBettype = @FromTime
-		SET @ToTimeForSpecialBettype = @ToTime
-		SET @ToTimeViewDetailForSpecialBettype = @ToTime
 	END
 	ELSE -- If not get yesterday event, set FromTime-ToTime in Time Range
 	BEGIN
 		SELECT @FromTime = FromTime
 			,@ToTime = ToTime
-			,@FromTimeForSpecialBettype = FromTimeForSpecialBettype
-			,@ToTimeForSpecialBettype = ToTimeForSpecialBettype
-			,@ToTimeViewDetailForSpecialBettype = ToTimeViewDetailForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 	END
 
@@ -159,34 +150,6 @@ BEGIN
 		AND mi.IsSelected = 1
 		AND minor.IsRepresented = 1
 		AND ass.UserId = @UserId
-
-	-- get events can not view detail
-	INSERT INTO #tblTodayMatch (
-		OWPMatchId
-		,ParentMatchId
-		,MinorBettypeId
-		,IsMinorMatch
-		,IsAllowedToViewDetail
-		)
-	SELECT DISTINCT om.OWPMatchId
-		,mm.ParentMatchId
-		,mm.MinorBettypeId
-		,1
-		,0
-	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
-		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-		INNER JOIN dbo.Assignment AS ass WITH (NOLOCK) ON ass.OWPMatchId = om.OWPMatchId
-	WHERE ass.UserId = @UserId
-		AND mi.IsSelected = 1
-		AND mm.MinorBettypeId IN (@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-		AND om.EventDateTime > @ToTimeViewDetailForSpecialBettype
-		AND om.EventDateTime <= @ToTimeForSpecialBettype
-		AND NOT EXISTS (
-			SELECT 1
-			FROM #tblTodayMatch
-			WHERE OWPMatchId = mm.MinorMatchId
-			)
 
 	-- insert parent Match of match 10, 15 mins
 	INSERT INTO #tblTodayMatch (

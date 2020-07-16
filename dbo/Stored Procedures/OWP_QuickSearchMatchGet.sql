@@ -23,6 +23,8 @@ Revisions:
   20190920@Leo.Vo: Update permission - [Feature: #120415]
   20200609@Carlos.Nguyen: Split full time/timerange/ony match is assign - [Redmine: #135527]
   20200609@Carlos.Nguyen: Change paging to server - [Redmine: #135527]
+  20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+  20200713@Carlos.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -35,9 +37,6 @@ BEGIN
 		,@YesterdayGMT8 DATETIME = DATEADD(hh, 12, DATEADD(DAY, - 1, GETDATE()))
 	DECLARE @FromTime DATETIME
 		,@ToTime DATETIME
-		,@FromTimeForSpecialBettype DATETIME
-		,@ToTimeViewDetailForSpecialBettype DATETIME
-		,@ToTimeForSpecialBettype DATETIME
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
 		,@Specific15MinsNoOfCorners INT = - 5
@@ -62,13 +61,10 @@ BEGIN
 
 	SELECT @FromTime = @FromTimeToGetData
 		,@ToTime = ToTime
-		,@FromTimeForSpecialBettype = FromTimeForSpecialBettype
-		,@ToTimeForSpecialBettype = ToTimeForSpecialBettype
-		,@ToTimeViewDetailForSpecialBettype = ToTimeViewDetailForSpecialBettype
 	FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
-	SELECT @owpTodayFrom = @FromTimeForSpecialBettype
-		,@owpTodayTo = @ToTimeForSpecialBettype
+	SELECT @owpTodayFrom = @FromTime
+		,@owpTodayTo = @ToTime
 
 	CREATE TABLE #tblAssignedMatches (OWPMatchId INT)
 
@@ -298,49 +294,8 @@ BEGIN
 			,a.AssignmentType
 		FROM #tblSuggestedMatches AS a WITH (NOLOCK)
 		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
-			AND a.EventDate BETWEEN @FromTime AND @ToTimeViewDetailForSpecialBettype
+			AND a.EventDate <= @ToTime
 
-			-- get events can not view detail
-		INSERT INTO #tblFinalResults (
-			OWPMatchId
-			,ParentMatchId
-			,MatchNo
-			,EventDate
-			,[Event]
-			,IsToday
-			,IsAllowedToViewDetail
-			,UserId
-			,AssigneeName
-			,Bettype
-			,AssignmentType
-			)
-		SELECT sm.OWPMatchId
-			,sm.ParentMatchId
-			,sm.MatchNo
-			,sm.EventDate
-			,sm.[Event]
-			,sm.IsToday
-			,0 AS IsAllowedToViewDetail
-			,sm.UserId
-			,sm.AssigneeName
-			,sm.Bettype
-			,sm.AssignmentType
-		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
-		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
-			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
-			AND sm.EventDate <= @ToTimeForSpecialBettype
-			AND EXISTS (
-				SELECT 1
-				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-				WHERE sm.OWPMatchId = minor.MinorMatchId
-					AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners,@Specific15MinsTotalBooking,@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-					AND minor.IsRepresented = 1
-				)
-			AND NOT EXISTS (
-				SELECT 1
-				FROM #tblFinalResults WITH (NOLOCK)
-				WHERE OWPMatchId = sm.OWPMatchId
-				)
 	END
 	
 	-- FILTER RESULTS
@@ -384,51 +339,8 @@ BEGIN
 			) AS b ON a.OWPMatchId = b.OWPMatchId
 		WHERE a.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND a.UserId=@UserId
-			AND a.EventDate BETWEEN @FromTime
-				AND @ToTimeViewDetailForSpecialBettype
-		
-			-- get events can not view detail
-		INSERT INTO #tblFinalResults (
-			OWPMatchId
-			,ParentMatchId
-			,MatchNo
-			,EventDate
-			,[Event]
-			,IsToday
-			,IsAllowedToViewDetail
-			,UserId
-			,AssigneeName
-			,Bettype
-			,AssignmentType
-			)
-		SELECT sm.OWPMatchId
-			,sm.ParentMatchId
-			,sm.MatchNo
-			,sm.EventDate
-			,sm.[Event]
-			,sm.IsToday
-			,0 AS IsAllowedToViewDetail
-			,sm.UserId
-			,sm.AssigneeName
-			,sm.Bettype
-			,sm.AssignmentType
-		FROM #tblSuggestedMatches AS sm WITH (NOLOCK)
-		WHERE sm.EventDate>=DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
-			AND sm.EventDate > @ToTimeViewDetailForSpecialBettype
-			AND sm.EventDate <= @ToTimeForSpecialBettype
-			AND sm.UserId=@UserId
-			AND EXISTS (
-				SELECT 1
-				FROM dbo.MinorMatch AS minor WITH (NOLOCK)
-				WHERE sm.OWPMatchId = minor.MinorMatchId
-					AND minor.MinorBettypeId IN (@Specific15MinsNoOfCorners,@Specific15MinsTotalBooking,@NextCorners, @NoOfCorners, @LastCorners, @HomeSingleTeamCorners, @AwaySingleTeamCorners, @NextBooking, @TotalBooking, @LastBooking)
-					AND minor.IsRepresented = 1
-				)
-			AND NOT EXISTS (
-				SELECT 1
-				FROM #tblFinalResults WITH (NOLOCK)
-				WHERE OWPMatchId = sm.OWPMatchId
-				)
+			AND a.EventDate <= @ToTime
+
 	END
 	
 	-- FULL TIME

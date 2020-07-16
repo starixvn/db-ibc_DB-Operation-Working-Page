@@ -38,6 +38,7 @@ Revisions:
 	20190919@Tyler.Dang: Update relevant matchs - [Redmine: #120496]
 	20191021@Leo.Vo: Check duplicate InfoSiteID - [Redmine: #120415]
 	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -141,8 +142,6 @@ BEGIN
 
 		DECLARE @FromTimeSendMessage DATETIME
 			,@ToTimeSendMessage DATETIME
-			,@FromTimeSendMessageSpecialBettype DATETIME
-			,@ToTimeSendMessageSpecialBettype DATETIME
 			,@ParentMatchId INT
 			,@MinorBettypeId INT
 
@@ -153,8 +152,6 @@ BEGIN
 
 		SELECT @FromTimeSendMessage = FromTime
 			,@ToTimeSendMessage = ToTime
-			,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
 		DECLARE @tblRelevantMatches TABLE (
@@ -200,20 +197,6 @@ BEGIN
 					)
 		END
 
-		-- list of minor bettypes Corner & Booking but not 15 mins
-		DECLARE @tblCornerBookingBetTypes TABLE (MinorBettypeId INT NOT NULL)
-
-		INSERT INTO @tblCornerBookingBetTypes
-		SELECT MinorBettypeId
-		FROM dbo.MinorBettype WITH (NOLOCK)
-		WHERE ParentBetTypeId IS NULL
-			AND IsActive = 1
-			AND MinorBettypeName NOT LIKE '%15 mins%'
-			AND (
-				MinorBettypeName LIKE '%corner%'
-				OR MinorBettypeName LIKE '%booking%'
-				)
-
 		DECLARE @Id INT
 			,@RelevantMatchId INT
 			,@RelevantMinorBettypeId INT
@@ -238,16 +221,6 @@ BEGIN
 					WHEN (
 							@EventDateTime >= @FromTimeSendMessage
 							AND @EventDateTime <= @ToTimeSendMessage
-							)
-						OR (
-							@RelevantMinorBettypeId IS NOT NULL
-							AND EXISTS (
-								SELECT 1
-								FROM @tblCornerBookingBetTypes
-								WHERE MinorBettypeId = @RelevantMinorBettypeId
-									AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
-									AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
-								)
 							)
 						THEN 1
 					ELSE 0
@@ -322,16 +295,6 @@ BEGIN
 						WHEN (
 								@EventDateTime >= @FromTimeSendMessage
 								AND @EventDateTime <= @ToTimeSendMessage
-								)
-							OR (
-								@RelevantMinorBettypeId IS NOT NULL
-								AND EXISTS (
-									SELECT 1
-									FROM @tblCornerBookingBetTypes
-									WHERE MinorBettypeId = @RelevantMinorBettypeId
-										AND @EventDateTime >= @FromTimeSendMessageSpecialBettype
-										AND @EventDateTime <= @ToTimeSendMessageSpecialBettype
-									)
 								)
 							THEN 1
 						ELSE 0

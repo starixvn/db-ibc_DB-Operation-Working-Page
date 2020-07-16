@@ -22,6 +22,7 @@ Revisions:
 	20190304@Kane.Le: add Notification Watcher - [Redmine: #109560]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS ET/PK Same- [Feature: #132709]
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -43,8 +44,6 @@ BEGIN
 		,@MessageChangeOfAssignment NVARCHAR(500)
 		,@FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
-		,@FromTimeSendMessageSpecialBettype DATETIME
-		,@ToTimeSendMessageSpecialBettype DATETIME
 		,@OWPMatchId INT
 		-- Notification Setting
 		,@NotifyMyAssignmentUpdatedId INT = 1 -- assignee
@@ -251,8 +250,6 @@ BEGIN
 	BEGIN
 		SELECT @FromTimeSendMessage = FromTime
 			,@ToTimeSendMessage = ToTime
-			,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-			,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 		FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
 		SELECT @MessageInsertAssignment = mt.MsgTemplateContent

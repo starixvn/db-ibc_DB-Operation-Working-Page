@@ -23,6 +23,7 @@ AS
 	20191014@Leo.Vo: Fix issue job failed - [Redmine: #121722]
 	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
 	20191108@Leo.Vo: Sync venue - [Feature: #123167]
+	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -38,8 +39,6 @@ BEGIN
 		-- send message by condition date
 		,@FromTimeSendMessage DATETIME
 		,@ToTimeSendMessage DATETIME
-		,@FromTimeSendMessageSpecialBettype DATETIME
-		,@ToTimeSendMessageSpecialBettype DATETIME
 		,@SessionId VARCHAR(50) = CAST(NEWID() AS VARCHAR(50))
 		,@CreatedBy INT = 0
 		,@Total INT
@@ -271,22 +270,6 @@ BEGIN
 		UserId INT NOT NULL
 		,OWPMatchId INT NOT NULL
 		);
-
-	-- list of minor bettypes Corner & Booking but not 15 mins
-	CREATE TABLE #tblCornerBookingBetTypes (
-		MinorBetTypeId INT NOT NULL
-	);
-
-	INSERT INTO #tblCornerBookingBetTypes
-	SELECT MinorBettypeId
-	FROM dbo.MinorBettype WITH (NOLOCK)
-	WHERE ParentBetTypeId IS NULL
-		AND IsActive = 1
-		AND MinorBettypeName NOT LIKE '%15 mins%'
-		AND (
-			MinorBettypeName LIKE '%corner%'
-			OR MinorBettypeName LIKE '%booking%'
-			);
 
 	-- create table to contain matches in time range
 	CREATE TABLE #tblMatchInTimeRange (
@@ -646,8 +629,6 @@ BEGIN
 	-- send message by condition date
 	SELECT @FromTimeSendMessage = FromTime
 		,@ToTimeSendMessage = ToTime
-		,@FromTimeSendMessageSpecialBettype = FromTimeForSpecialBettype
-		,@ToTimeSendMessageSpecialBettype = ToTimeForSpecialBettype
 	FROM dbo.fnc_GetDateTimeForTraderViewTime();
 
 	--Store list matches edited in Time Range
@@ -656,37 +637,8 @@ BEGIN
 	FROM #tblMatch AS m
 	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.OWPMatchId = om.OWPMatchId
 	LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
-	WHERE (
-			(
-				mm.MinorBettypeId IS NULL
-				AND om.EventDateTime >= @FromTimeSendMessage
-				AND om.EventDateTime <= @ToTimeSendMessage
-				)
-			OR (
-				mm.MinorBettypeId IS NOT NULL
-				AND 1 = (
-					CASE 
-						WHEN EXISTS (
-								SELECT 1
-								FROM #tblCornerBookingBetTypes
-								WHERE MinorBettypeId = mm.MinorBettypeId
-								)
-							THEN CASE 
-									WHEN om.EventDateTime >= @FromTimeSendMessageSpecialBettype
-										AND om.EventDateTime <= @ToTimeSendMessageSpecialBettype
-										THEN 1
-									ELSE 0
-									END
-						ELSE CASE 
-								WHEN om.EventDateTime >= @FromTimeSendMessage
-									AND om.EventDateTime <= @ToTimeSendMessage
-									THEN 1
-								ELSE 0
-								END
-						END
-					)
-				)
-			);
+	WHERE om.EventDateTime >= @FromTimeSendMessage
+		AND om.EventDateTime <= @ToTimeSendMessage;
 
 	-- message template
 	INSERT INTO #tblMessageTemplate (
@@ -898,8 +850,6 @@ BEGIN
 		INSERT INTO dbo.NotificationQueue (SessionId)
 		SELECT @SessionId;
 	END;
-
-	DROP TABLE #tblCornerBookingBetTypes;
 
 	DROP TABLE #tblMessageTemplate;
 
