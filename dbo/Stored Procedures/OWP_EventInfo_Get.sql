@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EventInfo_Get] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_EventInfo_Get] @EventDate DATE
 	,@HomeName NVARCHAR(500) = NULL
 	,@AwayName NVARCHAR(500) = NULL
 	,@WatchBet NVARCHAR(500) = NULL
@@ -259,7 +259,6 @@ BEGIN
 		WHERE om.EventDateTime BETWEEN @FromTime
 				AND @ToTime
 			AND mi.IsSelected = 1		
-			,om.IsNeutral
 	END
 
 	-- get match setting
