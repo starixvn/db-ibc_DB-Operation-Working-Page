@@ -5,6 +5,7 @@ CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @SiteId INT
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
 	,@SectionId VARCHAR(2000) = ''
+	,@DepartmentId VARCHAR(2000) = ''
 	,@CategoryId VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
@@ -33,6 +34,7 @@ AS
 	 20190531@Leo.Vo: Add Email info [Redmine: #114047]
 	 20191011@Tyler.Dang: Alter Note to Remark [Redmine: #121878]
 	 20191028@Leo.Vo: Get Modified By [Redmine: #122604]
+	 20200714@Tyler.Dang: Add department filter [Redmine: #137416]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -43,6 +45,10 @@ BEGIN
 	DECLARE @tblSection TABLE (
 		SectionId INT
 		,SectionName VARCHAR(50)
+		)
+	DECLARE @tblDepartment TABLE (
+		DepartmentId INT
+		,DepartmentName VARCHAR(50)
 		)
 	DECLARE @tblCategory TABLE (
 		CategoryId INT
@@ -61,9 +67,17 @@ BEGIN
 		SectionId
 		,SectionName
 		)
-	SELECT SectionId
-		,SectionName
-	FROM dbo.fnc_GetSectionByIds(@SectionId)
+	SELECT RefResourceId
+		,RefResourceValue
+	FROM dbo.fnc_GetRefResourceByIds(@SectionId, 'Section')
+
+	INSERT INTO @tblDepartment (
+		DepartmentId
+		,DepartmentName
+		)
+	SELECT RefResourceId
+		,RefResourceValue
+	FROM dbo.fnc_GetRefResourceByIds(@DepartmentId, 'Department')
 
 	-- Get Category filter
 	INSERT INTO @tblCategory (
@@ -83,14 +97,17 @@ BEGIN
 	DECLARE @tblUser TABLE (
 		UserId INT
 		,SectionId SMALLINT
+		,DepartmentId SMALLINT
 		);
 
 	INSERT INTO @tblUser (
 		UserId
 		,SectionId
+		,DepartmentId
 		)
 	SELECT u.UserId
 		,ISNULL(u.SectionId, 0)
+		,ISNULL(u.DepartmentId, 0)
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
 		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
@@ -108,7 +125,7 @@ BEGIN
 		AND (
 			LEN(ISNULL(@User, '')) = 0
 			OR u.Nickname LIKE '%' + @User + '%'
-			OR u.Username LIKE '%' + @User + '%'
+			OR u.Username LIKE '%' + @User + '%'			
 			)
 		AND EXISTS (
 			SELECT 1
@@ -117,6 +134,15 @@ BEGIN
 				OR (
 					u.SectionId IS NULL
 					AND s.SectionId = 0
+					)
+			)
+		AND EXISTS (
+			SELECT 1
+			FROM @tblDepartment AS d
+			WHERE u.DepartmentId = d.DepartmentId
+				OR (
+					u.DepartmentId IS NULL
+					AND d.DepartmentId = 0
 					)
 			)
 		AND EXISTS (
@@ -138,6 +164,7 @@ BEGIN
 					)
 			)
 
+			
 	SELECT u.UserId
 		,u.Nickname
 		,u.Username
@@ -149,6 +176,8 @@ BEGIN
 		,u.Email
 		,u.SectionId
 		,s.SectionName
+		,u.DepartmentId
+		,d.DepartmentName
 		,u.CategoryId
 		,od.OrderId
 		,n.Remark
@@ -157,6 +186,7 @@ BEGIN
 	FROM @tblUser AS tmp
 		INNER JOIN dbo.[User] AS u WITH (NOLOCK) ON tmp.UserId = u.UserId
 		INNER JOIN @tblSection AS s ON s.SectionId = tmp.SectionId
+		INNER JOIN @tblDepartment AS d ON d.DepartmentId = tmp.DepartmentId
 		LEFT JOIN dbo.UserRemark AS n WITH (NOLOCK) ON u.UserId = n.UserId AND n.Category = @Category_WEEKLY
 		LEFT JOIN dbo.EmployeeWorkingShiftOrder AS od WITH (NOLOCK) ON od.UserId = @OrderUserId
 			AND od.EmployeeId = u.UserId
