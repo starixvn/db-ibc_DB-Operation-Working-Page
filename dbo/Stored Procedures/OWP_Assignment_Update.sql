@@ -209,7 +209,7 @@ BEGIN
 		,UserReceivedWatcherId INT
 		)
 
-	SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END
+	SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END
 		,@AwayTeam = a.OWPTeamName
 		,@BettypeName = al.BetTypeName
 		,@EventDateTime = m.EventDateTime

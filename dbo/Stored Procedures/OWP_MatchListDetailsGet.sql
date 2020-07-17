@@ -204,7 +204,7 @@ BEGIN
 		,ml.KickOffTime
 		,ml.OtherTime
 		,l.OWPLeagueName AS League
-		,(CASE WHEN ml.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END) AS Home 
+		,(CASE WHEN ml.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home 
 		,a.OWPTeamName AS Away
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId

@@ -129,7 +129,7 @@ BEGIN
 		,m.KickOffTime
 		,l.OWPLeagueName AS League
 		,(CASE
-			WHEN m.IsNeutral=1 THEN h.OWPTeamName+'(N)'
+			WHEN m.IsNeutral=1 THEN h.OWPTeamName+' (N)'
 			ELSE h.OWPTeamName
 			END) AS Home
 		,a.OWPTeamName AS Away

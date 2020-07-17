@@ -396,7 +396,7 @@ BEGIN
 		,m.EventDateTime		
 		,l.CategoryId
 		,l.OWPLeagueName AS 'LeagueName'
-		,(CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END) AS 'HomeName'
+		,(CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS 'HomeName'
 		,a.OWPTeamName AS 'AwayName'
 		,(CASE 
 			WHEN ms.Maxbet IS NOT NULL THEN ms.Maxbet

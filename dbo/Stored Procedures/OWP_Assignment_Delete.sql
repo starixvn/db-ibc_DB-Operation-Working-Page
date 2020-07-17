@@ -141,7 +141,7 @@ BEGIN
 
 	IF (dbo.[fnc_IsMatchInTimeRange](@OWPMatchId) = 1)
 	BEGIN
-		SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END
+		SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END
 			,@AwayTeam = a.OWPTeamName
 			,@BettypeName = al.BetTypeName
 			,@LeagueName = l.OWPLeagueName

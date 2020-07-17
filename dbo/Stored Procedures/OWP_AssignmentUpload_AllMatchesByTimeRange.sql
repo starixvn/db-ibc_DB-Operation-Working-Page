@@ -32,7 +32,7 @@ Revisions:
             mm.[MinorBettypeId] AS MatchType, 
             mb.[MinorBettypeName] AS MinorBettypeName, 
             l.[OWPLeagueName] AS LeagueName, 
-            (CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + '(N)' ELSE h.OWPTeamName END) AS Home, 
+            (CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home, 
             a.[OWPTeamName] AS Away, 
             m.[EventDate], 
             m.[EventDateTime], 

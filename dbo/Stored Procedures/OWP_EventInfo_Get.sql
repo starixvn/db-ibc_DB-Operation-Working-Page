@@ -923,7 +923,7 @@ BEGIN
 		,tm.KickOffTime
 		,tm.League
 		,(CASE
-			WHEN mf.IsNeutral = 1 THEN tm.Home + '(N)'
+			WHEN mf.IsNeutral = 1 THEN tm.Home + ' (N)'
 			ELSE tm.Home END) AS Home 
 		,tm.Away
 		,tm.MatchNo

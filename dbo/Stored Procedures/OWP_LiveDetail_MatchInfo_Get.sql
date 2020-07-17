@@ -18,7 +18,7 @@ BEGIN
 	SET NOCOUNT ON
 
 	SELECT l.OWPLeagueName AS LeagueName
-		,(CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + '(N)' ELSE home.OWPTeamName END) AS HomeName
+		,(CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END) AS HomeName
 		,away.OWPTeamName AS AwayName
 		,om.MatchNo
 		,om.EventDate

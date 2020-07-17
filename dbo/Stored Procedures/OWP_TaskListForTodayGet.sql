@@ -388,7 +388,7 @@ BEGIN
 		,om.EventDate
 		,om.KickOffTime
 		,league.OWPLeagueName AS League
-		,CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + '(N)' ELSE home.OWPTeamName END AS Home
+		,CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END AS Home
 		,away.OWPTeamName AS Away
 		,om.MatchNo
 		,om.OtherTime
