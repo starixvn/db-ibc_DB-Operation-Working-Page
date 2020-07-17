@@ -63,8 +63,20 @@ BEGIN
 		,@ToTime = ToTime
 	FROM dbo.fnc_GetDateTimeForTraderViewTime()
 
-	SELECT @owpTodayFrom = @FromTime
-		,@owpTodayTo = @ToTime
+	-- Calculate @owpTodayFrom, @owpTodayTo
+	DECLARE @Now DATETIME= GETDATE();
+	DECLARE @GMT8 DATETIME= DATEADD(hh, 12, @Now);
+	DECLARE @TodayGMT8 DATETIME= DATEADD(dd, 0, DATEDIFF(dd, 0, @GMT8));
+	DECLARE @AfternoonGMT8 DATETIME= DATEADD(hh, 12, @TodayGMT8);
+
+	IF @GMT8 < @AfternoonGMT8
+	BEGIN
+		SELECT @owpTodayFrom = DATEADD(hh, -24, @AfternoonGMT8), @owpTodayTo = DATEADD(ss, -1, @AfternoonGMT8);
+	END
+	ELSE
+	BEGIN
+		SELECT @owpTodayFrom = @AfternoonGMT8, @owpTodayTo = DATEADD(ss, 24 * 3600 - 1, @AfternoonGMT8);
+	END
 
 	CREATE TABLE #tblAssignedMatches (OWPMatchId INT)
 
