@@ -4,7 +4,6 @@ ALTER PROC [dbo].[OWP_MessageGetByUserIdWithPaging] @UserId INT
 	,@PageNumber INT = 1
 	,@Keyword NVARCHAR(250) = NULL
 	,@IsWatcher BIT = NULL
-	,@TotalRecords INT = 0 OUTPUT
 AS
 /*    
 Created: 20190214@Kane.Le
@@ -14,7 +13,7 @@ DB: bodb_OWP
 Revisions:    
 20190214@Kane.Le: init SP - [Redmine: #108723]
 20200715@Jacob: Rewrite SP - [Redmine: #137417]
-  
+20200720@Mira: Remove totalRecord - [Redmine: #137752]
 */
 
 
@@ -55,13 +54,3 @@ FROM
 ) AS Paging
 WHERE RowNumber BETWEEN @FromRowNum AND @ToRowNum
 ORDER BY RowNumber;
-
--- @TotalRecords
-SELECT @TotalRecords = COUNT(mu.MessageId)
-FROM dbo.MessageUser mu WITH(NOLOCK)
-     INNER JOIN dbo.[Message] m WITH(NOLOCK) ON mu.MessageId = m.MessageId
-WHERE mu.UserId = @UserId
-      AND (@IsWatcher IS NULL
-           OR m.IsWatcher = @IsWatcher)
-      AND (@Keyword = N''
-           OR m.MessageContent LIKE '%' + @Keyword + '%');
