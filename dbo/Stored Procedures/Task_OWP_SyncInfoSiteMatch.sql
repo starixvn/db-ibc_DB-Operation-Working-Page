@@ -49,7 +49,7 @@ BEGIN
 
 	-- remove old data
 	DELETE dbo.InfoSiteMatch WITH (ROWLOCK)
-	WHERE EventDateTime < DATEADD(DAY, - 3, GETDATE());
+	WHERE EventDateTime < DATEADD(DAY, - 1, GETDATE());
 
 	DELETE ld
 	FROM dbo.InfoSiteSyncLogDetail AS ld WITH (ROWLOCK)
@@ -142,7 +142,7 @@ BEGIN
 		,ISNULL(im.OWPHomeId, m.OWPHomeId) AS OWPHomeId
 		,ISNULL(im.OWPAwayId, m.OWPAwayId) AS OWPAwayId
 		,1
-		,im.IsNeutral
+		,ISNULL(im.IsNeutral,0)
 	FROM (
 		SELECT m.OWPMatchId
 			,m.EventDateTime
