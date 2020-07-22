@@ -18,6 +18,8 @@ AS
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200305@Jacob.Phan: Remove Param @Username - [Redmine: #129761] 
 	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
+	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
+	20200713@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
 */
 	SET NOCOUNT ON
 
@@ -106,6 +108,7 @@ AS
 		,MinorBettypeId INT
 		,ParentMatchId INT
 		,InfoSiteMatchId INT
+		,IsNeutral BIT
 		)
 
 	INSERT INTO #owpMatchListByDate (
@@ -136,6 +139,7 @@ AS
 		,MinorBettypeId
 		,ParentMatchId
 		,InfoSiteMatchId
+		,IsNeutral
 		)
 	SELECT om.OWPMatchId
 		,om.MatchNo
@@ -172,6 +176,7 @@ AS
 			ELSE minor.ParentMatchId
 			END AS ParentMatchId
 		,om.InfoSiteMatchId
+		,om.IsNeutral
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 	LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
@@ -251,8 +256,8 @@ AS
 		,ml.EventDateTime
 		,ml.KickOffTime
 		,ml.OtherTime
-		,l.OWPLeagueName AS League
-		,h.OWPTeamName AS Home
+		,l.OWPLeagueName AS League,
+		(CASE WHEN ml.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home 
 		,a.OWPTeamName AS Away
 		,ref.[Value] AS NoOfHDP
 		,ml.NoOfHDPId

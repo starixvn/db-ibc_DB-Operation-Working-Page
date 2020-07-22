@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20200713@Esther.Nguyen: add (N) for Home Name - [Redmine: #137417]
 */
 
      SET NOCOUNT ON;
@@ -31,7 +32,7 @@ Revisions:
             mm.[MinorBettypeId] AS MatchType, 
             mb.[MinorBettypeName] AS MinorBettypeName, 
             l.[OWPLeagueName] AS LeagueName, 
-            h.[OWPTeamName] AS Home, 
+            (CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home, 
             a.[OWPTeamName] AS Away, 
             m.[EventDate], 
             m.[EventDateTime], 

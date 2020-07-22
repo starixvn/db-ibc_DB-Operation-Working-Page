@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[Task_OWP_SyncInfoSiteMatch]
+ALTER PROCEDURE [dbo].[Task_OWP_SyncInfoSiteMatch]
 AS
 /*    
  Created: 20181030@Leo.Vo
@@ -24,6 +24,7 @@ AS
 	20191022@Leo.Vo: Change Provider, OtherProvider - [Feature: #122194]
 	20191108@Leo.Vo: Sync venue - [Feature: #123167]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -48,7 +49,7 @@ BEGIN
 
 	-- remove old data
 	DELETE dbo.InfoSiteMatch WITH (ROWLOCK)
-	WHERE EventDateTime < DATEADD(DAY, - 3, GETDATE());
+	WHERE EventDateTime < DATEADD(DAY, - 1, GETDATE());
 
 	DELETE ld
 	FROM dbo.InfoSiteSyncLogDetail AS ld WITH (ROWLOCK)
@@ -72,6 +73,7 @@ BEGIN
 		,OWPHomeId INT NOT NULL
 		,OWPAwayId INT NOT NULL
 		,IsSync BIT NOT NULL
+		,IsNeutral BIT NOT NULL
 		);
 
 	CREATE TABLE #tblSimilarMatchInfo (
@@ -131,6 +133,7 @@ BEGIN
 		,OWPHomeId
 		,OWPAwayId
 		,IsSync
+		,IsNeutral
 		)
 	SELECT m.OWPMatchId
 		,m.InfoSiteMatchId
@@ -139,6 +142,7 @@ BEGIN
 		,ISNULL(im.OWPHomeId, m.OWPHomeId) AS OWPHomeId
 		,ISNULL(im.OWPAwayId, m.OWPAwayId) AS OWPAwayId
 		,1
+		,ISNULL(im.IsNeutral,0)
 	FROM (
 		SELECT m.OWPMatchId
 			,m.EventDateTime
@@ -264,6 +268,7 @@ BEGIN
 		,OldLeagueId INT NOT NULL
 		,OldHomeId INT NOT NULL
 		,OldAwayId INT NOT NULL
+		,IsNeutral BIT NOT NULL
 		);
 
 	CREATE TABLE #tblAssigneeReceiver (
@@ -281,11 +286,13 @@ BEGIN
 	SET om.OWPLeagueId = tm.OWPLeagueId
 		,om.OWPHomeId = tm.OWPHomeId
 		,om.OWPAwayId = tm.OWPAwayId
+		,om.IsNeutral = tm.IsNeutral
 	OUTPUT DELETED.OWPMatchId
 		,DELETED.OWPLeagueId
 		,DELETED.OWPHomeId
 		,DELETED.OWPAwayId
-	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId)
+		,DELETED.IsNeutral
+	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral)
 	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 	INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
 	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR om.OWPHomeId <> tm.OWPHomeId OR om.OWPAwayId <> tm.OWPAwayId
@@ -659,13 +666,13 @@ BEGIN
 							ELSE '#' + m.MatchNo
 							END)
 						,'<League>', nl.OWPLeagueName)
-					,'<Event>', nh.OWPTeamName + ' -vs- ' + na.OWPTeamName)
+					,'<Event>', nh.OWPTeamName + CASE WHEN m.IsNeutral = 1 THEN ' (N)' ELSE '' END + ' -vs- ' + na.OWPTeamName)
 				,'<OldMatch.No>', CASE 
 					WHEN ISNULL(m.MatchNo, '') = '' THEN ''
 					ELSE '#' + m.MatchNo
 					END)
 			,'<OldLeague>', ol.OWPLeagueName)
-		,'<OldEvent>', oh.OWPTeamName + ' -vs- ' + oa.OWPTeamName)
+		,'<OldEvent>', oh.OWPTeamName + CASE WHEN el.IsNeutral = 1 THEN ' (N)' ELSE '' END  + ' -vs- ' + oa.OWPTeamName)
 		,t.MsgTemplateId
 	FROM #tblMatchInTimeRange AS mt
 	INNER JOIN dbo.OWPMatch AS m ON mt.OWPMatchId = m.OWPMatchId
@@ -697,7 +704,7 @@ BEGIN
 							ELSE '#' + m.MatchNo
 							END)
 					,'<League>', le.OWPLeagueName)
-				,'<Event>', nh.OWPTeamName + ' -vs- ' + na.OWPTeamName)
+				,'<Event>', nh.OWPTeamName + CASE WHEN m.IsNeutral = 1 THEN ' (N)' ELSE '' END +' -vs- ' + na.OWPTeamName)
 			,'<Old>', ml.OldValue)
 		,'<New>', ml.NewValue)
 		,t.MsgTemplateId

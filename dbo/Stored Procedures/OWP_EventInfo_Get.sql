@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EventInfo_Get] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_EventInfo_Get] @EventDate DATE
 	,@HomeName NVARCHAR(500) = NULL
 	,@AwayName NVARCHAR(500) = NULL
 	,@WatchBet NVARCHAR(500) = NULL
@@ -49,6 +49,7 @@ Revisions:
 	20190715@Carlos.Nguyen: Add maxbetCN88, spreadCN88 - [Readmine: #116798]
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
+	20200713@Carlos.Nguyen: Build HomeName in live game list - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -138,12 +139,14 @@ BEGIN
 		,IsSelected BIT
 		,IsOneHourToKickOffTime BIT
 		,IsFiltered BIT
+		,IsNeutral BIT
 		)
 
 	CREATE TABLE #tblMatchFiltered (
 		OWPMatchId INT
 		,ParentMatchId INT
 		,MinorBettypeId INT
+		,IsNeutral BIT
 		)
 
 	CREATE TABLE #tblMatchSetting (
@@ -212,6 +215,7 @@ BEGIN
 			,MinorBettypeId
 			,IsMinorMatch
 			,IsAllowedToViewDetail
+			,IsNeutral
 			)
 		SELECT om.OWPMatchId
 			,ISNULL(mm.ParentMatchId, om.OWPMatchId)
@@ -221,6 +225,7 @@ BEGIN
 				ELSE 1
 				END
 			,1
+			,IsNeutral
 		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 			INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = om.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
@@ -236,7 +241,9 @@ BEGIN
 			,MinorBettypeId
 			,IsMinorMatch
 			,IsAllowedToViewDetail
-			) --get match can view Live Detail
+			,IsNeutral
+			)
+			--get match can view Live Detail
 		SELECT om.OWPMatchId
 			,ISNULL(mm.ParentMatchId, om.OWPMatchId)
 			,mm.MinorBettypeId
@@ -245,6 +252,7 @@ BEGIN
 				ELSE 1
 				END
 			,1
+			,om.IsNeutral
 		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 			INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = om.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
@@ -824,10 +832,12 @@ BEGIN
 		OWPMatchId
 		,ParentMatchId
 		,MinorBettypeId
+		,IsNeutral
 		)
 	SELECT tm.OWPMatchId
 		,tm.ParentMatchId
 		,tm.MinorBettypeId
+		,tm.IsNeutral
 	FROM #tblMatch AS tm
 	WHERE tm.IsFiltered = 1
 
@@ -836,10 +846,12 @@ BEGIN
 		OWPMatchId
 		,ParentMatchId
 		,MinorBettypeId
+		,IsNeutral
 		)
 	SELECT mf.ParentMatchId
 		,mf.ParentMatchId
 		,NULL
+		,mf.IsNeutral
 	FROM #tblMatchFiltered AS mf
 	WHERE mf.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne)
 		AND NOT EXISTS (
@@ -853,10 +865,12 @@ BEGIN
 		OWPMatchId
 		,ParentMatchId
 		,MinorBettypeId
+		,IsNeutral
 		)
 	SELECT tm.OWPMatchId
 		,tm.ParentMatchId
 		,tm.MinorBettypeId
+		,tm.IsNeutral
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS tm ON tm.ParentMatchId = mf.OWPMatchId
 		AND tm.IsMinorMatch = 1
@@ -871,6 +885,7 @@ BEGIN
 	SELECT minor1.OWPMatchId
 		,minor1.ParentMatchId
 		,minor1.MinorBettypeId
+		,mf.IsNeutral
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS minor ON minor.OWPMatchId = mf.OWPMatchId
 		AND minor.IsMinorMatch = 1
@@ -907,7 +922,9 @@ BEGIN
 		,tm.EventDate
 		,tm.KickOffTime
 		,tm.League
-		,tm.Home
+		,(CASE
+			WHEN mf.IsNeutral = 1 THEN tm.Home + ' (N)'
+			ELSE tm.Home END) AS Home 
 		,tm.Away
 		,tm.MatchNo
 		,tm.OtherTime
