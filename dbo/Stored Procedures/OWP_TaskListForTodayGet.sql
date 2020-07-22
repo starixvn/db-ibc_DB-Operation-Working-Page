@@ -26,6 +26,7 @@ AS
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 	20200714@Esther.Nguyen: Build Home Name(N) - [Redmine: #137417]
+	20200722@Esther.Nguyen: Ready to Trade Status - [Redmine: #137751]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
@@ -427,6 +428,10 @@ BEGIN
 					AND DATEADD(DAY, DATEDIFF(DAY, - 1, @Today), '11:59:59') THEN 1
 			ELSE 0 END
 			) AS IsTodayEvent
+		,(CASE 
+			WHEN rd.UserId = @UserId AND rd.MatchId = m.OWPMatchId THEN 1
+			ELSE 0 END
+		  ) AS IsReady
 	FROM #tblTodayMatch AS m WITH (NOLOCK)
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.OWPMatchId = om.OWPMatchId
 		INNER JOIN dbo.OWPMatch AS pa WITH (NOLOCK) ON m.ParentMatchId = pa.OWPMatchId
@@ -436,6 +441,7 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
 		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
 		LEFT JOIN #tblNoOfHDPResource AS ref WITH (NOLOCK) ON inf.NoOfHDPId = ref.Id
+		LEFT JOIN dbo.ReadyTradeStatus AS rd WITH(NOLOCK) ON m.OWPMatchId = rd.MatchId
 	WHERE m.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 		OR m.MinorBettypeId IS NULL
 	ORDER BY om.EventDate
