@@ -17,6 +17,7 @@ Revisions:
 	20190821@Leo.Vo: initial - [Redmine: #117960]
 	20190927@Leo.Vo: Write log - [Feature: #120415]
 	20191021@Leo.Vo: Remove debug code - [Redmine: #120415]
+	20200723@Esther.Nguyen: Build Home name (N) - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -109,7 +110,7 @@ BEGIN
 	BEGIN
 		SELECT @ActorName = dbo.[fnc_GetUsernameByUserId](@ActorId)
 
-		SELECT @HomeTeamName = home.OWPTeamName
+		SELECT @HomeTeamName = CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END
 			,@AwayTeamName = away.OWPTeamName
 			,@EventDateTime = om.EventDateTime
 			,@MatchNo = CASE WHEN om.MatchNo = '' THEN '' ELSE '#' + om.MatchNo END
