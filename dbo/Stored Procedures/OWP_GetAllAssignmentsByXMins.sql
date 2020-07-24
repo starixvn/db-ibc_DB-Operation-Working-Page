@@ -1,5 +1,5 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE OWP_GetAllAssignmentsByXMins @LastTimeNotification DateTime 
+ALTER PROCEDURE dbo.[OWP_GetAllAssignmentsByXMins]
 	
 AS
 /*
@@ -12,7 +12,8 @@ Revisions:
 */
 BEGIN	
 	SET NOCOUNT ON;
-    DECLARE @XMins  DATETIME = DATEADD(MINUTE, 15,  GETDATE());
+    DECLARE @XMins INT = 15;
+	DECLARE @OWPNow DATETIME = DATEADD(hh , 12,  GETDATE());
 
    -- Result
      SELECT [AssignmentId], 
@@ -26,8 +27,9 @@ BEGIN
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
 		  LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
 		  LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
+		  LEFT JOIN dbo.ReadyTradeStatus r WITH(NOLOCK) ON m.OWPMatchId = r.MatchId AND r.UserId = a.UserId
 	   WHERE i.IsSelected = 1
-           AND m.KickOffTime BETWEEN CONVERT(char(5), @LastTimeNotification, 108) AND CONVERT(char(5), @XMins, 108)
-           AND m.EventDate = CONVERT(VARCHAR(10), GETDATE(), 111)
+           AND m.EventDateTime BETWEEN @OWPNow AND DATEADD(mi , @XMins,  @OWPNow)
+		   AND r.ReadyDateTime IS NULL
 END
 
