@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_TaskListForTodayGet] @UserId INT
+ALTER PROCEDURE [dbo].[OWP_TaskListForTodayGet] @UserId INT
 	,@IsGetYesterdayEvent BIT = 0
 AS
 /*
@@ -441,7 +441,7 @@ BEGIN
 		INNER JOIN dbo.OWPTeam AS home WITH (NOLOCK) ON om.OWPHomeId = home.OWPTeamId
 		INNER JOIN dbo.OWPTeam AS away WITH (NOLOCK) ON om.OWPAwayId = away.OWPTeamId
 		LEFT JOIN #tblNoOfHDPResource AS ref WITH (NOLOCK) ON inf.NoOfHDPId = ref.Id
-		LEFT JOIN dbo.ReadyTradeStatus AS rd WITH(NOLOCK) ON m.OWPMatchId = rd.MatchId
+		LEFT JOIN dbo.ReadyTradeStatus AS rd WITH(NOLOCK) ON m.OWPMatchId = rd.MatchId AND rd.UserId = @UserId
 	WHERE m.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
 		OR m.MinorBettypeId IS NULL
 	ORDER BY om.EventDate
