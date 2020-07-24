@@ -16,6 +16,7 @@ Param's Explanation:
 Revisions:
 	20181012@Leo.Vo: Initial SP - [Redmine: #102867]
 	20190703@Tyler.Dang: change message template - [Redmine: #116230]
+	20200724@Esther.Nguyen: Build home name (N) - [Redmine: #137417]
 */
 BEGIN
 	DECLARE @Username NVARCHAR(30)
@@ -24,7 +25,7 @@ BEGIN
 		,@MatchNo VARCHAR(50)
 		,@League NVARCHAR(500)
 
-	SELECT @HomeTeam = h.OWPTeamName
+	SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END
 		,@AwayTeam = a.OWPTeamName
 		,@MatchNo = CASE WHEN m.MatchNo = '' THEN '' ELSE '#' + m.MatchNo END
 		,@League = b.OWPLeagueName
