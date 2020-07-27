@@ -31,5 +31,6 @@ BEGIN
 	   WHERE i.IsSelected = 1
            AND m.EventDateTime BETWEEN @OWPNow AND DATEADD(mi , @XMins,  @OWPNow)
 		   AND r.ReadyDateTime IS NULL
+		   AND i.MatchStatus like 'Live'
 END
 
