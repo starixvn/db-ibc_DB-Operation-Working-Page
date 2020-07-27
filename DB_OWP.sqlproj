@@ -402,13 +402,13 @@
     <Build Include="dbo\Stored Procedures\OWP_LSTReport_GetTraderAssignmentByDate.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_GetStatusByRequestId.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_GetByStatus.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetAllMatchIsAssigned.sql" />
     <Build Include="dbo\Stored Procedures\Task_OWP_LSTReport_MultipleMatches.sql" />
     <Build Include="dbo\Stored Procedures\OWP_AutoAssignmentRequest_Api_UpdateStatusRequestId_1.sql" />
     <Build Include="dbo\Tables\LeagueSettingTVCondition.sql" />
     <Build Include="dbo\Tables\NewLeagueSetting.sql" />
     <Build Include="dbo\Stored Procedures\OWP_OWPLeague_UpdateGroup.sql" />
-    <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetByLeagueId.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetRequestIsWaiting.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetRequestNew.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_UpdateTVCondition.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_UpdateCondition.sql" />
@@ -417,11 +417,21 @@
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetCondition.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetAllTVCondition.sql" />
     <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_Delete.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_LeagueManagement_GetByLeagueId.sql" />    
+    <Build Include="dbo\Tables\AutoAssignmentSuspenderHistory.sql" />
+    <Build Include="dbo\Tables\AutoAssignmentMatchHistory.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetRequestExtra.sql" />
     <Build Include="dbo\Tables\SpecialProduct.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Update.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_WriteHistorySuspender.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_WriteHistoryMatch.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Get.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_Delete.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetHistoryMatchToday.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetMatctIsAssignedToday.sql" />
     <Build Include="dbo\Stored Procedures\OWP_SpecialProduct_GetLog.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_GetHistorySuspenderToday.sql" />
+    <Build Include="dbo\Stored Procedures\OWP_AutoAssignment_DeleteMatch.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="232-bodb_OWP_DEV to GIT.scmp" />
