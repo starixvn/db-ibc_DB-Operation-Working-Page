@@ -12,13 +12,13 @@ Revisions:
 	20190116@Kane.Le: Get Column NoOfHDPId - [Redmine: #107257]
 	20190813@Tyler.Dang: Add more info to edit Event - [Redmine: #118562]
 	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
-	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
+	20200723@Esther.Nguyen: Build Home name (N) - [Redmind: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
 
 	SELECT l.OWPLeagueName AS LeagueName
-		,(CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END) AS HomeName
+		,(CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END) AS HomeName 
 		,away.OWPTeamName AS AwayName
 		,om.MatchNo
 		,om.EventDate

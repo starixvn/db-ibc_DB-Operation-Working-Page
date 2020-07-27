@@ -38,6 +38,7 @@ Revisions:
 	20190820@Leo.Vo: Initial SP - [Redmine: #120496]
 	20191118@Leo.Vo: Update InfositeMatch only main match - [Redmine: #123167]
 	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
+	20200723@Esther.Nguyen: Build Home name (N) - [Redmine: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -233,7 +234,7 @@ BEGIN
 			,@LeagueName NVARCHAR(500)
 			,@ActorName VARCHAR(30)
 			
-		SELECT @EventName = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+		SELECT @EventName = (CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END) + ' -vs- ' + away.OWPTeamName
 			,@MatchNo = CASE 
 				WHEN om.MatchNo = '' THEN ''
 				ELSE '#' + om.MatchNo

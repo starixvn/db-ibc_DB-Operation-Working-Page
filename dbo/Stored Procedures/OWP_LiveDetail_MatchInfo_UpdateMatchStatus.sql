@@ -22,6 +22,7 @@ Revisions:
 	20190924@Tyler.Dang: Update relevant matchs - [Redmine: #120496]
 	20190927@Kane.Le: Write log - [Feature: #120415]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20200723@Esther.Nguyen: Build Home name (N) - [Feature: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -156,7 +157,7 @@ BEGIN
 
 		-- Get Main match name 
 		SELECT @EventDateTime = om.EventDateTime
-			,@MatchName = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+			,@MatchName = (CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END) + ' -vs- ' + away.OWPTeamName
 			,@MatchNo = CASE 
 				WHEN om.MatchNo = ''
 					THEN ''

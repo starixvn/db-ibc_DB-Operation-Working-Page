@@ -20,6 +20,7 @@ AS
  Revisions:
 	20190814@Kane.Le: Initial SP - [Feature: #117960]
 	20190927@Kane.Le: Update message MatchNo - [Feature: #120415]
+	20200724@Esther.Nguyen: Build home name (N) - [Feature: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -71,8 +72,9 @@ BEGIN
 	FROM dbo.OWPLeague AS l WITH (NOLOCK)
 	WHERE l.OWPLeagueId = @OWPLeagueId
 
-	SELECT @OldOWPHomeName = l.OWPTeamName
-	FROM dbo.OWPTeam AS l WITH (NOLOCK)
+	SELECT @OldOWPHomeName = CASE WHEN m.IsNeutral = 1 THEN l.OWPTeamName + ' (N)' ELSE l.OWPTeamName END
+	FROM dbo.OWPMatch AS m WITH (NOLOCK)
+	LEFT JOIN  dbo.OWPTeam AS l WITH (NOLOCK) ON m.OWPHomeId = l.OWPTeamId
 	WHERE l.OWPTeamId = @OWPHomeTeamId
 
 	SELECT @OldOWPAwayName = l.OWPTeamName
@@ -261,6 +263,7 @@ BEGIN
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditMatch'
 
+		SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @OWPMatchId, @ActorId)	
 		SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>',
 		
 		CASE 
@@ -310,6 +313,7 @@ BEGIN
 			FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 			WHERE mt.MsgTemplateCode = 'EditKOTime'
 
+			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @OWPMatchId, @ActorId)	
 			SELECT @MessageTemplate = REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(@MessageTemplate, '<User>', @ActorName), '<Match.No>', CASE 
 								WHEN ISNULL(@MatchNo, '') = ''
 									THEN ''

@@ -29,6 +29,7 @@ Revisions:
 	20190820@Leo.Vo: Initial SP - [Redmine: #120496]
 	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
 	20191117@Carlos: Fix phone notification - [Feature: #123167]
+	20200723@Esther.Nguyen: Build Home name (N) - [Feature: #137417]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -313,7 +314,7 @@ BEGIN
 			,@LeagueName NVARCHAR(500)
 			,@ActorName VARCHAR(30)
 
-		SELECT @EventName = home.OWPTeamName + ' -vs- ' + away.OWPTeamName
+		SELECT @EventName = (CASE WHEN om.IsNeutral = 1 THEN home.OWPTeamName + ' (N)' ELSE home.OWPTeamName END) + ' -vs- ' + away.OWPTeamName
 			,@MatchNo = CASE 
 				WHEN om.MatchNo = ''
 					THEN ''
