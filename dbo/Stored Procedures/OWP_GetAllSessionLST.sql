@@ -12,8 +12,8 @@ Revisions:
 */
 
     BEGIN
-        SELECT u.UserId, 
-               u.Username
+        SELECT u.UserId 'AssigneeId', 
+               u.Username 'AssigneeName'
         FROM dbo.[User] AS u WITH(NOLOCK)
              INNER JOIN dbo.RefResource AS sec WITH(NOLOCK) ON u.SectionId = sec.ResourceId                                                           
                                                                AND Value = 'LST';

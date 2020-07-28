@@ -21,8 +21,8 @@ Revisions:
                       val
                FROM fnc_SplitStrings(@UserIds, ',') u OPTION(MAXRECURSION 0);
         SELECT r.UserId, 
-               u.UserId, 
-               u.Username
+               u.UserId 'LeaderId', 
+               u.Username 'LeaderName'
         FROM
         (
             SELECT t.UserId, 
