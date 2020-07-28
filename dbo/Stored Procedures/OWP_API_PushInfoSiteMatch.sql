@@ -128,7 +128,7 @@ BEGIN
 			,[Website3] [nvarchar](1000)
 			,[Website4] [nvarchar](1000)
 			,[IsNeutral] BIT
-			,[IPTV][nvarchar](2000)
+			,[Iptv][nvarchar](2000)
 			)
 
 	EXEC sp_xml_removedocument @idoc
