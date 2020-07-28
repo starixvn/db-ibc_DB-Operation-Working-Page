@@ -13,6 +13,7 @@ Revisions:
 	20190813@Tyler.Dang: Add more info to edit Event - [Redmine: #118562]
 	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 	20200723@Esther.Nguyen: Build Home name (N) - [Redmind: #137417]
+	20200729@Carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmind: #137755]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -24,6 +25,7 @@ BEGIN
 		,om.EventDate
 		,(om.EventDate + om.KickOffTime) AS KickOffTime
 		,mi.Channel
+		,mi.IPTV AS IpTv
 		,mi.WB
 		,mi.Phone
 		,mi.Remark
@@ -56,6 +58,4 @@ BEGIN
 		LEFT JOIN dbo.RefResource AS r WITH (NOLOCK) ON l.CategoryId = r.ResourceId
 		AND r.RefName = 'LeagueCategory'
 	WHERE om.OWPMatchId = @OWPMatchId
-
-
 END
