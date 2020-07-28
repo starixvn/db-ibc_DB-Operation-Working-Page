@@ -11,6 +11,23 @@ Revisions:
 
 ALTER TABLE InfoSiteMatch
 ADD [IPTV] NVARCHAR(2000);
+
+ALTER TABLE MatchInfo
+ADD [IPTV] NVARCHAR(2000);
+
+INSERT INTO MessageTemplate
+(
+	MsgTemplateId,
+	MsgTemplateCode,
+	MsgTemplateContent,
+	SystemMessageType
+)
+VALUES
+(41,
+'EditIPTV',
+'Was updated IPTV: [<New>] for the match: <Match.No> - <League> - <Event> updated by <User>, previous: [<Old>]',
+1)
+
 GO
 
 
