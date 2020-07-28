@@ -22,15 +22,19 @@ BEGIN
      -- Result
      SELECT m.[OWPMatchId] AS MatchId, 			
 			mm.[ParentMatchId] AS ParentMatchId,
+			mm.MinorBettypeId,
             l.[OWPLeagueName] AS LeagueName, 
-            (CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home, 
+            (CASE WHEN mmm.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home, 
             a.[OWPTeamName] AS Away, 
-			m.[MatchNo]
+			mmm.[MatchNo]
 	FROM dbo.OWPMatch m WITH(NOLOCK)
           LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
-          INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
-          INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
-          INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+		  INNER JOIN dbo.OWPMatch mmm WITH(NOLOCK) ON 
+				(m.OWPMatchId = mmm.OWPMatchId AND (mm.MinorBettypeId IS NULL OR mm.MinorBettypeId NOT IN (-1, -2, -88, -89))) OR
+				(mm.ParentMatchId = mmm.OWPMatchId AND (mm.MinorBettypeId IN (-1, -2, -88, -89)))				
+          INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON mmm.OWPHomeId = h.OWPTeamId
+          INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON mmm.OWPAwayId = a.OWPTeamId
+          INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON mmm.OWPLeagueId = l.OWPLeagueId
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
 		  INNER JOIN @allMatchIds t ON t.MatchId = m.OWPMatchId
      WHERE i.IsSelected = 1
