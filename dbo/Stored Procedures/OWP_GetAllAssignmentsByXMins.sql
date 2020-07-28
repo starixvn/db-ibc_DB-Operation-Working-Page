@@ -16,13 +16,9 @@ BEGIN
 	DECLARE @OWPNow DATETIME = DATEADD(hh , 12,  GETDATE());
 
    -- Result
-     SELECT [AssignmentId], 
-            a.[OWPMatchId] MatchId, 
-            [Bettype], 
-            [AssignmentType], 
+     SELECT a.[OWPMatchId] MatchId,
             a.[UserId], 
-            u.Username, 
-            [AssignmentNote]
+            u.Username
      FROM [dbo].[Assignment] a WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
 		  LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
