@@ -21,7 +21,7 @@ Revisions:
         DECLARE @FromTime DATETIME;
 
 		-- Get From Time
-        IF(@LastTimeInCache IS NULL)
+        IF(@LastTimeInCache = '')
             BEGIN
                 SELECT @FromTime = @OWPNow;
         END;
