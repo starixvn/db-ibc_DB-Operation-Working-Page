@@ -14,7 +14,7 @@ DB: bodb_OWP
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
-	
+	20200730@Jack.Nguyen: add IPTV, AdminSiteId, changeName MachId  - [Redmine: #137756]
 */
 
      SET NOCOUNT ON;
@@ -23,7 +23,8 @@ Revisions:
      CREATE TABLE #tmpTable
      (MinorBettypeId  INT, 
       HashKey         VARCHAR(200), 
-      InfoSiteMatchId INT, 
+      InfoSiteMatchId INT,
+	  AdminSiteId     INT,
       League          NVARCHAR(500), 
       Home            NVARCHAR(200), 
       Away            NVARCHAR(200), 
@@ -31,7 +32,8 @@ Revisions:
       MatchNo         VARCHAR(50), 
       OtherTime       TIME(7), 
       KickOffTime     TIME(7), 
-      Channel         NVARCHAR(100), 
+      Channel         NVARCHAR(100),
+	  IPTV			  NVARCHAR(100),
       Division        NVARCHAR(2000), 
       MatchOffer      NVARCHAR(100), 
       MatchStatus     VARCHAR(15), 
@@ -49,7 +51,7 @@ Revisions:
       HomeId          INT, 
       AwayId          INT, 
       LeagueId        INT, 
-      MatchId         INT
+      OWPMatchId      INT
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -60,6 +62,7 @@ Revisions:
                    ISNULL(MinorBettypeId, 0), 
                    HashKey, 
                    NULLIF(InfoSiteMatchId, 0), 
+				   NULLIF(AdminSiteId,0),
                    League, 
                    Home, 
                    Away, 
@@ -68,6 +71,7 @@ Revisions:
                    NULLIF(OtherTime, '00:00:00.0000000'), 
                    KickOffTime, 
                    Channel, 
+				   IPTV,
                    Division, 
                    MatchOffer, 
                    MatchStatus, 
@@ -86,7 +90,7 @@ Revisions:
                    0, 
                    0, 
                    0
-            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT)
+            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100),IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT)
             ORDER BY ISNULL(MinorBettypeId, 0) DESC;
      EXEC sp_xml_removedocument 
           @idoc;
@@ -149,7 +153,8 @@ Revisions:
                          om.KickOffTime = m.KickOffTime, 
                          om.OtherTime = m.OtherTime, 
                          om.EventDateTime = m.EventDate + m.KickOffTime, 
-                         om.InfoSiteMatchId = m.InfoSiteMatchId
+                         om.InfoSiteMatchId = m.InfoSiteMatchId,
+						 om.MatchId = m.AdminSiteId
          WHEN NOT MATCHED BY TARGET
          THEN
            INSERT([MatchNo], 
@@ -161,6 +166,7 @@ Revisions:
                   [OtherTime], 
                   [EventDateTime], 
                   [InfoSiteMatchId],
+				  [MatchId],
 				  [IsNeutral])
            VALUES
      (m.[MatchNo], 
@@ -172,13 +178,14 @@ Revisions:
       m.[OtherTime], 
       m.EventDate + m.KickOffTime, 
       m.[InfoSiteMatchId],
+	  m.[AdminSiteId],
 	  m.[IsNeutral]
      );
 
      -- UPDATE MatchId to temp table
      UPDATE m
        SET 
-           m.MatchId = om.OWPMatchId
+           m.OWPMatchId = om.OWPMatchId
      FROM #tmpTable m
           INNER JOIN dbo.OWPMatch om WITH(NOLOCK) ON m.LeagueId = om.OWPLeagueId
                                                      AND m.HomeId = om.OWPHomeId
@@ -190,15 +197,16 @@ Revisions:
      -- INSERT missing MatchInfo
      INSERT INTO dbo.MatchInfo(OWPMatchId)
             SELECT DISTINCT 
-                   MatchId
+                   m.OWPMatchId
             FROM #tmpTable AS m
-                 LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.MatchId = i.OWPMatchId
+                 LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
             WHERE i.OWPMatchId IS NULL;
 
      -- UPDATE Match Info
      UPDATE i
        SET 
            i.[Channel] = m.[Channel], 
+		   i.[IPTV] = m.[IPTV], 
            i.[WB] = m.[WB], 
            i.[Phone] = m.[Phone], 
            i.[Round] = m.[Round], 
@@ -214,17 +222,17 @@ Revisions:
            i.[SelectedBy] = @UserId, 
            i.IsSelectedUpdatedDate = GETDATE()
      FROM #tmpTable AS m
-          INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.MatchId = i.OWPMatchId
+          INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'NoOfHDP'
                                                       AND r.[Value] = m.NoHDP;
 
      -- DELETE MinorMatch
      DELETE mm
      FROM dbo.MinorMatch mm
-          INNER JOIN #tmpTable t ON mm.MinorMatchId = t.MatchId;
+          INNER JOIN #tmpTable t ON mm.MinorMatchId = t.OWPMatchId;
      DELETE mm
      FROM dbo.MinorMatch mm
-          INNER JOIN #tmpTable t ON mm.ParentMatchId = t.MatchId;
+          INNER JOIN #tmpTable t ON mm.ParentMatchId = t.OWPMatchId;
 
      -- INSERT MinorMatch
      INSERT INTO [dbo].[MinorMatch]
@@ -235,8 +243,8 @@ Revisions:
       [GroupId]
      )
             SELECT DISTINCT 
-                   t.MatchId, 
-                   m.MatchId, 
+                   t.OWPMatchId, 
+                   m.OWPMatchId, 
                    t.MinorBettypeId, 
                    1, 
                    NULL
@@ -246,6 +254,6 @@ Revisions:
 
      -- SELECT the result
      SELECT HashKey, 
-            MatchId
+            OWPMatchId
      FROM #tmpTable;
      DROP TABLE #tmpTable;
