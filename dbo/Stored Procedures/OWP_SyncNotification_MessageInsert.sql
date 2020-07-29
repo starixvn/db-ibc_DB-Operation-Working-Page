@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_SyncNotification_MessageInsert] @Messages        NVARCHAR(MAX), 
+ALTER PROCEDURE [dbo].[OWP_SyncNotification_MessageInsert] @Messages        NVARCHAR(MAX), 
                                                             @CreatedByUserId INT, 
                                                             @SessionId       VARCHAR(50)
 AS
@@ -22,13 +22,13 @@ Revisions:
       IsImportant        BIT, 
       MessageType        TINYINT, 
       IsWatcher          BIT, 
-      ReceivedUserIdList NVARCHAR(MAX)
+      ReceivedUserIds NVARCHAR(MAX)
      );
      CREATE TABLE #tblMessageUser
      (MessageId          INT, 
-      ReceivedUserIdList NVARCHAR(MAX)
+      ReceivedUserIds NVARCHAR(MAX)
      );
-     DECLARE @CreatedDate DATETIME= DATEADD(hh, 12, GETDATE());
+     DECLARE @CreatedDate DATETIME = GETDATE();
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
           @idoc OUTPUT, 
@@ -39,8 +39,8 @@ Revisions:
                    IsImportant, 
                    MessageType, 
                    IsWatcher, 
-                   ReceivedUserIdList
-            FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX));
+                   ReceivedUserIds
+            FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIds NVARCHAR(MAX));
      EXEC sp_xml_removedocument 
           @idoc;
 
@@ -48,7 +48,7 @@ Revisions:
      MERGE dbo.[Message] WITH(ROWLOCK) AS ms
      USING
      (
-         SELECT m.ReceivedUserIdList, 
+         SELECT m.ReceivedUserIds, 
                 m.MessageContent, 
                 m.MessageType, 
                 m.IsImportant, 
@@ -73,9 +73,9 @@ Revisions:
       msn.IsWatcher
      )
      OUTPUT inserted.MessageId, 
-            msn.ReceivedUserIdList
+            msn.ReceivedUserIds
             INTO #tblMessageUser(MessageId, 
-                                 ReceivedUserIdList);
+                                 ReceivedUserIds);
 
      -- insert messageUser
      INSERT INTO dbo.MessageUser
@@ -87,7 +87,7 @@ Revisions:
                    val, 
                    @SessionId
             FROM #tblMessageUser mu
-                 CROSS APPLY fnc_SplitStrings(mu.ReceivedUserIdList, ',');
+                 CROSS APPLY fnc_SplitStrings(mu.ReceivedUserIds, ',');
 
      -- insert NotificationQueue
      INSERT INTO dbo.NotificationQueue
