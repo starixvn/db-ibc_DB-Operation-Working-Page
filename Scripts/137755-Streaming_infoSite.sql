@@ -30,5 +30,42 @@ VALUES
 
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'OWP_EventInsertFromInfoSite')
+DROP PROCEDURE OWP_EventInsertFromInfoSite
+GO
+
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'OWP_EventPicking_Get')
+DROP PROCEDURE OWP_EventPicking_Get
+GO
+
+IF EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'AdminSiteId'
+          AND Object_ID = Object_ID(N'dbo.OWPMatch'))
+BEGIN
+	
+	ALTER TABLE dbo.OWPMatch
+	DROP COLUMN AdminSiteId;    
+END
 
 
+IF EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'LocalTV'
+          AND Object_ID = Object_ID(N'dbo.MatchInfo'))
+BEGIN
+	
+	ALTER TABLE dbo.MatchInfo
+	DROP COLUMN LocalTV;    
+END
+
+
+IF EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'LiveTV'
+          AND Object_ID = Object_ID(N'dbo.MatchInfo'))
+BEGIN
+	
+	ALTER TABLE dbo.MatchInfo
+	DROP COLUMN LiveTV;    
+END
+
+
+GO
