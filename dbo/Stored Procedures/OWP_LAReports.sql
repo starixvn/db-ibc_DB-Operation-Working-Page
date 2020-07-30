@@ -1,6 +1,4 @@
-
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LAReports] @FromDate DATETIME = '2020-01-03', 
                                         @ToDate   DATETIME = '2020-01-05'
 AS
@@ -18,7 +16,8 @@ AS
      SET @FromDate = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
      SET @ToDate = DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
      SELECT DISTINCT 
-            a.UserId, 
+            a.UserId,
+			a.AssignmentId,
             p.ProviderName, 
             l.OWPLeagueName, 
             mn.MinorBettypeId, 
