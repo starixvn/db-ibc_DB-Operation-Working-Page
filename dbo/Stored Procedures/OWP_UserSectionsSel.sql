@@ -20,5 +20,5 @@ AS
             u.Nickname, 
             r.[Value] AS Section
      FROM dbo.[User] u WITH(NOLOCK)
-          INNER JOIN dbo.RefResource r WITH(NOLOCK) ON u.SectionId = r.ResourceId
+          LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON u.SectionId = r.ResourceId
                                                        AND r.RefName = 'Section';
