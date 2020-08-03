@@ -9,25 +9,37 @@ Revisions:
 	20200728@Carlos.Nguyen: New structure of InfoSiteMatch - [Redmine: #137755]
 */
 
-ALTER TABLE InfoSiteMatch
-ADD [IPTV] NVARCHAR(2000);
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'IPTV'
+          AND Object_ID = Object_ID(N'dbo.InfoSiteMatch'))
+BEGIN
+	ALTER TABLE InfoSiteMatch
+	ADD [IPTV] NVARCHAR(2000);   
+END
 
-ALTER TABLE MatchInfo
-ADD [IPTV] NVARCHAR(2000);
+IF NOT EXISTS(SELECT 1 FROM sys.columns 
+          WHERE Name = N'IPTV'
+          AND Object_ID = Object_ID(N'dbo.MatchInfo'))
+BEGIN
+	ALTER TABLE MatchInfo
+	ADD [IPTV] NVARCHAR(2000);   
+END
 
-INSERT INTO MessageTemplate
-(
-	MsgTemplateId,
-	MsgTemplateCode,
-	MsgTemplateContent,
-	SystemMessageType
-)
-VALUES
-(41,
-'EditIPTV',
-'Was updated IPTV: [<New>] for the match: <Match.No> - <League> - <Event> updated by <User>, previous: [<Old>]',
-1)
-
+IF NOT EXISTS (SELECT 1 FROM MessageTemplate WHERE MsgTemplateId=41)
+BEGIN
+	INSERT INTO MessageTemplate
+	(
+		MsgTemplateId,
+		MsgTemplateCode,
+		MsgTemplateContent,
+		SystemMessageType
+	)
+	VALUES
+	(41,
+	'EditIPTV',
+	'Was updated IPTV: [<New>] for the match: <Match.No> - <League> - <Event> updated by <User>, previous: [<Old>]',
+	1)
+END
 GO
 
 IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'OWP_EventInsertFromInfoSite')
@@ -39,12 +51,12 @@ DROP PROCEDURE OWP_EventPicking_Get
 GO
 
 IF EXISTS(SELECT 1 FROM sys.columns 
-          WHERE Name = N'AdminSiteId'
+          WHERE Name = N'AdminSiteMatchId'
           AND Object_ID = Object_ID(N'dbo.OWPMatch'))
 BEGIN
 	
 	ALTER TABLE dbo.OWPMatch
-	DROP COLUMN AdminSiteId;    
+	DROP COLUMN AdminSiteMatchId;    
 END
 
 
