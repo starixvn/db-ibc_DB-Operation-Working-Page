@@ -26,6 +26,7 @@ BEGIN
             l.[OWPLeagueName] AS LeagueName, 
             (CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home, 
             a.[OWPTeamName] AS Away, 
+			m.KickOffTime As KOTime,
 			m.[MatchNo]
 	FROM dbo.OWPMatch m WITH(NOLOCK)
           LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId			
