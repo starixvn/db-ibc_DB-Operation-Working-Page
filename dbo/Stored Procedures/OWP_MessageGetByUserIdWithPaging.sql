@@ -14,6 +14,7 @@ Revisions:
 20190214@Kane.Le: init SP - [Redmine: #108723]
 20200715@Jacob: Rewrite SP - [Redmine: #137417]
 20200720@Mira: Remove totalRecord - [Redmine: #137752]
+20200729@Esther: Ready to Trade Status  - [Redmine: #137751]
 */
 
 
@@ -45,7 +46,7 @@ FROM
            SystemMessageType
     FROM dbo.MessageUser mu WITH(NOLOCK)
          INNER JOIN dbo.[Message] m WITH(NOLOCK) ON mu.MessageId = m.MessageId
-         INNER JOIN dbo.MessageTemplate mt WITH(NOLOCK) ON m.MessageType = mt.MsgTemplateId
+         LEFT JOIN dbo.MessageTemplate mt WITH(NOLOCK) ON m.MessageType = mt.MsgTemplateId
     WHERE mu.UserId = @UserId
           AND (@IsWatcher IS NULL
                OR m.IsWatcher = @IsWatcher)
