@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_GetLeadersOfSession] @UserIds VARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_GetLeaderSupervisorSectionHeadOfSession] @UserIds VARCHAR(MAX)
 AS
 
 /*
@@ -21,8 +21,8 @@ Revisions:
                       val
                FROM fnc_SplitStrings(@UserIds, ',') u OPTION(MAXRECURSION 0);
         SELECT r.UserId, 
-               u.UserId 'LeaderId', 
-               u.Username 'LeaderName'
+               u.UserId 'ReceivedUserId', 
+               u.Username 'ReceivedUserName'
         FROM
         (
             SELECT t.UserId, 
@@ -34,5 +34,7 @@ Revisions:
         INNER JOIN dbo.UserRole AS ur WITH(NOLOCK) ON u.UserId = ur.UserId
         INNER JOIN dbo.RefResource AS a WITH(NOLOCK) ON ur.RoleId = a.ResourceId
                                                         AND a.RefName = 'UserRole'
-                                                        AND a.Value = 'Leader';
+                                                        AND (a.Value = 'Leader'
+                                                             OR a.Value = 'Supervisor'
+                                                             OR a.Value = 'Section Head');
     END;
