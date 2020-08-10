@@ -15,7 +15,7 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @XMins INT= 10;
+        DECLARE @XMins INT= 15;
         DECLARE @OWPNow DATETIME= DATEADD(hh, 12, GETDATE());
         DECLARE @LastTimeNotification DATETIME= DATEADD(mi, @XMins, @OWPNow);
         DECLARE @FromTime DATETIME;
