@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200723@Esther.Nguyen: Staff's readiness notification - [Redmine: #137751]
+	20200810@Mira.Nguyen: edit xMins - [Redmine: #137751]
 */
 
     BEGIN
