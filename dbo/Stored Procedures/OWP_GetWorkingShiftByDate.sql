@@ -15,15 +15,6 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @tblShift TABLE(ShiftId INT);
-        DECLARE @ShiftIds VARCHAR(500);
-        SELECT @ShiftIds = COALESCE(@ShiftIds + ',', '') + CONVERT(VARCHAR(12), ShiftId)
-        FROM EmployeeWorkingShift
-        WHERE ShiftDate = @EventDate;
-        INSERT INTO @tblShift(ShiftId)
-               SELECT DISTINCT 
-                      t.val
-               FROM dbo.fnc_SplitStrings(@ShiftIds, ',') AS t OPTION(MAXRECURSION 0);
         SELECT CASE
                    WHEN u.Nickname IS NULL
                    THEN u.Username
@@ -37,8 +28,7 @@ Revisions:
                ec.IsTimeShift
         FROM EmployeeWorkingShift AS em WITH(NOLOCK)
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON em.EmployeeId = u.UserId
-             INNER JOIN @tblShift AS ts ON ts.ShiftId = em.ShiftId
-             LEFT JOIN EmployeeWorkingShiftColor AS ec WITH(NOLOCK) ON ec.ShiftId = ts.ShiftId
+             INNER JOIN EmployeeWorkingShiftColor AS ec WITH(NOLOCK) ON ec.ShiftId = em.ShiftId
         WHERE ShiftDate = @EventDate
               AND ((ec.IsTimeShift = 1
                     AND ec.StartTime IS NOT NULL
