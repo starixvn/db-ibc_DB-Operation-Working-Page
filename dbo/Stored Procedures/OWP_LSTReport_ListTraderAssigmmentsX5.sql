@@ -12,7 +12,8 @@ AS
     
  Revisions:
 	20200226@Kane.Le: Initial SP - [Redmine: #124448]	
-	20200326@Jacob: 2x35 mins match - [Redmine: #125461]	
+	20200326@Jacob: 2x35 mins match - [Redmine: #125461]
+	20200715@Jacob: Initial SP - [Redmine: #137210]	
 */
 
      SET NOCOUNT ON;
@@ -37,7 +38,7 @@ AS
           INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
      WHERE ass.AssignmentType = 1
-           AND mi.MatchStatus NOT IN('Cancel', 'Postponed', 'Suspended')
+           AND mi.MatchStatus = 'Live'
           AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
           AND ass.Bettype <> -1002
      ORDER BY ma.EventDateTime ASC, 
