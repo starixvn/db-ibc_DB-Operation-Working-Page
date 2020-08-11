@@ -10,7 +10,7 @@ Task : Get list working shift
 DB: bodb_OWP  
   
 Revisions:  
- 20200810@Esther.Nguyen: Get list working shift - [Redmine: #139219]  
+ 20200810@Esther.Nguyen: Get list working shift - [Redmine: #138643]  
 */
 
     BEGIN
