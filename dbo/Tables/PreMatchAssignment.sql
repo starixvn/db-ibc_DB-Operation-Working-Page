@@ -10,14 +10,13 @@ Revisions:
 */
 
 CREATE TABLE [dbo].[PreMatchAssignment]
-([EventDateTime] DATETIME NOT NULL, 
- [LeagueName]    NVARCHAR(400) NOT NULL, 
- [HomeName]      NVARCHAR(200) NOT NULL, 
- [AwayName]      NVARCHAR(200) NOT NULL, 
+([PreMatchAssignmentId] INT NOT NULL,
+ [EventDateTime] DATETIME NOT NULL, 
+ [LeagueName]    NVARCHAR(400) NOT NULL,
  [HDP]           NVARCHAR(200) NOT NULL, 
  [OU]            NVARCHAR(200) NOT NULL, 
  [HDPTOver]      NVARCHAR(200) NOT NULL, 
  [OUTOver]       NVARCHAR(200) NOT NULL, 
  [isDeleted]     BIT NOT NULL, 
- CONSTRAINT [PK_PreMatchAssignment] PRIMARY KEY CLUSTERED([EventDateTime] ASC, [LeagueName] ASC)
+ CONSTRAINT [PK_PreMatchAssignment] PRIMARY KEY CLUSTERED([PreMatchAssignmentId] ASC)
 );
