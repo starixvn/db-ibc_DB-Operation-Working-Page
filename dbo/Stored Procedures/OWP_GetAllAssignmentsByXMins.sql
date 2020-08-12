@@ -11,11 +11,12 @@ DB: bodb_OWP
 
 Revisions:
 	20200723@Esther.Nguyen: Staff's readiness notification - [Redmine: #137751]
+	20200810@Mira.Nguyen: edit xMins - [Redmine: #137751]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @XMins INT= 10;
+        DECLARE @XMins INT= 15;
         DECLARE @OWPNow DATETIME= DATEADD(hh, 12, GETDATE());
         DECLARE @LastTimeNotification DATETIME= DATEADD(mi, @XMins, @OWPNow);
         DECLARE @FromTime DATETIME;
