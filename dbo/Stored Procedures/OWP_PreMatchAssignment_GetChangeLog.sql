@@ -24,9 +24,9 @@ AS
         VALUES(113), (114), (115);
 
         SELECT (CASE
-                   WHEN lat.ActionTypeName = 2 THEN 'Update Assignment'
-                   WHEN lat.ActionTypeName = 3 THEN 'Delete League'
-                   WHEN lat.ActionTypeName = 4 THEN 'Recover League'
+                   WHEN lat.ActionTypeId = 2 THEN 'Update Assignment'
+                   WHEN lat.ActionTypeId = 3 THEN 'Delete League'
+                   WHEN lat.ActionTypeId = 4 THEN 'Recover League'
                END) AS [Action], 
               ul.DataOld AS OldValue, 
               ul.Data AS NewValue, 
