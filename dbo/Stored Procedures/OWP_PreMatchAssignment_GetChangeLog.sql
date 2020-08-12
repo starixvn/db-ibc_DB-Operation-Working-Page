@@ -21,13 +21,17 @@ AS
         );
 
         INSERT INTO @tblLogAction(ActionId)
-        VALUES(112), (113), (114);
+        VALUES(113), (114), (115);
 
-        SELECT lat.ActionTypeName AS [Action], 
-               ul.DataOld AS OldValue, 
-               ul.Data AS NewValue, 
-               ul.LoggedDate AS LastModified, 
-               u.Username AS ModifiedBy
+        SELECT (CASE
+                   WHEN lat.ActionTypeName = 2 THEN 'Update Assignment'
+                   WHEN lat.ActionTypeName = 3 THEN 'Delete League'
+                   WHEN lat.ActionTypeName = 4 THEN 'Recover League'
+               END) AS [Action], 
+              ul.DataOld AS OldValue, 
+              ul.Data AS NewValue, 
+              ul.LoggedDate AS LastModified, 
+              u.Username AS ModifiedBy
         FROM dbo.UserLog AS ul WITH(NOLOCK)
              INNER JOIN @tblLogAction AS sp ON ul.ActionId = sp.ActionId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON ul.CreatorId = u.UserId
