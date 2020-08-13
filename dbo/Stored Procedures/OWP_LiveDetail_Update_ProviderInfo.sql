@@ -1,10 +1,12 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo] @ActorId INT
 	,@SessionId NVARCHAR(100)
 	,@OWPMatchId INT
 	,@Channel NVARCHAR(100) = ''
 	,@IsUpdateChannel BIT = 0
+	,@IpTv NVARCHAR(100)=''
+	,@IsUpdateIpTv BIT = 0
 	,@WB NVARCHAR(100) = ''
 	,@IsUpdateWB BIT = 0
 	,@Phone NVARCHAR(200) = ''
@@ -30,18 +32,18 @@ Revisions:
 	20190823@Carlos.Nguyen: Prevent send notification - [Redmine: #120415]
 	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 */
 BEGIN
 	SET NOCOUNT ON
 	
- 
-
 	DECLARE @EventDateTime DATETIME
 		,@StartRun DATETIME = GETDATE()
 		,@EndRun DATETIME
 		,@Duration INT		 
 		,@Xml XML
 		,@OldChannel NVARCHAR(100)
+		,@OldIpTv NVARCHAR(100)
 		,@OldWB NVARCHAR(100)
 		,@OldPhone NVARCHAR(200)
 		,@OldTVIds NVARCHAR(500)
@@ -57,11 +59,13 @@ BEGIN
 	
 	-- save old value
 	SELECT @OldChannel = m.Channel
+		,@OldIpTv = m.IPTV
 		,@OldWB = m.WB
 		,@OldPhone = m.Phone
 	FROM dbo.MatchInfo AS m WITH (NOLOCK)
 	INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 	WHERE m.OWPMatchId = @OWPMatchId
+
 
 	SELECT @OldTVIds = ISNULL(STUFF((
 					SELECT ', ' + CAST(TVId AS NVARCHAR)
@@ -94,6 +98,7 @@ BEGIN
 	SET @Xml = (
 			SELECT @OldTVIds AS '@tv'
 				,@OldChannel AS '@ch'
+				,@OldIpTv AS '@iptv'
 				,@OldWB AS '@wb'
 				,@OldProviderIds AS '@pv'
 				,@OldOtherProviderIds AS '@opv'
@@ -219,6 +224,7 @@ BEGIN
 			
 		DECLARE @RelevantIsUpdateTVs BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateTVs END)
 			,@RelevantIsUpdateChannel BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateChannel END)
+			,@RelevantIsUpdateIpTv BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateIpTv END)
 			,@RelevantIsUpdateWB BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateWB END)
 			,@RelevantIsUpdateProviders BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateProviders END)
 			,@RelevantIsUpdateOtherProviders BIT = (CASE WHEN @RelevantMatchId = @OWPMatchId THEN 1 ELSE @IsUpdateOtherProviders END)
@@ -235,6 +241,8 @@ BEGIN
 			,@IsUpdateTVs = @RelevantIsUpdateTVs
 			,@Channel = @Channel
 			,@IsUpdateChannel = @RelevantIsUpdateChannel
+			,@IpTv=@IpTv
+			,@IsUpdateIpTv = @RelevantIsUpdateIpTv
 			,@WB = @WB
 			,@IsUpdateWB = @RelevantIsUpdateWB
 			,@Phone = @Phone
@@ -254,6 +262,8 @@ BEGIN
 				,@IsUpdateTVs AS '@iutv'
 				,@Channel AS '@ch'
 				,@IsUpdateChannel AS '@iuch'
+				,@IpTv AS '@iptv'
+				,@IsUpdateIpTv AS '@iuiptv'
 				,@WB AS '@wb'
 				,@IsUpdateWB AS '@iuwb'
 				,@Provider AS '@pv'

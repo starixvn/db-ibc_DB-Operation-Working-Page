@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo_Single] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo_Single] @ActorId INT
 	,@SessionId NVARCHAR(100)
 	,@OWPMatchId INT
 	,@ParentMatchId INT
@@ -7,6 +7,8 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_ProviderInfo_Single] @ActorId INT
 	,@IsMatchInTimeRange BIT
 	,@Channel NVARCHAR(100) = ''
 	,@IsUpdateChannel BIT = 0
+	,@IpTv NVARCHAR(100) = ''
+	,@IsUpdateIpTv BIT = 0
 	,@WB NVARCHAR(100) = ''
 	,@IsUpdateWB BIT = 0
 	,@Phone NVARCHAR(200) = ''
@@ -30,6 +32,7 @@ Revisions:
 	20191017@Kane.Le: Change Provider, OtherProvider - [Feature: #122194]
 	20191117@Carlos: Fix phone notification - [Feature: #123167]
 	20200723@Esther.Nguyen: Build Home name (N) - [Feature: #137417]
+	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -109,6 +112,7 @@ BEGIN
 	END
 
 	DECLARE @OldChannel NVARCHAR(100) = ''
+		,@OldIpTv NVARCHAR(100) = ''
 		,@OldWB NVARCHAR(100) = ''
 		,@OldPhone NVARCHAR(200) = ''
 		,@OldTV NVARCHAR(2000) = ''
@@ -116,6 +120,7 @@ BEGIN
 		,@OldOtherProvider NVARCHAR(2000) = ''
 		,@OldAgent NVARCHAR(2000) = ''
 		,@NewChannel NVARCHAR(100) = ''
+		,@NewIpTv NVARCHAR(100) = ''
 		,@NewWB NVARCHAR(100) = ''
 		,@NewPhone NVARCHAR(200) = ''
 		,@NewTV NVARCHAR(2000) = ''
@@ -124,6 +129,7 @@ BEGIN
 		,@NewAgent NVARCHAR(2000) = ''
 
 	SELECT @OldChannel = mi.Channel
+		,@OldIpTv=mi.IPTV
 		,@OldWB = mi.WB
 	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
 	INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
@@ -144,6 +150,11 @@ BEGIN
 				THEN @Phone
 			ELSE @OldPhone
 			END
+		,@NewIpTv = CASE
+			WHEN @IsUpdateIpTv = 1
+				THEN @IpTv
+			ELSE @OldIpTv
+			END
 			
 	SELECT @OldPhone=mi.Phone
 	FROM dbo.MatchInfo AS mi WITH (NOLOCK)
@@ -151,6 +162,7 @@ BEGIN
 	
 	UPDATE mi
 	SET mi.Channel = @NewChannel
+		,mi.IPTV=@NewIpTv
 		,mi.WB = @NewWB
 		,mi.Phone = @NewPhone
 	FROM dbo.MatchInfo AS mi WITH (ROWLOCK)
@@ -364,6 +376,11 @@ BEGIN
 			@OldChannel
 			,@NewChannel
 			,'EditChannel'
+			)
+			,(
+			@OldIpTv
+			,@NewIpTv
+			,'EditIPTV'
 			)
 			,(
 			@OldWB

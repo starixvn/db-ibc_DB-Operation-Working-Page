@@ -25,6 +25,7 @@ AS
 	20191108@Leo.Vo: Sync venue - [Feature: #123167]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
+	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -482,6 +483,16 @@ BEGIN
 	UNION ALL
 	
 	SELECT m.OWPMatchId
+		,mi.IPTV
+		,im.IPTV
+		,'EditIPTV'
+	FROM #tblMatch AS m
+	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+	INNER JOIN dbo.InfoSiteMatch AS im WITH (NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
+	
+	UNION ALL
+	
+	SELECT m.OWPMatchId
 		,mi.Venue
 		,im.Venue
 		,'EditVenue'
@@ -543,6 +554,7 @@ BEGIN
 	SET mi.[Round] = im.[Round]
 		,mi.Division = im.Division
 		,mi.Channel = im.Channel
+		,mi.IPTV = im.IPTV
 		,mi.WB = im.WB
 		,mi.Venue = im.Venue
 		,mi.Website1 = im.Website1

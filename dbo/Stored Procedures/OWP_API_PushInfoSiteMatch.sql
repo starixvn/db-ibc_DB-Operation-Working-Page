@@ -18,6 +18,8 @@ AS
 	20191014@Leo.Vo: Fix issue job failed - [Redmine: #121722]
 	20191108@Leo.Vo: Add venue - [Redmine: #123167]
 	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
+	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
+	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -64,6 +66,7 @@ BEGIN
 		,[TVIds] VARCHAR(200) NULL
 		,AgentIds VARCHAR(200) NULL		
 		,[IsNeutral] BIT NULL
+		,[IPTV][nvarchar](2000) NULL
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -85,6 +88,7 @@ BEGIN
 		,[Website3]
 		,[Website4]
 		,[IsNeutral]
+		,[IPTV]
 		)
 	SELECT [InfoSiteMatchId]
 		,[EventDateTime]
@@ -104,6 +108,7 @@ BEGIN
 		,[Website3]
 		,[Website4]
 		,[IsNeutral]
+		,[IPTV]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			[InfoSiteMatchId] [int]
 			,[EventDateTime] [datetime]
@@ -123,6 +128,7 @@ BEGIN
 			,[Website3] [nvarchar](1000)
 			,[Website4] [nvarchar](1000)
 			,[IsNeutral] BIT
+			,[Iptv][nvarchar](2000)
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -302,6 +308,7 @@ BEGIN
 			,[TVIds]
 			,[AgentIds]
 			,[IsNeutral]
+			,[IPTV]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -332,6 +339,7 @@ BEGIN
 				,t.[AgentIds] = s.[AgentIds]
 				,t.[IsDeleted] = 0
 				,t.[IsNeutral] = s.[IsNeutral]
+				,t.[IPTV]=s.[IPTV]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -359,6 +367,7 @@ BEGIN
 				,[AgentIds]
 				,[IsDeleted]
 				,[IsNeutral]
+				,[IPTV]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -385,6 +394,7 @@ BEGIN
 				,s.[AgentIds]
 				,0
 				,[IsNeutral]
+				,[IPTV]
 				);
 
 	DROP TABLE #tblInfoSiteMatch

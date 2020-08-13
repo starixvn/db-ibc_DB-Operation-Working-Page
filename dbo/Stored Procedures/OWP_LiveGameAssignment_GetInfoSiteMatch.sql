@@ -73,6 +73,7 @@ BEGIN
 		,[Round]
 		,Division
 		,WB
+		,IPTV AS IpTv
 		,Channel
 		,Website1
 		,Website2

@@ -20,6 +20,7 @@ AS
 	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
 	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
 	20200713@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
+	20200728@Carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 */
 	SET NOCOUNT ON
 
@@ -109,6 +110,7 @@ AS
 		,ParentMatchId INT
 		,InfoSiteMatchId INT
 		,IsNeutral BIT
+		,IpTv NVARCHAR(2000)
 		)
 
 	INSERT INTO #owpMatchListByDate (
@@ -140,6 +142,7 @@ AS
 		,ParentMatchId
 		,InfoSiteMatchId
 		,IsNeutral
+		,IpTv
 		)
 	SELECT om.OWPMatchId
 		,om.MatchNo
@@ -177,6 +180,7 @@ AS
 			END AS ParentMatchId
 		,om.InfoSiteMatchId
 		,om.IsNeutral
+		,mi.IPTV
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 	LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
@@ -311,6 +315,7 @@ AS
 		,ml.MinorBettypeId
 		,ml.ParentMatchId
 		,ml.InfoSiteMatchId
+		,ml.IpTv
 		,(CASE WHEN ml.InfoSiteMatchId IS NULL THEN NULL ELSE CASE WHEN im.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END END) AS IsInfoSiteLinked
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId

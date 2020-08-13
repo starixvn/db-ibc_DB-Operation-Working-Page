@@ -26,6 +26,7 @@ AS;
 	20200610@Jack.Nguyen: add EventDateTime @MatchStatusIds- [Feature: #135525]
 	20200713@Tyler.Dang: sort follow MatchNo - [Feature: #137416]
 	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
+20200729@Jack.Nguyen: get IPTV, MatchId  - [Redmine: #137756]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -101,6 +102,7 @@ BEGIN
 		,NoOfHDP NVARCHAR(20)
 		,NoOfHDPId INT
 		,Channel NVARCHAR(200)
+		,IPTV NVARCHAR(200)
 		,WatchBet NVARCHAR(200)
 		,Phone NVARCHAR(200)
 		,[Round] NVARCHAR(2000)
@@ -132,6 +134,7 @@ BEGIN
 		,NoOfHDP
 		,NoOfHDPId
 		,Channel
+		,IPTV
 		,WatchBet
 		,Phone
 		,[Round]
@@ -161,6 +164,7 @@ BEGIN
 		,r.Value
 		,mi.NoOfHDPId
 		,mi.Channel
+		,mi.IPTV
 		,mi.WB
 		,mi.Phone
 		,mi.[Round]
@@ -203,6 +207,7 @@ BEGIN
 		,ml.MatchNo
 		,ml.KickOffTime
 		,ml.OtherTime
+		,ml.MatchId
 		,l.OWPLeagueName AS League
 		,(CASE WHEN ml.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END) AS Home 
 		,a.OWPTeamName AS Away
@@ -216,6 +221,7 @@ BEGIN
 				FOR XML PATH('')
 				), 1, 2, '') AS TV
 		,ml.Channel
+		,ml.IPTV
 		,ml.WatchBet
 		,STUFF((
 				SELECT ', ' + rs.AgentName
