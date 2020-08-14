@@ -127,7 +127,7 @@ Revisions:
                   AND pl.IsDayShiftDeleted = 0
             GROUP BY l.OWPLeagueName;
      -- Result
-     SELECT pl.PreMatchLeagueId, 
+     SELECT pl.PreMatchLeagueId 'PreMatchLeagueId', 
             pl.OWPLeagueId 'LeagueId', 
             l.OWPLeagueName 'LeagueName', 
             a.MatchCount 'MatchCount', 
@@ -139,7 +139,6 @@ Revisions:
             pl.Remark 'Remark'
      FROM PreMatchLeague AS pl WITH(NOLOCK)
           INNER JOIN OWPLeague AS l WITH(NOLOCK) ON pl.OWPLeagueId = l.OWPLeagueId
-          INNER JOIN InfoSiteMatch AS m1 WITH(NOLOCK) ON m1.LeagueName = l.OWPLeagueName
           INNER JOIN @tblMatchCount AS a ON a.LeagueName = l.OWPLeagueName
           LEFT JOIN @tblUserNamesHDP AS h ON h.PreMatchLeagueId = pl.PreMatchLeagueId
           LEFT JOIN @tblUserNamesHDPTO AS ht ON ht.PreMatchLeagueId = pl.PreMatchLeagueId
@@ -147,7 +146,6 @@ Revisions:
           LEFT JOIN @tblUserNamesOUTO AS ot ON ot.PreMatchLeagueId = pl.PreMatchLeagueId
      WHERE pl.EventDate = @EventDate
            AND pl.IsDay = 1
-           AND m1.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
            AND pl.IsDayShiftDeleted = 0
      GROUP BY pl.PreMatchLeagueId, 
               pl.OWPLeagueId, 
