@@ -33,7 +33,7 @@ Revisions:
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
             WHERE pl.EventDate = @EventDate
                   AND pl.IsDay = 1
-                  AND pl.IsDayShiftDeleted = 0
+                  AND pl.IsDeleted = 0
                   AND IsTakeOver = 0
                   AND Bettype = 1
             GROUP BY pa.PreMatchLeagueId, 
@@ -55,7 +55,7 @@ Revisions:
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
             WHERE pl.EventDate = @EventDate
                   AND pl.IsDay = 1
-                  AND pl.IsDayShiftDeleted = 0
+                  AND pl.IsDeleted = 0
                   AND IsTakeOver = 1
                   AND Bettype = 1
             GROUP BY pa.PreMatchLeagueId, 
@@ -76,7 +76,7 @@ Revisions:
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
             WHERE pl.EventDate = @EventDate
                   AND pl.IsDay = 1
-                  AND pl.IsDayShiftDeleted = 0
+                  AND pl.IsDeleted = 0
                   AND IsTakeOver = 0
                   AND Bettype = 3
             GROUP BY pa.PreMatchLeagueId, 
@@ -97,7 +97,7 @@ Revisions:
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
             WHERE pl.EventDate = @EventDate
                   AND pl.IsDay = 1
-                  AND pl.IsDayShiftDeleted = 0
+                  AND pl.IsDeleted = 0
                   AND IsTakeOver = 1
                   AND Bettype = 3
             GROUP BY pa.PreMatchLeagueId, 
@@ -124,7 +124,7 @@ Revisions:
             WHERE pl.EventDate = @EventDate
                   AND m1.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
                   AND pl.IsDay = 1
-                  AND pl.IsDayShiftDeleted = 0
+                  AND pl.IsDeleted = 0
             GROUP BY l.OWPLeagueName;
      -- Result
      SELECT pl.PreMatchLeagueId 'PreMatchLeagueId', 
@@ -146,7 +146,7 @@ Revisions:
           LEFT JOIN @tblUserNamesOUTO AS ot ON ot.PreMatchLeagueId = pl.PreMatchLeagueId
      WHERE pl.EventDate = @EventDate
            AND pl.IsDay = 1
-           AND pl.IsDayShiftDeleted = 0
+           AND pl.IsDeleted = 0
      GROUP BY pl.PreMatchLeagueId, 
               pl.OWPLeagueId, 
               l.OWPLeagueName, 
