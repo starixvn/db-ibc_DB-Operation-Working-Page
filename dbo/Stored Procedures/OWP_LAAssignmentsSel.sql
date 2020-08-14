@@ -1,15 +1,15 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LAReports] @FromDate DATETIME = '2020-01-03', 
+ALTER PROCEDURE [dbo].[OWP_LAAssignmentsSel] @FromDate DATETIME = '2020-01-03', 
                                         @ToDate   DATETIME = '2020-01-05'
 AS
 
 /*    
- Created: 20200715@Jacob
+ Created: 20200815@Jacob
  Task : LA Reports
  DB: bodb_OWP    
     
  Revisions:
-	20200715@Jacob: Initial SP - [Redmine: #137210]	
+	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
 */
 
      SET NOCOUNT ON;
