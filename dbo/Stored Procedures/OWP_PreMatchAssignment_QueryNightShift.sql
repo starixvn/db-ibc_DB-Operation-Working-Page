@@ -146,9 +146,9 @@ Revisions:
                   AND m1.EventDateTime BETWEEN @PreStartTime AND @EventToDateTime
                   AND pl.IsDay = 0
                   AND pl.IsDeleted = 0
-            GROUP BY l.OWPLeagueName;		
-    
-	-- insert table night shift--
+            GROUP BY l.OWPLeagueName;
+
+     -- insert table night shift--
      DECLARE @tblNightShiftTable TABLE
      (No               INT IDENTITY(1, 1), 
       PreMatchLeagueId INT, 
@@ -204,10 +204,27 @@ Revisions:
                      ot.UserName, 
                      l.IsBlackList, 
                      pl.Remark
-            ORDER BY h.UserName DESC, 
-                     o.UserName DESC, 
-                     ht.UserName DESC, 
-                     ot.UserName DESC, 
+           
+		   ORDER BY CASE
+                         WHEN h.UserName IS NOT NULL
+                         THEN 0
+                         ELSE 1
+                     END,
+                     CASE
+                         WHEN o.UserName IS NOT NULL
+                         THEN 0
+                         ELSE 1
+                     END,
+                     CASE
+                         WHEN ht.UserName IS NOT NULL
+                         THEN 0
+                         ELSE 1
+                     END,
+                     CASE
+                         WHEN ot.UserName IS NOT NULL
+                         THEN 0
+                         ELSE 1
+                     END, 
                      l.OWPLeagueName ASC;
      -- Result
      SELECT *
