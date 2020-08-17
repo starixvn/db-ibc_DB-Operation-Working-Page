@@ -126,34 +126,68 @@ Revisions:
                   AND pl.IsDay = 1
                   AND pl.IsDeleted = 0
             GROUP BY l.OWPLeagueName;
+    
+	-- insert table day shift--
+     DECLARE @tblDayShiftTable TABLE
+     (No               INT IDENTITY(1, 1), 
+      PreMatchLeagueId INT, 
+      LeagueId         INT, 
+      LeagueName       VARCHAR(MAX), 
+      MatchCount       INT, 
+      HDP              VARCHAR(200), 
+      OU               VARCHAR(200), 
+      HDPTakeOver      VARCHAR(200), 
+      OUTakeOver       VARCHAR(200), 
+      BlackList        BIT, 
+      Remark           NVARCHAR(MAX)
+     );
+     INSERT INTO @tblDayShiftTable
+     (PreMatchLeagueId, 
+      LeagueId, 
+      LeagueName, 
+      MatchCount, 
+      HDP, 
+      OU, 
+      HDPTakeOver, 
+      OUTakeOver, 
+      BlackList, 
+      Remark
+     )
+            SELECT pl.PreMatchLeagueId 'PreMatchLeagueId', 
+                   pl.OWPLeagueId 'LeagueId', 
+                   l.OWPLeagueName 'LeagueName', 
+                   a.MatchCount 'MatchCount', 
+                   h.UserName 'HDP', 
+                   o.UserName 'OU', 
+                   ht.UserName 'HDPTakeOver', 
+                   ot.UserName 'OUTakeOver', 
+                   l.IsBlackList 'BlackList', 
+                   pl.Remark 'Remark'
+            FROM PreMatchLeague AS pl WITH(NOLOCK)
+                 INNER JOIN OWPLeague AS l WITH(NOLOCK) ON pl.OWPLeagueId = l.OWPLeagueId
+                 INNER JOIN @tblMatchCount AS a ON a.LeagueName = l.OWPLeagueName
+                 LEFT JOIN @tblUserNamesHDP AS h ON h.PreMatchLeagueId = pl.PreMatchLeagueId
+                 LEFT JOIN @tblUserNamesHDPTO AS ht ON ht.PreMatchLeagueId = pl.PreMatchLeagueId
+                 LEFT JOIN @tblUserNamesOU AS o ON o.PreMatchLeagueId = pl.PreMatchLeagueId
+                 LEFT JOIN @tblUserNamesOUTO AS ot ON ot.PreMatchLeagueId = pl.PreMatchLeagueId
+            WHERE pl.EventDate = @EventDate
+                  AND pl.IsDay = 1
+                  AND pl.IsDeleted = 0
+            GROUP BY pl.PreMatchLeagueId, 
+                     pl.OWPLeagueId, 
+                     l.OWPLeagueName, 
+                     a.MatchCount, 
+                     h.UserName, 
+                     ht.UserName, 
+                     o.UserName, 
+                     ot.UserName, 
+                     l.IsBlackList, 
+                     pl.Remark
+            ORDER BY h.UserName DESC, 
+                     o.UserName DESC, 
+                     ht.UserName DESC, 
+                     ot.UserName DESC, 
+                     l.OWPLeagueName ASC;
      -- Result
-     SELECT pl.PreMatchLeagueId 'PreMatchLeagueId', 
-            pl.OWPLeagueId 'LeagueId', 
-            l.OWPLeagueName 'LeagueName', 
-            a.MatchCount 'MatchCount', 
-            h.UserName 'HDP', 
-            o.UserName 'OU', 
-            ht.UserName 'HDPTakeOver', 
-            ot.UserName 'OUTakeOver', 
-            l.IsBlackList 'BlackList', 
-            pl.Remark 'Remark'
-     FROM PreMatchLeague AS pl WITH(NOLOCK)
-          INNER JOIN OWPLeague AS l WITH(NOLOCK) ON pl.OWPLeagueId = l.OWPLeagueId
-          INNER JOIN @tblMatchCount AS a ON a.LeagueName = l.OWPLeagueName
-          LEFT JOIN @tblUserNamesHDP AS h ON h.PreMatchLeagueId = pl.PreMatchLeagueId
-          LEFT JOIN @tblUserNamesHDPTO AS ht ON ht.PreMatchLeagueId = pl.PreMatchLeagueId
-          LEFT JOIN @tblUserNamesOU AS o ON o.PreMatchLeagueId = pl.PreMatchLeagueId
-          LEFT JOIN @tblUserNamesOUTO AS ot ON ot.PreMatchLeagueId = pl.PreMatchLeagueId
-     WHERE pl.EventDate = @EventDate
-           AND pl.IsDay = 1
-           AND pl.IsDeleted = 0
-     GROUP BY pl.PreMatchLeagueId, 
-              pl.OWPLeagueId, 
-              l.OWPLeagueName, 
-              a.MatchCount, 
-              h.UserName, 
-              ht.UserName, 
-              o.UserName, 
-              ot.UserName, 
-              l.IsBlackList, 
-              pl.Remark;
+     SELECT *
+     FROM @tblDayShiftTable;
