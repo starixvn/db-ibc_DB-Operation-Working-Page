@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE OWP_PreMatchAssignment_QueryNightShift @EventDate DATE, 
-                                                       @StartTime DATETIME
+                                                       @StartTime TIME(7)
 AS
 
 /*  
@@ -17,9 +17,11 @@ Revisions:
      SET NOCOUNT ON;
      DECLARE @PreStartTime DATETIME;
      DECLARE @EventToDateTime DATETIME;
+     DECLARE @StartNightTime DATETIME;
      IF @StartTime IS NOT NULL
          BEGIN
-             SET @PreStartTime = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), @StartTime);
+             SET @StartNightTime = @StartTime;
+             SET @PreStartTime = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), @StartNightTime);
              SET @EventToDateTime = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59');
      END;
          ELSE
@@ -30,7 +32,6 @@ Revisions:
              WHERE EventDate = @EventDate
          )
              BEGIN
-                 DECLARE @StartNightTime DATETIME;
                  SELECT @StartNightTime = StartTime
                  FROM PreMatchNightShiftStartTime
                  WHERE EventDate = @EventDate;
@@ -204,8 +205,7 @@ Revisions:
                      ot.UserName, 
                      l.IsBlackList, 
                      pl.Remark
-           
-		   ORDER BY CASE
+            ORDER BY CASE
                          WHEN h.UserName IS NOT NULL
                          THEN 0
                          ELSE 1
