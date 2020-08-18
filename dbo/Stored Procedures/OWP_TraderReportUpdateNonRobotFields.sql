@@ -374,12 +374,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type2_AUS_League
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 2 AUS Conner
@@ -488,12 +490,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type2_AUS_League_Corner
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 2 JAP Division1
@@ -601,12 +605,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type2_JAP_Divison1
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 2 JAP Division2
@@ -714,12 +720,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type2_JAP_Divison2
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 3 Solo MJ
@@ -827,12 +835,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type3_Solo_Major
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 Major League
@@ -940,12 +950,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_Major
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 MIN-1 League
@@ -1053,12 +1065,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_Minor1
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 MIN-2 League
@@ -1166,12 +1180,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_Minor2
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 MIN-3 League
@@ -1279,12 +1295,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_Minor3
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 1ST MJ League
@@ -1391,12 +1409,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_1ST_Major
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 1ST(Other) MJ League
@@ -1504,12 +1524,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_1ST_Other
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 FANTASY
@@ -1574,12 +1596,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_Fantasy
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 Conner/NextConner Conner
@@ -1644,12 +1668,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_Corner_NextCorner
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type4_15M
@@ -1757,12 +1783,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_15M
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type4_10M
@@ -1870,12 +1898,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_10M
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type4_TB (TotalBooking, count as NextBooking)
@@ -1940,12 +1970,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_TotalBooking
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 PK SO
@@ -2010,12 +2042,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_PKSO
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- Type 4 WIN
@@ -2080,12 +2114,14 @@ Revisions:
 				,UserId
 				,Username
 				,Type4_Winner
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- PH-1x2 Major
@@ -2159,12 +2195,14 @@ Revisions:
 				,UserId
 				,Username
 				,PH_1X2_Major
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- PH-1x2 Minor1 MIN-1
@@ -2238,12 +2276,14 @@ Revisions:
 				,UserId
 				,Username
 				,PH_1X2_Minor1
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- PH-1x2 Minor2 MIN-1
@@ -2317,12 +2357,14 @@ Revisions:
 				,UserId
 				,Username
 				,PH_1X2_Minor2
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- PH-1x2 Minor3 MIN-1
@@ -2396,12 +2438,14 @@ Revisions:
 				,UserId
 				,Username
 				,PH_1X2_Minor3
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	-- PH_1X2_Others
@@ -2479,12 +2523,14 @@ Revisions:
 				,UserId
 				,Username
 				,PH_1X2_Others
+				,CreatedDate
 				)
 			VALUES (
 				@EventDate
 				,SOURCE.UserId
 				,SOURCE.UserName
 				,SOURCE.FT_HDP_OU
+				,GETDATE()
 				);
 
 	DROP TABLE #tblReportTypeGeneral
