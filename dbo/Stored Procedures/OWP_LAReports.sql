@@ -47,4 +47,5 @@ AS
      GROUP BY a.UserId, 
               a.Username, 
               r.Value
-     ORDER BY a.UserId ASC;
+     ORDER BY r.Value ASC, 
+              a.Username ASC;
