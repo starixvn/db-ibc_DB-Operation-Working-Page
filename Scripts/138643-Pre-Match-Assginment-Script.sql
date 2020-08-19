@@ -67,7 +67,7 @@ VALUES
  35, 
  2, 
  N'OWPPreMatchAssignmentUpdateRemark', 
- N'OWP_PreMatchAssignment_Update', 
+ N'OWP_PreMatchAssignment_UpdateRemark', 
  N'<root><xml path="r/z" /><row item="PreMatchLeagueId" alias="plid" /><row item="Remark" alias="rm" /></root>'
 ),
 (117, 
@@ -76,7 +76,7 @@ VALUES
  2, 
  N'OWPPreMatchAssignmentUpdateStartTime', 
  N'OWP_PreMatchAssignment_UpdateStartTime', 
- N'<root><xml path="r/z" /><row item="Date" alias="d" /><row item="StartTime" alias="t" /></root>'
+ N'<root><xml path="r/z" /><row item="EventDate" alias="d" /><row item="StartTime" alias="t" /></root>'
 );
 
 
