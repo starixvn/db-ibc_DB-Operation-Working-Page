@@ -15,7 +15,7 @@ AS
 */
 
      SET NOCOUNT ON;
-	 DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
+     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
      DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate), '12:00:00');
 
      -- Temp table
@@ -27,15 +27,34 @@ AS
             FROM dbo.Message
             WHERE CreatedDate BETWEEN @FromDateTime AND @ToDateTime;
 
-     -- DELETE MessageUser
-     DELETE m
-     FROM dbo.MessageUser m
-          INNER JOIN #tmpMessageId t ON m.MessageId = t.MessageId;
+     DECLARE @RemainFlag BIT; 
+	 -- DELETE MessageUser
+     SELECT @RemainFlag = 1;
+     WHILE @RemainFlag = 1
+         BEGIN             
+             DELETE TOP (3000)
+             m WITH(ROWLOCK)
+             FROM dbo.MessageUser m
+                  INNER JOIN #tmpMessageId t ON m.MessageId = t.MessageId;
+             IF @@ROWCOUNT = 0
+                 SELECT @RemainFlag = 0;
+                 ELSE
+                 PRINT '3000 rows of MessageUser was deleted. Now is ' + CONVERT(VARCHAR(50), GETDATE());
+         END;
 
      -- DELETE Message
-     DELETE m
-     FROM dbo.Message m
-          INNER JOIN #tmpMessageId t ON m.MessageId = t.MessageId;
+	 SELECT @RemainFlag = 1;
+     WHILE @RemainFlag = 1
+         BEGIN             
+             DELETE TOP (3000)
+             m WITH(ROWLOCK)
+             FROM dbo.Message m
+                  INNER JOIN #tmpMessageId t ON m.MessageId = t.MessageId;
+             IF @@ROWCOUNT = 0
+                 SELECT @RemainFlag = 0;
+                 ELSE
+                 PRINT '3000 rows of Message was deleted. Now is ' + CONVERT(VARCHAR(50), GETDATE());
+         END;
 
      -- DROP Temp Table
      DROP TABLE #tmpMessageId;
