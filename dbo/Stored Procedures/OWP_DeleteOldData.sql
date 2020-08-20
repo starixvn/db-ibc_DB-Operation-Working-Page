@@ -15,8 +15,14 @@ AS
 */
 
      SET NOCOUNT ON;
+	 -- DO NOT ALLOW TO DELETE DATA IN 30 DAYS
+	 IF DATEDIFF(DAY, @ToDate ,GETDATE()) < 30 
+	 BEGIN
+		RETURN
+	 END
+
      DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate), '12:00:00');
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate) + 1 , '12:00:00');  
 
      -- Temp table
      CREATE TABLE #MatchIds
@@ -150,7 +156,10 @@ AS
      DELETE m
      FROM dbo.MinorMatch m
           INNER JOIN #MatchIds i ON m.MinorMatchId = i.Id
-                                    OR m.ParentMatchId = i.Id;
+
+	 DELETE m
+     FROM dbo.MinorMatch m
+          INNER JOIN #MatchIds i ON  m.ParentMatchId = i.Id;
 
      -- DELETE Assignment
      DELETE m

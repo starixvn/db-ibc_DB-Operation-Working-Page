@@ -15,20 +15,14 @@ Remarks:
 
 */
 
-     SET NOCOUNT ON;
-     DECLARE @tempIds TABLE(Id INT);
-     INSERT INTO @tempIds(Id)
+    SET NOCOUNT ON;
+    DECLARE @tempIds TABLE(Id INT);
+    INSERT INTO @tempIds(Id)
             SELECT DISTINCT 
                    val
             FROM fnc_SplitStrings(@Ids, ',') u OPTION(MAXRECURSION 0);
-     DECLARE @RemainFlag BIT;
-     SELECT @RemainFlag = 1;
-     WHILE @RemainFlag = 1
-         BEGIN
-             DELETE TOP (3000)
-             o
-             FROM dbo.OWPTeam o WITH(ROWLOCK)
-                  INNER JOIN @tempIds i ON o.OWPTeamId = i.Id;
-             IF @@ROWCOUNT = 0
-                 SELECT @RemainFlag = 0;
-         END;
+    
+    DELETE o
+	FROM dbo.OWPTeam o WITH(ROWLOCK)
+    INNER JOIN @tempIds i ON o.OWPTeamId = i.Id;
+    

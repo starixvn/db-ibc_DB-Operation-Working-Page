@@ -24,14 +24,8 @@ Remarks:
             SELECT DISTINCT 
                    val
             FROM fnc_SplitStrings(@Ids, ',') u OPTION(MAXRECURSION 0);
-     DECLARE @RemainFlag BIT;
-     SELECT @RemainFlag = 1;
-     WHILE @RemainFlag = 1
-         BEGIN
-             DELETE TOP (3000)
-             o
-             FROM dbo.[Provider] o WITH(ROWLOCK)
-                  INNER JOIN @tempIds i ON o.ProviderId = i.Id;
-             IF @@ROWCOUNT = 0
-                 SELECT @RemainFlag = 0;
-         END;
+     
+	 DELETE o
+	 FROM dbo.[Provider] o WITH(ROWLOCK)
+		  INNER JOIN @tempIds i ON o.ProviderId = i.Id;
+             

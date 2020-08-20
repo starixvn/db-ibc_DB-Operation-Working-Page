@@ -53,8 +53,7 @@ AS
      FROM dbo.TraderReport AS rp WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON rp.UserId = u.UserId
           INNER JOIN dbo.[RefResource] AS rs WITH(NOLOCK) ON u.SectionId = rs.ResourceId
-     WHERE rp.ReportDate >= @FromDate
-           AND rp.ReportDate <= @ToDate
+     WHERE rp.ReportDate BETWEEN @FromDate AND @ToDate
            AND rs.RefName = 'Section'
      GROUP BY rp.[UserId], 
               rp.[Username], 

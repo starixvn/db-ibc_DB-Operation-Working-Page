@@ -16,7 +16,7 @@ AS
 
      SET NOCOUNT ON;
      DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate), '12:00:00');
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate) + 1 , '12:00:00');  
 
      -- Temp table
      CREATE TABLE #MatchIds
