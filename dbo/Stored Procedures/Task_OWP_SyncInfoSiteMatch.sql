@@ -26,6 +26,7 @@ AS
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
+	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -46,7 +47,6 @@ BEGIN
 		,@Total INT
 		,@Index INT
 		,@LogId INT
-		,@LastUploadTime DATETIME;
 
 	-- remove old data
 	DELETE dbo.InfoSiteMatch WITH (ROWLOCK)
@@ -213,9 +213,6 @@ BEGIN
 	SET EndTime = GETDATE()
 	WHERE LogId = @LogId;
 
-	SELECT @LastUploadTime = MAX(CreatedDate)
-	FROM dbo.AssignmentUploadingLog WITH (NOLOCK);
-
 	-- check to write log for matched not to be synced
 	IF NOT EXISTS (
 			SELECT 1
@@ -224,7 +221,6 @@ BEGIN
 					SELECT MAX(d.LogId)
 					FROM dbo.InfoSiteSyncLogDetail AS d WITH (NOLOCK)
 					)
-				AND il.StartTime >= @LastUploadTime
 			)
 	BEGIN
 		INSERT INTO dbo.InfoSiteSyncLogDetail (
