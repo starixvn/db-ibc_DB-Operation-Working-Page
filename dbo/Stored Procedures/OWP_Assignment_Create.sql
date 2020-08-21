@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_Assignment_Create] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_Assignment_Create] @ActorId INT
 	,@SessionId NVARCHAR(50)
 	,@OWPMatchId INT
 	,@BetType INT
@@ -27,17 +27,17 @@ Revisions:
 	20200514@Tyler.Dang: Add UserId for OtherAssignment DWS - [Feature: #132709]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
 	20200714@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
+	20200821@Jacob: Hotfix-DuplicateAssignment - [Feature: #139918]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	IF EXISTS (
+	IF @AssignmentType = 1 AND EXISTS (
 			SELECT 1
 			FROM dbo.Assignment WITH (NOLOCK)
 			WHERE OWPMatchId = @OWPMatchId
 				AND Bettype = @BetType
-				AND AssignmentType = @AssignmentType
-				AND @AssignmentType = 1
+				AND AssignmentType = 1
 			)
 	BEGIN
 		SELECT @ErrCode = 1
@@ -99,23 +99,33 @@ BEGIN
 	END
 
 	-- insert new assignment
-	INSERT INTO dbo.Assignment (
-		OWPMatchId
-		,Bettype
-		,AssignmentType
-		,UserId
-		,AssignmentNote
-		)
-	VALUES (
-		@OWPMatchId
-		,@BetType
-		,@AssignmentType
-		,@UserId
-		,@AssignmentNote
-		)
+	INSERT INTO dbo.Assignment
+	(OWPMatchId, 
+	 Bettype, 
+	 AssignmentType, 
+	 UserId, 
+	 AssignmentNote
+	)
+		   SELECT @OWPMatchId, 
+				  @BetType, 
+				  @AssignmentType, 
+				  @UserId, 
+				  @AssignmentNote
+		   WHERE @AssignmentType <> 1 OR NOT EXISTS
+		   (
+			   SELECT 1
+			   FROM dbo.Assignment WITH(NOLOCK)
+			   WHERE OWPMatchId = @OWPMatchId
+					 AND Bettype = @BetType
+					 AND AssignmentType = 1
+		   );
 
-	SELECT @ErrMsg = @@IDENTITY
-
+	SELECT @ErrMsg = @@IDENTITY;
+	IF @ErrMsg IS NULL
+	BEGIN
+		SELECT @ErrCode = 1	,@ErrMsg = 'The main assignment is existed'
+	END
+	
 	SELECT @HomeTeam = CASE WHEN m.IsNeutral = 1 THEN h.OWPTeamName + ' (N)' ELSE h.OWPTeamName END
 		,@AwayTeam = a.OWPTeamName
 		,@BettypeName = al.BetTypeName
