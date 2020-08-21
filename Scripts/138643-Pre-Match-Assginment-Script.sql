@@ -44,7 +44,7 @@ VALUES
  2, 
  N'OWPPreMatchAssignmentUpdateAssignment', 
  N'OWP_PreMatchAssignment_InsertUpdateDeleteAssignment', 
- N'<root><xml path="r/z" /><row item="PreMatchLeagueId" alias="plid" /><row item="UserId" alias="uid" /><row item="Bettype" alias="bt" /><row item="IsTakeOver" alias="ito" /></root>'
+ N'<root><xml path="r/z" /><row item="PreMatchLeagueId" alias="plid" /><row item="UserId" alias="uid" /><row item="Username" alias="un" /><row item="Bettype" alias="bt" /><row item="IsTakeOver" alias="ito" /></root>'
 ),
 (114, 
  10, 
