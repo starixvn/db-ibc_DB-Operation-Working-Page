@@ -1,8 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_CopyDataToOldTable] @FromDate DATETIME = '2020-01-03', 
-                                               @ToDate   DATETIME = '2020-01-05'
+ALTER PROCEDURE [dbo].[OWP_CopyDataToOldTable] @Date DATETIME 
 AS
 
 /*    
@@ -15,8 +14,8 @@ AS
 */
 
      SET NOCOUNT ON;
-     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate) + 1 , '12:00:00');  
+     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '12:00:00');  
 
      -- Temp table
      CREATE TABLE #MatchIds
@@ -40,7 +39,7 @@ AS
      -- EmployeeWorkingShift
      -- DELETE EmployeeWorkingShift_Old
      DELETE FROM dbo.EmployeeWorkingShift_Old
-     WHERE ShiftDate BETWEEN @FromDate AND @ToDate;
+     WHERE ShiftDate = @Date
      -- COPY
      INSERT INTO [dbo].[EmployeeWorkingShift_Old]
      ([EmployeeId], 
@@ -57,7 +56,7 @@ AS
                    [ShiftId], 
                    [RefShiftId]
             FROM EmployeeWorkingShift WITH(NOLOCK)
-            WHERE ShiftDate BETWEEN @FromDate AND @ToDate;
+            WHERE ShiftDate = @Date;
 
      -- OWP Match     
      -- DELETE OWPMatch_Old

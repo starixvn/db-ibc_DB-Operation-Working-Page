@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_DeleteOldData_Message] @FromDate DATETIME = '2020-01-03', 
-                                                  @ToDate   DATETIME = '2020-01-05'
+ALTER PROCEDURE [dbo].[OWP_DeleteOldData_Message] @Date DATETIME 
+                                                  
 AS
 
 /*    
@@ -17,13 +17,13 @@ AS
      SET NOCOUNT ON;
 
 	 -- DO NOT ALLOW TO DELETE DATA IN 30 DAYS
-	 IF DATEDIFF(DAY, @ToDate ,GETDATE()) < 30 
+	 IF DATEDIFF(DAY, @Date ,GETDATE()) < 30 
 	 BEGIN
 		RETURN
 	 END
 
-     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate) + 1 , '12:00:00');  
+     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '12:00:00');  
 
      -- Temp table
      CREATE TABLE #tmpMessageId

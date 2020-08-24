@@ -1,8 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_DeleteOldData] @FromDate DATETIME = '2020-01-03', 
-                                          @ToDate   DATETIME = '2020-01-05'
+ALTER PROCEDURE [dbo].[OWP_DeleteOldData] @Date DATETIME 
 AS
 
 /*    
@@ -16,13 +15,13 @@ AS
 
      SET NOCOUNT ON;
 	 -- DO NOT ALLOW TO DELETE DATA IN 30 DAYS
-	 IF DATEDIFF(DAY, @ToDate ,GETDATE()) < 30 
+	 IF DATEDIFF(DAY, @Date ,GETDATE()) < 30 
 	 BEGIN
 		RETURN
 	 END
 
-     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @ToDate) + 1 , '12:00:00');  
+     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '12:00:00');  
 
      -- Temp table
      CREATE TABLE #MatchIds
@@ -58,11 +57,11 @@ AS
      -- DELETE AutoAssignmentRequest
      DELETE m
      FROM dbo.AutoAssignmentRequest m
-     WHERE EventDate BETWEEN @FromDate AND @ToDate;
+     WHERE EventDate = @Date;
 
      -- DELETE AssignmentUploadHistory
      DELETE FROM dbo.AssignmentUploadHistory
-     WHERE EventDate BETWEEN @FromDate AND @ToDate;
+     WHERE EventDate = @Date;
 
      -- DELETE ReadyTradeStatus
      DELETE FROM dbo.ReadyTradeStatus
@@ -85,7 +84,7 @@ AS
 
      -- DELETE EmployeeWorkingShift
      DELETE FROM dbo.EmployeeWorkingShift
-     WHERE ShiftDate BETWEEN @FromDate AND @ToDate;
+     WHERE ShiftDate = @Date
 
      -- DELETE OWPMatch
      DELETE m
