@@ -1,7 +1,7 @@
-﻿
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE OWP_PreMatchAssignment_QueryByPreMatchLeagueId @PreMatchLeagueId INT
+ALTER PROCEDURE OWP_PreMatchAssignment_QueryByPreMatchLeagueId @PreMatchLeagueId INT
 AS
 
 /*

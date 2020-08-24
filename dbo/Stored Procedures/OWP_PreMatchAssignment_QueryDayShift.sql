@@ -1,7 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE OWP_PreMatchAssignment_QueryDayShift @EventDate DATE
+ALTER PROCEDURE OWP_PreMatchAssignment_QueryDayShift @EventDate DATE, 
+                                                     @Employee  VARCHAR(MAX)
 AS
 
 /*  
@@ -16,6 +17,8 @@ Revisions:
      SET NOCOUNT ON;
      DECLARE @EventFromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00');
      DECLARE @EventToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59');
+     DECLARE @hpdBettype INT= 1;
+     DECLARE @ouBettype INT= 3;
 
      ---- insert usernames for HDP bettype----
      DECLARE @tblUserNamesHDP TABLE
@@ -35,7 +38,7 @@ Revisions:
                   AND pl.IsDay = 1
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 0
-                  AND Bettype = 1
+                  AND Bettype = @hpdBettype
             GROUP BY pa.PreMatchLeagueId, 
                      u.Username;
 
@@ -57,9 +60,10 @@ Revisions:
                   AND pl.IsDay = 1
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 1
-                  AND Bettype = 1
+                  AND Bettype = @hpdBettype
             GROUP BY pa.PreMatchLeagueId, 
                      u.Username;
+
      ---- insert usernames for OU bettype----
      DECLARE @tblUserNamesOU TABLE
      (PreMatchLeagueId INT, 
@@ -78,9 +82,10 @@ Revisions:
                   AND pl.IsDay = 1
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 0
-                  AND Bettype = 3
+                  AND Bettype = @ouBettype
             GROUP BY pa.PreMatchLeagueId, 
                      u.Username;
+
      ---- insert usernames for OU Take Over----
      DECLARE @tblUserNamesOUTO TABLE
      (PreMatchLeagueId INT, 
@@ -99,7 +104,7 @@ Revisions:
                   AND pl.IsDay = 1
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 1
-                  AND Bettype = 3
+                  AND Bettype = @ouBettype
             GROUP BY pa.PreMatchLeagueId, 
                      u.Username;
 
@@ -129,20 +134,20 @@ Revisions:
 
      -- insert table day shift--
      DECLARE @tblDayShiftTable TABLE
-     (No               INT IDENTITY(1, 1), 
-      PreMatchLeagueId INT, 
-      LeagueId         INT, 
-      LeagueName       VARCHAR(MAX), 
-      MatchCount       INT, 
-      HDP              VARCHAR(200), 
-      OU               VARCHAR(200), 
-      HDPTakeOver      VARCHAR(200), 
-      OUTakeOver       VARCHAR(200), 
-      BlackList        BIT, 
-      Remark           NVARCHAR(MAX)
+     (No                   INT IDENTITY(1, 1), 
+      PreMatchAssignmentId INT, 
+      LeagueId             INT, 
+      LeagueName           VARCHAR(MAX), 
+      MatchCount           INT, 
+      HDP                  VARCHAR(200), 
+      OU                   VARCHAR(200), 
+      HDPTakeOver          VARCHAR(200), 
+      OUTakeOver           VARCHAR(200), 
+      BlackList            BIT, 
+      Remark               NVARCHAR(MAX)
      );
      INSERT INTO @tblDayShiftTable
-     (PreMatchLeagueId, 
+     (PreMatchAssignmentId, 
       LeagueId, 
       LeagueName, 
       MatchCount, 
@@ -153,16 +158,16 @@ Revisions:
       BlackList, 
       Remark
      )
-            SELECT pl.PreMatchLeagueId 'PreMatchLeagueId', 
-                   pl.OWPLeagueId 'LeagueId', 
-                   l.OWPLeagueName 'LeagueName', 
-                   a.MatchCount 'MatchCount', 
-                   h.UserName 'HDP', 
-                   o.UserName 'OU', 
-                   ht.UserName 'HDPTakeOver', 
-                   ot.UserName 'OUTakeOver', 
-                   l.IsBlackList 'BlackList', 
-                   pl.Remark 'Remark'
+            SELECT pl.PreMatchLeagueId, 
+                   pl.OWPLeagueId, 
+                   l.OWPLeagueName, 
+                   a.MatchCount, 
+                   h.UserName, 
+                   o.UserName, 
+                   ht.UserName, 
+                   ot.UserName, 
+                   l.IsBlackList, 
+                   pl.Remark
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN OWPLeague AS l WITH(NOLOCK) ON pl.OWPLeagueId = l.OWPLeagueId
                  INNER JOIN @tblMatchCount AS a ON a.LeagueName = l.OWPLeagueName
@@ -183,8 +188,7 @@ Revisions:
                      ot.UserName, 
                      l.IsBlackList, 
                      pl.Remark
-           
-		   ORDER BY CASE
+            ORDER BY CASE
                          WHEN h.UserName IS NOT NULL
                          THEN 0
                          ELSE 1
@@ -204,7 +208,44 @@ Revisions:
                          THEN 0
                          ELSE 1
                      END, 
+                     h.UserName ASC, 
+                     o.UserName ASC, 
+                     ht.UserName ASC, 
+                     ot.UserName ASC, 
                      l.OWPLeagueName ASC;
+
      -- Result
-     SELECT *
-     FROM @tblDayShiftTable;
+     IF @Employee = ''
+         BEGIN
+             SELECT [No], 
+                    PreMatchAssignmentId, 
+                    LeagueId, 
+                    LeagueName, 
+                    MatchCount, 
+                    HDP, 
+                    OU, 
+                    HDPTakeOver, 
+                    OUTakeOver, 
+                    BlackList, 
+                    Remark
+             FROM @tblDayShiftTable;
+     END;
+         ELSE
+         BEGIN
+             SELECT [No], 
+                    PreMatchAssignmentId, 
+                    LeagueId, 
+                    LeagueName, 
+                    MatchCount, 
+                    HDP, 
+                    OU, 
+                    HDPTakeOver, 
+                    OUTakeOver, 
+                    BlackList, 
+                    Remark
+             FROM @tblDayShiftTable AS a
+             WHERE a.HDP LIKE '%' + @Employee + '%'
+                   OR a.OU LIKE '%' + @Employee + '%'
+                   OR a.HDPTakeOver LIKE '%' + @Employee + '%'
+                   OR a.OUTakeOver LIKE '%' + @Employee + '%';
+     END;

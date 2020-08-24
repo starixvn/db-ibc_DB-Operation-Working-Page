@@ -13,6 +13,9 @@ Revisions:
  20200817@Esther.Nguyen: Get start time for night shift  - [Redmine: #138643]  
 */
 
-     SELECT [StartTime]
-     FROM PreMatchNightShiftStartTime
-     WHERE EventDate = @EventDate;
+    BEGIN
+        SET NOCOUNT ON;
+        SELECT [StartTime]
+        FROM PreMatchNightShiftStartTime WITH(NOLOCK)
+        WHERE EventDate = @EventDate;
+    END;
