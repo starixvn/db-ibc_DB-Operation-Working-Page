@@ -10,6 +10,50 @@ Revisions:
 	20200818@Tyler: Pre-Match assignment log - [Redmine: #138643]
 */
 
+/****** Object:  Table [dbo].[PreMatchAssignment]    Script Date: 8/24/2020 10:08:15 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PreMatchAssignment](
+	[PreMatchLeagueId] [int] NOT NULL,
+	[UserId] [int] NOT NULL,
+	[Bettype] [int] NOT NULL,
+	[IsTakeOver] [bit] NOT NULL
+) ON [OWP_Data]
+GO
+
+/****** Object:  Table [dbo].[PreMatchLeague]    Script Date: 8/24/2020 10:08:15 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PreMatchLeague](
+	[PreMatchLeagueId] [int] IDENTITY(1,1) NOT NULL,
+	[OWPLeagueId] [int] NOT NULL,
+	[EventDate] [date] NOT NULL,
+	[IsDay] [bit] NOT NULL,
+	[IsDeleted] [bit] NOT NULL,
+	[Remark] [nvarchar](2000) NULL,
+ CONSTRAINT [PK_PreMatchLeague] PRIMARY KEY CLUSTERED 
+(
+	[PreMatchLeagueId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+) ON [OWP_Data]
+GO
+
+/****** Object:  Table [dbo].[PreMatchNightShiftStartTime]    Script Date: 8/24/2020 10:08:15 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[PreMatchNightShiftStartTime](
+	[EventDate] [date] NOT NULL,
+	[StartTime] [time](7) NOT NULL
+) ON [OWP_Data]
+GO
+
+
 INSERT INTO [dbo].[Module] ([ModuleId], [ModuleName])
 VALUES (10, 'PreMatchAssignment');
 
