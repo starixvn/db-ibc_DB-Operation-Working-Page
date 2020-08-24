@@ -3,7 +3,7 @@
 
 ALTER PROCEDURE OWP_PreMatchAssignment_QueryNightShift @EventDate DATE, 
                                                        @StartTime TIME(7), 
-                                                       @Employee  VARCHAR(MAX)
+                                                       @Employee  VARCHAR(MAX) = ''
 AS
 
 /*  
