@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_UserSectionsSel]
+ALTER PROCEDURE [dbo].[OWP_UserSectionsSel]
 AS
 
 /*    
@@ -11,6 +11,7 @@ AS
     
  Revisions:
 	20200715@Jacob: Initial SP - [Redmine: #137210]	
+	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
 */
 
      SET NOCOUNT ON;
@@ -18,7 +19,8 @@ AS
             u.UserId, 
             u.Username, 
             u.Nickname, 
-            r.[Value] AS Section
+            r.[Value] AS Section,
+			u.SectionId
      FROM dbo.[User] u WITH(NOLOCK)
           LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON u.SectionId = r.ResourceId
                                                        AND r.RefName = 'Section';

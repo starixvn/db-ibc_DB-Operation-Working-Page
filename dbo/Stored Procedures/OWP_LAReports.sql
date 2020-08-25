@@ -1,38 +1,51 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LAReports] @FromDate DATETIME = '2020-01-03', 
-                                        @ToDate   DATETIME = '2020-01-05'
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
+ALTER PROCEDURE [dbo].[OWP_LAReports] @FromDate DATETIME = '2020-01-03', 
+                                      @ToDate   DATETIME = '2020-01-05'
 AS
 
 /*    
- Created: 20200715@Jacob
+ Created: 20200817@Mira
  Task : LA Reports
  DB: bodb_OWP    
     
  Revisions:
-	20200715@Jacob: Initial SP - [Redmine: #137210]	
+	20200817@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 */
 
      SET NOCOUNT ON;
-     SET @FromDate = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
-     SET @ToDate = DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
-     SELECT DISTINCT 
-            a.UserId,
-			a.AssignmentId,
-            p.ProviderName, 
-            l.OWPLeagueName, 
-            mn.MinorBettypeId, 
-            ma.OWPMatchId, 
-			mn.ParentMatchId,
-            ma.EventDateTime
-     FROM dbo.Assignment a WITH(NOLOCK)
-          INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = a.OWPMatchId
-          INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
-          INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
-          LEFT JOIN dbo.MatchProvider mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
-          LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
-          LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
-     WHERE a.AssignmentType = 1
-           AND a.Bettype = -1002
-           AND mi.MatchStatus = 'Live'
-           AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
-     ORDER BY UserId ASC, ma.EventDateTime ASC;
+     SELECT a.UserId, 
+            a.Username, 
+            r.Value Section, 
+            SUM(a.TotalMatches) TotalMatches, 
+            SUM(a.LinkLowerThan3) LinkLowerThan3, 
+            SUM(a.LinkX3) LinkX3, 
+            SUM(a.LinkX6) LinkX6, 
+            SUM(a.LinkX9Plus) LinkX9Plus, 
+            SUM(a.ProviderTv) ProviderTv, 
+            SUM(a.Provider) Provider, 
+            SUM(a.TV) TV, 
+            SUM(a.Reporter) Reporter, 
+            SUM(a.CornerPlus) CornerPlus, 
+            SUM(a.Reporter) Reporter, 
+            SUM(a.CornerPlus) CornerPlus, 
+            SUM(a.TBookingPlus) TBookingPlus, 
+            SUM(a.Fantasy) Fantasy, 
+            SUM(a.GoalKick) GoalKick, 
+            SUM(a.OtherProducts) OtherProducts, 
+            SUM(a.FTCorner) FTCorner, 
+            SUM(a.ESoccer5Mins) ESoccer5Mins, 
+            SUM(a.ESoccer15Mins) ESoccer15Mins, 
+            SUM(a.ESoccer20Mins) ESoccer20Mins, 
+            SUM(a.Others) Others
+     FROM dbo.LAReport a
+          LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
+          LEFT JOIN dbo.RefResource r ON r.RefName = 'Section'
+                                         AND u.SectionId = r.ResourceId
+     WHERE a.ReportDate BETWEEN @FromDate AND @ToDate
+     GROUP BY a.UserId, 
+              a.Username, 
+              r.Value
+     ORDER BY r.Value ASC, 
+              a.Username ASC;
