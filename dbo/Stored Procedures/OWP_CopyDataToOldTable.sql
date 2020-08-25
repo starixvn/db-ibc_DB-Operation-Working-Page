@@ -341,8 +341,7 @@ AS
                    [IsRepresented], 
                    [GroupId]
             FROM [dbo].[MinorMatch] m WITH(NOLOCK)
-                 INNER JOIN #MatchIds i ON m.MinorMatchId = i.Id
-                                           OR m.ParentMatchId = i.Id;
+                 INNER JOIN #MatchIds i ON m.ParentMatchId = i.Id;
 
      -- DELETE Assignment_Old
      DELETE m
