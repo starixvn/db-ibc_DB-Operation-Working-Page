@@ -21,7 +21,7 @@ AS
 	 END
 
      DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '12:00:00');  
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '11:59:59');  
 
      -- Temp table
      CREATE TABLE #MatchIds

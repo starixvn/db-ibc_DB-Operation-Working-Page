@@ -15,7 +15,7 @@ AS
 
      SET NOCOUNT ON;
      DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '12:00:00');  
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '11:59:59');  
 
      -- Temp table
      CREATE TABLE #MatchIds
@@ -92,7 +92,7 @@ AS
                    m.[IsChecked], 
                    m.[InfoSiteMatchId], 
                    m.[IsNeutral]
-            FROM dbo.OWPMatch m
+            FROM dbo.OWPMatch m WITH(NOLOCK)
                  INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
 
      -- DELETE MatchAgent_Old
