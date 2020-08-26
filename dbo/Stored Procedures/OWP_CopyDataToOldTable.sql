@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_CopyDataToOldTable] @Date DATETIME 
+ALTER PROCEDURE [dbo].[OWP_CopyDataToOldTable] @Date DATETIME
 AS
 
 /*    
@@ -11,11 +11,12 @@ AS
     
  Revisions:
 	20200817@Mira: Archive plan for OWP tables - [Redmine: #137757]	
+	20200825@Jacob: Use index - [Redmine: #137757]	
 */
 
      SET NOCOUNT ON;
      DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
-     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1 , '11:59:59');  
+     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1, '11:59:59');
 
      -- Temp table
      CREATE TABLE #MatchIds
@@ -39,7 +40,7 @@ AS
      -- EmployeeWorkingShift
      -- DELETE EmployeeWorkingShift_Old
      DELETE FROM dbo.EmployeeWorkingShift_Old
-     WHERE ShiftDate = @Date
+     WHERE ShiftDate = @Date;
      -- COPY
      INSERT INTO [dbo].[EmployeeWorkingShift_Old]
      ([EmployeeId], 
@@ -57,6 +58,27 @@ AS
                    [RefShiftId]
             FROM EmployeeWorkingShift WITH(NOLOCK)
             WHERE ShiftDate = @Date;
+     -- EmployeeWorkingShiftNote
+     -- DELETE EmployeeWorkingShiftNote_Old
+     DELETE FROM dbo.[EmployeeWorkingShiftNote_Old]
+     WHERE ShiftDate BETWEEN @FromDateTime AND @ToDateTime;
+     -- COPY
+     INSERT INTO [dbo].[EmployeeWorkingShiftNote_Old]
+     ([EmployeeWorkingShiftNoteId], 
+      [UserId], 
+      [CreatedDate], 
+      [CreatedBy], 
+      [Note], 
+      [ShiftDate]
+     )
+            SELECT [EmployeeWorkingShiftNoteId], 
+                   [UserId], 
+                   [CreatedDate], 
+                   [CreatedBy], 
+                   [Note], 
+                   [ShiftDate]
+            FROM [dbo].[EmployeeWorkingShiftNote]
+            WHERE ShiftDate BETWEEN @FromDateTime AND @ToDateTime;
 
      -- OWP Match     
      -- DELETE OWPMatch_Old
@@ -322,8 +344,7 @@ AS
      -- DELETE MinorMatch_Old
      DELETE m
      FROM dbo.MinorMatch_Old m
-          INNER JOIN #MatchIds i ON m.MinorMatchId = i.Id
-                                    OR m.ParentMatchId = i.Id; 
+          INNER JOIN #MatchIds i ON m.ParentMatchId = i.Id; 
      -- COPY
      INSERT INTO [dbo].[MinorMatch_Old]
      ([RelationshipId], 
