@@ -1,0 +1,88 @@
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*
+Created: 20200810@Jacob
+Task : Archive plan for OWP tables
+DB: bodb_OWP	
+
+Revisions:
+	20200825@Jacob: Archive plan for OWP tables - [Redmine: #137757]
+*/
+
+-- Create missing old table
+
+CREATE TABLE [dbo].[EmployeeWorkingShiftNote_Old](
+	[EmployeeWorkingShiftNoteId] [int] NOT NULL,
+	[UserId] [int] NOT NULL,
+	[CreatedDate] [datetime] NOT NULL,
+	[CreatedBy] [int] NOT NULL,
+	[Note] [nvarchar](4000) NOT NULL,
+	[ShiftDate] [datetime] NOT NULL,
+ CONSTRAINT [PK_EmployeeWorkingShiftNote_Old_Id] PRIMARY KEY CLUSTERED ([EmployeeWorkingShiftNoteId] ASC)
+ WITH(DATA_COMPRESSION = PAGE) ON [OWP_Data]
+) ON [OWP_Data]
+
+GO
+
+-- Create Index
+
+CREATE CLUSTERED INDEX [CIX_Assignment_Old] ON [dbo].[Assignment_Old]
+(
+	[OWPMatchId] ASC,
+	[Bettype] ASC,
+	[AssignmentType] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_EmployeeWorkingShift_Old_ShiftId] ON [dbo].[EmployeeWorkingShift_Old]
+(
+	[ShiftId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Index]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_EmployeeWorkingShiftNote_Old_UserId_ShiftDate] ON [dbo].[EmployeeWorkingShiftNote_Old]
+(
+	[UserId] ASC,
+	[ShiftDate] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_MatchInfo_Old_IsSelected] ON [dbo].[MatchInfo_Old]
+(
+	[IsSelected] DESC
+)
+INCLUDE([OWPMatchId]) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Index]
+GO
+
+CREATE CLUSTERED INDEX [CIX_MatchNote_Old] ON [dbo].[MatchNote_Old]
+(
+	[OWPMatchId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+GO
+
+
+CREATE CLUSTERED INDEX [CIX_MatchRecommendOdds_Old] ON [dbo].[MatchRecommendOdds_Old]
+(
+	[OWPMatchId] ASC,
+	[Bettype] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+GO
+
+
+CREATE CLUSTERED INDEX [CIX_MinorMatch_Old] ON [dbo].[MinorMatch_Old]
+(
+	[MinorMatchId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+GO
+
+CREATE NONCLUSTERED INDEX [IX_MinorMatch_Old_ParentMatchId] ON [dbo].[MinorMatch_Old]
+(
+	[ParentMatchId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Index]
+GO
+
+
+CREATE NONCLUSTERED INDEX [IX_OWPMatch_Old_EventDateTime] ON [dbo].[OWPMatch_Old]
+(
+	[EventDateTime] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Index]
+GO
