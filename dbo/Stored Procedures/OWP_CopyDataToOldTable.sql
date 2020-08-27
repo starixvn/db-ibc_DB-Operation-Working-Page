@@ -12,6 +12,7 @@ AS
  Revisions:
 	20200817@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 	20200825@Jacob: Use index - [Redmine: #137757]	
+	20200826@Jacob: Fix bug missing Odds - [Redmine: #137757]	
 */
 
      SET NOCOUNT ON;
@@ -34,7 +35,7 @@ AS
      CREATE TABLE #MatchRecommendOddsIds(Id INT);
      INSERT INTO #MatchRecommendOddsIds(Id)
             SELECT MatchRecommendOddsId
-            FROM dbo.MatchRecommendOdds_Old m WITH(NOLOCK)
+            FROM dbo.MatchRecommendOdds m WITH(NOLOCK)
                  INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
 
      -- EmployeeWorkingShift
