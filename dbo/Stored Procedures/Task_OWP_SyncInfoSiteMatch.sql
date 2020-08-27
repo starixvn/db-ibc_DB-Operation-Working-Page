@@ -292,7 +292,7 @@ BEGIN
 	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral)
 	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 	INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
-	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR om.OWPHomeId <> tm.OWPHomeId OR om.OWPAwayId <> tm.OWPAwayId
+	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR om.OWPHomeId <> tm.OWPHomeId OR om.OWPAwayId <> tm.OWPAwayId OR om.IsNeutral <> tm.IsNeutral
 
 	-- sync TVIds
 	TRUNCATE TABLE #tblMatchChangeLog
