@@ -1,7 +1,14 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿USE [bodb_OWP];
+GO
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_ValidateAssignment] @Assignee NVARCHAR(30) = ''
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_ValidateAssignment]    Script Date: 8/28/2020 2:40:28 PM ******/
+
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_ValidateAssignment] @Assignee NVARCHAR(30) = ''
 AS
 
 /*
@@ -16,8 +23,9 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-
-        SELECT UserId
+        SELECT UserId, 
+               Username
         FROM dbo.[User] WITH(NOLOCK)
-        WHERE Username = @Assignee;
+        WHERE Username = @Assignee
+              OR Nickname = @Assignee;
     END;

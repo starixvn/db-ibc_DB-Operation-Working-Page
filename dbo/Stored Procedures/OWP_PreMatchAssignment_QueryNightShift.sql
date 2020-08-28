@@ -1,7 +1,12 @@
-
+USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryNightShift]    Script Date: 8/28/2020 4:22:31 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-
-ALTER PROCEDURE OWP_PreMatchAssignment_QueryNightShift @EventDate DATE, 
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryNightShift] @EventDate DATE, 
                                                        @StartTime TIME(7), 
                                                        @Employee  VARCHAR(MAX) = ''
 AS
@@ -25,14 +30,17 @@ Revisions:
      ---- insert usernames for HDP bettype----
      DECLARE @tblUserNamesHDP TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX)
+      UserName         VARCHAR(MAX),
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesHDP
      (PreMatchLeagueId, 
-      UserName
+      UserName,
+	  Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username
+                   Username,
+				   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -40,21 +48,22 @@ Revisions:
                   AND pl.IsDay = 0
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 0
-                  AND Bettype = @hpdBettype
-            GROUP BY pa.PreMatchLeagueId, 
-                     u.Username;
-
+                  AND Bettype = @hpdBettype;
+	
      ---- insert usernames for HDP Take Over ----
      DECLARE @tblUserNamesHDPTO TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX)
+      UserName         VARCHAR(MAX),
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesHDPTO
      (PreMatchLeagueId, 
-      UserName
+      UserName,
+	  Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username
+                   Username,
+				   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -62,20 +71,21 @@ Revisions:
                   AND pl.IsDay = 0
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 1
-                  AND Bettype = @hpdBettype
-            GROUP BY pa.PreMatchLeagueId, 
-                     u.Username;
+                  AND Bettype = @hpdBettype;
      ---- insert usernames for OU bettype----
      DECLARE @tblUserNamesOU TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX)
+      UserName         VARCHAR(MAX),
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesOU
      (PreMatchLeagueId, 
-      UserName
+      UserName,
+	  Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username
+                   Username,
+				   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -83,20 +93,21 @@ Revisions:
                   AND pl.IsDay = 0
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 0
-                  AND Bettype = @ouBettype
-            GROUP BY pa.PreMatchLeagueId, 
-                     u.Username;
+                  AND Bettype = @ouBettype;
      ---- insert usernames for OU Take Over----
      DECLARE @tblUserNamesOUTO TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX)
+      UserName         VARCHAR(MAX),
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesOUTO
      (PreMatchLeagueId, 
-      UserName
+      UserName,
+	  Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username
+                   Username,
+				   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -104,9 +115,7 @@ Revisions:
                   AND pl.IsDay = 0
                   AND pl.IsDeleted = 0
                   AND IsTakeOver = 1
-                  AND Bettype = @ouBettype
-            GROUP BY pa.PreMatchLeagueId, 
-                     u.Username;
+                  AND Bettype = @ouBettype;
 
      ---- match count for league ----
      DECLARE @tblMatchCount TABLE
@@ -143,6 +152,10 @@ Revisions:
       OU                   VARCHAR(200), 
       HDPTakeOver          VARCHAR(200), 
       OUTakeOver           VARCHAR(200), 
+	  HDPNickname          VARCHAR(200), 
+      OUNickname           VARCHAR(200), 
+      HDPTakeOverNickname  VARCHAR(200), 
+      OUTakeOverNickname   VARCHAR(200), 
       BlackList            BIT, 
       Remark               NVARCHAR(MAX)
      );
@@ -155,6 +168,10 @@ Revisions:
       OU, 
       HDPTakeOver, 
       OUTakeOver, 
+	  HDPNickname, 
+      OUNickname, 
+      HDPTakeOverNickname, 
+      OUTakeOverNickname, 
       BlackList, 
       Remark
      )
@@ -166,6 +183,10 @@ Revisions:
                    o.UserName, 
                    ht.UserName, 
                    ot.UserName, 
+				   h.Nickname, 
+                   o.Nickname, 
+                   ht.Nickname, 
+                   ot.Nickname, 
                    l.IsBlackList, 
                    pl.Remark
             FROM PreMatchLeague AS pl WITH(NOLOCK)
@@ -187,7 +208,11 @@ Revisions:
                      o.UserName, 
                      ot.UserName, 
                      l.IsBlackList, 
-                     pl.Remark
+                     pl.Remark,
+					 h.Nickname, 
+                     ht.Nickname, 
+                     o.Nickname, 
+                     ot.Nickname
             ORDER BY CASE
                          WHEN h.UserName IS NOT NULL
                          THEN 0
@@ -246,5 +271,9 @@ Revisions:
              WHERE a.HDP LIKE '%' + @Employee + '%'
                    OR a.OU LIKE '%' + @Employee + '%'
                    OR a.HDPTakeOver LIKE '%' + @Employee + '%'
-                   OR a.OUTakeOver LIKE '%' + @Employee + '%';
+                   OR a.OUTakeOver LIKE '%' + @Employee + '%'
+				   OR a.HDPNickname LIKE '%' + @Employee + '%'
+				   OR a.OUNickname LIKE '%' + @Employee + '%'
+                   OR a.HDPTakeOverNickname LIKE '%' + @Employee + '%'
+                   OR a.OUTakeOverNickname LIKE '%' + @Employee + '%';
      END;
