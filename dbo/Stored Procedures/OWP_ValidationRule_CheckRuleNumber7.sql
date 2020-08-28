@@ -14,6 +14,7 @@ AS
 	20180718@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20190510@Kane.Le: Change phone length 200 - [Redmine: #112918]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -70,100 +71,7 @@ BEGIN
 	FROM dbo.RefResource WITH (NOLOCK)
 	WHERE RefName = 'MatchLength'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		INSERT INTO #tblAssignmentUploading (
-			RowNumber
-			,owpEventDate
-			,League
-			,Home
-			,Away
-			,Phone
-			,HasPhoneNumber
-			,MinorBettypeId
-			,ParentRowNumber
-			)
-		SELECT RowNumber
-			,(CASE 
-				WHEN ISDATE(KickOffTime) = 1 THEN DATEADD(dd, DATEDIFF(dd, 0, EventDate), CAST(KickOffTime AS DATETIME))
-				ELSE NULL END
-				) AS owpEventDate
-			,League
-			,Home
-			,Away
-			,Phone
-			,(CASE 
-				WHEN ISNULL(Phone, '') = '' THEN 0
-				ELSE 1 END
-				) HasPhoneNumber
-			,MinorBettypeId
-			,ParentRowNumber
-		FROM dbo.AssignmentUploading WITH (NOLOCK)
-		WHERE SessionId = @SessionId
-
-		-- check match duplicate phone
-		INSERT INTO #tblMatchDuplicatePhone (
-			RowNumber
-			,Match
-			)
-		SELECT upload.RowNumber
-			,upload1.Home + ' -vs- ' + upload1.Away
-		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
-			INNER JOIN #tblAssignmentUploading AS upload1 WITH (NOLOCK) ON upload.Phone = upload1.Phone
-		WHERE upload.RowNumber <> upload1.RowNumber
-			AND upload.HasPhoneNumber = 1
-			AND upload1.HasPhoneNumber = 1
-			AND upload.owpEventDate IS NOT NULL
-			AND upload1.owpEventDate IS NOT NULL
-			AND upload1.owpEventDate BETWEEN DATEADD(MINUTE, - 1 * @MatchLength, upload.owpEventDate)
-				AND DATEADD(MINUTE, @MatchLength, upload.owpEventDate)
-			AND ISNULL(upload.MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
-			AND ISNULL(upload1.MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
-			AND (
-				(
-					ISNULL(upload.ParentRowNumber, 0) = 0
-					AND upload.RowNumber <> ISNULL(upload1.ParentRowNumber, 0)
-					)
-				OR (
-					ISNULL(upload1.ParentRowNumber, 0) = 0
-					AND upload1.RowNumber <> ISNULL(upload.ParentRowNumber, 0)
-					)
-				)
-
-		-- combine
-		INSERT INTO #tblCombineMatchDuplicatePhone (
-			RowNumber
-			,Match
-			)
-		SELECT data.RowNumber
-			,STUFF((
-					SELECT DISTINCT '; ' + Match
-					FROM #tblMatchDuplicatePhone WITH (NOLOCK)
-					WHERE RowNumber = data.RowNumber
-					FOR XML PATH('')
-					), 1, 2, '')
-		FROM (
-			SELECT DISTINCT RowNumber
-			FROM #tblMatchDuplicatePhone WITH (NOLOCK)
-			) AS data
-
-		-- result
-		SELECT @SessionId
-			,upload.RowNumber
-			,@RuleId AS RuleId
-			,(CASE 
-				WHEN m.RowNumber IS NOT NULL THEN @RuleResultType
-				ELSE @Passed END
-				) AS ResultType
-			,(CASE 
-				WHEN m.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', m.Match)
-				ELSE '' END
-				) AS [Message]
-		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
-			LEFT JOIN #tblCombineMatchDuplicatePhone AS m WITH (NOLOCK) ON upload.RowNumber = m.RowNumber
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

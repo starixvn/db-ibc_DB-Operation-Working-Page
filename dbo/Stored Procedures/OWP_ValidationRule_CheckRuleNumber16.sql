@@ -10,6 +10,7 @@ AS
 
  Revisions:
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -40,24 +41,7 @@ BEGIN
 	WHERE RefName = 'AssignmentType'
 		AND Value = 'Assignee'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		SELECT @SessionId
-			,RowNumber
-			,@RuleId AS RuleId
-			,(CASE 
-				WHEN ISNULL(LA, '') = '' THEN @RuleResultType
-				ELSE @Passed END
-				) AS ResultType
-			,(CASE 
-				WHEN ISNULL(LA, '') = '' THEN @Message
-				ELSE '' END
-				) AS [Message]
-		FROM dbo.AssignmentUploading WITH (NOLOCK)
-		WHERE SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

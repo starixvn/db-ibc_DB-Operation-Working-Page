@@ -16,6 +16,7 @@ AS
 	20181031@Raymond.Le: Replace column MatchId by InfoSiteMatchId - [Redmine: #104052]
 	20190405@Lita.Tang: Apply for the second account only (row 141) - [Redmine: #111068]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -84,150 +85,7 @@ BEGIN
 	FROM dbo.RefResource WITH (NOLOCK)
 	WHERE RefName = 'MaxMatchTradingPerDay'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		INSERT INTO #tblAssignmentUploading (
-			RowNumber
-			,owpEventDate
-			,League
-			,Home
-			,Away
-			,UserId
-			,Trader
-			,MinorBettypeId
-			,ParentRowNumber
-			)
-		SELECT DISTINCT RowNumber
-			,owpEventDate
-			,League
-			,Home
-			,Away
-			,u.UserId
-			,unpvt.Trader
-			,MinorBettypeId
-			,ParentRowNumber
-		FROM (
-			SELECT RowNumber
-				,(CASE 
-					WHEN ISDATE(KickOffTime) = 1 THEN DATEADD(dd, DATEDIFF(dd, 0, EventDate), CAST(KickOffTime AS DATETIME))
-					ELSE NULL END
-					) AS owpEventDate
-				,League
-				,Home
-				,Away
-				,MinorBettypeId
-				,ParentRowNumber
-				,TraderHDP
-				,Trader1HHDP
-				,TraderOU
-				,Trader1HOU
-				,Trader1X2
-				,Trader1H1X2
-			FROM dbo.AssignmentUploading WITH (NOLOCK)
-			WHERE SessionId = @SessionId
-			) AS upload
-		UNPIVOT(Trader FOR ColumnName IN (TraderHDP, Trader1HHDP, TraderOU, Trader1HOU, Trader1X2, Trader1H1X2)) unpvt
-			LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON unpvt.Trader = u.Username
-			OR unpvt.Trader = u.Nickname
-		WHERE ISNULL(unpvt.Trader, '') <> ''
-			AND u.UserId IS NOT NULL
-			AND u.IsSecondAccount = 0
-
-		-- Update parentRowNumber for main match
-		UPDATE assignment
-		SET assignment.ParentRowNumber = assignment.RowNumber
-		FROM #tblAssignmentUploading AS assignment WITH (ROWLOCK)
-		WHERE assignment.ParentRowNumber IS NULL
-			AND assignment.MinorBettypeId IS NULL
-
-		-- get trade 5 matches/day from upload file
-		INSERT INTO #tblTrade5MatchPerDay (
-			UserId
-			,owpEventDate
-			)
-		SELECT data.UserId
-			,data.owpEventDate
-		FROM (
-			SELECT ParentRowNumber
-				,owpEventDate
-				,UserId
-			FROM #tblAssignmentUploading WITH (NOLOCK)
-			GROUP BY ParentRowNumber
-				,owpEventDate
-				,UserId
-			) AS data
-		GROUP BY data.owpEventDate
-			,data.UserId
-		HAVING COUNT(1) >= @MaxMatchTradingPerDay
-
-		-- get trade 5 matches/day from table dbo.Trade5MatchPerDay
-		INSERT INTO #tblTrade5MatchPerDay (
-			UserId
-			,owpEventDate
-			)
-		SELECT t.UserId
-			,[Date]
-		FROM dbo.Trade5MatchPerDay AS t WITH (NOLOCK)
-			INNER JOIN #tblTrade5MatchPerDay AS t1 WITH (NOLOCK) ON t.UserId = t1.UserId
-		WHERE MONTH(t.[Date]) = MONTH(t1.owpEventDate)
-			AND YEAR(t.[Date]) = YEAR(t1.owpEventDate)
-			AND t.[Date] NOT IN (
-				SELECT DISTINCT owpEventDate
-				FROM #tblAssignmentUploading WITH (NOLOCK)
-				)
-
-		-- get 2nd trading 5 matches/day
-		INSERT INTO #tbl2Trade5MatchPerMonth (
-			RowNumber
-			,Trader
-			)
-		SELECT DISTINCT (RowNumber / 10) * 10
-			,Trader
-		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
-		WHERE upload.UserId IN (
-				SELECT UserId
-				FROM #tblTrade5MatchPerDay WITH (NOLOCK)
-				GROUP BY UserId
-					,MONTH(owpEventDate)
-					,YEAR(owpEventDate)
-				HAVING COUNT(1) >= 2
-				)
-
-		-- combine
-		INSERT INTO #tblCombine2Trade5MatchPerMonth (
-			RowNumber
-			,Trader
-			)
-		SELECT data.RowNumber
-			,STUFF((
-					SELECT '; ' + Trader
-					FROM #tbl2Trade5MatchPerMonth WITH (NOLOCK)
-					WHERE RowNumber = data.RowNumber
-					FOR XML PATH('')
-					), 1, 2, '')
-		FROM (
-			SELECT DISTINCT RowNumber
-			FROM #tbl2Trade5MatchPerMonth WITH (NOLOCK)
-			) AS data
-
-		-- result
-		SELECT @SessionId
-			,upload.RowNumber
-			,@RuleId AS RuleId
-			,(CASE 
-				WHEN trader.RowNumber IS NOT NULL THEN @RuleResultType
-				ELSE @Passed END
-				) AS ResultType
-			,(CASE 
-				WHEN trader.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', trader.Trader)
-				ELSE '' END
-				) AS [Message]
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			LEFT JOIN #tblCombine2Trade5MatchPerMonth AS trader WITH (NOLOCK) ON upload.RowNumber = trader.RowNumber
-		WHERE upload.SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

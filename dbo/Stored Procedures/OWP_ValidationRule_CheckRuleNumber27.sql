@@ -11,6 +11,7 @@ AS
  Revisions:
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -50,48 +51,7 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		--Parent match in assignment uploadimg 
-		INSERT INTO #tblParentMatch (
-			RowNumber
-			,MatchStatus
-			)
-		SELECT DISTINCT au.RowNumber
-			,au.MatchStatus
-		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
-		WHERE au.SessionId = @SessionId
-			AND au.MatchStatus IN (@str_Cancel, @str_Postponed, @str_Suspended)
-			AND ISNULL(au.ParentRowNumber, '') = ''
-
-		-- get minor match status <> parent match status
-		INSERT INTO #tblMinorMatchDifferent (RowNumber)
-		SELECT DISTINCT au.RowNumber
-		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
-			LEFT JOIN #tblParentMatch AS pm ON au.ParentRowNumber = pm.RowNumber
-		WHERE au.SessionId = @SessionId
-			AND au.MinorBettypeId NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
-			AND pm.RowNumber IS NOT NULL
-			AND pm.MatchStatus <> au.MatchStatus
-
-		-- result
-		SELECT @SessionId
-			,upload.RowNumber
-			,@RuleId AS RuleId
-			,(CASE 
-				WHEN mm.RowNumber IS NOT NULL THEN @RuleResultType
-				ELSE @Passed END
-				) AS ResultType
-			,(CASE 
-				WHEN mm.RowNumber IS NOT NULL THEN @Message
-				ELSE '' END
-				) AS [Message]
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			LEFT JOIN #tblMinorMatchDifferent AS mm WITH (NOLOCK) ON upload.RowNumber = mm.RowNumber
-		WHERE upload.SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

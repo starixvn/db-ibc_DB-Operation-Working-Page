@@ -11,6 +11,7 @@ AS
 
  Revisions:
     20190923@Kane.Le: Init SP - [Redmine: #120415]	
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -38,52 +39,7 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		INSERT INTO #tblCombineDuplicateInfoSiteId (
-			RowNumber
-			,RowNumbers
-			)
-		SELECT data.RowNumber
-			,(
-				SELECT TOP 1 CAST(RowNumber / 10 AS VARCHAR(50))
-				FROM dbo.AssignmentUploading WITH (NOLOCK)
-				WHERE SessionId = @SessionId
-					AND RowNumber <> data.RowNumber
-					AND InfoSiteMatchId = data.InfoSiteMatchId
-					AND ISNULL(InfoSiteMatchId, '') <> ''
-				) AS RowNumbers
-		FROM (
-			SELECT RowNumber
-				,EventDate
-				,InfoSiteMatchId
-			FROM dbo.AssignmentUploading WITH (NOLOCK)
-			WHERE SessionId = @SessionId
-				AND ISNULL(InfoSiteMatchId, '') <> ''
-			) AS data
-
-		-- result
-		SELECT @SessionId
-			,RowNumber
-			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN ISNULL(RowNumbers, '') <> ''
-						THEN @RuleResultType
-					ELSE @Passed
-					END
-				) AS ResultType
-			,(
-				CASE 
-					WHEN ISNULL(RowNumbers, '') <> ''
-						THEN REPLACE(@Message, '<content>', RowNumbers)
-					ELSE ''
-					END
-				) AS [Message]
-		FROM #tblCombineDuplicateInfoSiteId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		SELECT @Passed AS ResultType
 			,'' AS [Message]

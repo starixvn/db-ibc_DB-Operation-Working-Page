@@ -12,6 +12,7 @@ AS
     20180725@Raymond.Le: Missing main assignment of {bet type} - [Redmine: #92868]
     20191113@Leo.Vo: handle setting to upload PH assignment - [Redmine: #123167]
 	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -52,31 +53,12 @@ BEGIN
 	WHERE RefName = 'AssignmentType'
 		AND Value = 'Assignee'
 
-	-- upload
+	-- edit	
 	BEGIN
-		EXEC sp_xml_preparedocument @idoc OUTPUT
-			,@Value
-
-		SELECT TOP 1 @TraderOU = data.Trader
-			,@Bettype = data.Bettype
-			,@AssignmentType = data.AssignmentType
-		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (Trader NVARCHAR(100), Bettype INT, AssignmentType TINYINT) AS data
-
-		EXEC sp_xml_removedocument @idoc
-
-		IF ISNULL(@TraderOU, '') = ''
-			AND @Bettype = @OverUnder
-			AND @AssignmentType = @Assignee
-		BEGIN
-			SELECT @RuleResultType AS ResultType
-				,@Message AS [Message]
-		END
-		ELSE
-		BEGIN
-			SELECT @Passed AS ResultType
-				,'' AS [Message]
-		END
+		SELECT @Passed AS ResultType
+			,'' AS [Message]
 	END
+	
 
 	DROP TABLE #tblAssignmentUploading
 
