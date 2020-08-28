@@ -20,7 +20,7 @@ Revisions:
                p.PreMatchLeagueId 'PreMatchLeagueId', 
                o.OWPLeagueName 'LeagueName', 
                u.Username 'DeletedBy', 
-               MAX(ul.LoggedDate) 'DeletedTime'
+               MAX(DATEADD(HOUR, 12, ul.LoggedDate)) 'DeletedTime'
         FROM PreMatchLeague AS p WITH(NOLOCK)
              INNER JOIN OWPLeague AS o WITH(NOLOCK) ON o.OWPLeagueId = p.OWPLeagueId
              INNER JOIN UserLog AS ul WITH(NOLOCK) ON ul.ObjectId = p.PreMatchLeagueId
