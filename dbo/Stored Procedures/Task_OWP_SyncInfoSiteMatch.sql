@@ -27,6 +27,7 @@ AS
 	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
+	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -292,7 +293,7 @@ BEGIN
 	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral)
 	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 	INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
-	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR om.OWPHomeId <> tm.OWPHomeId OR om.OWPAwayId <> tm.OWPAwayId
+	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR om.OWPHomeId <> tm.OWPHomeId OR om.OWPAwayId <> tm.OWPAwayId OR om.IsNeutral <> tm.IsNeutral
 
 	-- sync TVIds
 	TRUNCATE TABLE #tblMatchChangeLog
