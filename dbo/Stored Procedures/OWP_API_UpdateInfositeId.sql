@@ -10,7 +10,7 @@ Task : Infosite-Link matches between two sites
 DB: bodb_OWP  
   
 Revisions:  
- 20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   
+	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   
 */
 
      SET NOCOUNT ON;

@@ -27,6 +27,7 @@ AS
 	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
+	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   	
 */
 BEGIN
 	SET NOCOUNT ON;

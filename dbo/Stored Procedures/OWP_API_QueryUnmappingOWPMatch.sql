@@ -10,7 +10,7 @@ Task : Need MatchID column to integrate with AdminSite
 DB: bodb_OWP
 
 Revisions:
-	20200610@Jacob: Need MatchID column to integrate with AdminSite - [Redmine: #134336]	
+	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   
 */
 
      SET NOCOUNT ON;
