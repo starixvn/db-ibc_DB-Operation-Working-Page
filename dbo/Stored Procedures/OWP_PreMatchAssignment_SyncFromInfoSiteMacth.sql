@@ -20,7 +20,7 @@ Revisions:
         );
         DECLARE @i INT= 1;
         DECLARE @totalLeague INT;
-        DECLARE @date DATE= CAST(GETDATE() AS DATE);
+        DECLARE @date DATE= CAST(DATEADD(HOUR, 12, GETDATE()) AS DATE);
         DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @date), '12:00:00');
         DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @date), '11:59:59');
         INSERT INTO #tblLeague(OWPLeagueId)
