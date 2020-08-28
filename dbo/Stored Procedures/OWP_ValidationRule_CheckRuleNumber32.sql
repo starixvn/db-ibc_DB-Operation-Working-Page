@@ -11,6 +11,7 @@ AS
 
  Revisions:
     20190923@Tyler.Dang: Init SP - [Redmine: #120501]	
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -37,53 +38,8 @@ BEGIN
 	FROM dbo.RefResource WITH (NOLOCK)
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
-
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		INSERT INTO #tblCombineDuplicateMatchNo (
-			RowNumber
-			,RowNumbers
-			)
-		SELECT data.RowNumber
-			,(
-				SELECT TOP 1 CAST(RowNumber / 10 AS VARCHAR(50))
-				FROM dbo.AssignmentUploading WITH (NOLOCK)
-				WHERE SessionId = @SessionId
-					AND RowNumber <> data.RowNumber
-					AND MatchNo = data.MatchNo
-					AND ISNULL(MatchNo, '') <> ''
-				) AS RowNumbers
-		FROM (
-			SELECT RowNumber
-				,EventDate
-				,MatchNo
-			FROM dbo.AssignmentUploading WITH (NOLOCK)
-			WHERE SessionId = @SessionId
-				AND ISNULL(MatchNo, '') <> ''
-			) AS data
-
-		-- result
-		SELECT @SessionId
-			,RowNumber
-			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN ISNULL(RowNumbers, '') <> ''
-						THEN @RuleResultType
-					ELSE @Passed
-					END
-				) AS ResultType
-			,(
-				CASE 
-					WHEN ISNULL(RowNumbers, '') <> ''
-						THEN REPLACE(@Message, '<content>', RowNumbers)
-					ELSE ''
-					END
-				) AS [Message]
-		FROM #tblCombineDuplicateMatchNo
-	END
-	ELSE -- edit
+	
+	-- edit
 	BEGIN
 		SELECT @Passed AS ResultType
 			,'' AS [Message]

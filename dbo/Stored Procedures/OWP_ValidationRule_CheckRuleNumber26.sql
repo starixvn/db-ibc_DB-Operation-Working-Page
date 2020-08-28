@@ -10,6 +10,7 @@ AS
 
  Revisions:
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -36,42 +37,7 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		SELECT @SessionId
-			,RowNumber
-			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN ISNULL(MatchStatus, '') = ''
-						OR MatchStatus = @str_Live
-						OR MatchStatus = @str_Inplay
-						OR MatchStatus = @str_Completed
-						OR MatchStatus = @str_Cancel
-						OR MatchStatus = @str_Postponed
-						OR MatchStatus = @str_Suspended
-						THEN @Passed
-					ELSE @RuleResultType
-					END
-				) AS ResultType
-			,(
-				CASE 
-					WHEN ISNULL(MatchStatus, '') = ''
-						OR MatchStatus = @str_Live
-						OR MatchStatus = @str_Inplay
-						OR MatchStatus = @str_Completed
-						OR MatchStatus = @str_Cancel
-						OR MatchStatus = @str_Postponed
-						OR MatchStatus = @str_Suspended
-						THEN ''
-					ELSE @Message
-					END
-				) AS [Message]
-		FROM dbo.AssignmentUploading WITH (NOLOCK)
-		WHERE SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		SELECT @Passed AS ResultType
 			,'' AS [Message]

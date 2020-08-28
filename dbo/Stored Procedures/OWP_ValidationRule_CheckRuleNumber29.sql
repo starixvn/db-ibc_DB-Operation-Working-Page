@@ -13,6 +13,7 @@ AS
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 	20190110@Leo.Vo: New structure of Match offer - [Redmine: #107257]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -56,57 +57,7 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		INSERT INTO #tblRowMatchOffer (
-			RowNumber
-			,Value
-			)
-		SELECT au.RowNumber
-			,LTRIM(RTRIM(mo.val)) AS Value
-		FROM AssignmentUploading AS au
-			CROSS APPLY dbo.fnc_SplitStrings(au.MatchOffer, ',') AS mo
-		WHERE au.MatchOffer <> ''
-			AND SessionId = @SessionId
-
-		INSERT INTO #tblInvalidRowMatchOffer
-		SELECT r.RowNumber
-			,r.Value
-		FROM #tblRowMatchOffer AS r
-			LEFT JOIN #tblMatchOffer AS mo ON mo.Value = r.Value
-		WHERE r.Value <> ''
-			AND mo.Value IS NULL
-
-		INSERT INTO #tblInvalidRow (
-			RowNumber
-			,MatchOffer
-			)
-		SELECT DISTINCT t1.RowNumber
-			,STUFF((
-					SELECT ',' + t2.Value
-					FROM #tblInvalidRowMatchOffer AS t2
-					WHERE t1.RowNumber = t2.RowNumber
-					FOR XML PATH('')
-					), 1, 1, '')
-		FROM #tblInvalidRowMatchOffer AS t1
-
-		SELECT @SessionId
-			,au.RowNumber
-			,@RuleId AS RuleId
-			,(CASE 
-				WHEN r.MatchOffer IS NULL THEN @Passed
-				ELSE @RuleResultType END
-				) AS ResultType
-			,(CASE 
-				WHEN r.MatchOffer IS NULL THEN ''
-				ELSE REPLACE(@Message, '<content>', r.MatchOffer) END
-				) AS [Message]
-		FROM dbo.AssignmentUploading AS au WITH (NOLOCK)
-			LEFT JOIN #tblInvalidRow AS r ON au.RowNumber = r.RowNumber
-		WHERE SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

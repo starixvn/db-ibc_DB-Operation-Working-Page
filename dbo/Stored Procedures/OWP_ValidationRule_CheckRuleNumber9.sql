@@ -11,6 +11,7 @@ AS
  Revisions:
     20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180719@Raymond.Le: Modify rule follow new uploading structure, combine rule 9 + 10 + 15 - [Redmine: #92868]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -49,80 +50,7 @@ BEGIN
 		,ColumnName NVARCHAR(MAX)
 		)
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		-- Get match missing trader
-		INSERT INTO #tblAssignmentMissing (
-			RowNumber
-			,ColumnName
-			,Trader
-			)
-		SELECT unpvt.RowNumber
-			,(
-				CASE unpvt.ColumnName
-					WHEN 'TraderHDP'
-						THEN 'Trader (HDP)'
-					WHEN 'TraderOU'
-						THEN 'Trader (O/U)'
-					WHEN 'LA'
-						THEN 'LA'
-					END
-				) AS ColumnName
-			,unpvt.Trader
-		FROM (
-			SELECT a.RowNumber
-				,a.TraderHDP
-				,a.TraderOU
-				,a.LA
-			FROM dbo.AssignmentUploading AS a WITH (NOLOCK)
-			WHERE a.SessionId = @SessionId
-			) AS upload
-		UNPIVOT(Trader FOR ColumnName IN (
-					TraderHDP
-					,TraderOU
-					,LA
-					)) AS unpvt
-		WHERE (unpvt.RowNumber % 10) = 0
-			AND ISNULL(unpvt.Trader, '') = ''
-
-		-- combine result column
-		INSERT INTO #tblCombineInvalidColumn (
-			RowNumber
-			,ColumnName
-			)
-		SELECT DISTINCT am.RowNumber
-			,STUFF((
-					SELECT '; ' + data.ColumnName
-					FROM #tblAssignmentMissing AS data WITH (NOLOCK)
-					WHERE data.RowNumber = am.RowNumber
-					FOR XML PATH('')
-					), 1, 2, '')
-		FROM #tblAssignmentMissing AS am WITH (NOLOCK)
-
-		-- result
-		SELECT @SessionId
-			,upload.RowNumber
-			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN ci.RowNumber IS NOT NULL
-						THEN @RuleResultType
-					ELSE @Passed
-					END
-				) AS ResultType
-			,(
-				CASE 
-					WHEN ci.RowNumber IS NOT NULL
-						THEN REPLACE(@Message, '<content>', ci.ColumnName)
-					ELSE ''
-					END
-				) AS [Message]
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-		LEFT JOIN #tblCombineInvalidColumn AS ci WITH (NOLOCK) ON upload.RowNumber = ci.RowNumber
-		WHERE upload.SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

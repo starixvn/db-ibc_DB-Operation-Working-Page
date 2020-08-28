@@ -12,6 +12,7 @@ AS
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20180724@Raymond.Le: Modify rule follow new uploading structure  - [Redmine: #92868]
 	20190715@Leo.Vo: Add maxbet/spread CN88 - [Redmine: #116688]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -51,106 +52,7 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		INSERT INTO #tblAssignmentUploading (
-			RowNumber
-			,ColumnName
-			,Spread
-			,IsValid
-			)
-		SELECT RowNumber
-			,(CASE ColumnName
-				WHEN 'SpreadHDP' THEN 'Spread (HDP)'
-				WHEN 'Spread1HHDP' THEN 'Spread (1H HDP)'
-				WHEN 'SpreadOU' THEN 'Spread (O/U)'
-				WHEN 'Spread1HOU' THEN 'Spread (1H O/U)'
-				WHEN 'Spread1X2' THEN 'Spread (1X2)'
-				WHEN 'Spread1H1X2' THEN 'Spread (1H 1X2)'
-				WHEN 'SpreadXmins' THEN 'Spread (x mins)'
-				WHEN 'SpreadFM' THEN 'Spread (FM)'
-				WHEN 'SpreadHDP_CN88' THEN 'Spread CN88 (HDP)'
-				WHEN 'Spread1HHDP_CN88' THEN 'Spread CN88 (1H HDP)'
-				WHEN 'SpreadOU_CN88' THEN 'Spread CN88 (O/U)'
-				WHEN 'Spread1HOU_CN88' THEN 'Spread CN88 (1H O/U)'
-				WHEN 'Spread1X2_CN88' THEN 'Spread CN88 (1X2)'
-				WHEN 'Spread1H1X2_CN88' THEN 'Spread CN88 (1H 1X2)'
-				WHEN 'SpreadXmins_CN88' THEN 'Spread CN88 (x mins)'
-				WHEN 'SpreadFM_CN88' THEN 'Spread CN88 (FM)' END
-				) AS ColumnName
-			,unpvt.Spread
-			,0
-		FROM (
-			SELECT RowNumber
-				,SpreadHDP
-				,Spread1HHDP
-				,SpreadOU
-				,Spread1HOU
-				,Spread1X2
-				,Spread1H1X2
-				,SpreadXMins
-				,SpreadFM
-				,SpreadHDP_CN88
-				,Spread1HHDP_CN88
-				,SpreadOU_CN88
-				,Spread1HOU_CN88
-				,Spread1X2_CN88
-				,Spread1H1X2_CN88
-				,SpreadXMins_CN88
-				,SpreadFM_CN88
-			FROM dbo.AssignmentUploading WITH (NOLOCK)
-			WHERE SessionId = @SessionId
-				AND ISNULL(MinorBettypeId, 0) NOT IN (@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
-			) AS upload
-		UNPIVOT(Spread FOR ColumnName IN (SpreadHDP, Spread1HHDP, SpreadOU, Spread1HOU, Spread1X2, Spread1H1X2, SpreadXMins, SpreadFM, SpreadHDP_CN88, Spread1HHDP_CN88, SpreadOU_CN88, Spread1HOU_CN88, Spread1X2_CN88, Spread1H1X2_CN88, SpreadXMins_CN88, SpreadFM_CN88)) unpvt
-
-		-- check spread
-		UPDATE upload
-		SET upload.IsValid = 1
-		FROM #tblAssignmentUploading AS upload WITH (NOLOCK)
-		WHERE ISNULL(upload.Spread, '') = ''
-			OR (
-				ISNUMERIC(upload.Spread) = 1
-				AND SIGN(upload.Spread) > 0
-				)
-
-		-- combine
-		INSERT INTO #tblCombineInvalidSpread (
-			RowNumber
-			,ColumnName
-			)
-		SELECT data.RowNumber
-			,STUFF((
-					SELECT '; ' + ColumnName
-					FROM #tblAssignmentUploading WITH (NOLOCK)
-					WHERE RowNumber = data.RowNumber
-						AND IsValid = 0
-					FOR XML PATH('')
-					), 1, 2, '')
-		FROM (
-			SELECT DISTINCT RowNumber
-			FROM #tblAssignmentUploading WITH (NOLOCK)
-			WHERE IsValid = 0
-			) AS data
-
-		-- result
-		SELECT @SessionId
-			,upload.RowNumber
-			,@RuleId AS RuleId
-			,(CASE 
-				WHEN spread.RowNumber IS NOT NULL THEN @RuleResultType
-				ELSE @Passed END
-				) AS ResultType
-			,(CASE 
-				WHEN spread.RowNumber IS NOT NULL THEN REPLACE(@Message, '<content>', spread.ColumnName)
-				ELSE '' END
-				) AS [Message]
-		FROM dbo.AssignmentUploading AS upload WITH (NOLOCK)
-			LEFT JOIN #tblCombineInvalidSpread AS spread WITH (NOLOCK) ON upload.RowNumber = spread.RowNumber
-		WHERE upload.SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

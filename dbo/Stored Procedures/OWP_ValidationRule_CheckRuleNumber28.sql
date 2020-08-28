@@ -13,6 +13,7 @@ AS
 	20180725@Raymond.Le: Modify rule follow new uploading structure - [Redmine: #92868]
 	20190116@Raymond.Le: Add option 4HDP - [Redmine: #108043]
 	20190117@Leo.Vo: New structure of NoHDP - [Redmine: #107257]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -40,34 +41,7 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		SELECT @SessionId
-			,RowNumber
-			,@RuleId AS RuleId
-			,(CASE 
-				WHEN ISNULL(NoHDP, '') <> ''
-					AND NOT EXISTS (
-						SELECT 1
-						FROM #tblNoOfHandicap WITH (NOLOCK)
-						WHERE UPPER(REPLACE(NoHDP, ' ', '')) = Value
-						) THEN @RuleResultType
-				ELSE @Passed END
-				) AS ResultType
-			,(CASE 
-				WHEN ISNULL(NoHDP, '') <> ''
-					AND NOT EXISTS (
-						SELECT 1
-						FROM #tblNoOfHandicap WITH (NOLOCK)
-						WHERE UPPER(REPLACE(NoHDP, ' ', '')) = Value
-						) THEN REPLACE(@Message, '<content>', NoHDP)
-				ELSE '' END
-				) AS [Message]
-		FROM dbo.AssignmentUploading WITH (NOLOCK)
-		WHERE SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value

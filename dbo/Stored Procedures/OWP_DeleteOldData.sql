@@ -11,6 +11,7 @@ AS
     
  Revisions:
 	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
+	20200830@Jacob: Delete Old data of EmployeeWorkingShiftNote] - [Redmine: #137757]	
 */
 
      SET NOCOUNT ON;
@@ -85,6 +86,10 @@ AS
      -- DELETE EmployeeWorkingShift
      DELETE FROM dbo.EmployeeWorkingShift
      WHERE ShiftDate = @Date
+
+	 -- DELETE EmployeeWorkingShiftNote_Old
+     DELETE FROM dbo.[EmployeeWorkingShiftNote]
+     WHERE ShiftDate BETWEEN @FromDateTime AND @ToDateTime;
 
      -- DELETE OWPMatch
      DELETE m

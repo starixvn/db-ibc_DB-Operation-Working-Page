@@ -11,6 +11,7 @@ AS
  Revisions:
 	20180621@Leo.Vo: new structure of Upload Assignment - [Redmine: #92868]
 	20190109@Raymond.Le: Rename Provider to Other Provider, Runner to Provider - [Redmine: #107257]
+	20200830@Jacob: Delete unused code - [Redmine: #137757]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -33,34 +34,7 @@ BEGIN
 	WHERE RefName = 'RuleResultType'
 		AND Value = 'Passed'
 
-	-- upload
-	IF LEN(@SessionId) > 0
-	BEGIN
-		SELECT @SessionId
-			,RowNumber
-			,@RuleId AS RuleId
-			,(
-				CASE 
-					WHEN ISNULL([Provider], '') = ''
-						AND ISNULL(Phone, '') = ''
-						AND ISNULL(MinorBettypeId, '') = ''
-						THEN @RuleResultType
-					ELSE @Passed
-					END
-				) AS ResultType
-			,(
-				CASE 
-					WHEN ISNULL([Provider], '') = ''
-						AND ISNULL(Phone, '') = ''
-						AND ISNULL(MinorBettypeId, '') = ''
-						THEN @Message
-					ELSE ''
-					END
-				) AS [Message]
-		FROM dbo.AssignmentUploading WITH (NOLOCK)
-		WHERE SessionId = @SessionId
-	END
-	ELSE -- edit
+	-- edit
 	BEGIN
 		EXEC sp_xml_preparedocument @idoc OUTPUT
 			,@Value
