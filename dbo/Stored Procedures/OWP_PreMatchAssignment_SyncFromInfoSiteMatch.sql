@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_SyncFromInfoSiteMacth]
+CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_SyncFromInfoSiteMatch]
 AS
 
 /*
