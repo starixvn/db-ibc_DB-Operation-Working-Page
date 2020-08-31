@@ -23,32 +23,51 @@ Revisions:
         IF EXISTS
         (
             SELECT 1
-            FROM dbo.[PreMatchNightShiftStartTime]
+            FROM dbo.[PreMatchNightShiftStartTime] WITH(NOLOCK)
             WHERE EventDate = @Date
         )
             BEGIN
-                SET @Xml =
-                (
-                    SELECT EventDate AS '@d', 
-                           StartTime AS '@t'
-                    FROM dbo.[PreMatchNightShiftStartTime] WITH(ROWLOCK)
-                    WHERE EventDate = @Date FOR XML PATH('z'), ROOT('r')
-                );
-                SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+                DECLARE @oldStartTime TIME(7);
 
-                UPDATE dbo.[PreMatchNightShiftStartTime] WITH(ROWLOCK)
-                  SET 
-                      StartTime = @StartTime
+                SELECT @oldStartTime = StartTime
+                FROM dbo.[PreMatchNightShiftStartTime] WITH(NOLOCK)
                 WHERE EventDate = @Date;
 
-                SET @Xml =
-                (
-                    SELECT EventDate AS '@d', 
-                           StartTime AS '@t'
-                    FROM dbo.[PreMatchNightShiftStartTime] WITH(ROWLOCK)
-                    WHERE EventDate = @Date FOR XML PATH('z'), ROOT('r')
-                );
-                SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+                IF(@StartTime <> @oldStartTime)
+                    BEGIN
+                        SET @Xml =
+                        (
+                            SELECT EventDate AS '@d', 
+                                   StartTime AS '@t'
+                            FROM dbo.[PreMatchNightShiftStartTime] WITH(NOLOCK)
+                            WHERE EventDate = @Date FOR XML PATH('z'), ROOT('r')
+                        );
+                        SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+
+                        UPDATE dbo.[PreMatchNightShiftStartTime] WITH(ROWLOCK)
+                          SET 
+                              StartTime = @StartTime
+                        WHERE EventDate = @Date;
+
+                        SET @Xml =
+                        (
+                            SELECT EventDate AS '@d', 
+                                   StartTime AS '@t'
+                            FROM dbo.[PreMatchNightShiftStartTime] WITH(NOLOCK)
+                            WHERE EventDate = @Date FOR XML PATH('z'), ROOT('r')
+                        );
+                        SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+                        SET @EndRun = GETDATE();
+                        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+
+                        EXEC dbo.OWP_WriteLog 
+                             @CreatorId = @ActorId, 
+                             @SPName = 'OWP_PreMatchAssignment_UpdateStartTime', 
+                             @LoggedDate = @StartRun, 
+                             @Duration = @Duration, 
+                             @DataOld = @LogDataOld, 
+                             @Data = @LogData;
+                END;
         END;
             ELSE
             BEGIN
@@ -65,20 +84,18 @@ Revisions:
                 (
                     SELECT EventDate AS '@d', 
                            StartTime AS '@t'
-                    FROM dbo.[PreMatchNightShiftStartTime] WITH(ROWLOCK)
+                    FROM dbo.[PreMatchNightShiftStartTime] WITH(NOLOCK)
                     WHERE EventDate = @Date FOR XML PATH('z'), ROOT('r')
                 );
                 SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+                SET @EndRun = GETDATE();
+                SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+
+                EXEC dbo.OWP_WriteLog 
+                     @CreatorId = @ActorId, 
+                     @SPName = 'OWP_PreMatchAssignment_UpdateStartTime', 
+                     @LoggedDate = @StartRun, 
+                     @Duration = @Duration, 
+                     @Data = @LogData;
         END;
-
-        SET @EndRun = GETDATE();
-        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
-
-        EXEC dbo.OWP_WriteLog 
-             @CreatorId = @ActorId, 
-             @SPName = 'OWP_PreMatchAssignment_UpdateStartTime', 
-             @LoggedDate = @StartRun, 
-             @Duration = @Duration, 
-             @DataOld = @LogDataOld, 
-             @Data = @LogData;
     END;
