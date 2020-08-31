@@ -269,12 +269,12 @@ Revisions:
                     BlackList, 
                     Remark
              FROM @tblDayShiftTable AS a
-             WHERE a.HDP LIKE '%' + @Employee + '%'
-                   OR a.OU LIKE '%' + @Employee + '%'
-                   OR a.HDPTakeOver LIKE '%' + @Employee + '%'
-                   OR a.OUTakeOver LIKE '%' + @Employee + '%'
-                   OR a.HDPNickname LIKE '%' + @Employee + '%'
-				   OR a.OUNickname LIKE '%' + @Employee + '%'
-                   OR a.HDPTakeOverNickname LIKE '%' + @Employee + '%'
-                   OR a.OUTakeOverNickname LIKE '%' + @Employee + '%';
+             WHERE a.HDP = @Employee
+                   OR a.OU = @Employee
+                   OR a.HDPTakeOver = @Employee
+                   OR a.OUTakeOver = @Employee
+                   OR a.HDPNickname = @Employee
+                   OR a.OUNickname = @Employee
+                   OR a.HDPTakeOverNickname = @Employee
+                   OR a.OUTakeOverNickname = @Employee;
      END;
