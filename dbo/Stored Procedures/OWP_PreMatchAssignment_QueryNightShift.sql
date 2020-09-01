@@ -156,7 +156,7 @@ Revisions:
      -- insert table night shift--
      DECLARE @tblNightShiftTable TABLE
      (No                   INT IDENTITY(1, 1), 
-      PreMatchAssignmentId INT, 
+      PreMatchLeagueId INT, 
       LeagueId             INT, 
       LeagueName           VARCHAR(MAX), 
       MatchCount           INT, 
@@ -172,7 +172,7 @@ Revisions:
       Remark               NVARCHAR(MAX)
      );
      INSERT INTO @tblNightShiftTable
-     (PreMatchAssignmentId, 
+     (PreMatchLeagueId, 
       LeagueId, 
       LeagueName, 
       MatchCount, 
@@ -254,7 +254,7 @@ Revisions:
      IF @Employee = ''
          BEGIN
              SELECT [No], 
-                    PreMatchAssignmentId, 
+                    PreMatchLeagueId, 
                     LeagueId, 
                     LeagueName, 
                     MatchCount, 
@@ -265,11 +265,20 @@ Revisions:
                     BlackList, 
                     Remark
              FROM @tblNightShiftTable;
+
+			 SELECT m.InfoSiteMatchId,
+					m.HomeName,
+					m.AwayName,
+					m.EventDateTime,
+					l.PreMatchLeagueId
+             FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
+                  INNER JOIN @tblNightShiftTable AS l ON l.LeagueName = m.LeagueName
+             WHERE m.EventDateTime BETWEEN @PreStartTime AND @EventToDateTime;
      END;
          ELSE
          BEGIN
              SELECT [No], 
-                    PreMatchAssignmentId, 
+                    PreMatchLeagueId, 
                     LeagueId, 
                     LeagueName, 
                     MatchCount, 
@@ -288,4 +297,21 @@ Revisions:
                    OR a.OUNickname = @Employee
                    OR a.HDPTakeOverNickname = @Employee
                    OR a.OUTakeOverNickname = @Employee;
+
+			SELECT m.InfoSiteMatchId,
+					m.HomeName,
+					m.AwayName,
+					m.EventDateTime,
+					a.PreMatchLeagueId
+             FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
+                  INNER JOIN @tblNightShiftTable AS a ON a.LeagueName = m.LeagueName
+             WHERE m.EventDateTime BETWEEN @PreStartTime AND @EventToDateTime
+			 AND   (a.HDP = @Employee
+                   OR a.OU = @Employee
+                   OR a.HDPTakeOver = @Employee
+                   OR a.OUTakeOver = @Employee
+                   OR a.HDPNickname = @Employee
+                   OR a.OUNickname = @Employee
+                   OR a.HDPTakeOverNickname = @Employee
+                   OR a.OUTakeOverNickname = @Employee);
      END;

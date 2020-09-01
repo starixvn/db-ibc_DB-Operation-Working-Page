@@ -1,13 +1,17 @@
-USE [bodb_OWP]
+USE [bodb_OWP];
 GO
+
 /****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryDayShift]    Script Date: 8/28/2020 4:22:05 PM ******/
-SET ANSI_NULLS ON
+
+SET ANSI_NULLS ON;
 GO
-SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON;
 GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryDayShift] @EventDate DATE, 
-                                                     @Employee  VARCHAR(MAX) = ''
+                                                             @Employee  VARCHAR(MAX) = ''
 AS
 
 /*  
@@ -28,17 +32,17 @@ Revisions:
      ---- insert usernames for HDP bettype----
      DECLARE @tblUserNamesHDP TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX),
-	  Nickname         VARCHAR(MAX)
+      UserName         VARCHAR(MAX), 
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesHDP
      (PreMatchLeagueId, 
-      UserName,
-	  Nickname
+      UserName, 
+      Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username,
-				   u.Nickname
+                   Username, 
+                   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -51,17 +55,17 @@ Revisions:
      ---- insert usernames for HDP Take Over ----
      DECLARE @tblUserNamesHDPTO TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX),
-	  Nickname         VARCHAR(MAX)
+      UserName         VARCHAR(MAX), 
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesHDPTO
      (PreMatchLeagueId, 
-      UserName,
-	  Nickname
+      UserName, 
+      Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username,
-				   u.Nickname
+                   Username, 
+                   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -74,17 +78,17 @@ Revisions:
      ---- insert usernames for OU bettype----
      DECLARE @tblUserNamesOU TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX),
-	  Nickname         VARCHAR(MAX)
+      UserName         VARCHAR(MAX), 
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesOU
      (PreMatchLeagueId, 
-      UserName,
-	  Nickname
+      UserName, 
+      Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username,
-				   u.Nickname
+                   Username, 
+                   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -97,17 +101,17 @@ Revisions:
      ---- insert usernames for OU Take Over----
      DECLARE @tblUserNamesOUTO TABLE
      (PreMatchLeagueId INT, 
-      UserName         VARCHAR(MAX),
-	  Nickname         VARCHAR(MAX)
+      UserName         VARCHAR(MAX), 
+      Nickname         VARCHAR(MAX)
      );
      INSERT INTO @tblUserNamesOUTO
      (PreMatchLeagueId, 
-      UserName,
-	  Nickname
+      UserName, 
+      Nickname
      )
             SELECT pa.PreMatchLeagueId, 
-                   Username,
-				   u.Nickname
+                   Username, 
+                   u.Nickname
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN PreMatchAssignment AS pa WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
                  INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
@@ -143,24 +147,24 @@ Revisions:
 
      -- insert table day shift--
      DECLARE @tblDayShiftTable TABLE
-     (No                   INT IDENTITY(1, 1), 
-      PreMatchAssignmentId INT, 
-      LeagueId             INT, 
-      LeagueName           VARCHAR(MAX), 
-      MatchCount           INT, 
-      HDP                  VARCHAR(200), 
-      OU                   VARCHAR(200), 
-      HDPTakeOver          VARCHAR(200), 
-      OUTakeOver           VARCHAR(200), 
-	  HDPNickname          VARCHAR(200), 
-      OUNickname           VARCHAR(200), 
-      HDPTakeOverNickname  VARCHAR(200), 
-      OUTakeOverNickname   VARCHAR(200), 
-      BlackList            BIT, 
-      Remark               NVARCHAR(MAX)
+     (No                  INT IDENTITY(1, 1), 
+      PreMatchLeagueId    INT, 
+      LeagueId            INT, 
+      LeagueName          VARCHAR(MAX), 
+      MatchCount          INT, 
+      HDP                 VARCHAR(200), 
+      OU                  VARCHAR(200), 
+      HDPTakeOver         VARCHAR(200), 
+      OUTakeOver          VARCHAR(200), 
+      HDPNickname         VARCHAR(200), 
+      OUNickname          VARCHAR(200), 
+      HDPTakeOverNickname VARCHAR(200), 
+      OUTakeOverNickname  VARCHAR(200), 
+      BlackList           BIT, 
+      Remark              NVARCHAR(MAX)
      );
      INSERT INTO @tblDayShiftTable
-     (PreMatchAssignmentId, 
+     (PreMatchLeagueId, 
       LeagueId, 
       LeagueName, 
       MatchCount, 
@@ -168,7 +172,7 @@ Revisions:
       OU, 
       HDPTakeOver, 
       OUTakeOver, 
-	  HDPNickname, 
+      HDPNickname, 
       OUNickname, 
       HDPTakeOverNickname, 
       OUTakeOverNickname, 
@@ -183,7 +187,7 @@ Revisions:
                    o.UserName, 
                    ht.UserName, 
                    ot.UserName, 
-				   h.Nickname, 
+                   h.Nickname, 
                    o.Nickname, 
                    ht.Nickname, 
                    ot.Nickname, 
@@ -208,8 +212,8 @@ Revisions:
                      o.UserName, 
                      ot.UserName, 
                      l.IsBlackList, 
-                     pl.Remark,
-					 h.Nickname, 
+                     pl.Remark, 
+                     h.Nickname, 
                      ht.Nickname, 
                      o.Nickname, 
                      ot.Nickname
@@ -243,7 +247,7 @@ Revisions:
      IF @Employee = ''
          BEGIN
              SELECT [No], 
-                    PreMatchAssignmentId, 
+                    PreMatchLeagueId, 
                     LeagueId, 
                     LeagueName, 
                     MatchCount, 
@@ -254,11 +258,20 @@ Revisions:
                     BlackList, 
                     Remark
              FROM @tblDayShiftTable;
+
+             SELECT m.InfoSiteMatchId,
+					m.HomeName,
+					m.AwayName,
+					m.EventDateTime,
+					l.PreMatchLeagueId
+             FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
+                  INNER JOIN @tblDayShiftTable AS l ON l.LeagueName = m.LeagueName
+             WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime;
      END;
          ELSE
          BEGIN
              SELECT [No], 
-                    PreMatchAssignmentId, 
+                    PreMatchLeagueId, 
                     LeagueId, 
                     LeagueName, 
                     MatchCount, 
@@ -277,4 +290,21 @@ Revisions:
                    OR a.OUNickname = @Employee
                    OR a.HDPTakeOverNickname = @Employee
                    OR a.OUTakeOverNickname = @Employee;
+
+			SELECT m.InfoSiteMatchId,
+					m.HomeName,
+					m.AwayName,
+					m.EventDateTime,
+					a.PreMatchLeagueId
+             FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
+                  INNER JOIN @tblDayShiftTable AS a ON a.LeagueName = m.LeagueName
+             WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
+			 AND   (a.HDP = @Employee
+                   OR a.OU = @Employee
+                   OR a.HDPTakeOver = @Employee
+                   OR a.OUTakeOver = @Employee
+                   OR a.HDPNickname = @Employee
+                   OR a.OUNickname = @Employee
+                   OR a.HDPTakeOverNickname = @Employee
+                   OR a.OUTakeOverNickname = @Employee);
      END;
