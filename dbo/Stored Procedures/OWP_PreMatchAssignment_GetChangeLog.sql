@@ -1,8 +1,9 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_GetChangeLog] @PageSize   INT, 
-                                                            @PageNumber INT
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_GetChangeLog] @PageSize   INT = 10, 
+                                                            @PageNumber INT = 1, 
+                                                            @IsDay      BIT = 1
 AS
 
 /*      
@@ -46,7 +47,7 @@ AS
                           ORDER BY ul.UserLogId DESC) AS RowNumber, 
                           ul.LoggedDate AS LastModified
                    FROM dbo.UserLog AS ul WITH(NOLOCK)
-                        INNER JOIN @tblLogAction AS sp ON ul.ActionId = sp.ActionId                   
+                        INNER JOIN @tblLogAction AS sp ON ul.ActionId = sp.ActionId
                ) AS Paging
                WHERE RowNumber BETWEEN @FromRowNumNext AND @ToRowNumNext
                ORDER BY RowNumber, 
@@ -60,7 +61,7 @@ AS
                NewValue, 
                LastModified, 
                ModifiedBy
-         FROM
+        FROM
         (
             SELECT ROW_NUMBER() OVER(
                    ORDER BY ul.UserLogId DESC) AS RowNumber, 
@@ -93,6 +94,7 @@ AS
                  LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON ul.CreatorId = u.UserId
                  LEFT JOIN LogAction AS la WITH(NOLOCK) ON la.ActionId = ul.ActionId
                  LEFT JOIN LogActionType AS lat WITH(NOLOCK) ON lat.ActionTypeId = la.ActionTypeId
+            WHERE p.IsDay = @IsDay
         ) AS Paging
         WHERE RowNumber BETWEEN @FromRowNum AND @ToRowNum
         ORDER BY RowNumber, 
