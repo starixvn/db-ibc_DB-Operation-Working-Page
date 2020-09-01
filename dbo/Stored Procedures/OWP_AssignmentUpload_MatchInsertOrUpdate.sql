@@ -15,6 +15,7 @@ Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 	20200730@Jack.Nguyen: add IPTV, AdminSiteId, changeName MachId  - [Redmine: #137756]
+	20200901@Mira.Nguyen: Notification when re-uploading match with Neutral [Redmine: #140807]
 */
 
      SET NOCOUNT ON;
@@ -143,7 +144,6 @@ Revisions:
      ON m.LeagueId = om.OWPLeagueId
         AND m.HomeId = om.OWPHomeId
         AND m.AwayId = om.OWPAwayId
-		AND m.IsNeutral = om.IsNeutral
         AND om.EventDateTime >= @EventFromDateTime
         AND om.EventDateTime < @EventToDateTime
          WHEN MATCHED
@@ -154,7 +154,8 @@ Revisions:
                          om.OtherTime = m.OtherTime, 
                          om.EventDateTime = m.EventDate + m.KickOffTime, 
                          om.InfoSiteMatchId = m.InfoSiteMatchId,
-						 om.MatchId = m.AdminSiteId
+						 om.MatchId = m.AdminSiteId,
+						 om.IsNeutral = m.IsNeutral
          WHEN NOT MATCHED BY TARGET
          THEN
            INSERT([MatchNo], 
