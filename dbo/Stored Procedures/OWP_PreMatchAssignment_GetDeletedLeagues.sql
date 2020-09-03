@@ -30,5 +30,6 @@ Revisions:
               AND IsDay = @IsDay
         GROUP BY p.PreMatchLeagueId, 
                  o.OWPLeagueName, 
-                 u.Username;
+                 u.Username
+		ORDER BY 'DeletedTime' DESC;
     END;
