@@ -94,9 +94,8 @@ AS
                  LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON ul.CreatorId = u.UserId
                  LEFT JOIN LogAction AS la WITH(NOLOCK) ON la.ActionId = ul.ActionId
                  LEFT JOIN LogActionType AS lat WITH(NOLOCK) ON lat.ActionTypeId = la.ActionTypeId
-            WHERE (ul.ActionId <> 117
-                      AND p.IsDay = @IsDay)
-                   OR ul.ActionId = 117 
+            WHERE p.IsDay = @IsDay
+                  OR (ul.ActionId = 117 AND @IsDay = 0)
         ) AS Paging
         WHERE RowNumber BETWEEN @FromRowNum AND @ToRowNum
         ORDER BY RowNumber, 
