@@ -17,7 +17,6 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-
         CREATE TABLE #deleteIds
         (RowId            INT IDENTITY(1, 1), 
          PreMatchLeagueId INT
@@ -28,6 +27,7 @@ Revisions:
         INSERT INTO #deleteIds(PreMatchLeagueId)
                SELECT [Value]
                FROM dbo.fnc_SplitString(@DeletedIds, ',');
+
         SELECT @totalLeague = COUNT(RowId)
         FROM #deleteIds;
 
@@ -40,27 +40,33 @@ Revisions:
                 FROM #deleteIds
                 WHERE RowId = @i;
 
-                UPDATE dbo.[PreMatchLeague] WITH(ROWLOCK)
-                  SET 
-                      IsDeleted = 1
-                WHERE PreMatchLeagueId = @preMatchLeagueId;
-
-                SET @Xml =
+                IF EXISTS
                 (
-                    SELECT @preMatchLeagueId AS '@plid' FOR XML PATH('z'), ROOT('r')
-                );
-
-                SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
-                SET @EndRun = GETDATE();
-                SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
-
-                EXEC dbo.OWP_WriteLog 
-                     @CreatorId = @ActorId, 
-                     @SPName = 'OWP_PreMatchAssignment_DeleteLeague', 
-                     @LoggedDate = @StartRun, 
-                     @Duration = @Duration, 
-                     @ObjectId = @preMatchLeagueId, 
-                     @DataOld = @LogDataOld;
+                    SELECT 1
+                    FROM dbo.[PreMatchLeague] WITH(NOLOCK)
+                    WHERE PreMatchLeagueId = @preMatchLeagueId
+                          AND IsDeleted = 0
+                )
+                    BEGIN
+                        UPDATE dbo.[PreMatchLeague] WITH(ROWLOCK)
+                          SET 
+                              IsDeleted = 1
+                        WHERE PreMatchLeagueId = @preMatchLeagueId;
+                        SET @Xml =
+                        (
+                            SELECT @preMatchLeagueId AS '@plid' FOR XML PATH('z'), ROOT('r')
+                        );
+                        SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+                        SET @EndRun = GETDATE();
+                        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+                        EXEC dbo.OWP_WriteLog 
+                             @CreatorId = @ActorId, 
+                             @SPName = 'OWP_PreMatchAssignment_DeleteLeague', 
+                             @LoggedDate = @StartRun, 
+                             @Duration = @Duration, 
+                             @ObjectId = @preMatchLeagueId, 
+                             @DataOld = @LogDataOld;
+                END;
 
                 SET @i = @i + 1;
             END;
