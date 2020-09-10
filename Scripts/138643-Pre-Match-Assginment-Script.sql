@@ -49,10 +49,13 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [dbo].[PreMatchNightShiftStartTime](
 	[EventDate] [date] NOT NULL,
-	[StartTime] [time](7) NOT NULL
+	[StartTime] [time](7) NOT NULL,
+ CONSTRAINT [PK_PreMatchNightShiftStartTime] PRIMARY KEY CLUSTERED 
+(
+	[EventDate] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 ) ON [OWP_Data]
 GO
-
 
 INSERT INTO [dbo].[Module] ([ModuleId], [ModuleName])
 VALUES (10, 'PreMatchAssignment');
