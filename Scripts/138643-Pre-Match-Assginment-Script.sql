@@ -15,11 +15,22 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
+IF OBJECT_ID('dbo.PreMatchAssignment', 'U') IS NOT NULL 
+DROP TABLE dbo.[PreMatchAssignment]; 
+GO
 CREATE TABLE [dbo].[PreMatchAssignment](
 	[PreMatchLeagueId] [int] NOT NULL,
 	[UserId] [int] NOT NULL,
 	[Bettype] [int] NOT NULL,
-	[IsTakeOver] [bit] NOT NULL
+	[IsTakeOver] [bit] NOT NULL,
+ CONSTRAINT [PK_PreMatchAssignment] PRIMARY KEY CLUSTERED 
+(
+	[PreMatchLeagueId] ASC,
+	[UserId] ASC,
+	[Bettype] ASC,
+	[IsTakeOver] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 ) ON [OWP_Data]
 GO
 
@@ -27,6 +38,9 @@ GO
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
+GO
+IF OBJECT_ID('dbo.PreMatchLeague', 'U') IS NOT NULL 
+DROP TABLE dbo.[PreMatchLeague]; 
 GO
 CREATE TABLE [dbo].[PreMatchLeague](
 	[PreMatchLeagueId] [int] IDENTITY(1,1) NOT NULL,
@@ -47,6 +61,9 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+IF OBJECT_ID('dbo.PreMatchNightShiftStartTime', 'U') IS NOT NULL 
+DROP TABLE dbo.[PreMatchNightShiftStartTime]; 
+GO
 CREATE TABLE [dbo].[PreMatchNightShiftStartTime](
 	[EventDate] [date] NOT NULL,
 	[StartTime] [time](7) NOT NULL,
@@ -58,24 +75,32 @@ CREATE TABLE [dbo].[PreMatchNightShiftStartTime](
 GO
 
 INSERT INTO [dbo].[Module] ([ModuleId], [ModuleName])
-VALUES (10, 'PreMatchAssignment');
+SELECT 10, 'PreMatchAssignment'
+WHERE NOT EXISTS(SELECT 1 FROM [dbo].[Module] WITH(NOLOCK) WHERE [ModuleId] = 1)
 
 INSERT INTO [dbo].[ModuleObject]([ModuleObjectId], [ModuleObjectName], [ModuleId])
-VALUES (34, 'ShiftAssignment', 10);
+SELECT 34, 'ShiftAssignment', 10
+WHERE NOT EXISTS(SELECT 1 FROM [dbo].[ModuleObject] WITH(NOLOCK) WHERE [ModuleObjectId] = 34)
 
 INSERT INTO [dbo].[ModuleObject]([ModuleObjectId], [ModuleObjectName], [ModuleId])
-VALUES (35, 'Remark', 10);
+SELECT 35, 'Remark', 10
+WHERE NOT EXISTS(SELECT 1 FROM [dbo].[ModuleObject] WITH(NOLOCK) WHERE [ModuleObjectId] = 35)
 
 INSERT INTO [dbo].[ModuleObject]([ModuleObjectId], [ModuleObjectName], [ModuleId])
-VALUES (36, 'League', 10);
+SELECT 36, 'League', 10
+WHERE NOT EXISTS(SELECT 1 FROM [dbo].[ModuleObject] WITH(NOLOCK) WHERE [ModuleObjectId] = 36)
 
 INSERT INTO [dbo].[ModuleObject]([ModuleObjectId], [ModuleObjectName], [ModuleId])
-VALUES (37, 'NightShiftStartTime', 10);
+SELECT 37, 'NightShiftStartTime', 10
+WHERE NOT EXISTS(SELECT 1 FROM [dbo].[ModuleObject] WITH(NOLOCK) WHERE [ModuleObjectId] = 37)
+
 
 INSERT INTO [dbo].[LogActionType]([ActionTypeName])
-VALUES ('Recover');
+SELECT  'Recover'
+WHERE NOT EXISTS(SELECT 1 FROM [dbo].[LogActionType] WITH(NOLOCK) WHERE [ActionTypeName] = 'Recover')
 
-INSERT INTO [dbo].[LogAction]
+IF NOT EXISTS (SELECT 1 FROM [LogAction] WHERE ActionId BETWEEN 113 AND 117)
+	INSERT INTO [dbo].[LogAction]
 ([ActionId], 
  [ModuleId], 
  [ModuleObjectId], 
