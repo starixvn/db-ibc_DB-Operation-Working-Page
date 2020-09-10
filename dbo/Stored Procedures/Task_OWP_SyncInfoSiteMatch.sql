@@ -28,6 +28,7 @@ AS
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   	
+	20200813@Jacob: Prematch Assignment - [Redmine: #138643]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -49,9 +50,9 @@ BEGIN
 		,@Index INT
 		,@LogId INT
 
-	-- remove old data
+	-- remove data older than 1 month
 	DELETE dbo.InfoSiteMatch WITH (ROWLOCK)
-	WHERE EventDateTime < DATEADD(DAY, - 1, GETDATE());
+	WHERE EventDateTime < DATEADD(DAY, - 31, GETDATE());
 
 	DELETE ld
 	FROM dbo.InfoSiteSyncLogDetail AS ld WITH (ROWLOCK)
