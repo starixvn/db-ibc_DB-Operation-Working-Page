@@ -11,8 +11,9 @@ GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryNightShift] @EventDate DATE, 
-                                                               @StartTime TIME(7), 
-                                                               @Employee  VARCHAR(MAX) = ''
+                                                                     @StartTime TIME(7), 
+                                                                     @Employee  VARCHAR(MAX) = '', 
+                                                                     @ActorId   INT
 AS
 
 /*  
@@ -21,7 +22,8 @@ Task : Query night shift
 DB: bodb_OWP  
   
 Revisions:  
- 20200814@Esther.Nguyen: query night shift  - [Redmine: #138643]  
+ 20200814@Esther.Nguyen: query night shift  - [Redmine: #138643] 
+ 20200908@Tyler: query matches  - [Redmine: #140620]   
 */
 
      SET NOCOUNT ON;
@@ -155,21 +157,21 @@ Revisions:
 
      -- insert table night shift--
      DECLARE @tblNightShiftTable TABLE
-     (No                   INT IDENTITY(1, 1), 
-      PreMatchLeagueId INT, 
-      LeagueId             INT, 
-      LeagueName           VARCHAR(MAX), 
-      MatchCount           INT, 
-      HDP                  VARCHAR(200), 
-      OU                   VARCHAR(200), 
-      HDPTakeOver          VARCHAR(200), 
-      OUTakeOver           VARCHAR(200), 
-      HDPNickname          VARCHAR(200), 
-      OUNickname           VARCHAR(200), 
-      HDPTakeOverNickname  VARCHAR(200), 
-      OUTakeOverNickname   VARCHAR(200), 
-      BlackList            BIT, 
-      Remark               NVARCHAR(MAX)
+     (No                  INT IDENTITY(1, 1), 
+      PreMatchLeagueId    INT, 
+      LeagueId            INT, 
+      LeagueName          VARCHAR(MAX), 
+      MatchCount          INT, 
+      HDP                 VARCHAR(200), 
+      OU                  VARCHAR(200), 
+      HDPTakeOver         VARCHAR(200), 
+      OUTakeOver          VARCHAR(200), 
+      HDPNickname         VARCHAR(200), 
+      OUNickname          VARCHAR(200), 
+      HDPTakeOverNickname VARCHAR(200), 
+      OUTakeOverNickname  VARCHAR(200), 
+      BlackList           BIT, 
+      Remark              NVARCHAR(MAX)
      );
      INSERT INTO @tblNightShiftTable
      (PreMatchLeagueId, 
@@ -263,16 +265,56 @@ Revisions:
                     HDPTakeOver, 
                     OUTakeOver, 
                     BlackList, 
-                    Remark
-             FROM @tblNightShiftTable;
+                    Remark,
+                    CASE
+                        WHEN i.[Message] IS NOT NULL
+                        THEN 1
+                        ELSE 0
+                    END AS HasMessages, 
+                    i.IsRead
+             FROM @tblNightShiftTable AS l
+                  LEFT JOIN
+             (
+                 SELECT TOP 1 m.[Message], 
+                              r.IsRead, 
+                              i.OWPLeagueId
+                 FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                      LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
+                      LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = i.PreMatchIssueId
+                 WHERE r.UserId = @ActorId
+                       AND i.EventDate = @EventDate
+                       AND i.OWPLeagueId IS NOT NULL
+                 ORDER BY m.CreatedDate DESC
+             ) AS i ON l.LeagueId = i.OWPLeagueId;
 
-			 SELECT m.InfoSiteMatchId,
-					m.HomeName,
-					m.AwayName,
-					m.EventDateTime,
-					l.PreMatchLeagueId
+             -- Query InfoSiteMatches --
+             SELECT m.InfoSiteMatchId, 
+                    m.LeagueName, 
+                    m.HomeName, 
+                    m.AwayName, 
+                    m.EventDateTime, 
+                    l.PreMatchLeagueId,
+                    CASE
+                        WHEN i.[Message] IS NOT NULL
+                        THEN 1
+                        ELSE 0
+                    END AS HasMessages, 
+                    i.IsRead
              FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
                   INNER JOIN @tblNightShiftTable AS l ON l.LeagueName = m.LeagueName
+                  LEFT JOIN
+             (
+                 SELECT TOP 1 im.[Message], 
+                              r.IsRead, 
+                              i.InfoSiteMatchId
+                 FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                      LEFT JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = i.PreMatchIssueId
+                      LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = i.PreMatchIssueId
+                 WHERE r.UserId = @ActorId
+                       AND i.EventDate = @EventDate
+                       AND i.InfoSiteMatchId IS NOT NULL
+                 ORDER BY im.CreatedDate DESC
+             ) AS i ON i.InfoSiteMatchId = m.InfoSiteMatchId
              WHERE m.EventDateTime BETWEEN @PreStartTime AND @EventToDateTime;
      END;
          ELSE
@@ -287,8 +329,27 @@ Revisions:
                     HDPTakeOver, 
                     OUTakeOver, 
                     BlackList, 
-                    Remark
+                    Remark,
+                    CASE
+                        WHEN i.[Message] IS NOT NULL
+                        THEN 1
+                        ELSE 0
+                    END AS HasMessages, 
+                    i.IsRead
              FROM @tblNightShiftTable AS a
+                  LEFT JOIN
+             (
+                 SELECT TOP 1 m.[Message], 
+                              r.IsRead, 
+                              i.OWPLeagueId
+                 FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                      LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
+                      LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = i.PreMatchIssueId
+                 WHERE r.UserId = @ActorId
+                       AND i.EventDate = @EventDate
+                       AND i.OWPLeagueId IS NOT NULL
+                 ORDER BY m.CreatedDate DESC
+             ) AS i ON a.LeagueId = i.OWPLeagueId
              WHERE a.HDP = @Employee
                    OR a.OU = @Employee
                    OR a.HDPTakeOver = @Employee
@@ -298,20 +359,41 @@ Revisions:
                    OR a.HDPTakeOverNickname = @Employee
                    OR a.OUTakeOverNickname = @Employee;
 
-			SELECT m.InfoSiteMatchId,
-					m.HomeName,
-					m.AwayName,
-					m.EventDateTime,
-					a.PreMatchLeagueId
+             -- Query InfoSiteMatches --
+             SELECT m.InfoSiteMatchId, 
+                    m.LeagueName, 
+                    m.HomeName, 
+                    m.AwayName, 
+                    m.EventDateTime, 
+                    a.PreMatchLeagueId,
+                    CASE
+                        WHEN i.[Message] IS NOT NULL
+                        THEN 1
+                        ELSE 0
+                    END AS HasMessages, 
+                    i.IsRead
              FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
                   INNER JOIN @tblNightShiftTable AS a ON a.LeagueName = m.LeagueName
+                  LEFT JOIN
+             (
+                 SELECT TOP 1 im.[Message], 
+                              r.IsRead, 
+                              i.InfoSiteMatchId
+                 FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                      LEFT JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = i.PreMatchIssueId
+                      LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = i.PreMatchIssueId
+                 WHERE r.UserId = @ActorId
+                       AND i.EventDate = @EventDate
+                       AND i.InfoSiteMatchId IS NOT NULL
+                 ORDER BY im.CreatedDate DESC
+             ) AS i ON i.InfoSiteMatchId = m.InfoSiteMatchId
              WHERE m.EventDateTime BETWEEN @PreStartTime AND @EventToDateTime
-			 AND   (a.HDP = @Employee
-                   OR a.OU = @Employee
-                   OR a.HDPTakeOver = @Employee
-                   OR a.OUTakeOver = @Employee
-                   OR a.HDPNickname = @Employee
-                   OR a.OUNickname = @Employee
-                   OR a.HDPTakeOverNickname = @Employee
-                   OR a.OUTakeOverNickname = @Employee);
+                   AND (a.HDP = @Employee
+                        OR a.OU = @Employee
+                        OR a.HDPTakeOver = @Employee
+                        OR a.OUTakeOver = @Employee
+                        OR a.HDPNickname = @Employee
+                        OR a.OUNickname = @Employee
+                        OR a.HDPTakeOverNickname = @Employee
+                        OR a.OUTakeOverNickname = @Employee);
      END;
