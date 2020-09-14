@@ -231,7 +231,8 @@ Revisions:
                     HDPTakeOver, 
                     OUTakeOver, 
                     BlackList, 
-                    Remark,
+                    Remark, 
+                    i.PreMatchIssueId,
                     CASE
                         WHEN i.[Message] IS NOT NULL
                         THEN 1
@@ -241,7 +242,8 @@ Revisions:
              FROM @tblDayShiftTable AS l
                   LEFT JOIN
              (
-                 SELECT TOP 1 m.[Message], 
+                 SELECT TOP 1 i.PreMatchIssueId, 
+                              m.[Message], 
                               r.IsRead, 
                               i.OWPLeagueId
                  FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
@@ -259,7 +261,8 @@ Revisions:
                     m.HomeName, 
                     m.AwayName, 
                     m.EventDateTime, 
-                    l.PreMatchLeagueId,
+                    l.PreMatchLeagueId, 
+                    i.PreMatchIssueId,
                     CASE
                         WHEN i.[Message] IS NOT NULL
                         THEN 1
@@ -270,7 +273,8 @@ Revisions:
                   INNER JOIN @tblDayShiftTable AS l ON l.LeagueName = m.LeagueName
                   LEFT JOIN
              (
-                 SELECT TOP 1 im.[Message], 
+                 SELECT TOP 1 i.PreMatchIssueId, 
+                              im.[Message], 
                               r.IsRead, 
                               i.InfoSiteMatchId
                  FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
@@ -296,7 +300,8 @@ Revisions:
                     HDPTakeOver, 
                     OUTakeOver, 
                     BlackList, 
-                    Remark,
+                    Remark, 
+                    i.PreMatchIssueId,
                     CASE
                         WHEN i.[Message] IS NOT NULL
                         THEN 1
@@ -306,7 +311,8 @@ Revisions:
              FROM @tblDayShiftTable AS a
                   LEFT JOIN
              (
-                 SELECT TOP 1 m.[Message], 
+                 SELECT TOP 1 i.PreMatchIssueId, 
+                              m.[Message], 
                               r.IsRead, 
                               i.OWPLeagueId
                  FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
@@ -332,7 +338,8 @@ Revisions:
                     m.HomeName, 
                     m.AwayName, 
                     m.EventDateTime, 
-                    a.PreMatchLeagueId,
+                    a.PreMatchLeagueId, 
+                    i.PreMatchIssueId,
                     CASE
                         WHEN i.[Message] IS NOT NULL
                         THEN 1
@@ -343,7 +350,8 @@ Revisions:
                   INNER JOIN @tblDayShiftTable AS a ON a.LeagueName = m.LeagueName
                   LEFT JOIN
              (
-                 SELECT TOP 1 im.[Message], 
+                 SELECT TOP 1 i.PreMatchIssueId, 
+                              im.[Message], 
                               r.IsRead, 
                               i.InfoSiteMatchId
                  FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
