@@ -1,7 +1,7 @@
 USE [bodb_OWP];
 GO
 
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryNightShift]    Script Date: 8/28/2020 4:22:31 PM ******/
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryNightShift]    Script Date: 9/14/2020 9:11:08 AM ******/
 
 SET ANSI_NULLS ON;
 GO
@@ -11,9 +11,9 @@ GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryNightShift] @EventDate DATE, 
-                                                                     @StartTime TIME(7), 
-                                                                     @Employee  VARCHAR(MAX) = '', 
-                                                                     @ActorId   INT
+                                                               @StartTime TIME(7), 
+                                                               @Employee  VARCHAR(MAX) = '', 
+                                                               @ActorId   INT
 AS
 
 /*  
@@ -226,32 +226,8 @@ Revisions:
                      h.Nickname, 
                      ht.Nickname, 
                      o.Nickname, 
-                     ot.Nickname
-            ORDER BY CASE
-                         WHEN h.UserName IS NOT NULL
-                         THEN 0
-                         ELSE 1
-                     END,
-                     CASE
-                         WHEN o.UserName IS NOT NULL
-                         THEN 0
-                         ELSE 1
-                     END,
-                     CASE
-                         WHEN ht.UserName IS NOT NULL
-                         THEN 0
-                         ELSE 1
-                     END,
-                     CASE
-                         WHEN ot.UserName IS NOT NULL
-                         THEN 0
-                         ELSE 1
-                     END, 
-                     h.UserName ASC, 
-                     o.UserName ASC, 
-                     ht.UserName ASC, 
-                     ot.UserName ASC, 
-                     l.OWPLeagueName ASC;
+                     ot.Nickname;
+
      -- Result
      IF @Employee = ''
          BEGIN
