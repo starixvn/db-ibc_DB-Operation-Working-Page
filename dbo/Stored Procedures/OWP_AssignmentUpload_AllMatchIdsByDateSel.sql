@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_AllMatcheIdsByDateSel] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_AllMatchIdsByDateSel] @EventDate DATE
 AS
 
 /*
@@ -11,7 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
-	
+	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 */
 
      SET NOCOUNT ON;
@@ -19,6 +19,6 @@ Revisions:
      DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
   
      -- Result
-     SELECT m.[OWPMatchId]
+     SELECT m.[OWPMatchId], m.[InfoSiteMatchId], m.EventDate
      FROM dbo.OWPMatch m WITH(NOLOCK)
      WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime;

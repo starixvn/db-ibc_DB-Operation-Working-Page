@@ -19,7 +19,7 @@ AS
 	20191108@Leo.Vo: Add venue - [Redmine: #123167]
 	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
-	
+	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -44,6 +44,7 @@ BEGIN
 
 	CREATE TABLE #tblInfoSiteMatch (
 		[InfoSiteMatchId] [int] NOT NULL
+		,[IsLive] BIT NOT NULL
 		,[EventDateTime] [datetime] NOT NULL
 		,[UpdatedTime] [datetime] NOT NULL
 		,[LeagueName] [nvarchar](500) NOT NULL
@@ -71,6 +72,7 @@ BEGIN
 
 	INSERT INTO #tblInfoSiteMatch (
 		[InfoSiteMatchId]
+		,[IsLive] 
 		,[EventDateTime]
 		,[UpdatedTime]
 		,[LeagueName]
@@ -91,6 +93,7 @@ BEGIN
 		,[IPTV]
 		)
 	SELECT [InfoSiteMatchId]
+		,[IsLive] 
 		,[EventDateTime]
 		,[UpdatedTime]
 		,[LeagueName]
@@ -111,6 +114,7 @@ BEGIN
 		,[IPTV]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			[InfoSiteMatchId] [int]
+			,[IsLive] BIT
 			,[EventDateTime] [datetime]
 			,[UpdatedTime] [datetime]
 			,[LeagueName] [nvarchar](500)
@@ -137,7 +141,7 @@ BEGIN
 	DELETE tism
 	FROM #tblInfoSiteMatch AS tism
 	INNER JOIN dbo.InfoSiteMatch AS dism WITH (NOLOCK) ON tism.InfoSiteMatchId = dism.InfoSiteMatchId
-	WHERE tism.UpdatedTime = dism.UpdatedTime OR dism.IsDeleted = 1
+	WHERE (tism.UpdatedTime = dism.UpdatedTime AND tism.IsLive = dism.IsLive) OR dism.IsDeleted = 1 
 
 	-- insert new league
 	INSERT INTO dbo.OWPLeague (OWPLeagueName)
@@ -309,10 +313,11 @@ BEGIN
 			,[AgentIds]
 			,[IsNeutral]
 			,[IPTV]
+			,[IsLive]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
-	WHEN MATCHED
+	WHEN MATCHED AND t.[IsDeleted] = 0
 		THEN
 			UPDATE
 			SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -340,6 +345,7 @@ BEGIN
 				,t.[IsDeleted] = 0
 				,t.[IsNeutral] = s.[IsNeutral]
 				,t.[IPTV]=s.[IPTV]
+				,t.[IsLive]=s.[IsLive]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -368,6 +374,7 @@ BEGIN
 				,[IsDeleted]
 				,[IsNeutral]
 				,[IPTV]
+				,[IsLive]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -395,6 +402,7 @@ BEGIN
 				,0
 				,[IsNeutral]
 				,[IPTV]
+				,[IsLive]
 				);
 
 	DROP TABLE #tblInfoSiteMatch
