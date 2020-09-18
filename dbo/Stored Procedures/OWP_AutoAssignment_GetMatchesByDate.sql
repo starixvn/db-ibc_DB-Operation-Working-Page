@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetMatchesByDate] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetMatchesByDate] @EventDate DATE
 AS
 /*
 Created: 20181221@Raymond.Le
@@ -20,6 +20,7 @@ Revisions:
 	20200427@Carlos.Nguyen: Order Provider [Redmine: #133428]
 	20200520@Tyler.Dang: Update RequireChinese rule [Redmine: #133428]
 	20200716@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
+	20200928@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -125,6 +126,7 @@ BEGIN
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
 		INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON m.OWPMatchId = mp.OWPMatchId
 		INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON p.ProviderId=mp.ProviderId
+		INNER JOIN OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId=om.OWPLeagueId AND UPPER(ol.OWPLeagueName) NOT LIKE 'SABA %'
 		LEFT JOIN OWPLeague AS owpl WITH(NOLOCK) ON om.OWPLeagueId=owpl.OWPLeagueId AND owpl.OWPLeagueName LIKE '%FANTASY%'
 	WHERE m.Maxbet IS NOT NULL
 		AND mi.MatchStatus = 'Live'
