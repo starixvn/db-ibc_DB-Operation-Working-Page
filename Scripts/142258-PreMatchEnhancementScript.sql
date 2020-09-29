@@ -13,3 +13,12 @@ ALTER TABLE [dbo].[PreMatchAssignment]
 ADD AssignmentType TINYINT NOT NULL DEFAULT(1), 
     AssignmentNote NVARCHAR(200);
 
+ALTER TABLE [dbo].[PreMatchAssignment]
+DROP CONSTRAINT [PK_PreMatchAssignment]
+
+ALTER TABLE [dbo].[PreMatchAssignment]
+ADD CONSTRAINT [PK_PreMatchAssignment] PRIMARY KEY CLUSTERED ([PreMatchLeagueId] ASC,
+	[UserId] ASC,
+	[Bettype] ASC,
+	[IsTakeOver] ASC,
+	[AssignmentType] ASC)
