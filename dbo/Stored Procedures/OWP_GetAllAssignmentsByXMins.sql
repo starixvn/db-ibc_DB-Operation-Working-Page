@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20200723@Esther.Nguyen: Staff's readiness notification - [Redmine: #137751]
 	20200810@Mira.Nguyen: edit xMins - [Redmine: #137751]
+	20200928@Mira.Nguyen: fix bug get special minor bettype - [Redmine: #137751]
 */
 
     BEGIN
@@ -31,7 +32,6 @@ Revisions:
 
         -- Result
         SELECT @LastTimeNotification;
-
         SELECT CASE
                    WHEN mm.MinorBettypeId IN(-1, -2, -88, -89)
                    THEN mp.OWPMatchId
@@ -45,8 +45,10 @@ Revisions:
              LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
              LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              LEFT JOIN dbo.OWPMatch AS mp WITH(NOLOCK) ON mp.OWPMatchId = mm.ParentMatchId
-             LEFT JOIN dbo.ReadyTradeStatus r WITH(NOLOCK) ON m.OWPMatchId = r.MatchId
-                                                              AND r.UserId = a.UserId
+             LEFT JOIN dbo.ReadyTradeStatus r WITH(NOLOCK) ON((mm.MinorBettypeId IN(-1, -2, -88, -89)
+                                                               AND mp.OWPMatchId = r.MatchId)
+                                                              OR a.[OWPMatchId] = r.MatchId)
+                                                             AND r.UserId = a.UserId
         WHERE i.IsSelected = 1
               AND m.EventDateTime BETWEEN @FromTime AND @LastTimeNotification
               AND r.ReadyDateTime IS NULL
