@@ -21,6 +21,7 @@ AS
 	20200710@Tyler.Dang: Fix order by MatchNo first - [Redmine: #137416]
 	20200713@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
 	20200728@Carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
+	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 */
 	SET NOCOUNT ON
 
@@ -111,6 +112,7 @@ AS
 		,InfoSiteMatchId INT
 		,IsNeutral BIT
 		,IpTv NVARCHAR(2000)
+		,IsLive BIT
 		)
 
 	INSERT INTO #owpMatchListByDate (
@@ -143,6 +145,7 @@ AS
 		,InfoSiteMatchId
 		,IsNeutral
 		,IpTv
+		,IsLive
 		)
 	SELECT om.OWPMatchId
 		,om.MatchNo
@@ -181,6 +184,11 @@ AS
 		,om.InfoSiteMatchId
 		,om.IsNeutral
 		,mi.IPTV
+		,CASE
+            WHEN mi.MatchStatus IN('Live', 'Postponed')
+            THEN 1
+            ELSE 0
+        END AS IsLive
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 	INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 	LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
@@ -193,9 +201,6 @@ AS
 			OR minor.IsRepresented IS NULL
 			)
 
-	
-
-	-- SELECT * FROM #owpMatchListByDate
 	CREATE TABLE #tblOWPMatchFilter (OWPMatchId INT)
 
 	INSERT INTO #tblOWPMatchFilter
@@ -315,8 +320,9 @@ AS
 		,ml.MinorBettypeId
 		,ml.ParentMatchId
 		,ml.InfoSiteMatchId
-		,ml.IpTv
-		,(CASE WHEN ml.InfoSiteMatchId IS NULL THEN NULL ELSE CASE WHEN im.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END END) AS IsInfoSiteLinked
+		,ml.IpTv		
+		,CASE WHEN im.InfoSiteMatchId IS NULL OR ml.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END AS IsInfoSiteLinked
+		,CASE WHEN im.IsLive = ml.IsLive THEN 1 ELSE 0 END AS IsLiveStatusSynchronized
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 	INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -324,6 +330,7 @@ AS
 	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
 	LEFT JOIN #tblNoOfHDPResource as ref ON ml.NoOfHDPId = ref.Id
 	LEFT JOIN dbo.InfoSiteMatch as im WITH (NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
+	
 	WHERE ml.OWPMatchId IN (
 			SELECT OWPMatchId
 			FROM #tblOWPMatchFilter
