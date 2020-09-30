@@ -13,6 +13,7 @@ DB: bodb_OWP
 Revisions:
 	20190820@Tyler.Dang: InitialSP - [Redmine: #118566]
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
+	20200913@Jacob: Sync Live Status to InfoSite - Ignore deleted match - [Redmine: #134336]
 */
 
      SET NOCOUNT ON;
@@ -32,7 +33,7 @@ Revisions:
      -- @infoSiteIsLive
      SELECT @infoSiteIsLive = IsLive
      FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
-     WHERE im.InfoSiteMatchId = @InfoSiteMatchId;
+     WHERE im.InfoSiteMatchId = @InfoSiteMatchId AND im.IsDeleted = 0;
 
      -- Result
      SELECT CASE
