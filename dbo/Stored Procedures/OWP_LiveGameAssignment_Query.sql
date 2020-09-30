@@ -22,6 +22,7 @@ AS
 	20200713@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
 	20200728@Carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
+	20200913@Jacob: Sync Live Status to InfoSite - Ignore deleted match - [Redmine: #134336]
 */
 	SET NOCOUNT ON
 
@@ -329,7 +330,7 @@ AS
 	INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
 	INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
 	LEFT JOIN #tblNoOfHDPResource as ref ON ml.NoOfHDPId = ref.Id
-	LEFT JOIN dbo.InfoSiteMatch as im WITH (NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
+	LEFT JOIN dbo.InfoSiteMatch as im WITH (NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId AND im.IsDeleted = 0
 	
 	WHERE ml.OWPMatchId IN (
 			SELECT OWPMatchId

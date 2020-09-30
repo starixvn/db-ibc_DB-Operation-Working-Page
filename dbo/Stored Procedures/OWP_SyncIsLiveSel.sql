@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
+	20200913@Jacob: Sync Live Status to InfoSite - Ignore deleted match - [Redmine: #134336]
 */
 
      SET NOCOUNT ON;
@@ -50,7 +51,7 @@ Revisions:
                    m.InfoSiteMatchId, 
                    i.IsLive
             FROM @tempOWPMatch m
-                 INNER JOIN dbo.InfoSiteMatch i WITH(NOLOCK) ON m.InfoSiteMatchId = i.InfoSiteMatchId;
+                 INNER JOIN dbo.InfoSiteMatch i WITH(NOLOCK) ON m.InfoSiteMatchId = i.InfoSiteMatchId AND i.IsDeleted = 0;
 
      -- Duplicated InfoSiteId
      DECLARE @tempDuplicatedInfoSiteMatch TABLE(InfoSiteMatchId INT);
