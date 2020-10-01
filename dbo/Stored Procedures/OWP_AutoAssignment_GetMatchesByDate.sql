@@ -22,6 +22,7 @@ Revisions:
 	20200716@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
 	20200928@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
 */
+
 BEGIN
 	SET NOCOUNT ON
 	

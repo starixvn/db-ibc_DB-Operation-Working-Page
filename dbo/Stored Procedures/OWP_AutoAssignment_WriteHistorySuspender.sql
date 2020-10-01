@@ -20,6 +20,7 @@ Revisions:
 	20200528@Carlos.Nguyen: Initial SP - [Redmine: #126964]
 	20200918@Carlos.Nguyen: Auto reassign - [Redmine: #126964]
 */
+
 BEGIN
 	SET NOCOUNT ON
 	
