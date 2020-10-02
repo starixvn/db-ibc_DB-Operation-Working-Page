@@ -1,23 +1,31 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_API_SyncEventDeletedInfoSiteMatch]
-	/*    
- Created: 20190104@Kane.Le
- Task : Service Prevent sync deleted event 
- DB: bodb_OWP    
-    
- Revisions:
-	20190104@Kane.Le: Initial SP - [Redmine: #107257] 
-*/
-	@Ids NVARCHAR(MAX)
-AS
-BEGIN
-	UPDATE dbo.InfoSiteMatch
-	WITH (ROWLOCK)
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-	SET IsDeleted = 1
-	WHERE InfoSiteMatchId IN (
-			SELECT val
-			FROM dbo.fnc_SplitStrings(@Ids, ',')
-			)
-	OPTION (MAXRECURSION 0)
-END
+ALTER PROCEDURE [dbo].[OWP_API_SyncEventDeletedInfoSiteMatch] @Ids NVARCHAR(MAX)
+
+/*      
+ Created: 20190104@Kane.Le  
+ Task : Service Prevent sync deleted event   
+ DB: bodb_OWP      
+      
+Revisions:  
+20190104@Kane.Le: Initial SP - [Redmine: #107257]  
+20200913@Jacob: Remove keyword IN - [Redmine: #134336]
+*/
+
+AS
+     DECLARE @tempMatch TABLE(MatchId INT);
+     INSERT INTO @tempMatch
+            SELECT DISTINCT 
+                   val
+            FROM fnc_SplitStrings(@Ids, ',') u OPTION(MAXRECURSION 0);
+     UPDATE m
+       SET 
+           m.IsDeleted = 1
+     FROM dbo.InfoSiteMatch m
+     WHERE EXISTS
+     (
+         SELECT 1
+         FROM @tempMatch t
+         WHERE m.InfoSiteMatchId = t.MatchId
+     );
