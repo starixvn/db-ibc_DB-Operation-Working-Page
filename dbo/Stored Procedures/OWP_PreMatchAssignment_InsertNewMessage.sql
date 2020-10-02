@@ -1,4 +1,4 @@
-﻿USE [bodb_OWP];
+USE [bodb_OWP];
 GO
 
 /****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertNewMessage]    Script Date: 9/22/2020 8:56:23 AM ******/

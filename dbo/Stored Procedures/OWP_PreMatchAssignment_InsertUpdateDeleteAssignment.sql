@@ -1,7 +1,7 @@
 ﻿USE [bodb_OWP];
 GO
 
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertUpdateDeleteAssignment]    Script Date: 9/30/2020 9:10:47 AM ******/
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertUpdateDeleteAssignment]    Script Date: 9/29/2020 9:34:38 AM ******/
 
 SET ANSI_NULLS ON;
 GO
@@ -56,13 +56,15 @@ Revisions:
                 ([PreMatchLeagueId], 
                  [UserId], 
                  [Bettype], 
-                 [IsTakeOver]
+                 [IsTakeOver], 
+                 [AssignmentType]
                 )
                 VALUES
                 (@PreMatchLeagueId, 
                  @userId, 
                  @Bettype, 
-                 @IsTakeOver
+                 @IsTakeOver, 
+                 1
                 );
 
                 -- Insert for receiving isssue message
@@ -140,13 +142,15 @@ Revisions:
                          INNER JOIN dbo.[User] AS u ON pa.UserId = u.UserId
                     WHERE PreMatchLeagueId = @PreMatchLeagueId
                           AND Bettype = @Bettype
-                          AND IsTakeOver = @IsTakeOver FOR XML PATH('z'), ROOT('r')
+                          AND IsTakeOver = @IsTakeOver
+                          AND AssignmentType = 1 FOR XML PATH('z'), ROOT('r')
                 );
                 SELECT @userId = UserId
                 FROM dbo.[PreMatchAssignment]
                 WHERE PreMatchLeagueId = @PreMatchLeagueId
                       AND Bettype = @Bettype
-                      AND IsTakeOver = @IsTakeOver;
+                      AND IsTakeOver = @IsTakeOver
+                      AND AssignmentType = 1;
 
                 -- delete from receiving isssue message
                 DELETE r
@@ -163,7 +167,8 @@ Revisions:
                 DELETE FROM dbo.[PreMatchAssignment]
                 WHERE PreMatchLeagueId = @PreMatchLeagueId
                       AND Bettype = @Bettype
-                      AND IsTakeOver = @IsTakeOver;
+                      AND IsTakeOver = @IsTakeOver
+                      AND AssignmentType = 1;
 
                 -- Log
                 SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
@@ -184,14 +189,16 @@ Revisions:
                          INNER JOIN dbo.[User] AS u ON pa.UserId = u.UserId
                     WHERE PreMatchLeagueId = @PreMatchLeagueId
                           AND Bettype = @Bettype
-                          AND IsTakeOver = @IsTakeOver FOR XML PATH('z'), ROOT('r')
+                          AND IsTakeOver = @IsTakeOver
+						  AND AssignmentType = 1 FOR XML PATH('z'), ROOT('r')
                 );
                 SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
                 SELECT @userId = UserId
                 FROM dbo.[PreMatchAssignment]
                 WHERE PreMatchLeagueId = @PreMatchLeagueId
                       AND Bettype = @Bettype
-                      AND IsTakeOver = @IsTakeOver;
+                      AND IsTakeOver = @IsTakeOver
+					  AND AssignmentType = 1;
 
                 -- delete from receiving isssue message
                 DELETE r
@@ -208,7 +215,8 @@ Revisions:
                       UserId = @userId
                 WHERE PreMatchLeagueId = @PreMatchLeagueId
                       AND Bettype = @Bettype
-                      AND IsTakeOver = @IsTakeOver;
+                      AND IsTakeOver = @IsTakeOver
+					  AND AssignmentType = 1;
 
                 -- Insert for receiving isssue message
                 IF(@PreMatchIssueId IS NOT NULL)
@@ -260,7 +268,8 @@ Revisions:
                          INNER JOIN dbo.[User] AS u ON pa.UserId = u.UserId
                     WHERE PreMatchLeagueId = @PreMatchLeagueId
                           AND Bettype = @Bettype
-                          AND IsTakeOver = @IsTakeOver FOR XML PATH('z'), ROOT('r')
+                          AND IsTakeOver = @IsTakeOver
+						  AND AssignmentType = 1 FOR XML PATH('z'), ROOT('r')
                 );
                 SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
                 SET @EndRun = GETDATE();

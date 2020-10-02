@@ -1,6 +1,6 @@
-﻿USE [bodb_OWP]
+USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertNewIssue]    Script Date: 9/28/2020 10:59:58 AM ******/
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertNewIssue]    Script Date: 9/30/2020 5:18:03 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -85,6 +85,7 @@ Revisions:
                     WHERE (pl.OWPLeagueId = @OWPLeagueId OR m.InfoSiteMatchId = @InfoSiteMatchId)
                           AND pl.EventDate = @EventDate
                           AND a.UserId <> @ActorId
+						  AND a.UserId > 0
                     UNION
                     SELECT @issueId, 
                            [UserId], 
