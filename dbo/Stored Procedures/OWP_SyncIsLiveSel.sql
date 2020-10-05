@@ -12,11 +12,12 @@ DB: bodb_OWP
 Revisions:
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 	20200913@Jacob: Sync Live Status to InfoSite - Ignore deleted match - [Redmine: #134336]
+	20200913@Jacob: Sync Live Status to InfoSite - Ignore SABA match - [Redmine: #134336]
 */
 
      SET NOCOUNT ON;
      DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00');
-     
+
      -- @tempOWPMatch
      DECLARE @tempOWPMatch TABLE
      (InfoSiteMatchId INT, 
@@ -34,9 +35,11 @@ Revisions:
                        ELSE 0
                    END IsLive
             FROM dbo.OWPMatch m WITH(NOLOCK)
+                 INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
                  INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
             WHERE m.EventDateTime >= @FromDate
-                  AND m.InfoSiteMatchId IS NOT NULL;
+                  AND m.InfoSiteMatchId IS NOT NULL
+				  AND l.OWPLeagueName NOT LIKE '%SABA %';
 
      -- @tempInfoSiteMatch
      DECLARE @tempInfoSiteMatch TABLE
@@ -51,7 +54,8 @@ Revisions:
                    m.InfoSiteMatchId, 
                    i.IsLive
             FROM @tempOWPMatch m
-                 INNER JOIN dbo.InfoSiteMatch i WITH(NOLOCK) ON m.InfoSiteMatchId = i.InfoSiteMatchId AND i.IsDeleted = 0;
+                 INNER JOIN dbo.InfoSiteMatch i WITH(NOLOCK) ON m.InfoSiteMatchId = i.InfoSiteMatchId
+                                                                AND i.IsDeleted = 0;
 
      -- Duplicated InfoSiteId
      DECLARE @tempDuplicatedInfoSiteMatch TABLE(InfoSiteMatchId INT);
