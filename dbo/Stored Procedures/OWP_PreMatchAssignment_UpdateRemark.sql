@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_UpdateRemark] @ActorId          INT, 
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_UpdateRemark] @ActorId          INT, 
                                                              @PreMatchLeagueId INT, 
                                                              @Remark           NVARCHAR(2000) = ''
 AS
@@ -13,6 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200817@Tyler: Init sync SP - [Redmine: #138643]
+	20200914@Tyler: Update select with nolock - [Redmine: #138643]
 	
 */
 
@@ -32,7 +33,7 @@ Revisions:
                 (
                     SELECT PreMatchLeagueId AS '@plid', 
                            @remarkOldValue AS '@rm'
-                    FROM dbo.[PreMatchLeague] WITH(ROWLOCK)
+                    FROM dbo.[PreMatchLeague] WITH(NOLOCK)
                     WHERE PreMatchLeagueId = @PreMatchLeagueId FOR XML PATH('z'), ROOT('r')
                 );
                 SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
@@ -46,7 +47,7 @@ Revisions:
                 (
                     SELECT PreMatchLeagueId AS '@plid', 
                            Remark AS '@rm'
-                    FROM dbo.[PreMatchLeague] WITH(ROWLOCK)
+                    FROM dbo.[PreMatchLeague] WITH(NOLOCK)
                     WHERE PreMatchLeagueId = @PreMatchLeagueId FOR XML PATH('z'), ROOT('r')
                 );
 
