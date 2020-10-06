@@ -1,9 +1,11 @@
-﻿USE [bodb_OWP]
+﻿USE [bodb_OWP];
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryByPreMatchLeagueId]    Script Date: 9/28/2020 11:04:23 AM ******/
-SET ANSI_NULLS ON
+
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryByPreMatchLeagueId]    Script Date: 10/5/2020 10:38:02 AM ******/
+
+SET ANSI_NULLS ON;
 GO
-SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON;
 GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
@@ -21,7 +23,7 @@ DB: bodb_OWP
 Revisions:
 	20200818@Esther: Init sync SP - [Redmine: #138643]
 	20200918@Tyler: Add matches/issue - [Redmine: #140620]
-	
+	20200903@Tyler: get other assignments  - [Redmine: #142258]  
 */
 
     BEGIN
@@ -30,6 +32,10 @@ Revisions:
         DECLARE @userNameOfOU VARCHAR(200);
         DECLARE @userNameOfHDPTakeOver VARCHAR(200);
         DECLARE @userNameOfOUTakeOver VARCHAR(200);
+        DECLARE @userNameOfOtherHDP VARCHAR(200);
+        DECLARE @userNameOfOtherOU VARCHAR(200);
+        DECLARE @userNameOfOtherHDPTakeOver VARCHAR(200);
+        DECLARE @userNameOfOtherOUTakeOver VARCHAR(200);
         DECLARE @StartNightTime DATETIME= @StartTime;
         DECLARE @EventFromDateTime DATETIME;
         DECLARE @hpdBettype INT= 1;
@@ -39,7 +45,7 @@ Revisions:
         FROM PreMatchLeague AS p WITH(NOLOCK)
         WHERE p.PreMatchLeagueId = @PreMatchLeagueId;
 
-		-- Cal start time
+        -- Cal start time
         IF @StartTime IS NULL
             BEGIN
                 SET @EventFromDateTime = DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '12:00:00');
@@ -55,59 +61,117 @@ Revisions:
             END;
         DECLARE @EventToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @eventDate), '11:59:59');
 
-		-- select assignments
+        -- select main assignments
         SELECT @userNameOfHDP = u.Username
         FROM PreMatchAssignment AS pa WITH(NOLOCK)
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
         WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
               AND pa.Bettype = @hpdBettype
-              AND pa.IsTakeOver = 0;
+              AND pa.IsTakeOver = 0
+              AND AssignmentType = 1;
         SELECT @userNameOfOU = u.Username
         FROM PreMatchAssignment AS pa WITH(NOLOCK)
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
         WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
               AND pa.Bettype = @ouBettype
-              AND pa.IsTakeOver = 0;
+              AND pa.IsTakeOver = 0
+              AND AssignmentType = 1;
         SELECT @userNameOfHDPTakeOver = u.Username
         FROM PreMatchAssignment AS pa WITH(NOLOCK)
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
         WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
               AND pa.Bettype = @hpdBettype
-              AND pa.IsTakeOver = 1;
+              AND pa.IsTakeOver = 1
+              AND AssignmentType = 1;
         SELECT @userNameOfOUTakeOver = u.Username
         FROM PreMatchAssignment AS pa WITH(NOLOCK)
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
         WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
               AND pa.Bettype = @ouBettype
-              AND pa.IsTakeOver = 1;
+              AND pa.IsTakeOver = 1
+              AND AssignmentType = 1;
 
-		-- query league info
+        -- Other assignments
+        SELECT @userNameOfOtherHDP = CASE
+                                         WHEN pa.UserId = 0
+                                         THEN pa.AssignmentNote
+                                         ELSE REPLACE(pa.AssignmentNote, '<username>', Username)
+                                     END
+        FROM PreMatchAssignment AS pa WITH(NOLOCK)
+             INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
+        WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
+              AND pa.Bettype = @hpdBettype
+              AND pa.IsTakeOver = 0
+              AND AssignmentType = 2;
+        SELECT @userNameOfOtherOU = CASE
+                                        WHEN pa.UserId = 0
+                                        THEN pa.AssignmentNote
+                                        ELSE REPLACE(pa.AssignmentNote, '<username>', Username)
+                                    END
+        FROM PreMatchAssignment AS pa WITH(NOLOCK)
+             INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
+        WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
+              AND pa.Bettype = @ouBettype
+              AND pa.IsTakeOver = 0
+              AND AssignmentType = 2;
+        SELECT @userNameOfOtherHDPTakeOver = CASE
+                                                 WHEN pa.UserId = 0
+                                                 THEN pa.AssignmentNote
+                                                 ELSE REPLACE(pa.AssignmentNote, '<username>', Username)
+                                             END
+        FROM PreMatchAssignment AS pa WITH(NOLOCK)
+             INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
+        WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
+              AND pa.Bettype = @hpdBettype
+              AND pa.IsTakeOver = 1
+              AND AssignmentType = 2;
+        SELECT @userNameOfOtherOUTakeOver = CASE
+                                                WHEN pa.UserId = 0
+                                                THEN pa.AssignmentNote
+                                                ELSE REPLACE(pa.AssignmentNote, '<username>', Username)
+                                            END
+        FROM PreMatchAssignment AS pa WITH(NOLOCK)
+             INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON pa.UserId = u.UserId
+        WHERE pa.PreMatchLeagueId = @PreMatchLeagueId
+              AND pa.Bettype = @ouBettype
+              AND pa.IsTakeOver = 1
+              AND AssignmentType = 2;
+
+        -- query league info
         DECLARE @tblLeagueInfo TABLE
-        (PreMatchLeagueId INT, 
-         LeagueId         INT, 
-         LeagueName       NVARCHAR(500), 
-         MatchCount       INT, 
-         HDP              NVARCHAR(30), 
-         OU               NVARCHAR(30), 
-         HDPTakeOver      NVARCHAR(30), 
-         OUTakeOver       NVARCHAR(30), 
-         BlackList        BIT, 
-         Remark           NVARCHAR(2000)
+        (PreMatchLeagueId     INT, 
+         LeagueId             INT, 
+         LeagueName           NVARCHAR(500), 
+         MatchCount           INT, 
+         HDP                  NVARCHAR(30), 
+         OU                   NVARCHAR(30), 
+         HDPTakeOver          NVARCHAR(30), 
+         OUTakeOver           NVARCHAR(30), 
+         OtherHDPNote         NVARCHAR(200), 
+         OtherOUNote          NVARCHAR(200), 
+         OtherHDPTakeOverNote NVARCHAR(200), 
+         OtherOUTakeOverNote  NVARCHAR(200), 
+         BlackList            BIT, 
+         Remark               NVARCHAR(2000)
         );
         INSERT INTO @tblLeagueInfo
-               SELECT p.PreMatchLeagueId 'PreMatchLeagueId', 
-                      p.OWPLeagueId 'LeagueId', 
-                      l.OWPLeagueName 'LeagueName', 
+               SELECT p.PreMatchLeagueId, 
+                      p.OWPLeagueId, 
+                      l.OWPLeagueName, 
                       COUNT(CASE
                                 WHEN m1.LeagueName = l.OWPLeagueName
                                 THEN 1
                                 ELSE 0
-                            END) AS 'MatchCount', 
-                      @userNameOfHDP 'HDP', 
-                      @userNameOfOU 'OU', 
-                      @userNameOfHDPTakeOver 'HDPTakeOver', 
-                      @userNameOfOUTakeOver 'OUTakeOver', 
-                      l.IsBlackList 'BlackList', 
+                            END), 
+                      @userNameOfHDP, 
+                      @userNameOfOU, 
+                      @userNameOfHDPTakeOver, 
+                      @userNameOfOUTakeOver, 
+                      @userNameOfOtherHDP, 
+                      @userNameOfOtherOU, 
+                      @userNameOfOtherHDPTakeOver, 
+                      @userNameOfOtherOUTakeOver, 
+                      l.IsBlackList, 
                       p.Remark 'Remark'
                FROM PreMatchLeague AS p WITH(ROWLOCK)
                     INNER JOIN OWPLeague AS l WITH(ROWLOCK) ON l.OWPLeagueId = p.OWPLeagueId
@@ -128,6 +192,10 @@ Revisions:
                OU, 
                HDPTakeOver, 
                OUTakeOver, 
+               OtherHDPNote, 
+               OtherOUNote, 
+               OtherHDPTakeOverNote, 
+               OtherOUTakeOverNote, 
                BlackList, 
                Remark, 
                PreMatchIssueId, 
@@ -189,7 +257,6 @@ Revisions:
                LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
                                                                           AND r.UserId = @ActorId
                WHERE im.CreatedDate = x.MaxDate;
-
         SELECT m.InfoSiteMatchId, 
                m.LeagueName, 
                m.HomeName, 
