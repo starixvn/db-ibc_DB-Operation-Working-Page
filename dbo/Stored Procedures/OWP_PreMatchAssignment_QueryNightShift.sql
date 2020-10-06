@@ -1,11 +1,9 @@
-﻿USE [bodb_OWP];
+﻿USE [bodb_OWP]
 GO
-
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryNightShift]    Script Date: 10/6/2020 10:43:38 AM ******/
-
-SET ANSI_NULLS ON;
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryNightShift]    Script Date: 10/6/2020 11:07:35 AM ******/
+SET ANSI_NULLS ON
 GO
-SET QUOTED_IDENTIFIER ON;
+SET QUOTED_IDENTIFIER ON
 GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
@@ -23,7 +21,7 @@ DB: bodb_OWP
 Revisions:  
  20200814@Esther.Nguyen: query night shift  - [Redmine: #138643] 
  20200908@Tyler: query matches  - [Redmine: #140620]   
- 20200903@Tyler: get other assignments  - [Redmine: #142258]  
+ 20201003@Tyler: get other assignments  - [Redmine: #142258]  
 */
 
      SET NOCOUNT ON;
