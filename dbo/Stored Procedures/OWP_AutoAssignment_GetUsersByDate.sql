@@ -1,6 +1,15 @@
-﻿
+﻿USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_AutoAssignment_GetUsersByDate]    Script Date: 10/05/2020 14:53:25 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetUsersByDate] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetUsersByDate]
+	@EventDate DATE,
+	@SiteId INT
 AS
 /*
 Created: 20181221@Raymond.Le
@@ -17,6 +26,7 @@ Revisions:
 	20200520@Tyler.Dang: Update User SpeakChinese and English [Redmine: #133428]
 	20200528@Carlos.Nguyen: Get distinct user - [Redmine: #126964]
 	20200713@Carlos.Nguyen: Update LA session ID from (2)=> to (2,30)- [Redmine: #126964]
+	20201005@Carlos.Nguyen: Exclude close account- [Redmine: #126964]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -41,7 +51,6 @@ BEGIN
 	INSERT INTO #tblUser (
 		UserId
 		,[Level]
-	 
 		,[Location]
 		,LanguageId
 		)
@@ -49,11 +58,17 @@ BEGIN
 		,ISNULL(ou.[Level], @NullLevelId)		
 			,ou.LocationCode
 			,ou.LanguageId
-	FROM dbo.[User] AS ou WITH (NOLOCK)  
+	FROM dbo.[User] AS ou WITH (NOLOCK)
 	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
+	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON ou.UserId = ci.custid
+	INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = ou.UserId AND us.SiteId = @SiteId
 	WHERE LocationCode IS NOT NULL
 		AND SectionId IN (2,30)
 		AND (ur.RoleId = 1 OR ur.RoleId IS NULL)
+		AND (ci.closed = 0
+		AND ci.reject = 0
+		AND ci.[Enabled] = 1
+		AND us.IsActive = 1)
 
 
 	SELECT DISTINCT UserId

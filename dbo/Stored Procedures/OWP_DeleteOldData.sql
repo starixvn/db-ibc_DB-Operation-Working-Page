@@ -12,6 +12,7 @@ AS
  Revisions:
 	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 	20200830@Jacob: Delete Old data of EmployeeWorkingShiftNote] - [Redmine: #137757]	
+	20200918@Carlos.Nguyen: Auto reassign/ Remove script delete old data AutoAssignmentSuspenderHistory - [Redmine: #126964]
 */
 
      SET NOCOUNT ON;
