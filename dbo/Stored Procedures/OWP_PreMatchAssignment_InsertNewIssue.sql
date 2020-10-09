@@ -1,6 +1,6 @@
 USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertNewIssue]    Script Date: 9/30/2020 5:18:03 PM ******/
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertNewIssue]    Script Date: 10/9/2020 10:05:22 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -22,6 +22,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200909@Tyler: Init sync SP - [Redmine: #140620]
+	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	
 */
 

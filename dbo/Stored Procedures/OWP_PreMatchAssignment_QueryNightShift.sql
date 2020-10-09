@@ -1,4 +1,4 @@
-﻿USE [bodb_OWP]
+USE [bodb_OWP]
 GO
 /****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryNightShift]    Script Date: 10/6/2020 11:07:35 AM ******/
 SET ANSI_NULLS ON

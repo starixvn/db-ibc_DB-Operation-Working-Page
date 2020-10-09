@@ -1,6 +1,6 @@
 USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertUpdateDeleteAssignment]    Script Date: 10/8/2020 9:09:17 AM ******/
+/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertUpdateDeleteAssignment]    Script Date: 10/9/2020 9:50:13 AM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -25,7 +25,7 @@ DB: bodb_OWP
 Revisions:
 	20200817@Tyler: Init sync SP - [Redmine: #138643]
 	20200914@Tyler: Update issue receiver - [Redmine: #140620]
-	20200903@Tyler: update other assignments  - [Redmine: #142258]  
+	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	
 */
 
@@ -214,7 +214,6 @@ Revisions:
                 FROM [dbo].[PreMatchIssueReceiver] AS r
                      INNER JOIN #tblMatchIssues AS i ON i.PreMatchIssueId = r.PreMatchIssueId
                 WHERE r.UserId = @userId;
-
 
                 UPDATE dbo.[PreMatchAssignment] WITH(ROWLOCK)
                   SET 
