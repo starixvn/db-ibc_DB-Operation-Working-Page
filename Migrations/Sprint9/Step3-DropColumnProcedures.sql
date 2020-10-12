@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Raymond.Le
 	Date: 2019-01-17
 	Task: Script sprint 9 - [Redmine: #107257]

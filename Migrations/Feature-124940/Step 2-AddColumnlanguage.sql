@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Carlos.Nguyen
 	Date: 201910512
 	Task:  Add column (Language) [Redmine: #125019]

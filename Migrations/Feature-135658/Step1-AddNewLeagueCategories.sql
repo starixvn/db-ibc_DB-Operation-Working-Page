@@ -1,4 +1,4 @@
-USE [bodb_OWP]
+﻿USE [bodb_OWP]
 GO
 
 ALTER TABLE [dbo].[NewLeagueSetting]

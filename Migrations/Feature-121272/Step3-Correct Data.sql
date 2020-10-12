@@ -1,4 +1,4 @@
- /*
+﻿ /*
 	Created: Tyler.Dang
 	Date: 20191004
 	Task: Initial correct data [Redmine: #121308]

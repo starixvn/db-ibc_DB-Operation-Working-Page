@@ -1,4 +1,4 @@
-DELETE
+﻿DELETE
 FROM [bodb_OWP].[dbo].[AutoAssignmentResult]
 WHERE RequestId = 'f4599bfd-f093-4957-9561-622281465383'
 

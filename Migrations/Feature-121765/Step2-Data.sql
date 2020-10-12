@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Carlos.Nguyen
 	Date: 20191011
 	Task: alter data [Redmine: #121885]

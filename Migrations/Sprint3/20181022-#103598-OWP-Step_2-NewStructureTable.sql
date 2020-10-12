@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Raymond.Le
 	Date: 2018-10-22
 	Task: New structure table MessageTemplate, NotificationSetting

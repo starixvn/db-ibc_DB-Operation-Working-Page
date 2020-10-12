@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Leo.Vo
 	Date: 20190715
 	Task: [Redmine: #116688]

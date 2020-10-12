@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Creator:	20181009@Leo
 	Task:		Schema migration for new OWP - [Redmine: #102733]
 	Server:		DBOWP.bodb_OWP

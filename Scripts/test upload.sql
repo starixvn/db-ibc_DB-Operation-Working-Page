@@ -1,4 +1,4 @@
-/*
+﻿/*
 --test insert - profiler để lấy data XML cần insert
 declare @SessionId varchar(50) = CAST(NEWID() AS varchar(50))
 exec OWP_AssignmentUploading_Insert @SessionId=@SessionId,@UserId=8,@AssignmentUploadDoc=N'<Root>

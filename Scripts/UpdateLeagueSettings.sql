@@ -1,4 +1,4 @@
-UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":2,"HasTV":true,"TV":"TV","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 2 AND [FullConditionDescription] IS NULL
+﻿UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":2,"HasTV":true,"TV":"TV","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 2 AND [FullConditionDescription] IS NULL
 UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":3,"HasTV":true,"TV":"TV","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 3 AND [FullConditionDescription] IS NULL
 UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":4,"HasTV":false,"TV":"IPTV","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 4 AND [FullConditionDescription] IS NULL
 UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":6,"HasTV":false,"TV":"IPTV","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 6 AND [FullConditionDescription] IS NULL

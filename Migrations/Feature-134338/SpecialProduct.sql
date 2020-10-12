@@ -1,4 +1,4 @@
-USE [bodb_OWP]
+﻿USE [bodb_OWP]
 GO
 /****** Object:  Table [dbo].[SpecialProduct]    Script Date: 07/01/2020 10:26:37 ******/
 SET ANSI_NULLS ON

@@ -1,4 +1,4 @@
-DECLARE @EventDate DATETIME = '2019-06-11'
+﻿DECLARE @EventDate DATETIME = '2019-06-11'
 DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
 	,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
 	,@Specific15Mins INT = - 1

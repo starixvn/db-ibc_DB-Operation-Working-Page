@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Kane.Le
 	Date: 20191011
 	Task: schema [Redmine: #121765]

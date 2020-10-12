@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Carlos.Nguyen
 	Date: 20190924
 	Task: [Redmine: #120415]

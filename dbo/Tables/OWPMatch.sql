@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[OWPMatch] (
+﻿CREATE TABLE [dbo].[OWPMatch] (
     [OWPMatchId]       INT            IDENTITY (1, 1) NOT NULL,
     [MatchNo]          VARCHAR (50)   CONSTRAINT [DF_OWPMatch_MatchNo] DEFAULT ('') NOT NULL,
     [EventDate]        DATETIME       NOT NULL,

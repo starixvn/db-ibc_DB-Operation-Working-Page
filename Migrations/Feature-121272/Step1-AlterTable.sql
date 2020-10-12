@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Kane.Le
 	Date: 20191002
 	Task: Alter table WorkingShiftColor [Redmine: #121272]
