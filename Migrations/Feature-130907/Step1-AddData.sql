@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Tyler.Dang
 	Date: 20200323
 	Task:  Add user locations for Covid19 [Redmine: #130907]

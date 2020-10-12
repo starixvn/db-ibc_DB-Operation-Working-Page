@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Carlos.Nguyen
 	Date: 20191206
 	Task: Update language [Redmine: #124940]

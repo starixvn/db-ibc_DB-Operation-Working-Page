@@ -1,4 +1,4 @@
- /*
+﻿ /*
 	Created: Kane.Le
 	Date: 20191002
 	Task: Update LogItems [Redmine: #121272]

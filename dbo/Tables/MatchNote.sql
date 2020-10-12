@@ -1,4 +1,4 @@
-CREATE TABLE [dbo].[MatchNote] (
+﻿CREATE TABLE [dbo].[MatchNote] (
     [MatchNoteId] INT             IDENTITY (1, 1) NOT NULL,
     [OWPMatchId]  INT             NOT NULL,
     [CreatedDate] DATETIME        CONSTRAINT [DF_MatchNote_CreatedDate] DEFAULT (getdate()) NOT NULL,

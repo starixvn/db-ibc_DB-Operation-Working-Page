@@ -1,4 +1,4 @@
-DECLARE @FromDate DATETIME = '2019-06-01'
+﻿DECLARE @FromDate DATETIME = '2019-06-01'
 	,@ToDate DATETIME = '2019-06-08 11:59:59'
 DECLARE @BettypeHDP INT = 1
 	,@Specific15Mins INT = - 1

@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Leo.Vo
 	Date: 20190919
 	Task: Inactive warning rules [Redmine: #120415]

@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Creator:	20190220@Raymond.Le
 	Job Name:	[bodb_OWP - Job: Sync Default Working Shift]
 	Server:		DBOWP

@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Creator:	20181129@Kane.Le
 	Task:		Add new column - [Redmine: #105043]
 	Server:		DBOWP.bodb_OWP

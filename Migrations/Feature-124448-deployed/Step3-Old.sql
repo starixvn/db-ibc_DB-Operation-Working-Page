@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: 
 	Date: 
 	Task: old [Redmine: #]

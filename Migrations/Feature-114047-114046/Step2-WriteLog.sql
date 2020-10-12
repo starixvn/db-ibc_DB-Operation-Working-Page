@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Created: Kane.Le
 	Date: 20190530
 	Task: [Redmine: #112737]

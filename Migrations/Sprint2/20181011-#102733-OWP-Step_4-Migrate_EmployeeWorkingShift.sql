@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Creator:	20181009@Leo
 	Task:		Data migration for new OWP - EmployeeWorkingShift table - [Redmine: #102733]
 	Server:		DBOWP.bodb_OWP

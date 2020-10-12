@@ -1,4 +1,4 @@
-DECLARE @FirstDate DATE, @FromDate DATE
+﻿DECLARE @FirstDate DATE, @FromDate DATE
 ,@ToDate DATE = DATEADD(DAY, -1, GETDATE())
 ,@MaxDate INT = 0
 

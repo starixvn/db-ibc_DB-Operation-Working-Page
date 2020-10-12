@@ -1,4 +1,4 @@
--- create table AutoAssignmentBettype
+﻿-- create table AutoAssignmentBettype
 CREATE TABLE [dbo].[AutoAssignmentBettype] (
     [MinorBettypeId]      INT NOT NULL,
     [SchedulingBettypeId] INT NOT NULL,
