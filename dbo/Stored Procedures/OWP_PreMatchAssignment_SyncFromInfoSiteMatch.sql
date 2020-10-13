@@ -1,35 +1,65 @@
-﻿USE [bodb_OWP]਍䜀伀ഀഀ
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_SyncFromInfoSiteMatch]    Script Date: 9/28/2020 11:11:08 AM ******/਍匀䔀吀 䄀一匀䤀开一唀䰀䰀匀 伀一ഀഀ
-GO਍匀䔀吀 儀唀伀吀䔀䐀开䤀䐀䔀一吀䤀䘀䤀䔀刀 伀一ഀഀ
-GO਍⼀⨀㰀椀渀昀漀 猀攀爀瘀攀爀䄀氀椀愀猀㴀∀䐀䈀伀圀倀ⴀ戀漀搀戀开伀圀倀∀ 攀砀攀挀甀琀攀爀猀㴀∀戀漀搀戀伀圀倀一攀琀∀ 椀猀䘀甀渀挀琀椀漀渀㴀∀　∀㸀㰀⼀椀渀昀漀㸀⨀⼀ഀഀ
-ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_SyncFromInfoSiteMatch]਍䄀匀ഀഀ
-਍⼀⨀ഀഀ
-Created: 20200813@Tyler਍吀愀猀欀 㨀 倀爀攀ⴀ䴀愀琀挀栀 䄀猀猀椀最渀洀攀渀琀ഀഀ
-DB: bodb_OWP਍ഀഀ
-Revisions:਍ऀ㈀　㈀　　㠀㄀㌀䀀吀礀氀攀爀㨀 䤀渀椀琀 猀礀渀挀 匀倀 ⴀ 嬀刀攀搀洀椀渀攀㨀 ⌀㄀㌀㠀㘀㐀㌀崀ഀഀ
-	20200923@Tyler: Update sync to future - [Redmine: #140620]	਍⨀⼀ഀഀ
-਍    䈀䔀䜀䤀一ഀഀ
-        SET NOCOUNT ON;਍        䌀刀䔀䄀吀䔀 吀䄀䈀䰀䔀 ⌀琀戀氀䰀攀愀最甀攀ഀഀ
-        (RowId       INT IDENTITY(1, 1), ਍         伀圀倀䰀攀愀最甀攀䤀搀 䤀一吀Ⰰ ഀഀ
-         EventDate   DATE਍        ⤀㬀ഀഀ
-        DECLARE @i INT= 1;਍        䐀䔀䌀䰀䄀刀䔀 䀀搀愀琀攀 䐀䄀吀䔀㴀 䌀䄀匀吀⠀䐀䄀吀䔀䄀䐀䐀⠀䠀伀唀刀Ⰰ ㄀㈀Ⰰ 䜀䔀吀䐀䄀吀䔀⠀⤀⤀ 䄀匀 䐀䄀吀䔀⤀㬀ഀഀ
-        DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @date), '12:00:00');਍ഀഀ
-		-- Temp table਍        䤀一匀䔀刀吀 䤀一吀伀 ⌀琀戀氀䰀攀愀最甀攀ഀഀ
-        (OWPLeagueId, ਍         䔀瘀攀渀琀䐀愀琀攀ഀഀ
-        )਍               匀䔀䰀䔀䌀吀 䐀䤀匀吀䤀一䌀吀 ഀഀ
-                      m.OWPLeagueId, ਍                      䌀䄀匀吀⠀洀⸀䔀瘀攀渀琀䐀愀琀攀吀椀洀攀 䄀匀 䐀䄀吀䔀⤀ഀഀ
-               FROM [dbo].[InfoSiteMatch] AS m WITH(NOLOCK)਍                    䰀䔀䘀吀 䨀伀䤀一 倀爀攀䴀愀琀挀栀䰀攀愀最甀攀 䄀匀 瀀氀 圀䤀吀䠀⠀一伀䰀伀䌀䬀⤀ 伀一 瀀氀⸀伀圀倀䰀攀愀最甀攀䤀搀 㴀 洀⸀伀圀倀䰀攀愀最甀攀䤀搀ഀഀ
-                                                                   AND pl.EventDate = CAST(m.EventDateTime AS DATE)਍               圀䠀䔀刀䔀 洀⸀䔀瘀攀渀琀䐀愀琀攀吀椀洀攀 㸀㴀 䀀昀爀漀洀䐀愀琀攀ഀഀ
-                     AND pl.OWPLeagueId IS NULL;਍ഀഀ
-		INSERT INTO [dbo].[PreMatchLeague]਍        ⠀嬀伀圀倀䰀攀愀最甀攀䤀搀崀Ⰰ ഀഀ
-         [EventDate], ਍         嬀䤀猀䐀愀礀崀Ⰰ ഀഀ
-         [IsDeleted], ਍         嬀刀攀洀愀爀欀崀ഀഀ
-        )਍               匀䔀䰀䔀䌀吀 伀圀倀䰀攀愀最甀攀䤀搀Ⰰ ഀഀ
-                      EventDate, ਍                      ㄀Ⰰ ⴀⴀ 搀愀礀 猀栀椀昀琀ഀഀ
-                      0, ਍                      一唀䰀䰀ഀഀ
-               FROM #tblLeague਍               唀一䤀伀一ഀഀ
-               SELECT OWPLeagueId, ਍                      䔀瘀攀渀琀䐀愀琀攀Ⰰ ഀഀ
-                      0, -- night shift਍                      　Ⰰ ഀഀ
-                      NULL਍               䘀刀伀䴀 ⌀琀戀氀䰀攀愀最甀攀ഀഀ
-               ORDER BY OWPLeagueId;਍        䐀刀伀倀 吀䄀䈀䰀䔀 ⌀琀戀氀䰀攀愀最甀攀㬀ഀഀ
-    END;
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_SyncFromInfoSiteMatch] @FromDate DATETIME, 
+                                                                     @ToDate   DATETIME
+AS
+
+/*
+Created: 20200813@Tyler
+Task : Pre-Match Assignment
+DB: bodb_OWP
+
+Revisions:
+	20200813@Tyler: Init sync SP - [Redmine: #138643]
+	20200923@Tyler: Update sync to future - [Redmine: #140620]	
+	20201012@Jacob: HotFix Failed to show League that has matches with KO time AM only - [Redmine: #143299]	
+*/
+
+     SET NOCOUNT ON;
+     CREATE TABLE #tblLeague
+     (RowId       INT IDENTITY(1, 1), 
+      OWPLeagueId INT, 
+      EventDate   DATE
+     );
+     SELECT @FromDate = DATEADD(HOUR, 12, @FromDate), 
+            @ToDate = DATEADD(HOUR, 12, @ToDate);
+
+     -- Temp table
+     INSERT INTO #tblLeague
+     (OWPLeagueId, 
+      EventDate
+     )
+            SELECT DISTINCT 
+                   m.OWPLeagueId, 
+                   CAST(DATEADD(HOUR, -12, m.EventDateTime) AS DATE)
+            FROM [dbo].[InfoSiteMatch] AS m WITH(NOLOCK)
+                 LEFT JOIN PreMatchLeague AS pl WITH(NOLOCK) ON pl.OWPLeagueId = m.OWPLeagueId
+                                                                AND pl.EventDate = CAST(DATEADD(HOUR, -12, m.EventDateTime) AS DATE)
+            WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
+                  AND pl.OWPLeagueId IS NULL;
+     -- Insert Data
+     INSERT INTO [dbo].[PreMatchLeague]
+     ([OWPLeagueId], 
+      [EventDate], 
+      [IsDay], 
+      [IsDeleted], 
+      [Remark]
+     )
+            SELECT OWPLeagueId, 
+                   EventDate, 
+                   1, -- day shift
+                   0, 
+                   NULL
+            FROM #tblLeague
+            UNION
+            SELECT OWPLeagueId, 
+                   EventDate, 
+                   0, -- night shift
+                   0, 
+                   NULL
+            FROM #tblLeague
+            ORDER BY OWPLeagueId;
+     
+	 -- DROP temp table
+     DROP TABLE #tblLeague;
