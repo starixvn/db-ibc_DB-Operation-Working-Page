@@ -9,12 +9,12 @@ Task : Query note messages
 DB: bodb_OWP  
   
 Revisions:  
-  20201006@Tyler: get other assignments  - [Redmine: #142258]  
+	20201006@Tyler: get other assignments  - [Redmine: #142258]  
 */
 
      SET NOCOUNT ON;
      SELECT i.PreMatchNoteId, 
-			im.PreMatchNoteMessageId,
+            im.PreMatchNoteMessageId, 
             im.[Message], 
             DATEADD(HOUR, 12, im.CreatedDate) AS 'CreatedDate',
             CASE

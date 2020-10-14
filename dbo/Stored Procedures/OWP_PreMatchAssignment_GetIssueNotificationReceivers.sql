@@ -1,14 +1,8 @@
-﻿USE [bodb_OWP]
-GO
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
+﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_GetIssueNotificationReceivers] @ActorId         INT, 
-                                                                                 @PreMatchIssueId INT
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_GetIssueNotificationReceivers] @ActorId         INT, 
+                                                                              @PreMatchIssueId INT
 AS
 
 /*
@@ -18,7 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200916@Tyler: Init SP - [Redmine: #140620]
-	
+	20201003@Tyler: update other assignments  - [Redmine: #142258]  	
 */
 
      SET NOCOUNT ON;

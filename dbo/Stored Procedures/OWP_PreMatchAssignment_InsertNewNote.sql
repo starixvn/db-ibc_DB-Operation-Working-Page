@@ -59,24 +59,23 @@ Revisions:
               @ActorId, 
               @Message
              );
-			 SELECT @noteMesageId = SCOPE_IDENTITY();
-     END;
+             SELECT @noteMesageId = SCOPE_IDENTITY();
+         END;
          ELSE
          BEGIN
              EXEC dbo.[OWP_PreMatchAssignment_InsertNewNoteMessage] 
                   @ActorId, 
                   @Message, 
-                  @PreMatchNoteId = @noteId,
-				  @PreMatchNoteMessageId = @noteMesageId;
-     END;
-
+                  @PreMatchNoteId = @noteId, 
+                  @PreMatchNoteMessageId = @noteMesageId;
+         END;
      SELECT @CreatedDate = DATEADD(HOUR, 12, @insertTime), 
             @Username = CASE
                             WHEN u.Nickname IS NOT NULL
                             THEN u.Nickname
                             ELSE u.Username
                         END, 
-            @PreMatchNoteId = @noteId,
-			@PreMatchNoteMessageId = @noteMesageId
+            @PreMatchNoteId = @noteId, 
+            @PreMatchNoteMessageId = @noteMesageId
      FROM dbo.[User] AS u WITH(NOLOCK)
      WHERE u.UserId = @ActorId;

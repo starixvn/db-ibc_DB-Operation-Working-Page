@@ -21,7 +21,6 @@ Revisions:
      SET NOCOUNT ON;
      DECLARE @insertTime DATETIME= GETDATE();
      DECLARE @noteMessageId INT;
-
      INSERT INTO [dbo].[PreMatchNoteMessage]
      ([PreMatchNoteId], 
       [CreatedDate], 
@@ -35,7 +34,6 @@ Revisions:
       @Message
      );
      SELECT @noteMessageId = SCOPE_IDENTITY();
-
      SELECT @CreatedDate = DATEADD(HOUR, 12, @insertTime), 
             @Username = CASE
                             WHEN u.Nickname IS NOT NULL

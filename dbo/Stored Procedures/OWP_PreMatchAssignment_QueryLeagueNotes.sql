@@ -1,6 +1,6 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryLeagueNotes] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryLeagueNotes] @EventDate DATE
 AS
 
 /*  
@@ -20,16 +20,14 @@ Revisions:
                 THEN 1
                 ELSE 0
             END
-     FROM
-     (
+     FROM(
          SELECT n.OWPLeagueId, 
                 MAX(m.CreatedDate) AS 'MaxDate'
          FROM dbo.[PreMatchNote] AS n WITH(NOLOCK)
               LEFT JOIN dbo.[PreMatchNoteMessage] AS m WITH(NOLOCK) ON m.PreMatchNoteId = n.PreMatchNoteId
          WHERE n.EventDate = @EventDate
                AND n.OWPLeagueId IS NOT NULL
-         GROUP BY n.OWPLeagueId
-     ) AS x
-     INNER JOIN dbo.[PreMatchNote] AS n WITH(NOLOCK) ON n.OWPLeagueId = x.OWPLeagueId
-     INNER JOIN dbo.[PreMatchNoteMessage] AS nm WITH(NOLOCK) ON nm.PreMatchNoteId = n.PreMatchNoteId
+         GROUP BY n.OWPLeagueId) AS x
+         INNER JOIN dbo.[PreMatchNote] AS n WITH(NOLOCK) ON n.OWPLeagueId = x.OWPLeagueId
+         INNER JOIN dbo.[PreMatchNoteMessage] AS nm WITH(NOLOCK) ON nm.PreMatchNoteId = n.PreMatchNoteId
      WHERE nm.CreatedDate = x.MaxDate;
