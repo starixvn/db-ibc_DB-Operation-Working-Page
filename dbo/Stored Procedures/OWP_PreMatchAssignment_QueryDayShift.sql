@@ -38,6 +38,8 @@ Revisions:
           @IsDay = 1, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 0;
+     
+	 --
      DECLARE @tblOUMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -53,6 +55,8 @@ Revisions:
           @IsDay = 1, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 0;
+     
+	 --
      DECLARE @tblHDPTOMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -68,6 +72,8 @@ Revisions:
           @IsDay = 1, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 1;
+     
+	 --
      DECLARE @tblOUTOMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -102,6 +108,8 @@ Revisions:
           @IsDay = 1, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 0;
+     
+	 --
      DECLARE @tblOtherOUAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -119,6 +127,8 @@ Revisions:
           @IsDay = 1, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 0;
+     
+	 --
      DECLARE @tblOtherHDPTOAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -136,6 +146,8 @@ Revisions:
           @IsDay = 1, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 1;
+     
+	 --
      DECLARE @tblOtherOUTOAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 

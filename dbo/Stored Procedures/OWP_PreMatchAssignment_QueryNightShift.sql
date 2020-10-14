@@ -1,3 +1,4 @@
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryNightShift] @EventDate DATE, 
@@ -25,11 +26,11 @@ Revisions:
      IF @StartTime BETWEEN '00:00' AND '11:59'
          BEGIN
              SET @PreStartTime = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), @StartNightTime);
-     END;
+         END;
          ELSE
          BEGIN
              SET @PreStartTime = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), @StartNightTime);
-     END;
+         END;
 
      -- main assignments
      DECLARE @tblHDPMainAssignment TABLE
@@ -47,6 +48,8 @@ Revisions:
           @IsDay = 0, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 0;
+
+     --
      DECLARE @tblOUMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -62,6 +65,8 @@ Revisions:
           @IsDay = 0, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 0;
+
+     --
      DECLARE @tblHDPTOMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -77,6 +82,8 @@ Revisions:
           @IsDay = 0, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 1;
+
+     --
      DECLARE @tblOUTOMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -111,6 +118,8 @@ Revisions:
           @IsDay = 0, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 0;
+
+     --
      DECLARE @tblOtherOUAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -128,6 +137,8 @@ Revisions:
           @IsDay = 0, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 0;
+
+     --
      DECLARE @tblOtherHDPTOAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -145,6 +156,8 @@ Revisions:
           @IsDay = 0, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 1;
+
+     --
      DECLARE @tblOtherOUTOAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
