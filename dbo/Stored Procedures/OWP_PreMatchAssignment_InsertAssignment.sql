@@ -2,12 +2,12 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_InsertAssignment] @ActorId          INT, 
-                                                                 @PreMatchLeagueId INT, 
-                                                                 @NewValue         NVARCHAR(30) = '', 
-                                                                 @OldValue         NVARCHAR(30) = '', 
-                                                                 @Bettype          INT, 
-                                                                 @IsTakeOver       BIT, 
-                                                                 @PreMatchIssueId  INT          = NULL
+                                                                @PreMatchLeagueId INT, 
+                                                                @NewValue         NVARCHAR(30) = '', 
+                                                                @OldValue         NVARCHAR(30) = '', 
+                                                                @Bettype          INT, 
+                                                                @IsTakeOver       BIT, 
+                                                                @PreMatchIssueId  INT          = NULL
 AS
 
 /*
@@ -54,24 +54,22 @@ Revisions:
      );
 
      -- Insert for receiving isssue message
-     IF(@PreMatchIssueId IS NOT NULL)
-         BEGIN
-             INSERT INTO [dbo].[PreMatchIssueReceiver]
-             ([PreMatchIssueId], 
-              [UserId], 
-              [IsRead]
-             )
-                    SELECT @PreMatchIssueId, 
-                           @userId, 
-                           0
-                    WHERE NOT EXISTS
-                    (
-                        SELECT 1
-                        FROM [dbo].[PreMatchIssueReceiver]
-                        WHERE UserId = @userId
-                              AND PreMatchIssueId = @PreMatchIssueId
-                    );
-         END;
+     INSERT INTO [dbo].[PreMatchIssueReceiver]
+     ([PreMatchIssueId], 
+      [UserId], 
+      [IsRead]
+     )
+            SELECT @PreMatchIssueId, 
+                   @userId, 
+                   0
+            WHERE NOT EXISTS
+            (
+                SELECT 1
+                FROM [dbo].[PreMatchIssueReceiver]
+                WHERE UserId = @userId
+                      AND PreMatchIssueId = @PreMatchIssueId
+            )
+                  AND @PreMatchIssueId IS NOT NULL;
 
      -- Receivers for infosite matches issue
      INSERT INTO [dbo].[PreMatchIssueReceiver]
@@ -96,8 +94,8 @@ Revisions:
      SELECT @preMatchLeagueId AS '@plid', 
             @userId AS '@uid', 
             @Bettype AS '@bt', 
-            @IsTakeOver AS '@ito',
-			@NewValue AS '@un' FOR XML PATH('z'), ROOT('r'));
+            @IsTakeOver AS '@ito', 
+            @NewValue AS '@un' FOR XML PATH('z'), ROOT('r'));
      SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
      SET @EndRun = GETDATE();
      SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);

@@ -35,7 +35,7 @@ Revisions:
                  INNER JOIN PreMatchIssue AS i ON i.InfoSiteMatchId = m.InfoSiteMatchId
             WHERE pl.PreMatchLeagueId = @PreMatchLeagueId
                   AND m.EventDateTime BETWEEN DATEADD(DAY, DATEDIFF(DAY, 0, pl.EventDate), '12:00:00') AND DATEADD(DAY, DATEDIFF(DAY, -1, pl.EventDate), '11:59:59');
-     
+     --
 	 SELECT @userId = u.UserId
      FROM dbo.[User] AS u WITH(NOLOCK)
      WHERE u.Username = @NewValue;
@@ -79,24 +79,22 @@ Revisions:
          END;
 
      -- Insert for receiving isssue message
-     IF(@PreMatchIssueId IS NOT NULL)
-         BEGIN
-             INSERT INTO [dbo].[PreMatchIssueReceiver]
-             ([PreMatchIssueId], 
-              [UserId], 
-              [IsRead]
-             )
-                    SELECT @PreMatchIssueId, 
-                           @userId, 
-                           0
-                    WHERE NOT EXISTS
-                    (
-                        SELECT 1
-                        FROM [dbo].[PreMatchIssueReceiver]
-                        WHERE UserId = @userId
-                              AND PreMatchIssueId = @PreMatchIssueId
-                    );
-         END;
+     INSERT INTO [dbo].[PreMatchIssueReceiver]
+     ([PreMatchIssueId], 
+      [UserId], 
+      [IsRead]
+     )
+            SELECT @PreMatchIssueId, 
+                   @userId, 
+                   0
+            WHERE NOT EXISTS
+            (
+                SELECT 1
+                FROM [dbo].[PreMatchIssueReceiver]
+                WHERE UserId = @userId
+                      AND PreMatchIssueId = @PreMatchIssueId
+            )
+                  AND @PreMatchIssueId IS NOT NULL;
 
      -- Receivers for infosite matches issue
      INSERT INTO [dbo].[PreMatchIssueReceiver]
@@ -122,7 +120,7 @@ Revisions:
             @Bettype AS '@bt', 
             @IsTakeOver AS '@ito', 
             @NewValue AS '@un', 
-			@NewNoteValue AS '@an' FOR XML PATH('z'), ROOT('r'));
+            @NewNoteValue AS '@an' FOR XML PATH('z'), ROOT('r'));
      SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
      SET @EndRun = GETDATE();
      SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
