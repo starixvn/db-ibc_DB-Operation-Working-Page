@@ -25,11 +25,11 @@ Revisions:
      IF @StartTime BETWEEN '00:00' AND '11:59'
          BEGIN
              SET @PreStartTime = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), @StartNightTime);
-         END;
+     END;
          ELSE
          BEGIN
              SET @PreStartTime = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), @StartNightTime);
-         END;
+     END;
 
      -- main assignments
      DECLARE @tblHDPMainAssignment TABLE
@@ -291,26 +291,14 @@ Revisions:
       IsRead          BIT
      );
      INSERT INTO @tblLeagueIssues
-            SELECT m.PreMatchIssueId, 
-                   x.OWPLeagueId, 
-                   im.[Message],
-                   CASE
-                       WHEN r.IsRead IS NULL
-                       THEN 1
-                       ELSE r.IsRead
-                   END AS 'IsRead'
-            FROM(SELECT i.OWPLeagueId, 
-                        MAX(m.CreatedDate) AS 'MaxDate'
-                 FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
-                      LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-                 WHERE i.EventDate = @EventDate
-                       AND i.OWPLeagueId IS NOT NULL
-                 GROUP BY i.OWPLeagueId) AS x
-                INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.OWPLeagueId = x.OWPLeagueId
-                INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
-                LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
-                                                                           AND r.UserId = @ActorId
-            WHERE im.CreatedDate = x.MaxDate;
+     (PreMatchIssueId, 
+      OWPLeagueId, 
+      [Message], 
+      IsRead
+     )
+     EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueIssues] 
+          @EventDate = @EventDate, 
+          @ActorId = @ActorId;
 
      -- Table infositematch issue
      DECLARE @tblInfoSiteMatchIssues TABLE
@@ -320,26 +308,14 @@ Revisions:
       IsRead          BIT
      );
      INSERT INTO @tblInfoSiteMatchIssues
-            SELECT m.PreMatchIssueId, 
-                   x.InfoSiteMatchId, 
-                   im.[Message],
-                   CASE
-                       WHEN r.IsRead IS NULL
-                       THEN 1
-                       ELSE r.IsRead
-                   END AS 'IsRead'
-            FROM(SELECT i.InfoSiteMatchId, 
-                        MAX(m.CreatedDate) AS 'MaxDate'
-                 FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
-                      LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-                 WHERE i.EventDate = @EventDate
-                       AND i.InfoSiteMatchId IS NOT NULL
-                 GROUP BY i.InfoSiteMatchId) AS x
-                INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.InfoSiteMatchId = x.InfoSiteMatchId
-                INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
-                LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
-                                                                           AND r.UserId = @ActorId
-            WHERE im.CreatedDate = x.MaxDate;
+     (PreMatchIssueId, 
+      InfoSiteMatchId, 
+      [Message], 
+      IsRead
+     )
+     EXEC dbo.[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues] 
+          @EventDate = @EventDate, 
+          @ActorId = @ActorId;
 
      -- Table league notes
      DECLARE @tblLeagueNotes TABLE
@@ -350,6 +326,7 @@ Revisions:
      INSERT INTO @tblLeagueNotes
      EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueNotes] 
           @EventDate = @EventDate;
+
      --table match notes
      DECLARE @tblMatchNotes TABLE
      (PreMatchNoteId  INT, 
