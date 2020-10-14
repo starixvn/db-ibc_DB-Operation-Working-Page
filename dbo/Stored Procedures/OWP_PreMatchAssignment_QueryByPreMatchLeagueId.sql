@@ -1,13 +1,3 @@
-USE [bodb_OWP];
-GO
-
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryByPreMatchLeagueId]    Script Date: 10/9/2020 10:22:39 AM ******/
-
-SET ANSI_NULLS ON;
-GO
-SET QUOTED_IDENTIFIER ON;
-GO
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryByPreMatchLeagueId] @PreMatchLeagueId INT, 

@@ -1,11 +1,3 @@
-USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_Update]    Script Date: 10/7/2020 1:54:12 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_Update] @ActorId              INT, 

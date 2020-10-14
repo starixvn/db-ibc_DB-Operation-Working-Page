@@ -1,13 +1,3 @@
-USE [bodb_OWP];
-GO
-
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_DeleteNoteMessage]    Script Date: 10/8/2020 2:26:34 PM ******/
-
-SET ANSI_NULLS ON;
-GO
-SET QUOTED_IDENTIFIER ON;
-GO
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_DeleteNoteMessage] @PreMatchNoteMessageId INT
