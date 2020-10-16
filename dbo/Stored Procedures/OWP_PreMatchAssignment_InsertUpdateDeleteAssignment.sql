@@ -22,6 +22,12 @@ Revisions:
 	
 */
 
+     DECLARE @OWPLeagueId INT;
+     DECLARE @eventDate DATE;
+     SELECT @OWPLeagueId = OWPLeagueId, 
+            @eventDate = EventDate
+     FROM dbo.[PreMatchLeague] WITH(NOLOCK)
+     WHERE PreMatchLeagueId = @PreMatchLeagueId;
      -- 
      IF(@OldValue = ''
         AND @NewValue <> '')
@@ -47,7 +53,9 @@ Revisions:
                   @OldValue = @OldValue, 
                   @Bettype = @Bettype, 
                   @IsTakeOver = @IsTakeOver, 
-                  @PreMatchIssueId = @PreMatchIssueId;
+                  @PreMatchIssueId = @PreMatchIssueId, 
+                  @EventDate = @eventDate, 
+                  @OWPLeagueId = @OWPLeagueId;
          END;
 
      --
@@ -61,5 +69,7 @@ Revisions:
                   @OldValue = @OldValue, 
                   @Bettype = @Bettype, 
                   @IsTakeOver = @IsTakeOver, 
-                  @PreMatchIssueId = @PreMatchIssueId;
+                  @PreMatchIssueId = @PreMatchIssueId, 
+                  @EventDate = @eventDate, 
+                  @OWPLeagueId = @OWPLeagueId;
          END;
