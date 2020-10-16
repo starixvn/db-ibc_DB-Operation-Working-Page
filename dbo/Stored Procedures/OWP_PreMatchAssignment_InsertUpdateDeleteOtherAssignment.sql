@@ -23,6 +23,12 @@ Revisions:
 */
 
      SET NOCOUNT ON;
+	 DECLARE @OWPLeagueId INT;
+     DECLARE @eventDate DATE;
+     SELECT @OWPLeagueId = OWPLeagueId, 
+            @eventDate = EventDate
+     FROM dbo.[PreMatchLeague] WITH(NOLOCK)
+     WHERE PreMatchLeagueId = @PreMatchLeagueId;
 
      -- new assignment
      IF(@OldValue = ''
@@ -53,7 +59,9 @@ Revisions:
                   @OldNoteValue, 
                   @Bettype, 
                   @IsTakeOver, 
-                  @PreMatchIssueId;
+                  @PreMatchIssueId,
+				  @EventDate = @eventDate, 
+                  @OWPLeagueId = @OWPLeagueId;
          END;
 
      -- update assignment
@@ -70,7 +78,9 @@ Revisions:
                   @OldNoteValue, 
                   @Bettype, 
                   @IsTakeOver, 
-                  @PreMatchIssueId;
+                  @PreMatchIssueId,
+				  @EventDate = @eventDate, 
+                  @OWPLeagueId = @OWPLeagueId;
          END;
 
      -- update assignment note

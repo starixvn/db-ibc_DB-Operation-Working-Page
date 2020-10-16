@@ -9,6 +9,8 @@ ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_DeleteOtherAssignment] @ActorId   
                                                                      @OldNoteValue     NVARCHAR(200) = '', 
                                                                      @Bettype          INT, 
                                                                      @IsTakeOver       BIT, 
+																	 @OWPLeagueId      INT, 
+																	 @EventDate        DATE, 
                                                                      @PreMatchIssueId  INT           = NULL
 AS
 
@@ -61,6 +63,14 @@ Revisions:
          SELECT UserId
          FROM dbo.[PreMatchIssueMessage] WITH(NOLOCK)
          WHERE PreMatchIssueId = @PreMatchIssueId
+     )
+		   AND r.UserId NOT IN
+     (
+         SELECT UserId
+         FROM dbo.[PreMatchAssignment] a WITH(NOLOCK)
+              INNER JOIN dbo.[PreMatchLeague] l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
+         WHERE l.OWPLeagueId = @OWPLeagueId
+               AND l.EventDate = EventDate
      );
      DELETE r
      FROM [dbo].[PreMatchIssueReceiver] AS r
