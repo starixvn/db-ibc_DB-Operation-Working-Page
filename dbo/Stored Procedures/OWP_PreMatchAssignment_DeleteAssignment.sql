@@ -61,11 +61,23 @@ Revisions:
      FROM [dbo].[PreMatchIssueReceiver] AS r
      WHERE @PreMatchIssueId IS NOT NULL
            AND r.PreMatchIssueId = @PreMatchIssueId
-           AND r.UserId = @userId;
+           AND r.UserId = @userId
+           AND r.UserId NOT IN
+     (
+         SELECT UserId
+         FROM dbo.[PreMatchIssueMessage] WITH(NOLOCK)
+         WHERE PreMatchIssueId = @PreMatchIssueId
+     );
      DELETE r
      FROM [dbo].[PreMatchIssueReceiver] AS r
           INNER JOIN #tblMatchIssues AS i ON i.PreMatchIssueId = r.PreMatchIssueId
-     WHERE r.UserId = @userId;
+     WHERE r.UserId = @userId
+           AND r.UserId NOT IN
+     (
+         SELECT UserId
+         FROM dbo.[PreMatchIssueMessage] WITH(NOLOCK)
+         WHERE PreMatchIssueId = @PreMatchIssueId
+     );
 
      -- delete asssignment
      DELETE FROM dbo.[PreMatchAssignment]
