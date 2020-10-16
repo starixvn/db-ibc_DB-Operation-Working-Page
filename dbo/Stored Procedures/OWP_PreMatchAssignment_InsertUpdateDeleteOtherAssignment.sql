@@ -23,7 +23,7 @@ Revisions:
 */
 
      SET NOCOUNT ON;
-	 DECLARE @OWPLeagueId INT;
+     DECLARE @OWPLeagueId INT;
      DECLARE @eventDate DATE;
      SELECT @OWPLeagueId = OWPLeagueId, 
             @eventDate = EventDate
@@ -59,9 +59,9 @@ Revisions:
                   @OldNoteValue, 
                   @Bettype, 
                   @IsTakeOver, 
-                  @PreMatchIssueId,
-				  @EventDate = @eventDate, 
-                  @OWPLeagueId = @OWPLeagueId;
+                  @OWPLeagueId, 
+                  @EventDate, 
+                  @PreMatchIssueId;
          END;
 
      -- update assignment
@@ -78,9 +78,9 @@ Revisions:
                   @OldNoteValue, 
                   @Bettype, 
                   @IsTakeOver, 
-                  @PreMatchIssueId,
-				  @EventDate = @eventDate, 
-                  @OWPLeagueId = @OWPLeagueId;
+                  @OWPLeagueId, 
+                  @EventDate, 
+                  @PreMatchIssueId;
          END;
 
      -- update assignment note
