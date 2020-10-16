@@ -1,3 +1,4 @@
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryInfoSiteMatchNotes] @EventDate DATE
@@ -13,7 +14,8 @@ Revisions:
 */
 
      SET NOCOUNT ON;
-     SELECT n.PreMatchNoteId, 
+     SELECT DISTINCT 
+            n.PreMatchNoteId, 
             x.InfoSiteMatchId,
             CASE
                 WHEN nm.[Message] IS NOT NULL
@@ -30,4 +32,7 @@ Revisions:
          GROUP BY n.InfoSiteMatchId) AS x
          INNER JOIN dbo.[PreMatchNote] AS n WITH(NOLOCK) ON n.InfoSiteMatchId = x.InfoSiteMatchId
          INNER JOIN dbo.[PreMatchNoteMessage] AS nm WITH(NOLOCK) ON nm.PreMatchNoteId = n.PreMatchNoteId
-     WHERE nm.CreatedDate = x.MaxDate;
+     WHERE nm.CreatedDate = x.MaxDate
+     GROUP BY n.PreMatchNoteId, 
+              x.InfoSiteMatchId, 
+              nm.[Message];
