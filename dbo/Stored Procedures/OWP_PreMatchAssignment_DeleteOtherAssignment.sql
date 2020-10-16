@@ -70,7 +70,7 @@ Revisions:
      (
          SELECT UserId
          FROM dbo.[PreMatchIssueMessage] WITH(NOLOCK)
-         WHERE PreMatchIssueId = @PreMatchIssueId
+         WHERE PreMatchIssueId = i.PreMatchIssueId
      );
 
      -- delete asssignment

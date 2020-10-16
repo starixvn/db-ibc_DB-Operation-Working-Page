@@ -49,17 +49,14 @@ Revisions:
               1
              );
          END;
-         ELSE
-         BEGIN
-             UPDATE dbo.[PreMatchIssueReceiver] WITH(ROWLOCK)
-               SET 
-                   IsRead = 0
-             WHERE PreMatchIssueId = @PreMatchIssueId
-                   AND UserId <> @ActorId;
+     UPDATE dbo.[PreMatchIssueReceiver] WITH(ROWLOCK)
+       SET 
+           IsRead = 0
+     WHERE PreMatchIssueId = @PreMatchIssueId
+           AND UserId <> @ActorId;
 
-             -- Set undone
-             UPDATE dbo.[PreMatchIssue] WITH(ROWLOCK)
-               SET 
-                   IsDone = 0
-             WHERE PreMatchIssueId = @PreMatchIssueId;
-         END;
+     -- Set undone
+     UPDATE dbo.[PreMatchIssue] WITH(ROWLOCK)
+       SET 
+           IsDone = 0
+     WHERE PreMatchIssueId = @PreMatchIssueId;
