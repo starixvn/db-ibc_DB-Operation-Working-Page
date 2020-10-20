@@ -28,7 +28,8 @@ AS
              FROM UserLog AS ul WITH(NOLOCK)
                   INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON l.PreMatchLeagueId = ul.ObjectId
                   INNER JOIN @tblLogAction AS sp ON ul.ActionId = sp.ActionId
-             WHERE l.IsDay = @IsDay;
+             WHERE l.IsDay = @IsDay
+                   AND ul.ActionId <> 117;
          END;
          ELSE
          BEGIN
