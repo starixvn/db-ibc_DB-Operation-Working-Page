@@ -1,8 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryLeagueIssues] @EventDate DATE, 
-                                                                  @ActorId   INT
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryLeagueIssues] @ActorId   INT
 AS
 
 /*  
@@ -12,6 +11,7 @@ DB: bodb_OWP
   
 Revisions:  
  20201003@Tyler: get other assignments  - [Redmine: #142258]  
+ 20201020@Tyler: Remove EventDate  - [Redmine: #143792] 
 */
 
      SELECT m.PreMatchIssueId, 
@@ -27,8 +27,7 @@ Revisions:
                 MAX(m.CreatedDate) AS 'MaxDate'
          FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
               LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-         WHERE i.EventDate = @EventDate
-               AND i.OWPLeagueId IS NOT NULL
+         WHERE i.OWPLeagueId IS NOT NULL
          GROUP BY i.OWPLeagueId) AS x
          INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.OWPLeagueId = x.OWPLeagueId
          INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId

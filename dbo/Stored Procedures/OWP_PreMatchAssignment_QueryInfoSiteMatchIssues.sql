@@ -1,8 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues] @EventDate DATE, 
-                                                                         @ActorId   INT
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues]  @ActorId   INT
 AS
 
 /*  
@@ -11,7 +10,8 @@ Task : Query day shift
 DB: bodb_OWP  
   
 Revisions:  
- 20201003@Tyler: get other assignments  - [Redmine: #142258]  
+ 20201003@Tyler: get other assignments  - [Redmine: #142258] 
+ 20201020@Tyler: Remove EventDate  - [Redmine: #143792] 
 */
 
      SELECT m.PreMatchIssueId, 
@@ -27,8 +27,7 @@ Revisions:
                 MAX(m.CreatedDate) AS 'MaxDate'
          FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
               LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-         WHERE i.EventDate = @EventDate
-               AND i.InfoSiteMatchId IS NOT NULL
+         WHERE i.InfoSiteMatchId IS NOT NULL
          GROUP BY i.InfoSiteMatchId) AS x
          INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.InfoSiteMatchId = x.InfoSiteMatchId
          INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId

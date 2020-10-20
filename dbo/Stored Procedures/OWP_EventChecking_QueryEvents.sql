@@ -8,8 +8,7 @@ GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @EventDate DATE, 
-                                                      @ActorId   INT
+ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents]  @ActorId   INT
 AS
 
 /*  
@@ -18,7 +17,8 @@ Task : Query leagues and matches
 DB: bodb_OWP  
   
 Revisions:  
- 20200908@Tyler: Init SP  - [Redmine: #140620]  
+ 20200908@Tyler: Init SP  - [Redmine: #140620] 
+ 20201020@Esther: Remove EventDate  - [Redmine: #143792] 
 */
 
     BEGIN
@@ -51,8 +51,7 @@ Revisions:
                           MAX(m.CreatedDate) AS 'MaxDate'
                    FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
                         LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-                   WHERE i.EventDate = @EventDate
-                         AND i.OWPLeagueId IS NOT NULL
+                   WHERE i.OWPLeagueId IS NOT NULL
                    GROUP BY i.OWPLeagueId
                ) AS x
                INNER JOIN dbo.[OWPLeague] AS l WITH(NOLOCK) ON l.OWPLeagueId = x.OWPLeagueId
@@ -96,8 +95,7 @@ Revisions:
                           MAX(m.CreatedDate) AS 'MaxDate'
                    FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
                         LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-                   WHERE i.EventDate = @EventDate
-                         AND i.InfoSiteMatchId IS NOT NULL
+                   WHERE i.InfoSiteMatchId IS NOT NULL
                    GROUP BY i.InfoSiteMatchId
                ) AS x
                INNER JOIN dbo.[InfoSiteMatch] AS ifm WITH(NOLOCK) ON ifm.InfoSiteMatchId = x.InfoSiteMatchId
@@ -145,7 +143,6 @@ Revisions:
              LEFT JOIN @tblInfoSiteMatchIssues AS im ON i.InfoSiteMatchId = im.InfoSiteMatchId
              INNER JOIN dbo.[User] AS u ON u.UserId = l.UserId
                                            OR u.UserId = im.UserId
-        WHERE i.EventDate = @EventDate
         ORDER BY i.IsDone ASC, 
                  'IsRead' ASC, 
                  'CreatedDate' DESC;

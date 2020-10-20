@@ -1,8 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryIssueMessagesAfterInsert] @OWPLeagueId     INT  = NULL, 
-                                                                             @EventDate       DATE, 
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryIssueMessagesAfterInsert] @OWPLeagueId     INT  = NULL,                                                                             
                                                                              @InfoSiteMatchId INT  = NULL
 AS
 
@@ -14,6 +13,7 @@ DB: bodb_OWP
 Revisions:  
 	20200909@Tyler: Init SP  - [Redmine: #140620]  
  	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201020@Esther: Remove EventDate  - [Redmine: #143792]  
 */
 
      SET NOCOUNT ON;
@@ -22,6 +22,5 @@ Revisions:
      FROM [dbo].[PreMatchIssue] WITH(NOLOCK)
      WHERE(OWPLeagueId = @OWPLeagueId
            OR InfoSiteMatchId = @InfoSiteMatchId)
-          AND EventDate = @EventDate;
      EXEC [dbo].[OWP_PreMatchAssignment_QueryIssueMessages] 
           @PreMatchIssueId = @issueId;

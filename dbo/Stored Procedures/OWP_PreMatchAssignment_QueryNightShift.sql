@@ -15,6 +15,7 @@ Revisions:
  20200814@Esther.Nguyen: query night shift  - [Redmine: #138643] 
  20200908@Tyler: query matches  - [Redmine: #140620]   
  20201003@Tyler: get other assignments  - [Redmine: #142258]  
+ 20201020@Esther: Remove EventDate  - [Redmine: #143792] 
 */
 
      SET NOCOUNT ON;
@@ -310,7 +311,6 @@ Revisions:
       IsRead
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueIssues] 
-          @EventDate = @EventDate, 
           @ActorId = @ActorId;
 
      -- Table infositematch issue
@@ -327,7 +327,6 @@ Revisions:
       IsRead
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues] 
-          @EventDate = @EventDate, 
           @ActorId = @ActorId;
 
      -- Table league notes

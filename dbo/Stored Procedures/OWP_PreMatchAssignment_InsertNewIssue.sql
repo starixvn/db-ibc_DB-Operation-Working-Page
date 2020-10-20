@@ -3,8 +3,7 @@
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_InsertNewIssue] @ActorId         INT, 
                                                               @Message         NVARCHAR(MAX), 
-                                                              @OWPLeagueId     INT           = NULL, 
-                                                              @EventDate       DATE, 
+                                                              @OWPLeagueId     INT           = NULL,                                                             
                                                               @InfoSiteMatchId INT           = NULL
 AS
 
@@ -16,6 +15,7 @@ DB: bodb_OWP
 Revisions:
 	20200909@Tyler: Init sync SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201020@Esther: Remove EventDate  - [Redmine: #143792] 
 	
 */
 
@@ -30,8 +30,7 @@ Revisions:
      SELECT @issueId = PreMatchIssueId
      FROM [dbo].[PreMatchIssue] WITH(NOLOCK)
      WHERE(OWPLeagueId = @OWPLeagueId
-           OR InfoSiteMatchId = @InfoSiteMatchId)
-          AND EventDate = @EventDate;
+           OR InfoSiteMatchId = @InfoSiteMatchId)        
 
      -- If PreMatchIssue not exists
      IF @issueId IS NULL
@@ -39,13 +38,11 @@ Revisions:
              INSERT INTO [dbo].[PreMatchIssue]
              ([OWPLeagueId], 
               [InfoSiteMatchId], 
-              [EventDate], 
               [IsDone]
              )
              VALUES
              (@OWPLeagueId, 
               @InfoSiteMatchId, 
-              @EventDate, 
               0
              );
              SELECT @issueId = SCOPE_IDENTITY();
@@ -78,7 +75,6 @@ Revisions:
                          INNER JOIN dbo.[InfoSiteMatch] AS m WITH(NOLOCK) ON m.OWPLeagueId = pl.OWPLeagueId
                     WHERE(pl.OWPLeagueId = @OWPLeagueId
                           OR m.InfoSiteMatchId = @InfoSiteMatchId)
-                         AND pl.EventDate = @EventDate
                          AND a.UserId <> @ActorId
                          AND a.UserId > 0
                     UNION
