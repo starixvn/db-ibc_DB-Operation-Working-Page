@@ -10,12 +10,11 @@ Task : Pre-Match Assignment
 DB: bodb_OWP  
   
 Revisions:  
- 20200817@Esther.Nguyen: Get start time for night shift  - [Redmine: #138643]  
+	20200817@Esther.Nguyen: Get start time for night shift  - [Redmine: #138643] 
+ 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 */
 
-    BEGIN
-        SET NOCOUNT ON;
-        SELECT [StartTime]
-        FROM PreMatchNightShiftStartTime WITH(NOLOCK)
-        WHERE EventDate = @EventDate;
-    END;
+     SET NOCOUNT ON;
+     SELECT [StartTime]
+     FROM PreMatchNightShiftStartTime WITH(NOLOCK)
+     WHERE EventDate = @EventDate;

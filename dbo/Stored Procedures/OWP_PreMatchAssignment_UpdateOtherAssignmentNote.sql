@@ -1,0 +1,141 @@
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_UpdateOtherAssignmentNote] @ActorId          INT, 
+                                                                          @PreMatchLeagueId INT, 
+                                                                          @NewValue         NVARCHAR(30)  = '', 
+                                                                          @OldValue         NVARCHAR(30)  = '', 
+                                                                          @NewNoteValue     NVARCHAR(200) = '', 
+                                                                          @OldNoteValue     NVARCHAR(200) = '', 
+                                                                          @Bettype          INT, 
+                                                                          @IsTakeOver       BIT, 
+                                                                          @PreMatchIssueId  INT           = NULL
+AS
+
+/*
+Created: 20200930@Tyler
+Task : Pre-Match Other Assignment
+DB: bodb_OWP
+
+Revisions:
+	20200930@Tyler: Init SP - [Redmine: #142258]
+	
+*/
+
+     SET NOCOUNT ON;
+     DECLARE @StartRun DATETIME= GETDATE(), @EndRun DATETIME, @Duration INT, @LogData NVARCHAR(MAX), @LogDataOld NVARCHAR(MAX), @Xml XML;
+
+     -- Update AssignmentNote
+     IF(@NewNoteValue <> ''
+        AND @OldNoteValue = '')
+         BEGIN
+             INSERT INTO [dbo].[PreMatchAssignment]
+             ([PreMatchLeagueId], 
+              [UserId], 
+              [Bettype], 
+              [IsTakeOver], 
+              [AssignmentType], 
+              [AssignmentNote]
+             )
+             VALUES
+             (@PreMatchLeagueId, 
+              0, 
+              @Bettype, 
+              @IsTakeOver, 
+              2, 
+              @NewNoteValue
+             );
+
+             SET @Xml = (
+             SELECT pa.PreMatchLeagueId AS '@plid', 
+                    pa.UserId AS '@uid', 
+                    pa.Bettype AS '@bt', 
+                    pa.IsTakeOver AS '@ito', 
+                    u.Username AS '@un', 
+                    pa.AssignmentNote AS '@an'
+             FROM dbo.[PreMatchAssignment] AS pa WITH(NOLOCK)
+                  LEFT JOIN dbo.[User] AS u ON pa.UserId = u.UserId
+             WHERE PreMatchLeagueId = @PreMatchLeagueId
+                   AND Bettype = @Bettype
+                   AND IsTakeOver = @IsTakeOver
+                   AND AssignmentType = 2 FOR XML PATH('z'), ROOT('r'));
+             SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+         END;
+     --
+     IF(@NewNoteValue <> ''
+        AND @OldNoteValue <> '')
+         BEGIN
+             SET @Xml = (
+             SELECT pa.PreMatchLeagueId AS '@plid', 
+                    pa.UserId AS '@uid', 
+                    pa.Bettype AS '@bt', 
+                    pa.IsTakeOver AS '@ito', 
+                    u.Username AS '@un', 
+                    pa.AssignmentNote AS '@an'
+             FROM dbo.[PreMatchAssignment] AS pa WITH(NOLOCK)
+                  LEFT JOIN dbo.[User] AS u ON pa.UserId = u.UserId
+             WHERE PreMatchLeagueId = @PreMatchLeagueId
+                   AND Bettype = @Bettype
+                   AND IsTakeOver = @IsTakeOver
+                   AND AssignmentType = 2 FOR XML PATH('z'), ROOT('r'));
+             SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+
+             UPDATE dbo.[PreMatchAssignment]
+               SET 
+                   AssignmentNote = @NewNoteValue
+             WHERE PreMatchLeagueId = @PreMatchLeagueId
+                   AND Bettype = @Bettype
+                   AND IsTakeOver = @IsTakeOver
+                   AND AssignmentType = 2;
+
+             SET @Xml = (
+             SELECT pa.PreMatchLeagueId AS '@plid', 
+                    pa.UserId AS '@uid', 
+                    pa.Bettype AS '@bt', 
+                    pa.IsTakeOver AS '@ito', 
+                    u.Username AS '@un', 
+                    pa.AssignmentNote AS '@an'
+             FROM dbo.[PreMatchAssignment] AS pa WITH(NOLOCK)
+                  LEFT JOIN dbo.[User] AS u ON pa.UserId = u.UserId
+             WHERE PreMatchLeagueId = @PreMatchLeagueId
+                   AND Bettype = @Bettype
+                   AND IsTakeOver = @IsTakeOver
+                   AND AssignmentType = 2 FOR XML PATH('z'), ROOT('r'));
+             SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+         END;
+     --
+     IF(@NewNoteValue = ''
+        AND @OldNoteValue <> '')
+         BEGIN
+             SET @Xml = (
+             SELECT pa.PreMatchLeagueId AS '@plid', 
+                    pa.UserId AS '@uid', 
+                    pa.Bettype AS '@bt', 
+                    pa.IsTakeOver AS '@ito', 
+                    u.Username AS '@un', 
+                    pa.AssignmentNote AS '@an'
+             FROM dbo.[PreMatchAssignment] AS pa WITH(NOLOCK)
+                  LEFT JOIN dbo.[User] AS u ON pa.UserId = u.UserId
+             WHERE PreMatchLeagueId = @PreMatchLeagueId
+                   AND Bettype = @Bettype
+                   AND IsTakeOver = @IsTakeOver
+                   AND AssignmentType = 2 FOR XML PATH('z'), ROOT('r'));
+
+             SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
+             DELETE FROM [dbo].[PreMatchAssignment]
+             WHERE PreMatchLeagueId = @PreMatchLeagueId
+                   AND Bettype = @Bettype
+                   AND IsTakeOver = @IsTakeOver
+                   AND AssignmentType = 2;
+         END;
+
+     SET @EndRun = GETDATE();
+     SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+     EXEC dbo.OWP_WriteLog 
+          @CreatorId = @ActorId, 
+          @SPName = 'OWP_PreMatchAssignment_InsertUpdateDeleteOtherAssignment', 
+          @LoggedDate = @StartRun, 
+          @Duration = @Duration, 
+          @ObjectId = @preMatchLeagueId, 
+          @DataOld = @LogDataOld, 
+          @Data = @LogData;

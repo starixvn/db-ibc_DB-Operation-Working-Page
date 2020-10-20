@@ -1,11 +1,4 @@
-﻿USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_QueryIssueMessages]    Script Date: 9/21/2020 1:21:50 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
+﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryIssueMessages] @PreMatchIssueId INT
@@ -17,7 +10,8 @@ Task : Query issue messages
 DB: bodb_OWP  
   
 Revisions:  
- 20200909@Tyler: Init SP  - [Redmine: #140620]  
+	20200909@Tyler: Init SP  - [Redmine: #140620]  
+ 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 */
 
      SET NOCOUNT ON;

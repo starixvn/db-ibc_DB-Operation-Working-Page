@@ -1,12 +1,3 @@
-﻿USE [bodb_OWP];
-GO
-
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertNewMessage]    Script Date: 9/22/2020 8:56:23 AM ******/
-
-SET ANSI_NULLS ON;
-GO
-SET QUOTED_IDENTIFIER ON;
-GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
@@ -22,7 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200914@Tyler: Init sync SP - [Redmine: #140620]
-	
+	20201003@Tyler: update other assignments  - [Redmine: #142258]  	
 */
 
      SET NOCOUNT ON;
@@ -57,18 +48,15 @@ Revisions:
               @ActorId, 
               1
              );
-     END;
-         ELSE
-         BEGIN
-             UPDATE dbo.[PreMatchIssueReceiver] WITH(ROWLOCK)
-               SET 
-                   IsRead = 0
-             WHERE PreMatchIssueId = @PreMatchIssueId
-                   AND UserId <> @ActorId;
+         END;
+     UPDATE dbo.[PreMatchIssueReceiver] WITH(ROWLOCK)
+       SET 
+           IsRead = 0
+     WHERE PreMatchIssueId = @PreMatchIssueId
+           AND UserId <> @ActorId;
 
-             -- Set undone
-             UPDATE dbo.[PreMatchIssue] WITH(ROWLOCK)
-               SET 
-                   IsDone = 0
-             WHERE PreMatchIssueId = @PreMatchIssueId;
-     END;
+     -- Set undone
+     UPDATE dbo.[PreMatchIssue] WITH(ROWLOCK)
+       SET 
+           IsDone = 0
+     WHERE PreMatchIssueId = @PreMatchIssueId;

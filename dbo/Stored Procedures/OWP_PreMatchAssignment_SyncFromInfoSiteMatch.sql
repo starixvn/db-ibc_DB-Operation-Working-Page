@@ -14,6 +14,7 @@ Revisions:
 	20200813@Tyler: Init sync SP - [Redmine: #138643]
 	20200923@Tyler: Update sync to future - [Redmine: #140620]	
 	20201012@Jacob: HotFix Failed to show League that has matches with KO time AM only - [Redmine: #143299]	
+	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 */
 
      SET NOCOUNT ON;
@@ -60,6 +61,6 @@ Revisions:
                    NULL
             FROM #tblLeague
             ORDER BY OWPLeagueId;
-     
-	 -- DROP temp table
+
+     -- DROP temp table
      DROP TABLE #tblLeague;

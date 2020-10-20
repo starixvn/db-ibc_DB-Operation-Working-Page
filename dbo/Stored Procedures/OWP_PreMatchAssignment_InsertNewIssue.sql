@@ -1,10 +1,3 @@
-﻿USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_PreMatchAssignment_InsertNewIssue]    Script Date: 9/28/2020 10:59:58 AM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
@@ -22,6 +15,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200909@Tyler: Init sync SP - [Redmine: #140620]
+	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	
 */
 
@@ -82,9 +76,11 @@ Revisions:
                     FROM [dbo].[PreMatchAssignment] AS a WITH(NOLOCK)
                          INNER JOIN dbo.[PreMatchLeague] AS pl WITH(NOLOCK) ON pl.PreMatchLeagueId = a.PreMatchLeagueId
                          INNER JOIN dbo.[InfoSiteMatch] AS m WITH(NOLOCK) ON m.OWPLeagueId = pl.OWPLeagueId
-                    WHERE (pl.OWPLeagueId = @OWPLeagueId OR m.InfoSiteMatchId = @InfoSiteMatchId)
-                          AND pl.EventDate = @EventDate
-                          AND a.UserId <> @ActorId
+                    WHERE(pl.OWPLeagueId = @OWPLeagueId
+                          OR m.InfoSiteMatchId = @InfoSiteMatchId)
+                         AND pl.EventDate = @EventDate
+                         AND a.UserId <> @ActorId
+                         AND a.UserId > 0
                     UNION
                     SELECT @issueId, 
                            [UserId], 
@@ -96,11 +92,11 @@ Revisions:
                     SELECT @issueId, 
                            @ActorId, 
                            1;
-     END;
+         END;
          ELSE
          BEGIN
              EXEC dbo.[OWP_PreMatchAssignment_InsertNewMessage] 
                   @ActorId, 
                   @Message, 
                   @PreMatchIssueId = @issueId;
-     END;
+         END;
