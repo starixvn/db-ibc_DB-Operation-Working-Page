@@ -3,8 +3,8 @@
 
 ALTER PROCEDURE [dbo].[OWP_EventChecking_InsertNewAddRequest] @ActorId INT, 
                                                               @Message NVARCHAR(MAX), 
-                                                              @League  NVARCHAR(500), 
-                                                              @Match   NVARCHAR(200)
+                                                              @LeagueName  NVARCHAR(500), 
+                                                              @MatchName   NVARCHAR(200)
 AS
 
 /*
@@ -47,8 +47,8 @@ Revisions:
       [PrematchIssueId]
      )
      VALUES
-     (@League, 
-      @Match, 
+     (@LeagueName, 
+      @MatchName, 
       @issueId
      );
 
