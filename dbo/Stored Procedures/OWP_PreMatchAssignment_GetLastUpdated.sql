@@ -21,7 +21,7 @@ AS
       PRIMARY KEY
      );
      INSERT INTO @tblLogAction(ActionId)
-     VALUES(113), (114), (115), (116), (117);
+     VALUES(113), (114), (115), (116), (117), (119);
      IF(@IsDay = 1)
          BEGIN
              SELECT @logTime = MAX(LoggedDate)
