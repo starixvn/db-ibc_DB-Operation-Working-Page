@@ -18,6 +18,7 @@ DB: bodb_OWP
 Revisions:
 	20200916@Tyler: Init SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201021@Mira: New add request  - [Redmine: #140772]
 */
 
      SET NOCOUNT ON;
@@ -33,11 +34,15 @@ Revisions:
      FROM dbo.[User] WITH(NOLOCK)
      WHERE UserId = @ActorId;
      SELECT @eventName = CASE
+                             WHEN i.InfoSiteMatchId IS NULL
+                                  AND i.OWPLeagueId IS NULL
+                             THEN n.LeagueName
                              WHEN i.InfoSiteMatchId IS NOT NULL
                              THEN(m.LeagueName + ' - ' + m.HomeName + ' -vs- ' + m.AwayName)
                              ELSE l.OWPLeagueName
                          END
      FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+          LEFT JOIN [NewAddRequest] AS n WITH(NOLOCK) ON i.PreMatchIssueId = n.PrematchIssueId
           LEFT JOIN [InfoSiteMatch] AS m WITH(NOLOCK) ON i.InfoSiteMatchId = m.InfoSiteMatchId
           LEFT JOIN [OWPLeague] AS l WITH(NOLOCK) ON i.OWPLeagueId = l.OWPLeagueId
      WHERE i.PreMatchIssueId = @PreMatchIssueId;
