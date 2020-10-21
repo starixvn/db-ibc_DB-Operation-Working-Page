@@ -1,13 +1,4 @@
-﻿USE [bodb_OWP];
-GO
-
-/****** Object:  StoredProcedure [dbo].[OWP_EventChecking_QueryEvents]    Script Date: 9/23/2020 1:14:10 PM ******/
-
-SET ANSI_NULLS ON;
-GO
-SET QUOTED_IDENTIFIER ON;
-GO
-
+﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @ActorId    INT, 
@@ -92,7 +83,7 @@ Revisions:
                        THEN 1
                        ELSE r.IsRead
                    END AS 'IsRead', 
-                   NULL, 
+                   ifm.LeagueName, 
                    NULL, 
                    ifm.HomeName, 
                    ifm.AwayName, 
