@@ -1,9 +1,10 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @ActorId    INT, 
-                                                      @PageNumber INT = 1, 
-                                                      @PageSize   INT = 50
+ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @ActorId          INT, 
+                                                      @PageNumber       INT = 1, 
+                                                      @PageSize         INT = 50, 
+                                                      @IsHideDoneIssues BIT
 AS
 
 /*  
@@ -177,5 +178,8 @@ Revisions:
          FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
               LEFT JOIN @tblIssues AS i ON i.PreMatchIssueId = p.PreMatchIssueId
               INNER JOIN dbo.[User] AS u ON u.UserId = i.UserId
+         WHERE @IsHideDoneIssues = 0
+               OR (@IsHideDoneIssues = 1
+                   AND p.IsDone = 0)
      ) AS Paging
      WHERE Paging.RowNumber BETWEEN @FromRow AND @ToRow;
