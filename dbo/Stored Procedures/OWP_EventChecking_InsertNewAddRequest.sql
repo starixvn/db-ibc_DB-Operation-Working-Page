@@ -1,10 +1,10 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_EventChecking_InsertNewAddRequest] @ActorId INT, 
-                                                              @Message NVARCHAR(MAX), 
-                                                              @LeagueName  NVARCHAR(500), 
-                                                              @MatchName   NVARCHAR(200)
+ALTER PROCEDURE [dbo].[OWP_EventChecking_InsertNewAddRequest] @ActorId    INT, 
+                                                              @Message    NVARCHAR(MAX), 
+                                                              @LeagueName NVARCHAR(500), 
+                                                              @MatchName  NVARCHAR(200)
 AS
 
 /*
@@ -82,3 +82,4 @@ Revisions:
             SELECT @issueId, 
                    @ActorId, 
                    1;
+     SELECT @issueId AS 'PreMatchIssueId';
