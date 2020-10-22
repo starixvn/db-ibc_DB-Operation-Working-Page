@@ -19,10 +19,14 @@ Revisions:
 	20200916@Tyler: Init SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201021@Mira: New add request  - [Redmine: #140772]
+	20201021@Esther: update table PreMatchIssueReceiver  - [Redmine: #143939]
 */
 
      SET NOCOUNT ON;
      DECLARE @messageTemplate NVARCHAR(MAX);
+     DECLARE @eventDate DATE= CAST(GETDATE() AS DATE);
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
      DECLARE @eventName NVARCHAR(2000);
      DECLARE @actorName NVARCHAR(50);
      DECLARE @tblReceivedUser TVP_INT;
@@ -54,9 +58,10 @@ Revisions:
                   AND UserId <> @ActorId
             UNION
             SELECT UserId
-            FROM dbo.[PreMatchIssueMessage] WITH(NOLOCK)
+            FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
             WHERE PreMatchIssueId = @PreMatchIssueId
-                  AND UserId <> @ActorId;
+                  AND UserId <> @ActorId
+                  AND p.CreatedDate BETWEEN @fromDate AND @toDate;
      EXEC dbo.OWP_MessageInsert 
           @UserId = @ActorId, 
           @MessageContent = @messageTemplate, 

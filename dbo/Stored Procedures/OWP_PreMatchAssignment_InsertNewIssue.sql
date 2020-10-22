@@ -3,7 +3,7 @@
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_InsertNewIssue] @ActorId         INT, 
                                                               @Message         NVARCHAR(MAX), 
-                                                              @OWPLeagueId     INT           = NULL,                                                             
+                                                              @OWPLeagueId     INT           = NULL, 
                                                               @InfoSiteMatchId INT           = NULL
 AS
 
@@ -16,6 +16,7 @@ Revisions:
 	20200909@Tyler: Init sync SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201020@Esther: Remove EventDate  - [Redmine: #143792] 
+	20201021@Esther: update table PreMatchIssueReceiver  - [Redmine: #143790]
 	
 */
 
@@ -23,6 +24,7 @@ Revisions:
      DECLARE @issueId INT;
      DECLARE @estId INT;
      DECLARE @insertTime DATETIME= GETDATE();
+     DECLARE @eventDate DATE= CAST(GETDATE() AS DATE);
      SELECT TOP 1 @estId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
      WHERE RefName = N'Section'
@@ -30,7 +32,7 @@ Revisions:
      SELECT @issueId = PreMatchIssueId
      FROM [dbo].[PreMatchIssue] WITH(NOLOCK)
      WHERE(OWPLeagueId = @OWPLeagueId
-           OR InfoSiteMatchId = @InfoSiteMatchId)        
+           OR InfoSiteMatchId = @InfoSiteMatchId);
 
      -- If PreMatchIssue not exists
      IF @issueId IS NULL
@@ -67,7 +69,8 @@ Revisions:
               [UserId], 
               [IsRead]
              )
-                    SELECT @issueId, 
+                    SELECT DISTINCT 
+                           @issueId, 
                            a.[UserId], 
                            0
                     FROM [dbo].[PreMatchAssignment] AS a WITH(NOLOCK)
@@ -77,6 +80,7 @@ Revisions:
                           OR m.InfoSiteMatchId = @InfoSiteMatchId)
                          AND a.UserId <> @ActorId
                          AND a.UserId > 0
+                         AND pl.EventDate = @eventDate
                     UNION
                     SELECT @issueId, 
                            [UserId], 
@@ -87,12 +91,12 @@ Revisions:
                     UNION
                     SELECT @issueId, 
                            @ActorId, 
-                           1;
-         END;
+                           1;                 
+     END;
          ELSE
          BEGIN
              EXEC dbo.[OWP_PreMatchAssignment_InsertNewMessage] 
                   @ActorId, 
                   @Message, 
                   @PreMatchIssueId = @issueId;
-         END;
+     END;

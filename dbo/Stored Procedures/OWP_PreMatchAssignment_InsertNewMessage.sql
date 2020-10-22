@@ -13,11 +13,20 @@ DB: bodb_OWP
 
 Revisions:
 	20200914@Tyler: Init sync SP - [Redmine: #140620]
-	20201003@Tyler: update other assignments  - [Redmine: #142258]  	
+	20201003@Tyler: update other assignments  - [Redmine: #142258] 
+	20201021@Esther: update table PreMatchIssueReceiver  - [Redmine: #143790]
 */
 
      SET NOCOUNT ON;
      DECLARE @insertTime DATETIME= GETDATE();
+     DECLARE @eventDate DATE= CAST(GETDATE() AS DATE);
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
+     DECLARE @estId INT;
+     SELECT TOP 1 @estId = ResourceId
+     FROM dbo.[RefResource] WITH(NOLOCK)
+     WHERE RefName = N'Section'
+           AND Value = N'EST';
      INSERT INTO [dbo].[PreMatchIssueMessage]
      ([PreMatchIssueId], 
       [CreatedDate], 
@@ -48,7 +57,74 @@ Revisions:
               @ActorId, 
               1
              );
-         END;
+     END;
+
+     ---- get assignment today ----
+     DECLARE @tblReceivedUser TABLE
+     (IssueId INT, 
+      UserId  INT, 
+      IsRead  BIT
+     );
+     INSERT INTO @tblReceivedUser
+     (IssueId, 
+      UserId, 
+      IsRead
+     )
+            SELECT DISTINCT 
+                   @PreMatchIssueId, 
+                   a.[UserId], 
+                   0
+            FROM [dbo].[PreMatchAssignment] AS a WITH(NOLOCK)
+                 INNER JOIN dbo.[PreMatchLeague] AS pl WITH(NOLOCK) ON pl.PreMatchLeagueId = a.PreMatchLeagueId
+                 INNER JOIN dbo.[InfoSiteMatch] AS m WITH(NOLOCK) ON m.OWPLeagueId = pl.OWPLeagueId
+                 INNER JOIN dbo.[PreMatchIssue] AS p WITH(NOLOCK) ON p.PreMatchIssueId = @PreMatchIssueId
+            WHERE(pl.OWPLeagueId = p.OWPLeagueId
+                  OR m.InfoSiteMatchId = p.InfoSiteMatchId)
+                 AND a.UserId <> @ActorId
+                 AND a.UserId > 0
+                 AND pl.EventDate = @eventDate
+            UNION
+            SELECT @PreMatchIssueId, 
+                   [UserId], 
+                   0
+            FROM [dbo].[User] WITH(NOLOCK)
+            WHERE SectionId = @estId
+                  AND UserId <> @ActorId
+            UNION
+            SELECT @PreMatchIssueId, 
+                   @ActorId, 
+                   1;
+
+     ------update receiver (assignment)---------
+     DELETE r
+     FROM [dbo].[PreMatchIssueReceiver] AS r
+          INNER JOIN @tblReceivedUser AS t ON t.IssueId = r.PreMatchIssueId
+     WHERE t.UserId <> r.UserId
+           AND r.UserId NOT IN
+     (
+         SELECT UserId
+         FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
+         WHERE p.PreMatchIssueId = t.IssueId
+               AND p.CreatedDate BETWEEN @fromDate AND @toDate
+     );
+     ----- insert receiver----
+     INSERT INTO [dbo].[PreMatchIssueReceiver]
+     ([PreMatchIssueId], 
+      [UserId], 
+      [IsRead]
+     )
+            SELECT t.IssueId, 
+                   t.UserId, 
+                   t.IsRead
+            FROM @tblReceivedUser AS t
+            WHERE t.UserId NOT IN
+            (
+                SELECT UserId
+                FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
+                WHERE p.PreMatchIssueId = t.IssueId
+                      AND p.CreatedDate BETWEEN @fromDate AND @toDate
+            );	
+     ---- update isRead-----
      UPDATE dbo.[PreMatchIssueReceiver] WITH(ROWLOCK)
        SET 
            IsRead = 0
