@@ -15,10 +15,13 @@ DB: bodb_OWP
 Revisions:  
  20200908@Tyler: Init SP  - [Redmine: #140620] 
  20201020@Esther: Remove EventDate  - [Redmine: #143792] 
- 20201020@Mira: new add request  - [Redmine: #143792] 
+ 20201020@Mira: new add request, pagination  - [Redmine: #143792] 
 */
 
      SET NOCOUNT ON;
+     DECLARE @LastDay INT= 7;
+     DECLARE @StartOfToday DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '00:00:00');
+     DECLARE @FromDate DATETIME= DATEADD(day, -@LastDay, @StartOfToday);
      -- Pagination
      DECLARE @FromRow INT= (@PageNumber - 1) * @PageSize + 1;
      DECLARE @ToRow INT= @PageNumber * @PageSize;
@@ -71,7 +74,8 @@ Revisions:
             INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
             LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
                                                                        AND r.UserId = @ActorId
-            WHERE im.CreatedDate = x.MaxDate;
+            WHERE x.MaxDate >= @FromDate
+                  AND im.CreatedDate = x.MaxDate;
 
      -- Table infositematch issue
      INSERT INTO @tblIssues
@@ -105,7 +109,8 @@ Revisions:
             INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
             LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
                                                                        AND r.UserId = @ActorId
-            WHERE im.CreatedDate = x.MaxDate;
+            WHERE x.MaxDate >= @FromDate
+                  AND im.CreatedDate = x.MaxDate;
 
      -- Table newAddRequestIssues
      INSERT INTO @tblIssues
@@ -140,7 +145,8 @@ Revisions:
             INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
             LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
                                                                        AND r.UserId = @ActorId
-            WHERE im.CreatedDate = x.MaxDate;
+            WHERE x.MaxDate >= @FromDate
+                  AND im.CreatedDate = x.MaxDate;
 
      --Result
      SELECT PreMatchIssueId, 
