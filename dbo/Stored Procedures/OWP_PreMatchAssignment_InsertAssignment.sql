@@ -17,6 +17,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201026@Tyler: update insert receiver  - [Redmine: #140772]  
 	
 */
 
@@ -61,7 +62,7 @@ Revisions:
      )
             SELECT @PreMatchIssueId, 
                    @userId, 
-                   0
+                   1
             WHERE NOT EXISTS
             (
                 SELECT 1
@@ -79,7 +80,7 @@ Revisions:
      )
             SELECT PreMatchIssueId, 
                    @userId, 
-                   0
+                   1
             FROM #tblMatchIssues AS i
             WHERE NOT EXISTS
             (

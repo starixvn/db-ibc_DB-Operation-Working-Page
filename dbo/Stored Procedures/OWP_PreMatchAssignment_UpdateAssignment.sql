@@ -19,6 +19,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201026@Tyler: update insert receiver  - [Redmine: #140772]  
 	
 */
 
@@ -109,7 +110,7 @@ Revisions:
      )
             SELECT @PreMatchIssueId, 
                    @newUserId, 
-                   0
+                   1
             WHERE @PreMatchIssueId IS NOT NULL;
 
      -- Receivers for infosite matches issue
@@ -120,7 +121,7 @@ Revisions:
      )
             SELECT PreMatchIssueId, 
                    @newUserId, 
-                   0
+                   1
             FROM #tblMatchIssues AS i
             WHERE NOT EXISTS
             (
