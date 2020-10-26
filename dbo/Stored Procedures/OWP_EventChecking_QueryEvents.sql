@@ -179,7 +179,6 @@ Revisions:
               LEFT JOIN @tblIssues AS i ON i.PreMatchIssueId = p.PreMatchIssueId
               INNER JOIN dbo.[User] AS u ON u.UserId = i.UserId
          WHERE @IsHideDoneIssues = 0
-               OR (@IsHideDoneIssues = 1
-                   AND p.IsDone = 0)
+               OR p.IsDone = 0
      ) AS Paging
      WHERE Paging.RowNumber BETWEEN @FromRow AND @ToRow;
