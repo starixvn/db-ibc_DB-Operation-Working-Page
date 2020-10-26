@@ -25,7 +25,7 @@ Revisions:
      SELECT TOP 1 @earlyId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
      WHERE RefName = N'Section'
-           AND Value = N'Early';
+           AND Value = N'EST';
 
      -- Insert new issue
      INSERT INTO [dbo].[PreMatchIssue]
