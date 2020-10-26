@@ -16,15 +16,16 @@ Revisions:
 	20200909@Tyler: Init sync SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201020@Esther: Remove EventDate  - [Redmine: #143792] 
-	20201021@Esther: update table PreMatchIssueReceiver  - [Redmine: #143790]
+	20201021@Esther: update receivers  - [Redmine: #143939]
 	
 */
 
      SET NOCOUNT ON;
      DECLARE @issueId INT;
      DECLARE @estId INT;
+     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
      DECLARE @insertTime DATETIME= GETDATE();
-     DECLARE @eventDate DATE= CAST(GETDATE() AS DATE);
+     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
      SELECT TOP 1 @estId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
      WHERE RefName = N'Section'
@@ -91,7 +92,7 @@ Revisions:
                     UNION
                     SELECT @issueId, 
                            @ActorId, 
-                           1;                 
+                           1;
      END;
          ELSE
          BEGIN

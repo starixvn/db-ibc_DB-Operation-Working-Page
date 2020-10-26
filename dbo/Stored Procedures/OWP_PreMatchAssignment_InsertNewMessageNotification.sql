@@ -19,7 +19,7 @@ Revisions:
 	20200916@Tyler: Init SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201021@Mira: New add request  - [Redmine: #140772]
-	20201021@Esther: update table PreMatchIssueReceiver  - [Redmine: #143939]
+	20201021@Esther: update Receivers  - [Redmine: #143939]
 */
 
      SET NOCOUNT ON;

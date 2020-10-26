@@ -14,14 +14,15 @@ DB: bodb_OWP
 Revisions:
 	20200914@Tyler: Init sync SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258] 
-	20201021@Esther: update table PreMatchIssueReceiver  - [Redmine: #143790]
+	20201021@Esther: update receivers  - [Redmine: #143939]
 */
 
      SET NOCOUNT ON;
      DECLARE @insertTime DATETIME= GETDATE();
-     DECLARE @eventDate DATE= CAST(GETDATE() AS DATE);
-     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
+     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
+     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, CAST(GETDATE() AS DATE)), '00:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, CAST(GETDATE() AS DATE)), '23:59:59');
      DECLARE @estId INT;
      SELECT TOP 1 @estId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
@@ -107,7 +108,7 @@ Revisions:
          WHERE p.PreMatchIssueId = t.IssueId
                AND p.CreatedDate BETWEEN @fromDate AND @toDate
      );
-     ----- insert receiver----
+   ----- insert receiver----
      INSERT INTO [dbo].[PreMatchIssueReceiver]
      ([PreMatchIssueId], 
       [UserId], 
