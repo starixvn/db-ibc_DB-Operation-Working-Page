@@ -29,6 +29,7 @@ Revisions:
      DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
      DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
      DECLARE @eventName NVARCHAR(2000);
+     DECLARE @matchName NVARCHAR(2000);
      DECLARE @actorName NVARCHAR(50);
      DECLARE @tblReceivedUser TVP_INT;
      SELECT @actorName = CASE
@@ -45,13 +46,21 @@ Revisions:
                              WHEN i.InfoSiteMatchId IS NOT NULL
                              THEN(m.LeagueName + ' - ' + m.HomeName + ' -vs- ' + m.AwayName)
                              ELSE l.OWPLeagueName
+                         END, 
+            @matchName = CASE
+                             WHEN i.InfoSiteMatchId IS NULL
+                                  AND i.OWPLeagueId IS NULL
+                                  AND n.MatchName IS NOT NULL
+								  AND n.MatchName <> ''
+                             THEN ' - ' + n.MatchName
+                             ELSE ''
                          END
      FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
           LEFT JOIN [NewAddRequest] AS n WITH(NOLOCK) ON i.PreMatchIssueId = n.PrematchIssueId
           LEFT JOIN [InfoSiteMatch] AS m WITH(NOLOCK) ON i.InfoSiteMatchId = m.InfoSiteMatchId
           LEFT JOIN [OWPLeague] AS l WITH(NOLOCK) ON i.OWPLeagueId = l.OWPLeagueId
      WHERE i.PreMatchIssueId = @PreMatchIssueId;
-     SELECT @messageTemplate = REPLACE(REPLACE(@NotificationContent, '<League Name>/<Event Name>', @eventName), '<username>', @actorName);
+     SELECT @messageTemplate = REPLACE(REPLACE(REPLACE(@NotificationContent, '<League Name>/<Event Name>', @eventName), '<username>', @actorName), ' - <Match>', @matchName);
      INSERT INTO @tblReceivedUser(Id)
             SELECT UserId
             FROM dbo.[PreMatchIssueReceiver] WITH(NOLOCK)
