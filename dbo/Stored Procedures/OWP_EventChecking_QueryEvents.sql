@@ -150,7 +150,7 @@ Revisions:
 
      --Result
      SELECT PreMatchIssueId, 
-            OWPLeagueId, 
+            LeagueId, 
             InfoSiteMatchId, 
             LeagueName, 
             MatchName, 
@@ -169,7 +169,7 @@ Revisions:
                          i.IsRead ASC, 
                          i.CreatedDate DESC) AS RowNumber, 
                 i.[PreMatchIssueId], 
-                i.[OWPLeagueId], 
+                i.[OWPLeagueId] 'LeagueId', 
                 i.[InfoSiteMatchId], 
                 i.[LeagueName], 
                 i.[MatchName], 
