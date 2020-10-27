@@ -17,9 +17,10 @@ Revisions:
 */
 
      SET NOCOUNT ON;
-     DECLARE @commentTimeToday DATE= CAST(GETDATE() AS DATE);
-     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @commentTimeToday), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @commentTimeToday), '23:59:59');
+     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
+     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
      SELECT Username
      FROM dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON r.UserId = u.UserId
@@ -31,4 +32,4 @@ Revisions:
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON r.UserId = u.UserId
      WHERE PreMatchIssueId = @PreMatchIssueId
            AND r.UserId <> @ActorId
-           AND r.CreatedDate BETWEEN @fromDate AND @toDate;
+           AND DATEADD(HOUR, 12, r.CreatedDate) BETWEEN @fromDate AND @toDate;

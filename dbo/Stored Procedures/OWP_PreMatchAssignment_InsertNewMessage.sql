@@ -21,8 +21,8 @@ Revisions:
      DECLARE @insertTime DATETIME= GETDATE();
      DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
      DECLARE @eventDate DATE= CAST(@getDate AS DATE);
-     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, CAST(GETDATE() AS DATE)), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, CAST(GETDATE() AS DATE)), '23:59:59');
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
      DECLARE @estId INT;
      SELECT TOP 1 @estId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
@@ -106,7 +106,7 @@ Revisions:
          SELECT UserId
          FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
          WHERE p.PreMatchIssueId = t.IssueId
-               AND p.CreatedDate BETWEEN @fromDate AND @toDate
+               AND DATEADD(HOUR, 12, p.CreatedDate) BETWEEN @fromDate AND @toDate
      );
    ----- insert receiver----
      INSERT INTO [dbo].[PreMatchIssueReceiver]
@@ -123,7 +123,7 @@ Revisions:
                 SELECT UserId
                 FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
                 WHERE p.PreMatchIssueId = t.IssueId
-                      AND p.CreatedDate BETWEEN @fromDate AND @toDate
+                      AND DATEADD(HOUR, 12, p.CreatedDate) BETWEEN @fromDate AND @toDate
             );	
      ---- update isRead-----
      UPDATE dbo.[PreMatchIssueReceiver] WITH(ROWLOCK)

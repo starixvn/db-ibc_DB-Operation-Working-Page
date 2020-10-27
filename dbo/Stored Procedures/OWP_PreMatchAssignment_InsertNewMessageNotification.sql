@@ -24,7 +24,8 @@ Revisions:
 
      SET NOCOUNT ON;
      DECLARE @messageTemplate NVARCHAR(MAX);
-     DECLARE @eventDate DATE= CAST(GETDATE() AS DATE);
+     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
+     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
      DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
      DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
      DECLARE @eventName NVARCHAR(2000);
@@ -61,7 +62,7 @@ Revisions:
             FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
             WHERE PreMatchIssueId = @PreMatchIssueId
                   AND UserId <> @ActorId
-                  AND p.CreatedDate BETWEEN @fromDate AND @toDate;
+                  AND DATEADD(HOUR, 12, p.CreatedDate) BETWEEN @fromDate AND @toDate;
      EXEC dbo.OWP_MessageInsert 
           @UserId = @ActorId, 
           @MessageContent = @messageTemplate, 
