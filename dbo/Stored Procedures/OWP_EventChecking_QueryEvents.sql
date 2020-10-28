@@ -179,7 +179,11 @@ Revisions:
                 i.[IsRead], 
                 i.[Message], 
                 i.[CreatedDate], 
-                u.[Nickname] AS 'Username', 
+                CASE
+                    WHEN u.[Nickname] IS NULL
+                    THEN u.[Username]
+                    ELSE u.[Nickname]
+                END AS 'Username', 
                 p.[IsDone]
          FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
               LEFT JOIN @tblIssues AS i ON i.PreMatchIssueId = p.PreMatchIssueId
