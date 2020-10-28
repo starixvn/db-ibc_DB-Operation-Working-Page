@@ -27,6 +27,7 @@ Revisions:
 	20200528@Carlos.Nguyen: Get distinct user - [Redmine: #126964]
 	20200713@Carlos.Nguyen: Update LA session ID from (2)=> to (2,30)- [Redmine: #126964]
 	20201005@Carlos.Nguyen: Exclude close account- [Redmine: #126964]
+	20201028@Carlos.Nguyen: Exclude user role null (level=6)- [Redmine: #126964]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -62,7 +63,8 @@ BEGIN
 	LEFT JOIN dbo.UserRole AS ur WITH (NOLOCK) ON ur.UserId = ou.UserId
 	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON ou.UserId = ci.custid
 	INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = ou.UserId AND us.SiteId = @SiteId
-	WHERE LocationCode IS NOT NULL
+	WHERE  ou.[Level] <> 6
+		AND LocationCode IS NOT NULL
 		AND SectionId IN (2,30)
 		AND (ur.RoleId = 1 OR ur.RoleId IS NULL)
 		AND (ci.closed = 0
