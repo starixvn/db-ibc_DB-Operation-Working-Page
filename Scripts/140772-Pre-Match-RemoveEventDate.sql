@@ -5,7 +5,7 @@ Task : Event Checking - New Add
 DB: bodb_OWP	
 
 Revisions:
-	20201020@Esther: Remove EventDate from PreMatchIssue - [Redmine: #143790]
+	20201020@Esther: Remove EventDate from PreMatchIssue - [Redmine: #140772]
 */
 
 ALTER TABLE dbo.[PreMatchIssue] 
