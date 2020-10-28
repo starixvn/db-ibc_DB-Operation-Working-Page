@@ -7,6 +7,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201020@Mira: EventCheckingNewAdd - [Redmine: #140772]
+	20201020@Esther: Remove EventDate from PreMatchIssue - [Redmine: #140772]
 */
 /****** Object:  Table [dbo].[NewAddRequest]    Script Date: 10/20/2020 9:39:18 AM ******/
 
@@ -26,3 +27,6 @@ CREATE TABLE [dbo].[NewAddRequest]
 )
 ON [OWP_Data];
 GO
+
+ALTER TABLE dbo.[PreMatchIssue] 
+DROP COLUMN EventDate;
