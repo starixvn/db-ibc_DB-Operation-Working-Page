@@ -1,3 +1,4 @@
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryByPreMatchLeagueId] @PreMatchLeagueId INT, 
@@ -13,7 +14,9 @@ DB: bodb_OWP
 Revisions:
 	20200818@Esther: Init sync SP - [Redmine: #138643]
 	20200918@Tyler: Add matches/issue - [Redmine: #140620]
-	20200903@Tyler: get other assignments  - [Redmine: #142258]  
+	20200903@Tyler: get other assignments  - [Redmine: #142258] 
+    20201028@Esther: Remove EventDate  - [Redmine: #143783]  
+
 */
 
      SET NOCOUNT ON;
@@ -28,16 +31,16 @@ Revisions:
      IF @StartTime IS NULL
          BEGIN
              SET @EventFromDateTime = DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '12:00:00');
-         END;
+     END;
          ELSE
          IF @StartTime BETWEEN '00:00' AND '11:59'
              BEGIN
                  SET @EventFromDateTime = DATEADD(DAY, DATEDIFF(DAY, -1, @eventDate), @StartNightTime);
-             END;
+         END;
              ELSE
              BEGIN
                  SET @EventFromDateTime = DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), @StartNightTime);
-             END;
+         END;
      DECLARE @EventToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @eventDate), '11:59:59');
 
      -- query league info
@@ -116,26 +119,27 @@ Revisions:
             HasNotes, 
             PreMatchNoteId
      FROM @tblLeagueInfo AS l
-          LEFT JOIN(
-          SELECT TOP 1 i.PreMatchIssueId,
-                       CASE
-                           WHEN m.[Message] IS NOT NULL
-                           THEN 1
-                           ELSE 0
-                       END AS 'HasMessages',
-                       CASE
-                           WHEN r.IsRead IS NOT NULL
-                           THEN r.IsRead
-                           ELSE 1
-                       END AS 'IsRead', 
-                       pl.PreMatchLeagueId
-          FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
-               INNER JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-               INNER JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = i.PreMatchIssueId
-               INNER JOIN dbo.[PreMatchLeague] AS pl WITH(NOLOCK) ON pl.OWPLeagueId = i.OWPLeagueId
-                                                                     AND pl.EventDate = i.EventDate
-          WHERE r.userId = @ActorId
-                AND pl.PreMatchLeagueId = @PreMatchLeagueId) AS x ON x.PreMatchLeagueId = l.PreMatchLeagueId
+          LEFT JOIN
+     (
+         SELECT TOP 1 i.PreMatchIssueId,
+                      CASE
+                          WHEN m.[Message] IS NOT NULL
+                          THEN 1
+                          ELSE 0
+                      END AS 'HasMessages',
+                      CASE
+                          WHEN r.IsRead IS NOT NULL
+                          THEN r.IsRead
+                          ELSE 1
+                      END AS 'IsRead', 
+                      pl.PreMatchLeagueId
+         FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+              INNER JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
+              INNER JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = i.PreMatchIssueId
+              INNER JOIN dbo.[PreMatchLeague] AS pl WITH(NOLOCK) ON pl.OWPLeagueId = i.OWPLeagueId
+         WHERE r.userId = @ActorId
+               AND pl.PreMatchLeagueId = @PreMatchLeagueId
+     ) AS x ON x.PreMatchLeagueId = l.PreMatchLeagueId
           LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId;
 
      -- Table infositematch issue
@@ -154,17 +158,19 @@ Revisions:
                        THEN 1
                        ELSE r.IsRead
                    END AS 'IsRead'
-            FROM(SELECT i.InfoSiteMatchId, 
-                        MAX(m.CreatedDate) AS 'MaxDate'
-                 FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
-                      LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-                 WHERE i.EventDate = @EventDate
-                       AND i.InfoSiteMatchId IS NOT NULL
-                 GROUP BY i.InfoSiteMatchId) AS x
-                INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.InfoSiteMatchId = x.InfoSiteMatchId
-                INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
-                LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
-                                                                           AND r.UserId = @ActorId
+            FROM
+            (
+                SELECT i.InfoSiteMatchId, 
+                       MAX(m.CreatedDate) AS 'MaxDate'
+                FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                     LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
+                WHERE i.InfoSiteMatchId IS NOT NULL
+                GROUP BY i.InfoSiteMatchId
+            ) AS x
+            INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.InfoSiteMatchId = x.InfoSiteMatchId
+            INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
+            LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
+                                                                       AND r.UserId = @ActorId
             WHERE im.CreatedDate = x.MaxDate;
 
      --table match notes
