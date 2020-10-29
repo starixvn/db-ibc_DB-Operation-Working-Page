@@ -11,7 +11,7 @@ DB: bodb_OWP
   
 Revisions:  
  20201003@Tyler: get other assignments  - [Redmine: #142258] 
- 20201020@Tyler: Remove EventDate  - [Redmine: #143792] 
+ 20201020@Esther: Remove EventDate  - [Redmine: #143792] 
 */
 
      SELECT m.PreMatchIssueId, 
