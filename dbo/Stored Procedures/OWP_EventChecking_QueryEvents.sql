@@ -20,8 +20,8 @@ Revisions:
 
      SET NOCOUNT ON;
      DECLARE @LastDay INT= 7;
-     DECLARE @StartOfToday DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '00:00:00');
-     DECLARE @FromDate DATETIME= DATEADD(day, -@LastDay, @StartOfToday);
+     DECLARE @FromDate DATETIME= DATEADD(day, -@LastDay, GETDATE());
+	 
      -- Pagination
      DECLARE @FromRow INT= (@PageNumber - 1) * @PageSize + 1;
      DECLARE @ToRow INT= @PageNumber * @PageSize;
