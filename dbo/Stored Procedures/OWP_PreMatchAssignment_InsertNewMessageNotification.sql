@@ -18,11 +18,18 @@ DB: bodb_OWP
 Revisions:
 	20200916@Tyler: Init SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201021@Mira: New add request  - [Redmine: #140772]
+	20201021@Esther: update Receivers  - [Redmine: #143939]
 */
 
      SET NOCOUNT ON;
      DECLARE @messageTemplate NVARCHAR(MAX);
+     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
+     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
      DECLARE @eventName NVARCHAR(2000);
+     DECLARE @matchName NVARCHAR(2000);
      DECLARE @actorName NVARCHAR(50);
      DECLARE @tblReceivedUser TVP_INT;
      SELECT @actorName = CASE
@@ -33,15 +40,27 @@ Revisions:
      FROM dbo.[User] WITH(NOLOCK)
      WHERE UserId = @ActorId;
      SELECT @eventName = CASE
+                             WHEN i.InfoSiteMatchId IS NULL
+                                  AND i.OWPLeagueId IS NULL
+                             THEN n.LeagueName
                              WHEN i.InfoSiteMatchId IS NOT NULL
                              THEN(m.LeagueName + ' - ' + m.HomeName + ' -vs- ' + m.AwayName)
                              ELSE l.OWPLeagueName
+                         END, 
+            @matchName = CASE
+                             WHEN i.InfoSiteMatchId IS NULL
+                                  AND i.OWPLeagueId IS NULL
+                                  AND n.MatchName IS NOT NULL
+								  AND n.MatchName <> ''
+                             THEN ' - ' + n.MatchName
+                             ELSE ''
                          END
      FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+          LEFT JOIN [NewAddRequest] AS n WITH(NOLOCK) ON i.PreMatchIssueId = n.PrematchIssueId
           LEFT JOIN [InfoSiteMatch] AS m WITH(NOLOCK) ON i.InfoSiteMatchId = m.InfoSiteMatchId
           LEFT JOIN [OWPLeague] AS l WITH(NOLOCK) ON i.OWPLeagueId = l.OWPLeagueId
      WHERE i.PreMatchIssueId = @PreMatchIssueId;
-     SELECT @messageTemplate = REPLACE(REPLACE(@NotificationContent, '<League Name>/<Event Name>', @eventName), '<username>', @actorName);
+     SELECT @messageTemplate = REPLACE(REPLACE(REPLACE(@NotificationContent, '<League Name>/<Event Name>', @eventName), '<username>', @actorName), ' - <Match>', @matchName);
      INSERT INTO @tblReceivedUser(Id)
             SELECT UserId
             FROM dbo.[PreMatchIssueReceiver] WITH(NOLOCK)
@@ -49,9 +68,10 @@ Revisions:
                   AND UserId <> @ActorId
             UNION
             SELECT UserId
-            FROM dbo.[PreMatchIssueMessage] WITH(NOLOCK)
+            FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
             WHERE PreMatchIssueId = @PreMatchIssueId
-                  AND UserId <> @ActorId;
+                  AND UserId <> @ActorId
+                  AND DATEADD(HOUR, 12, p.CreatedDate) BETWEEN @fromDate AND @toDate;
      EXEC dbo.OWP_MessageInsert 
           @UserId = @ActorId, 
           @MessageContent = @messageTemplate, 

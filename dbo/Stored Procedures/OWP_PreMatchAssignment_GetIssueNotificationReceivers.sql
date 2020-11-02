@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_GetIssueNotificationReceivers] @ActorId         INT, 
-                                                                              @PreMatchIssueId INT
+                                                                             @PreMatchIssueId INT
 AS
 
 /*
@@ -12,10 +12,15 @@ DB: bodb_OWP
 
 Revisions:
 	20200916@Tyler: Init SP - [Redmine: #140620]
-	20201003@Tyler: update other assignments  - [Redmine: #142258]  	
+	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201021@Esther: update receivers  - [Redmine: #143939]
 */
 
      SET NOCOUNT ON;
+     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
+     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
      SELECT Username
      FROM dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON r.UserId = u.UserId
@@ -26,4 +31,5 @@ Revisions:
      FROM dbo.[PreMatchIssueMessage] AS r WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON r.UserId = u.UserId
      WHERE PreMatchIssueId = @PreMatchIssueId
-           AND r.UserId <> @ActorId;
+           AND r.UserId <> @ActorId
+           AND DATEADD(HOUR, 12, r.CreatedDate) BETWEEN @fromDate AND @toDate;

@@ -1,15 +1,10 @@
-﻿USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_EventChecking_QueryEvents]    Script Date: 9/23/2020 1:14:10 PM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
+﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @EventDate DATE, 
-                                                      @ActorId   INT
+ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @ActorId          INT, 
+                                                      @PageNumber       INT = 1, 
+                                                      @PageSize         INT = 50, 
+                                                      @IsHideDoneIssues BIT
 AS
 
 /*  
@@ -18,135 +13,182 @@ Task : Query leagues and matches
 DB: bodb_OWP  
   
 Revisions:  
- 20200908@Tyler: Init SP  - [Redmine: #140620]  
+ 20200908@Tyler: Init SP  - [Redmine: #140620] 
+ 20201020@Esther: Remove EventDate  - [Redmine: #143792] 
+ 20201020@Mira: new add request, pagination  - [Redmine: #143792] 
 */
 
-    BEGIN
-        SET NOCOUNT ON;
-        -- Table league issue
-        DECLARE @tblLeagueIssues TABLE
-        (PreMatchIssueId INT, 
-         OWPLeagueId     INT, 
-         [Message]       NVARCHAR(MAX), 
-         IsRead          BIT, 
-         LeagueName      NVARCHAR(500), 
-         CreatedDate     DATETIME, 
-         UserId          INT
-        );
-        INSERT INTO @tblLeagueIssues
-               SELECT m.PreMatchIssueId, 
-                      x.OWPLeagueId, 
-                      im.[Message],
-                      CASE
-                          WHEN r.IsRead IS NULL
-                          THEN 1
-                          ELSE r.IsRead
-                      END AS 'IsRead', 
-                      l.OWPLeagueName, 
-                      DATEADD(HOUR, 12, im.CreatedDate), 
-                      im.UserId
-               FROM
-               (
-                   SELECT i.OWPLeagueId, 
-                          MAX(m.CreatedDate) AS 'MaxDate'
-                   FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
-                        LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-                   WHERE i.EventDate = @EventDate
-                         AND i.OWPLeagueId IS NOT NULL
-                   GROUP BY i.OWPLeagueId
-               ) AS x
-               INNER JOIN dbo.[OWPLeague] AS l WITH(NOLOCK) ON l.OWPLeagueId = x.OWPLeagueId
-               INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.OWPLeagueId = x.OWPLeagueId
-               INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
-               LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
-                                                                          AND r.UserId = @ActorId
-               WHERE im.CreatedDate = x.MaxDate;
+     SET NOCOUNT ON;
+     DECLARE @LastDay INT= 7;
+     DECLARE @FromDate DATETIME= DATEADD(day, -@LastDay, GETDATE());
+	 
+     -- Pagination
+     DECLARE @FromRow INT= (@PageNumber - 1) * @PageSize + 1;
+     DECLARE @ToRow INT= @PageNumber * @PageSize;
 
-        -- Table infositematch issue
-        DECLARE @tblInfoSiteMatchIssues TABLE
-        (PreMatchIssueId INT, 
-         InfoSiteMatchId INT, 
-         [Message]       NVARCHAR(MAX), 
-         IsRead          BIT, 
-         HomeName        NVARCHAR(500), 
-         AwayName        NVARCHAR(500), 
-         EventDateTime   DATETIME, 
-         LeagueName      NVARCHAR(500), 
-         CreatedDate     DATETIME, 
-         UserId          INT
-        );
-        INSERT INTO @tblInfoSiteMatchIssues
-               SELECT m.PreMatchIssueId, 
-                      x.InfoSiteMatchId, 
-                      im.[Message],
-                      CASE
-                          WHEN r.IsRead IS NULL
-                          THEN 1
-                          ELSE r.IsRead
-                      END AS 'IsRead', 
-                      ifm.HomeName, 
-                      ifm.AwayName, 
-                      ifm.EventDateTime, 
-                      ifm.LeagueName, 
-                      DATEADD(HOUR, 12, im.CreatedDate), 
-                      im.UserId
-               FROM
-               (
-                   SELECT i.InfoSiteMatchId, 
-                          MAX(m.CreatedDate) AS 'MaxDate'
-                   FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
-                        LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
-                   WHERE i.EventDate = @EventDate
-                         AND i.InfoSiteMatchId IS NOT NULL
-                   GROUP BY i.InfoSiteMatchId
-               ) AS x
-               INNER JOIN dbo.[InfoSiteMatch] AS ifm WITH(NOLOCK) ON ifm.InfoSiteMatchId = x.InfoSiteMatchId
-               INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.InfoSiteMatchId = x.InfoSiteMatchId
-               INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
-               LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
-                                                                          AND r.UserId = @ActorId
-               WHERE im.CreatedDate = x.MaxDate;
+     -- Table issue
+     DECLARE @tblIssues TABLE
+     (PreMatchIssueId INT, 
+      InfoSiteMatchId INT, 
+      OWPLeagueId     INT, 
+      [Message]       NVARCHAR(MAX), 
+      IsRead          BIT, 
+      LeagueName      NVARCHAR(500), 
+      MatchName       NVARCHAR(500), 
+      HomeName        NVARCHAR(500), 
+      AwayName        NVARCHAR(500), 
+      EventDateTime   DATETIME, 
+      CreatedDate     DATETIME, 
+      UserId          INT
+     );
 
-        --Result
-        SELECT i.[PreMatchIssueId], 
-               i.[OWPLeagueId], 
-               i.[InfoSiteMatchId],
-               CASE
-                   WHEN l.LeagueName IS NOT NULL
-                   THEN l.LeagueName
-                   ELSE im.LeagueName
-               END AS 'LeagueName', 
-               im.HomeName, 
-               im.AwayName, 
-               im.EventDateTime,
-               CASE
-                   WHEN l.LeagueName IS NOT NULL
-                   THEN l.IsRead
-                   ELSE im.IsRead
-               END AS 'IsRead',
-               CASE
-                   WHEN l.LeagueName IS NOT NULL
-                   THEN l.[Message]
-                   ELSE im.[Message]
-               END AS 'Message',
-               CASE
-                   WHEN l.LeagueName IS NOT NULL
-                   THEN l.CreatedDate
-                   ELSE im.CreatedDate
-               END AS 'CreatedDate',
-               CASE
-                   WHEN u.Nickname IS NULL
-                   THEN u.Username
-                   ELSE u.Nickname
-               END AS 'Username', 
-               i.[IsDone]
-        FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
-             LEFT JOIN @tblLeagueIssues AS l ON i.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN @tblInfoSiteMatchIssues AS im ON i.InfoSiteMatchId = im.InfoSiteMatchId
-             INNER JOIN dbo.[User] AS u ON u.UserId = l.UserId
-                                           OR u.UserId = im.UserId
-        WHERE i.EventDate = @EventDate
-        ORDER BY i.IsDone ASC, 
-                 'IsRead' ASC, 
-                 'CreatedDate' DESC;
-    END;
+     -- insert league issue
+     INSERT INTO @tblIssues
+            SELECT m.PreMatchIssueId, 
+                   NULL, 
+                   x.OWPLeagueId, 
+                   im.[Message],
+                   CASE
+                       WHEN r.IsRead IS NULL
+                       THEN 1
+                       ELSE r.IsRead
+                   END AS 'IsRead', 
+                   l.OWPLeagueName, 
+                   NULL, 
+                   NULL, 
+                   NULL, 
+                   NULL, 
+                   DATEADD(HOUR, 12, im.CreatedDate), 
+                   im.UserId
+            FROM
+            (
+                SELECT i.OWPLeagueId, 
+                       MAX(m.CreatedDate) AS 'MaxDate'
+                FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                     LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
+                WHERE i.OWPLeagueId IS NOT NULL
+                GROUP BY i.OWPLeagueId
+            ) AS x
+            INNER JOIN dbo.[OWPLeague] AS l WITH(NOLOCK) ON l.OWPLeagueId = x.OWPLeagueId
+            INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.OWPLeagueId = x.OWPLeagueId
+            INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
+            LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
+                                                                       AND r.UserId = @ActorId
+            WHERE x.MaxDate >= @FromDate
+                  AND im.CreatedDate = x.MaxDate;
+
+     -- Table infositematch issue
+     INSERT INTO @tblIssues
+            SELECT m.PreMatchIssueId, 
+                   x.InfoSiteMatchId, 
+                   NULL, 
+                   im.[Message],
+                   CASE
+                       WHEN r.IsRead IS NULL
+                       THEN 1
+                       ELSE r.IsRead
+                   END AS 'IsRead', 
+                   ifm.LeagueName, 
+                   NULL, 
+                   ifm.HomeName, 
+                   ifm.AwayName, 
+                   ifm.EventDateTime, 
+                   DATEADD(HOUR, 12, im.CreatedDate), 
+                   im.UserId
+            FROM
+            (
+                SELECT i.InfoSiteMatchId, 
+                       MAX(m.CreatedDate) AS 'MaxDate'
+                FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                     LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
+                WHERE i.InfoSiteMatchId IS NOT NULL
+                GROUP BY i.InfoSiteMatchId
+            ) AS x
+            INNER JOIN dbo.[InfoSiteMatch] AS ifm WITH(NOLOCK) ON ifm.InfoSiteMatchId = x.InfoSiteMatchId
+            INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.InfoSiteMatchId = x.InfoSiteMatchId
+            INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
+            LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
+                                                                       AND r.UserId = @ActorId
+            WHERE x.MaxDate >= @FromDate
+                  AND im.CreatedDate = x.MaxDate;
+
+     -- Table newAddRequestIssues
+     INSERT INTO @tblIssues
+            SELECT m.PreMatchIssueId, 
+                   NULL, 
+                   NULL, 
+                   im.[Message],
+                   CASE
+                       WHEN r.IsRead IS NULL
+                       THEN 1
+                       ELSE r.IsRead
+                   END AS 'IsRead', 
+                   n.LeagueName, 
+                   n.MatchName, 
+                   NULL, 
+                   NULL, 
+                   NULL, 
+                   DATEADD(HOUR, 12, im.CreatedDate), 
+                   im.UserId
+            FROM
+            (
+                SELECT i.PreMatchIssueId, 
+                       MAX(m.CreatedDate) AS 'MaxDate'
+                FROM dbo.[PreMatchIssue] AS i WITH(NOLOCK)
+                     LEFT JOIN dbo.[PreMatchIssueMessage] AS m WITH(NOLOCK) ON m.PreMatchIssueId = i.PreMatchIssueId
+                WHERE i.OWPLeagueId IS NULL
+                      AND i.InfoSiteMatchId IS NULL
+                GROUP BY i.PreMatchIssueId
+            ) AS x
+            INNER JOIN dbo.[PreMatchIssue] AS m WITH(NOLOCK) ON m.PreMatchIssueId = x.PreMatchIssueId
+            INNER JOIN dbo.[NewAddRequest] AS n WITH(NOLOCK) ON n.PreMatchIssueId = x.PreMatchIssueId
+            INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = m.PreMatchIssueId
+            LEFT JOIN dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK) ON r.PreMatchIssueId = m.PreMatchIssueId
+                                                                       AND r.UserId = @ActorId
+            WHERE x.MaxDate >= @FromDate
+                  AND im.CreatedDate = x.MaxDate;
+
+     --Result
+     SELECT PreMatchIssueId, 
+            LeagueId, 
+            InfoSiteMatchId, 
+            LeagueName, 
+            MatchName, 
+            HomeName, 
+            AwayName, 
+            EventDateTime, 
+            IsRead, 
+            Message, 
+            CreatedDate, 
+            Username, 
+            IsDone
+     FROM
+     (
+         SELECT ROW_NUMBER() OVER(
+                ORDER BY p.IsDone ASC, 
+                         i.IsRead ASC, 
+                         i.CreatedDate DESC) AS RowNumber, 
+                i.[PreMatchIssueId], 
+                i.[OWPLeagueId] 'LeagueId', 
+                i.[InfoSiteMatchId], 
+                i.[LeagueName], 
+                i.[MatchName], 
+                i.[HomeName], 
+                i.[AwayName], 
+                i.[EventDateTime], 
+                i.[IsRead], 
+                i.[Message], 
+                i.[CreatedDate], 
+                CASE
+                    WHEN u.[Nickname] IS NULL
+                    THEN u.[Username]
+                    ELSE u.[Nickname]
+                END AS 'Username', 
+                p.[IsDone]
+         FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
+              LEFT JOIN @tblIssues AS i ON i.PreMatchIssueId = p.PreMatchIssueId
+              INNER JOIN dbo.[User] AS u ON u.UserId = i.UserId
+         WHERE @IsHideDoneIssues = 0
+               OR p.IsDone = 0
+     ) AS Paging
+     WHERE Paging.RowNumber BETWEEN @FromRow AND @ToRow;

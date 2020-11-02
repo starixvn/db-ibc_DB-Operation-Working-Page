@@ -13,7 +13,8 @@ DB: bodb_OWP
 Revisions:  
  20200813@Esther.Nguyen: query day shift  - [Redmine: #138643]  
  20200903@Tyler: query matches  - [Redmine: #140620]  
- 20201003@Tyler: get other assignments  - [Redmine: #142258]  
+ 20201003@Tyler: get other assignments  - [Redmine: #142258] 
+ 20201020@Esther: Remove EventDate  - [Redmine: #143792] 
 */
 
      SET NOCOUNT ON;
@@ -299,8 +300,7 @@ Revisions:
       [Message], 
       IsRead
      )
-     EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueIssues] 
-          @EventDate = @EventDate, 
+     EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueIssues]  
           @ActorId = @ActorId;
 
      -- Table infositematch issue
@@ -316,8 +316,7 @@ Revisions:
       [Message], 
       IsRead
      )
-     EXEC dbo.[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues] 
-          @EventDate = @EventDate, 
+     EXEC dbo.[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues]  
           @ActorId = @ActorId;
 
      -- Table league notes

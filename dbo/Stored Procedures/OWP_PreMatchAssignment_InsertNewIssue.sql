@@ -4,7 +4,6 @@
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_InsertNewIssue] @ActorId         INT, 
                                                               @Message         NVARCHAR(MAX), 
                                                               @OWPLeagueId     INT           = NULL, 
-                                                              @EventDate       DATE, 
                                                               @InfoSiteMatchId INT           = NULL
 AS
 
@@ -16,13 +15,17 @@ DB: bodb_OWP
 Revisions:
 	20200909@Tyler: Init sync SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
+	20201020@Esther: Remove EventDate  - [Redmine: #143792] 
+	20201021@Esther: update receivers  - [Redmine: #143939]
 	
 */
 
      SET NOCOUNT ON;
      DECLARE @issueId INT;
      DECLARE @estId INT;
+     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
      DECLARE @insertTime DATETIME= GETDATE();
+     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
      SELECT TOP 1 @estId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
      WHERE RefName = N'Section'
@@ -30,8 +33,7 @@ Revisions:
      SELECT @issueId = PreMatchIssueId
      FROM [dbo].[PreMatchIssue] WITH(NOLOCK)
      WHERE(OWPLeagueId = @OWPLeagueId
-           OR InfoSiteMatchId = @InfoSiteMatchId)
-          AND EventDate = @EventDate;
+           OR InfoSiteMatchId = @InfoSiteMatchId);
 
      -- If PreMatchIssue not exists
      IF @issueId IS NULL
@@ -39,13 +41,11 @@ Revisions:
              INSERT INTO [dbo].[PreMatchIssue]
              ([OWPLeagueId], 
               [InfoSiteMatchId], 
-              [EventDate], 
               [IsDone]
              )
              VALUES
              (@OWPLeagueId, 
               @InfoSiteMatchId, 
-              @EventDate, 
               0
              );
              SELECT @issueId = SCOPE_IDENTITY();
@@ -70,7 +70,8 @@ Revisions:
               [UserId], 
               [IsRead]
              )
-                    SELECT @issueId, 
+                    SELECT DISTINCT 
+                           @issueId, 
                            a.[UserId], 
                            0
                     FROM [dbo].[PreMatchAssignment] AS a WITH(NOLOCK)
@@ -78,9 +79,9 @@ Revisions:
                          INNER JOIN dbo.[InfoSiteMatch] AS m WITH(NOLOCK) ON m.OWPLeagueId = pl.OWPLeagueId
                     WHERE(pl.OWPLeagueId = @OWPLeagueId
                           OR m.InfoSiteMatchId = @InfoSiteMatchId)
-                         AND pl.EventDate = @EventDate
                          AND a.UserId <> @ActorId
                          AND a.UserId > 0
+                         AND pl.EventDate = @eventDate
                     UNION
                     SELECT @issueId, 
                            [UserId], 
@@ -92,11 +93,11 @@ Revisions:
                     SELECT @issueId, 
                            @ActorId, 
                            1;
-         END;
+     END;
          ELSE
          BEGIN
              EXEC dbo.[OWP_PreMatchAssignment_InsertNewMessage] 
                   @ActorId, 
                   @Message, 
                   @PreMatchIssueId = @issueId;
-         END;
+     END;
