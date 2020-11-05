@@ -24,13 +24,13 @@ Revisions:
         FROM dbo.[PreMatchLeague] WITH(NOLOCK)
         WHERE PreMatchLeagueId = @PreMatchLeagueId;
 
-		--recover DayShift
+		--recover
         UPDATE dbo.[PreMatchLeague] WITH(ROWLOCK)
           SET 
               IsDeleted = 0
         WHERE PreMatchLeagueId = @PreMatchLeagueId;
 
-        -- recover NightShift
+        -- recover Day/NightShift
         IF NOT EXISTS
         (
             SELECT 1
@@ -38,20 +38,19 @@ Revisions:
             WHERE EventDate = @eventDate
         )
             BEGIN
-                DECLARE @nightShiftPreMatchLeagueId INT;
-                SELECT @nightShiftPreMatchLeagueId = PreMatchLeagueId
+                DECLARE @sameDayShiftPreMatchLeagueId INT;
+                SELECT @sameDayShiftPreMatchLeagueId = PreMatchLeagueId
                 FROM dbo.[PreMatchLeague] WITH(NOLOCK)
                 WHERE EventDate = @eventDate
-                      AND OWPLeagueId = @OWPLeagueId
-                      AND IsDay = 0;
+                      AND OWPLeagueId = @OWPLeagueId;
 
                 UPDATE dbo.[PreMatchLeague] WITH(ROWLOCK)
                   SET 
                       IsDeleted = 0
-                WHERE PreMatchLeagueId = @nightShiftPreMatchLeagueId;
+                WHERE PreMatchLeagueId = @sameDayShiftPreMatchLeagueId;
 
                 SET @Xml = (
-                SELECT @nightShiftPreMatchLeagueId AS '@plid' FOR XML PATH('z'), ROOT('r'));
+                SELECT @sameDayShiftPreMatchLeagueId AS '@plid' FOR XML PATH('z'), ROOT('r'));
                 SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
                 SET @EndRun = GETDATE();
                 SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
@@ -60,7 +59,7 @@ Revisions:
                      @SPName = 'OWP_PreMatchAssignment_Recover', 
                      @LoggedDate = @StartRun, 
                      @Duration = @Duration, 
-                     @ObjectId = @nightShiftPreMatchLeagueId, 
+                     @ObjectId = @sameDayShiftPreMatchLeagueId, 
                      @Data = @LogData;
             END;
 
