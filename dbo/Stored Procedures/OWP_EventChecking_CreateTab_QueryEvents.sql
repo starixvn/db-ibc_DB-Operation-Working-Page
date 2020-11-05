@@ -27,7 +27,7 @@ Revisions:
                  InfoSiteMatchId INT, 
                  OWPLeagueId     INT, 
                  IsRead          BIT, 
-                 LeagueName      NVARCHAR(500),                  
+                 LeagueName      NVARCHAR(500), 
                  HomeName        NVARCHAR(500), 
                  AwayName        NVARCHAR(500), 
                  EventDateTime   DATETIME
@@ -44,7 +44,7 @@ Revisions:
                                   THEN 1
                                   ELSE r.IsRead
                               END AS 'IsRead', 
-                              l.OWPLeagueName,  
+                              l.OWPLeagueName, 
                               NULL, 
                               NULL, 
                               NULL
@@ -66,7 +66,7 @@ Revisions:
                                   THEN 1
                                   ELSE r.IsRead
                               END AS 'IsRead', 
-                              m.LeagueName,                             
+                              m.LeagueName, 
                               m.HomeName, 
                               m.AwayName, 
                               m.EventDateTime
@@ -80,7 +80,7 @@ Revisions:
                 SELECT i.[PreMatchIssueId], 
                        i.[OWPLeagueId] 'LeagueId', 
                        i.[InfoSiteMatchId], 
-                       i.[LeagueName],                     
+                       i.[LeagueName], 
                        i.[HomeName], 
                        i.[AwayName], 
                        i.[EventDateTime], 
@@ -89,6 +89,7 @@ Revisions:
                 WHERE i.LeagueName LIKE '%' + @DataFilter + '%'
                       OR i.HomeName LIKE '%' + @DataFilter + '%'
                       OR i.AwayName LIKE '%' + @DataFilter + '%'
+                      OR (i.HomeName + ' -vs- ' + i.AwayName) LIKE '%' + @DataFilter + '%'
                 ORDER BY CASE
                              WHEN i.OWPLeagueId IS NULL
                              THEN i.HomeName
