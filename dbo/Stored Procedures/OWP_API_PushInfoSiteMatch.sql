@@ -20,6 +20,7 @@ AS
 	20200713@Jacob: ImportingMatchInNeutralStadium - [Redmine: #137417]
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
+	20201105@Jacob: New column ETPK - [Redmine: #144570]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -43,7 +44,8 @@ BEGIN
 		,@XML
 
 	CREATE TABLE #tblInfoSiteMatch (
-		[InfoSiteMatchId] [int] NOT NULL
+		 [InfoSiteMatchId] [int] NOT NULL
+		,[AdminSiteMatchId] INT 
 		,[IsLive] BIT NOT NULL
 		,[EventDateTime] [datetime] NOT NULL
 		,[UpdatedTime] [datetime] NOT NULL
@@ -67,11 +69,13 @@ BEGIN
 		,[TVIds] VARCHAR(200) NULL
 		,AgentIds VARCHAR(200) NULL		
 		,[IsNeutral] BIT NULL
-		,[IPTV][nvarchar](2000) NULL
+		,[IPTV] NVARCHAR(2000) NULL
+		,[ETPK] NVARCHAR(2000) NULL
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
-		[InfoSiteMatchId]
+		 [InfoSiteMatchId]
+		,[AdminSiteMatchId]
 		,[IsLive] 
 		,[EventDateTime]
 		,[UpdatedTime]
@@ -91,8 +95,10 @@ BEGIN
 		,[Website4]
 		,[IsNeutral]
 		,[IPTV]
+		,[ETPK]
 		)
 	SELECT [InfoSiteMatchId]
+	    ,[AdminSiteMatchId]
 		,[IsLive] 
 		,[EventDateTime]
 		,[UpdatedTime]
@@ -112,8 +118,10 @@ BEGIN
 		,[Website4]
 		,[IsNeutral]
 		,[IPTV]
+		,[ETPK]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
-			[InfoSiteMatchId] [int]
+			 [InfoSiteMatchId] [int]
+			,[AdminSiteMatchId] [int]
 			,[IsLive] BIT
 			,[EventDateTime] [datetime]
 			,[UpdatedTime] [datetime]
@@ -133,6 +141,7 @@ BEGIN
 			,[Website4] [nvarchar](1000)
 			,[IsNeutral] BIT
 			,[Iptv][nvarchar](2000)
+			,[ETPK][nvarchar](2000) 
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -290,6 +299,7 @@ BEGIN
 	MERGE INTO dbo.InfoSiteMatch AS t
 	USING (
 		SELECT [InfoSiteMatchId]
+		    ,[AdminSiteMatchId]
 			,[EventDateTime]
 			,[UpdatedTime]
 			,[LeagueName]
@@ -313,7 +323,8 @@ BEGIN
 			,[AgentIds]
 			,[IsNeutral]
 			,[IPTV]
-			,[IsLive]
+			,[ETPK]
+			,[IsLive]			
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -321,6 +332,7 @@ BEGIN
 		THEN
 			UPDATE
 			SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
+			    ,t.[AdminSiteMatchId] = s.[AdminSiteMatchId]
 				,t.[EventDateTime] = s.[EventDateTime]
 				,t.[UpdatedTime] = s.[UpdatedTime]
 				,t.[LeagueName] = s.[LeagueName]
@@ -345,11 +357,13 @@ BEGIN
 				,t.[IsDeleted] = 0
 				,t.[IsNeutral] = s.[IsNeutral]
 				,t.[IPTV]=s.[IPTV]
+				,t.[ETPK]=s.[ETPK]
 				,t.[IsLive]=s.[IsLive]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
 				[InfoSiteMatchId]
+				,[AdminSiteMatchId]
 				,[EventDateTime]
 				,[UpdatedTime]
 				,[LeagueName]
@@ -374,10 +388,12 @@ BEGIN
 				,[IsDeleted]
 				,[IsNeutral]
 				,[IPTV]
+				,[ETPK]
 				,[IsLive]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
+				,s.[AdminSiteMatchId]
 				,s.[EventDateTime]
 				,s.[UpdatedTime]
 				,s.[LeagueName]
@@ -402,6 +418,7 @@ BEGIN
 				,0
 				,[IsNeutral]
 				,[IPTV]
+				,s.[ETPK]
 				,[IsLive]
 				);
 
