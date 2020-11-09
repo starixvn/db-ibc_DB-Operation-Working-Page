@@ -22,6 +22,7 @@ DB: bodb_OWP
 Revisions:
 	20200930@Tyler: Init SP - [Redmine: #142258]
 	20201026@Tyler: update insert receiver  - [Redmine: #140772]  
+	20201104@Tyler: update insert receiver  - [Redmine: #144400]  
 	
 */
 
@@ -101,7 +102,14 @@ Revisions:
             SELECT @PreMatchIssueId, 
                    @newUserId, 
                    1
-            WHERE @PreMatchIssueId IS NOT NULL;
+            WHERE @PreMatchIssueId IS NOT NULL
+			AND NOT EXISTS
+            (
+                SELECT 1
+                FROM [dbo].[PreMatchIssueReceiver]
+                WHERE PreMatchIssueId = @PreMatchIssueId
+                      AND UserId = @newUserId
+            );
 
      -- Receivers for infosite matches issue
      INSERT INTO [dbo].[PreMatchIssueReceiver]

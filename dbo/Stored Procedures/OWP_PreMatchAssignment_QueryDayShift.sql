@@ -1,8 +1,11 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryDayShift] @EventDate DATE, 
-                                                             @ActorId   INT
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryDayShift] @EventDate         DATE, 
+                                                             @ActorId           INT, 
+                                                             @EventFromDateTime DATETIME, 
+                                                             @EventToDateTime   DATETIME, 
+                                                             @IsDay             BIT
 AS
 
 /*  
@@ -15,11 +18,10 @@ Revisions:
  20200903@Tyler: query matches  - [Redmine: #140620]  
  20201003@Tyler: get other assignments  - [Redmine: #142258] 
  20201020@Esther: Remove EventDate  - [Redmine: #143792] 
+ 20201029@Tyler: Clone assignment to NightShift  - [Redmine: #144400] 
 */
 
      SET NOCOUNT ON;
-     DECLARE @EventFromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00');
-     DECLARE @EventToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59');
      DECLARE @hpdBettype INT= 1;
      DECLARE @ouBettype INT= 3;
 
@@ -36,11 +38,11 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryMainAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 0;
-     
-	 --
+
+     --
      DECLARE @tblOUMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -53,11 +55,11 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryMainAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 0;
-     
-	 --
+
+     --
      DECLARE @tblHDPTOMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -70,11 +72,11 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryMainAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 1;
-     
-	 --
+
+     --
      DECLARE @tblOUTOMainAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -87,7 +89,7 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryMainAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 1;
 
@@ -106,11 +108,11 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryOtherAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 0;
-     
-	 --
+
+     --
      DECLARE @tblOtherOUAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -125,11 +127,11 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryOtherAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 0;
-     
-	 --
+
+     --
      DECLARE @tblOtherHDPTOAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -144,11 +146,11 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryOtherAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @hpdBettype, 
           @IsTakeOver = 1;
-     
-	 --
+
+     --
      DECLARE @tblOtherOUTOAssignment TABLE
      (PreMatchLeagueId INT, 
       UserName         VARCHAR(MAX), 
@@ -163,7 +165,7 @@ Revisions:
      )
      EXEC dbo.[OWP_PreMatchAssignment_QueryOtherAssignment] 
           @EventDate = @EventDate, 
-          @IsDay = 1, 
+          @IsDay = @IsDay, 
           @Bettype = @ouBettype, 
           @IsTakeOver = 1;
 
@@ -182,7 +184,7 @@ Revisions:
                  INNER JOIN InfoSiteMatch AS m1 WITH(NOLOCK) ON m1.OWPLeagueId = pl.OWPLeagueId
             WHERE pl.EventDate = @EventDate
                   AND m1.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
-                  AND pl.IsDay = 1
+                  AND pl.IsDay = @IsDay
                   AND pl.IsDeleted = 0
             GROUP BY m1.OWPLeagueId;
 
@@ -213,7 +215,8 @@ Revisions:
       OtherHDPTakeOverNote     VARCHAR(200), 
       OtherOUTakeOverNote      VARCHAR(200), 
       BlackList                BIT, 
-      Remark                   NVARCHAR(MAX)
+      Remark                   NVARCHAR(MAX), 
+      IsDeleted                BIT
      );
      INSERT INTO @tblDayShiftTable
      (PreMatchLeagueId, 
@@ -241,7 +244,8 @@ Revisions:
       OtherHDPTakeOverNote, 
       OtherOUTakeOverNote, 
       BlackList, 
-      Remark
+      Remark,
+	  IsDeleted
      )
             SELECT pl.PreMatchLeagueId, 
                    pl.OWPLeagueId, 
@@ -271,7 +275,8 @@ Revisions:
                    oht.AssignmentNote, 
                    oot.AssignmentNote, 
                    l.IsBlackList, 
-                   pl.Remark
+                   pl.Remark,
+				   pl.IsDeleted
             FROM PreMatchLeague AS pl WITH(NOLOCK)
                  INNER JOIN OWPLeague AS l WITH(NOLOCK) ON pl.OWPLeagueId = l.OWPLeagueId
                  INNER JOIN @tblMatchCount AS a ON a.OWPLeagueId = l.OWPLeagueId
@@ -284,8 +289,7 @@ Revisions:
                  LEFT JOIN @tblOtherHDPTOAssignment AS oht ON oht.PreMatchLeagueId = pl.PreMatchLeagueId
                  LEFT JOIN @tblOtherOUTOAssignment AS oot ON oot.PreMatchLeagueId = pl.PreMatchLeagueId
             WHERE pl.EventDate = @EventDate
-                  AND pl.IsDay = 1
-                  AND pl.IsDeleted = 0;
+                  AND pl.IsDay = @IsDay;
 
      -- Table league issue
      DECLARE @tblLeagueIssues TABLE
@@ -300,7 +304,7 @@ Revisions:
       [Message], 
       IsRead
      )
-     EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueIssues]  
+     EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueIssues] 
           @ActorId = @ActorId;
 
      -- Table infositematch issue
@@ -316,7 +320,7 @@ Revisions:
       [Message], 
       IsRead
      )
-     EXEC dbo.[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues]  
+     EXEC dbo.[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues] 
           @ActorId = @ActorId;
 
      -- Table league notes
@@ -374,7 +378,8 @@ Revisions:
             END AS HasMessages, 
             i.IsRead, 
             n.PreMatchNoteId, 
-            n.HasNotes
+            n.HasNotes,
+			l.IsDeleted
      FROM @tblDayShiftTable AS l
           LEFT JOIN @tblLeagueIssues AS i ON l.LeagueId = i.OWPLeagueId
           LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId;
