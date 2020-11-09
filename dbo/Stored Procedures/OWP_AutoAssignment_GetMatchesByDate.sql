@@ -103,8 +103,9 @@ BEGIN
 		,m.IsMajorLeague		
 		,p.ProviderName AS Provider
 		,CASE 
-				WHEN LOWER(mi.ETPK) LIKE '%et%' OR LOWER(mi.ETPK) LIKE '%pk%' THEN 1
-				ELSE 0
+				WHEN LOWER(mi.ETPK) LIKE '%et%' THEN 'ET'
+				WHEN LOWER(mi.ETPK) LIKE '%pk%' THEN 'PK'
+				ELSE 'NM'
 				END AS ExtraTime
 		,mi.Venue AS Venue
 		,CASE 
