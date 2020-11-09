@@ -21,6 +21,7 @@ AS
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 	20201105@Jacob: New column ETPK - [Redmine: #144570]
+	20201106@Jacob: Increase casting size - [Redmine: #144570]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -207,7 +208,7 @@ BEGIN
 		,[Text]
 		)
 	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR)
+		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(2000))
 	FROM #tblInfoSiteMatch AS im
 	CROSS APPLY dbo.fnc_SplitStrings(im.TV, ',') AS d
 	WHERE im.TV <> ''
@@ -240,7 +241,7 @@ BEGIN
 
 	UPDATE im
 	SET im.TVIds = STUFF((
-				SELECT ',' + CAST(Id AS VARCHAR(10))
+				SELECT ',' + CAST(Id AS VARCHAR(100))
 				FROM #tblDistinctTextList AS tl
 				WHERE tl.InfoSiteMatchId = im.InfoSiteMatchId
 				FOR XML PATH('')
@@ -256,7 +257,7 @@ BEGIN
 		,[Text]
 		)
 	SELECT im.InfoSiteMatchId
-		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR)
+		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(2000))
 	FROM #tblInfoSiteMatch AS im
 	CROSS APPLY dbo.fnc_SplitStrings(im.Agent, ',') AS d
 	WHERE im.Agent <> ''
@@ -289,7 +290,7 @@ BEGIN
 
 	UPDATE im
 	SET im.AgentIds = STUFF((
-				SELECT ',' + CAST(Id AS VARCHAR(10))
+				SELECT ',' + CAST(Id AS VARCHAR(100))
 				FROM #tblDistinctTextList AS tl
 				WHERE tl.InfoSiteMatchId = im.InfoSiteMatchId
 				FOR XML PATH('')
