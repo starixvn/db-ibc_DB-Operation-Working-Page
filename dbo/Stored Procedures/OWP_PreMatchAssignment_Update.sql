@@ -149,7 +149,8 @@ Revisions:
                      @OldValue = @hdpOldValue, 
                      @Bettype = @hdpBettype, 
                      @IsTakeOver = 0, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 1;
             END;
         IF(@ouOldValue <> @OU)
             BEGIN
@@ -160,7 +161,8 @@ Revisions:
                      @OldValue = @ouOldValue, 
                      @Bettype = @ouBettype, 
                      @IsTakeOver = 0, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 1;
             END;
         IF(@hdpTakeOverOldValue <> @HDPTakeOver)
             BEGIN
@@ -171,7 +173,8 @@ Revisions:
                      @OldValue = @hdpTakeOverOldValue, 
                      @Bettype = @hdpBettype, 
                      @IsTakeOver = 1, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 1;
             END;
         IF(@ouTakeOverOldValue <> @OUTakeOver)
             BEGIN
@@ -182,7 +185,8 @@ Revisions:
                      @OldValue = @ouTakeOverOldValue, 
                      @Bettype = @ouBettype, 
                      @IsTakeOver = 1, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 1;
             END;
         IF(@remarkOldValue <> @Remark)
             BEGIN
@@ -202,7 +206,8 @@ Revisions:
                      @OldValue = @otherHdpOldValue, 
                      @Bettype = @hdpBettype, 
                      @IsTakeOver = 0, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 2;
             END;
         IF(@otherOuOldValue <> @OtherOU)
             BEGIN
@@ -213,7 +218,8 @@ Revisions:
                      @OldValue = @otherOuOldValue, 
                      @Bettype = @ouBettype, 
                      @IsTakeOver = 0, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 2;
             END;
         IF(@otherHdpTakeOverOldValue <> @OtherHDPTakeOver)
             BEGIN
@@ -224,7 +230,8 @@ Revisions:
                      @OldValue = @otherHdpTakeOverOldValue, 
                      @Bettype = @hdpBettype, 
                      @IsTakeOver = 1, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 2;
             END;
         IF(@otherOuTakeOverOldValue <> @OtherOUTakeOver)
             BEGIN
@@ -235,7 +242,8 @@ Revisions:
                      @OldValue = @otherOuTakeOverOldValue, 
                      @Bettype = @ouBettype, 
                      @IsTakeOver = 1, 
-                     @PreMatchIssueId = @preMatchIssueId;
+                     @PreMatchIssueId = @preMatchIssueId,
+					 @AssignmentType = 2;
             END;
         --
         IF(@remarkOldValue <> @Remark)

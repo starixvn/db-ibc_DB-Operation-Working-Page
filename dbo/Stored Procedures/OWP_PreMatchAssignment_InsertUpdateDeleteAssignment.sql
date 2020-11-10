@@ -42,6 +42,7 @@ Revisions:
                      @OldValue = @OldValue, 
                      @Bettype = @Bettype, 
                      @IsTakeOver = @IsTakeOver, 
+					 @AssignmentType = @AssignmentType,
                      @PreMatchIssueId = @PreMatchIssueId;
             END;
 
@@ -58,7 +59,8 @@ Revisions:
                      @IsTakeOver = @IsTakeOver, 
                      @PreMatchIssueId = @PreMatchIssueId, 
                      @EventDate = @eventDate, 
-                     @OWPLeagueId = @OWPLeagueId;
+                     @OWPLeagueId = @OWPLeagueId,
+					 @AssignmentType = @AssignmentType;
             END;
 
         --
@@ -74,6 +76,7 @@ Revisions:
                      @IsTakeOver = @IsTakeOver, 
                      @PreMatchIssueId = @PreMatchIssueId, 
                      @EventDate = @eventDate, 
-                     @OWPLeagueId = @OWPLeagueId;
+                     @OWPLeagueId = @OWPLeagueId,
+					 @AssignmentType = @AssignmentType;
             END;
     END;
