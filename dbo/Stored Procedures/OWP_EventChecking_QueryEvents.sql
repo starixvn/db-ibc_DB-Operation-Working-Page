@@ -160,6 +160,7 @@ Revisions:
                    THEN u.[Username]
                    ELSE u.[Nickname]
                END AS 'Username', 
+			   u.[Username] 'AccountName',
                p.[IsDone]
         FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
              LEFT JOIN @tblIssues AS i ON i.PreMatchIssueId = p.PreMatchIssueId
