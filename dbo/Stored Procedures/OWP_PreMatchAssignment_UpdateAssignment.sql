@@ -105,7 +105,7 @@ Revisions:
         WHERE PreMatchLeagueId = @PreMatchLeagueId
               AND Bettype = @Bettype
               AND IsTakeOver = @IsTakeOver
-              AND AssignmentType = AssignmentType;
+              AND AssignmentType = @AssignmentType;
 
         -- Insert for receiving isssue message
         INSERT INTO [dbo].[PreMatchIssueReceiver]
@@ -156,7 +156,7 @@ Revisions:
         WHERE PreMatchLeagueId = @PreMatchLeagueId
               AND Bettype = @Bettype
               AND IsTakeOver = @IsTakeOver
-              AND AssignmentType = AssignmentType FOR XML PATH('z'), ROOT('r'));
+              AND AssignmentType = @AssignmentType FOR XML PATH('z'), ROOT('r'));
         SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @oldXml), '" />', '"/"');
         SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @newXml), '" />', '"/"');
         SET @EndRun = GETDATE();
