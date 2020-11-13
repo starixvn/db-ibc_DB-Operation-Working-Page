@@ -102,11 +102,7 @@ BEGIN
 		,mi.IsSoloMatch
 		,m.IsMajorLeague		
 		,p.ProviderName AS Provider
-		,CASE 
-				WHEN LOWER(mi.ETPK) LIKE '%et%' THEN 'ET'
-				WHEN LOWER(mi.ETPK) LIKE '%pk%' THEN 'PK'
-				ELSE 'NM'
-				END AS ExtraTime
+		,mi.ETPK AS ExtraTime
 		,mi.Venue AS Venue
 		,CASE 
 			WHEN owpl.OWPLeagueId IS NOT NULL THEN 1
