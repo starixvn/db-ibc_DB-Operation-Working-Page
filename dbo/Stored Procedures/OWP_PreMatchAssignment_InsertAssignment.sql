@@ -7,6 +7,7 @@ ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_InsertAssignment] @ActorId        
                                                                 @OldValue         NVARCHAR(30) = '', 
                                                                 @Bettype          INT, 
                                                                 @IsTakeOver       BIT, 
+																@AssignmentType   INT,
                                                                 @PreMatchIssueId  INT          = NULL
 AS
 
@@ -18,6 +19,7 @@ DB: bodb_OWP
 Revisions:
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201026@Tyler: update insert receiver  - [Redmine: #140772]  
+	20201110@Tyler: remove other assignment note - [Redmine: #144948]
 	
 */
 
@@ -39,6 +41,7 @@ Revisions:
      SELECT @userId = u.UserId
      FROM dbo.[User] AS u WITH(NOLOCK)
      WHERE u.Username = @NewValue;
+
      INSERT INTO [dbo].[PreMatchAssignment]
      ([PreMatchLeagueId], 
       [UserId], 
@@ -51,7 +54,7 @@ Revisions:
       @userId, 
       @Bettype, 
       @IsTakeOver, 
-      1
+      @AssignmentType
      );
 
      -- Insert for receiving isssue message
@@ -96,7 +99,8 @@ Revisions:
             @userId AS '@uid', 
             @Bettype AS '@bt', 
             @IsTakeOver AS '@ito', 
-            @NewValue AS '@un' FOR XML PATH('z'), ROOT('r'));
+            @NewValue AS '@un',
+			@AssignmentType AS '@at' FOR XML PATH('z'), ROOT('r'));
      SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
      SET @EndRun = GETDATE();
      SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
