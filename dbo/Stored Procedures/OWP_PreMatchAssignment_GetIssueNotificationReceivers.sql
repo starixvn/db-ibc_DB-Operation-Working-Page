@@ -19,7 +19,7 @@ Revisions:
 
      SET NOCOUNT ON;
      DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '12:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '11:59:59');
      SELECT Username
      FROM dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON r.UserId = u.UserId

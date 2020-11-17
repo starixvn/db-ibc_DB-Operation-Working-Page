@@ -21,7 +21,7 @@ Revisions:
      SET NOCOUNT ON;
      DECLARE @insertTime DATETIME= GETDATE();
      DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @insertTime), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @insertTime), '12:00:00');
+     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @insertTime), '11:59:59');
      DECLARE @eventDate DATE= CAST(@fromDate AS DATE);
      DECLARE @estId INT;
      SELECT TOP 1 @estId = ResourceId
