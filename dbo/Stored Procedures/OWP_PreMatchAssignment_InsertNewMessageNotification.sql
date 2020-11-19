@@ -20,14 +20,12 @@ Revisions:
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201021@Mira: New add request  - [Redmine: #140772]
 	20201021@Esther: update Receivers  - [Redmine: #143939]
+	20201117@Esther: update event date  - [Redmine: #145409]
 */
 
      SET NOCOUNT ON;
      DECLARE @messageTemplate NVARCHAR(MAX);
-     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
-     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
-     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '00:00:00');
      DECLARE @eventName NVARCHAR(2000);
      DECLARE @matchName NVARCHAR(2000);
      DECLARE @actorName NVARCHAR(50);
@@ -51,7 +49,7 @@ Revisions:
                              WHEN i.InfoSiteMatchId IS NULL
                                   AND i.OWPLeagueId IS NULL
                                   AND n.MatchName IS NOT NULL
-								  AND n.MatchName <> ''
+                                  AND n.MatchName <> ''
                              THEN ' - ' + n.MatchName
                              ELSE ''
                          END
@@ -71,7 +69,7 @@ Revisions:
             FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
             WHERE PreMatchIssueId = @PreMatchIssueId
                   AND UserId <> @ActorId
-                  AND DATEADD(HOUR, 12, p.CreatedDate) BETWEEN @fromDate AND @toDate;
+                  AND DATEADD(HOUR, 12, p.CreatedDate) >= @fromDate
      EXEC dbo.OWP_MessageInsert 
           @UserId = @ActorId, 
           @MessageContent = @messageTemplate, 

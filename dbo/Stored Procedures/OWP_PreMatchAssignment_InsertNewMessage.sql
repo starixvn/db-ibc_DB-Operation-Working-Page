@@ -15,14 +15,13 @@ Revisions:
 	20200914@Tyler: Init sync SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258] 
 	20201021@Esther: update receivers  - [Redmine: #143939]
+	20201117@Esther: update event date  - [Redmine: #145409]
 */
 
      SET NOCOUNT ON;
      DECLARE @insertTime DATETIME= GETDATE();
-     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
-     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
-     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @insertTime), '00:00:00');
+     DECLARE @eventDate DATE= CAST(@fromDate AS DATE);
      DECLARE @estId INT;
      SELECT TOP 1 @estId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
@@ -83,7 +82,7 @@ Revisions:
                   OR m.InfoSiteMatchId = p.InfoSiteMatchId)
                  AND a.UserId <> @ActorId
                  AND a.UserId > 0
-                 AND pl.EventDate = @eventDate
+                 AND pl.EventDate >= @eventDate
             UNION
             SELECT @PreMatchIssueId, 
                    [UserId], 
@@ -106,9 +105,9 @@ Revisions:
          SELECT UserId
          FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
          WHERE p.PreMatchIssueId = t.IssueId
-               AND DATEADD(HOUR, 12, p.CreatedDate) BETWEEN @fromDate AND @toDate
+               AND DATEADD(HOUR, 12, p.CreatedDate) >= @fromDate
      );
-   ----- insert receiver----
+     ----- insert receiver----
      INSERT INTO [dbo].[PreMatchIssueReceiver]
      ([PreMatchIssueId], 
       [UserId], 
@@ -123,7 +122,7 @@ Revisions:
                 SELECT UserId
                 FROM dbo.[PreMatchIssueMessage] AS p WITH(NOLOCK)
                 WHERE p.PreMatchIssueId = t.IssueId
-                      AND DATEADD(HOUR, 12, p.CreatedDate) BETWEEN @fromDate AND @toDate
+                      AND DATEADD(HOUR, 12, p.CreatedDate) >= @fromDate
             );	
      ---- update isRead-----
      UPDATE dbo.[PreMatchIssueReceiver] WITH(ROWLOCK)

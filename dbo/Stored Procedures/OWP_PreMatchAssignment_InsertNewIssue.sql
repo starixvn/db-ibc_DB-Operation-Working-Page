@@ -17,15 +17,15 @@ Revisions:
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201020@Esther: Remove EventDate  - [Redmine: #143792] 
 	20201021@Esther: update receivers  - [Redmine: #143939]
+	20201117@Esther: update event date  - [Redmine: #145409]
 	
 */
 
      SET NOCOUNT ON;
      DECLARE @issueId INT;
      DECLARE @estId INT;
-     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
      DECLARE @insertTime DATETIME= GETDATE();
-     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
+     DECLARE @eventDate DATE= CAST(@insertTime AS DATE);
      SELECT TOP 1 @estId = ResourceId
      FROM dbo.[RefResource] WITH(NOLOCK)
      WHERE RefName = N'Section'
@@ -81,7 +81,7 @@ Revisions:
                           OR m.InfoSiteMatchId = @InfoSiteMatchId)
                          AND a.UserId <> @ActorId
                          AND a.UserId > 0
-                         AND pl.EventDate = @eventDate
+                         AND pl.EventDate >= @eventDate
                     UNION
                     SELECT @issueId, 
                            [UserId], 

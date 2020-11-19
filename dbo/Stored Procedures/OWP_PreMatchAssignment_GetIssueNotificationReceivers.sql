@@ -14,13 +14,11 @@ Revisions:
 	20200916@Tyler: Init SP - [Redmine: #140620]
 	20201003@Tyler: update other assignments  - [Redmine: #142258]  
 	20201021@Esther: update receivers  - [Redmine: #143939]
+	20201117@Esther: update event date  - [Redmine: #145409]
 */
 
      SET NOCOUNT ON;
-     DECLARE @getDate DATETIME= DATEADD(HOUR, 12, GETDATE());
-     DECLARE @eventDate DATE= CAST(@getDate AS DATE);
-     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '00:00:00');
-     DECLARE @toDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @eventDate), '23:59:59');
+     DECLARE @fromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '00:00:00');
      SELECT Username
      FROM dbo.[PreMatchIssueReceiver] AS r WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON r.UserId = u.UserId
@@ -32,4 +30,4 @@ Revisions:
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON r.UserId = u.UserId
      WHERE PreMatchIssueId = @PreMatchIssueId
            AND r.UserId <> @ActorId
-           AND DATEADD(HOUR, 12, r.CreatedDate) BETWEEN @fromDate AND @toDate;
+           AND DATEADD(HOUR, 12, r.CreatedDate) >= @fromDate
