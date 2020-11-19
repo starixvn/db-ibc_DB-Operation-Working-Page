@@ -30,7 +30,6 @@ Revisions:
          [Message]       NVARCHAR(MAX), 
          IsRead          BIT, 
          LeagueName      NVARCHAR(500), 
-         MatchName       NVARCHAR(500), 
          HomeName        NVARCHAR(500), 
          AwayName        NVARCHAR(500), 
          EventDateTime   DATETIME, 
@@ -49,8 +48,7 @@ Revisions:
                           THEN 1
                           ELSE r.IsRead
                       END AS 'IsRead', 
-                      l.OWPLeagueName, 
-                      NULL, 
+                      l.OWPLeagueName,
                       NULL, 
                       NULL, 
                       NULL, 
@@ -84,8 +82,7 @@ Revisions:
                           THEN 1
                           ELSE r.IsRead
                       END AS 'IsRead', 
-                      ifm.LeagueName, 
-                      NULL, 
+                      ifm.LeagueName,
                       ifm.HomeName, 
                       ifm.AwayName, 
                       ifm.EventDateTime, 
@@ -119,8 +116,7 @@ Revisions:
                           THEN 1
                           ELSE r.IsRead
                       END AS 'IsRead', 
-                      n.LeagueName, 
-                      n.MatchName, 
+                      n.Subject, 
                       NULL, 
                       NULL, 
                       NULL, 
@@ -148,8 +144,7 @@ Revisions:
         SELECT i.[PreMatchIssueId], 
                i.[OWPLeagueId] 'LeagueId', 
                i.[InfoSiteMatchId], 
-               i.[LeagueName], 
-               i.[MatchName], 
+               i.[LeagueName],
                i.[HomeName], 
                i.[AwayName], 
                i.[EventDateTime], 
