@@ -14,6 +14,7 @@ Revisions:
  20201020@Esther: Remove EventDate  - [Redmine: #143792] 
  20201020@Mira: new add request, pagination  - [Redmine: #143792]
  20201102@Mira: remove pagination, IsHideDoneIssues - [Redmine: #143782]
+ 20201119@Carlos.nguyen: Event Tickets enhancement - Phase 1 (Task: Query two last message) - [Redmine: #145568]
 */
 
     BEGIN
