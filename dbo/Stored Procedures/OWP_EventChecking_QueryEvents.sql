@@ -148,8 +148,7 @@ Revisions:
                i.[HomeName], 
                i.[AwayName], 
                i.[EventDateTime], 
-               i.[IsRead], 
-               i.[Message], 
+               i.[IsRead],
                i.[CreatedDate],
                CASE
                    WHEN u.[Nickname] IS NULL
@@ -164,4 +163,17 @@ Revisions:
         ORDER BY p.IsDone ASC, 
                  i.IsRead ASC, 
                  i.CreatedDate DESC;
+                 
+        SELECT p.PreMatchIssueId,
+			im.[Message] AS 'MessageContent',
+			im.CreatedDate,
+			CASE
+                WHEN u.[Nickname] IS NULL
+                THEN u.[Username]
+                ELSE u.[Nickname]
+            END AS 'Username'
+        FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
+        INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = p.PreMatchIssueId
+        INNER JOIN dbo.[User] AS u ON u.UserId = im.UserId
+        ORDER BY p.PreMatchIssueId DESC
     END;
