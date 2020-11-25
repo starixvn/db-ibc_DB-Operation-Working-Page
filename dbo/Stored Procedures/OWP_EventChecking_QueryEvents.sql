@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @ActorId   INT, 
-                                                      @MarketKey INT = 2
+                                                      @MarketKey INT
 AS
 
 /*  
