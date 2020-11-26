@@ -164,7 +164,7 @@ Revisions:
                  i.CreatedDate DESC;
         SELECT p.PreMatchIssueId, 
                im.[Message] AS 'MessageContent', 
-               im.CreatedDate,
+               DATEADD(HOUR, 12, im.CreatedDate) AS 'CreatedDate',
                CASE
                    WHEN u.[Nickname] IS NULL
                    THEN u.[Username]
