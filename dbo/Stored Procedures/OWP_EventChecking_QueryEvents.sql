@@ -152,8 +152,7 @@ Revisions:
                    WHEN u.[Nickname] IS NULL
                    THEN u.[Username]
                    ELSE u.[Nickname]
-               END AS 'Username', 
-               u.[Username] 'AccountName', 
+               END AS 'Username',
                p.[IsDone], 
                i.[Subject]
         FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
@@ -169,7 +168,8 @@ Revisions:
                    WHEN u.[Nickname] IS NULL
                    THEN u.[Username]
                    ELSE u.[Nickname]
-               END AS 'Username'
+               END AS 'Username',
+			   u.[Username] 'AccountName'
         FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = p.PreMatchIssueId
              INNER JOIN dbo.[User] AS u ON u.UserId = im.UserId
