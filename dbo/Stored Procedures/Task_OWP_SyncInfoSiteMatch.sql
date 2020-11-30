@@ -29,6 +29,7 @@ AS
 	20200819@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   	
 	20200813@Jacob: Prematch Assignment - [Redmine: #138643]
+	20201106@Jacob: Increase casting size - [Redmine: #144570]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -559,6 +560,7 @@ BEGIN
 		,mi.Website2 = im.Website2
 		,mi.Website3 = im.Website3
 		,mi.Website4 = im.Website4
+		,mi.ETPK = im.ETPK
 	FROM dbo.MatchInfo AS mi WITH (ROWLOCK)
 	INNER JOIN #tblMatch AS m ON mi.OWPMatchId = m.OWPMatchId
 	INNER JOIN dbo.InfoSiteMatch AS im WITH (NOLOCK) ON im.InfoSiteMatchId = m.InfoSiteMatchId

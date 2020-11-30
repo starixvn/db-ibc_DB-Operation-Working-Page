@@ -1,4 +1,11 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_InfoSiteMatch_GetInfoSiteMatchByDate]    Script Date: 11/09/2020 13:55:27 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_InfoSiteMatch_GetInfoSiteMatchByDate]
  @EventDate DATE
@@ -8,7 +15,8 @@ ALTER PROCEDURE [dbo].[OWP_InfoSiteMatch_GetInfoSiteMatchByDate]
  DB: bodb_OWP    
     
  Revisions:
-	20201023@Carlos.nguyen: Initial SP - [Redmine: #142320] 
+	20201023@Carlos.nguyen: Initial SP - [Redmine: #142320]
+	20201109@Carlos.Nguyen: LA Auto Assignment - Determine ET/PK match - [Redmine: #144570]
 */
 	 
 AS
@@ -33,7 +41,8 @@ BEGIN
 		i.Website4,
 		i.IPTV,
 		i.IsNeutral,
-		i.AdminSiteMatchId
+		i.AdminSiteMatchId,
+		i.ETPK AS EtPk
 	FROM InfoSiteMatch AS i WITH (NOLOCK)
 	WHERE i.EventDateTime BETWEEN @FromDate AND @ToDate
 END

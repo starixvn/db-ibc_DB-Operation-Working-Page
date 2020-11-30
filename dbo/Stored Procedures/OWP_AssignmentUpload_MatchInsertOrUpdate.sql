@@ -16,6 +16,7 @@ Revisions:
 	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 	20200730@Jack.Nguyen: add IPTV, AdminSiteId, changeName MachId  - [Redmine: #137756]
 	20200901@Mira.Nguyen: Notification when re-uploading match with Neutral [Redmine: #140807]
+	20201109@Carlos.Nguyen: LA Auto Assignment - Determine ET/PK match - [Redmine: #144570]
 */
 
      SET NOCOUNT ON;
@@ -52,7 +53,8 @@ Revisions:
       HomeId          INT, 
       AwayId          INT, 
       LeagueId        INT, 
-      OWPMatchId      INT
+      OWPMatchId      INT,
+      ETPK			  NVARCHAR(2000)
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -90,8 +92,9 @@ Revisions:
                    0, 
                    0, 
                    0, 
-                   0
-            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100),IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT)
+                   0,
+                   EtPk
+            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100),IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT, EtPk NVARCHAR(2000))
             ORDER BY ISNULL(MinorBettypeId, 0) DESC;
      EXEC sp_xml_removedocument 
           @idoc;
@@ -221,7 +224,8 @@ Revisions:
            i.[NoOfHDPId] = r.[ResourceId], 
            i.[IsSelected] = 1, 
            i.[SelectedBy] = @UserId, 
-           i.IsSelectedUpdatedDate = GETDATE()
+           i.IsSelectedUpdatedDate = GETDATE(),
+           i.ETPK=m.ETPK
      FROM #tmpTable AS m
           INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'NoOfHDP'

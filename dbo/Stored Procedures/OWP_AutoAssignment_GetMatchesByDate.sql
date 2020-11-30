@@ -21,6 +21,7 @@ Revisions:
 	20200520@Tyler.Dang: Update RequireChinese rule [Redmine: #133428]
 	20200716@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
 	20200928@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
+	20201109@Carlos.Nguyen: LA Auto Assignment - Determine ET/PK match - [Redmine: #144570]
 */
 
 BEGIN
@@ -101,10 +102,7 @@ BEGIN
 		,mi.IsSoloMatch
 		,m.IsMajorLeague		
 		,p.ProviderName AS Provider
-		,CASE 
-				WHEN LOWER(mi.Remark) LIKE '%et%' OR LOWER(mi.Remark) LIKE '%pk%' THEN 1
-				ELSE 0
-				END AS ExtraTime				 
+		,mi.ETPK AS ExtraTime
 		,mi.Venue AS Venue
 		,CASE 
 			WHEN owpl.OWPLeagueId IS NOT NULL THEN 1
