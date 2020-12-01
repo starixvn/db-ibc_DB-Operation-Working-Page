@@ -1,0 +1,25 @@
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*
+Created: 20201119@Tyler
+Task : event tickets enhancement
+DB: bodb_OWP	
+
+Revisions:
+	20201119@Tyler: remove MatchName in NewAddRequest - [Redmine: #145568]
+*/
+
+UPDATE dbo.[NewAddRequest]
+  SET 
+      [LeagueName] = [LeagueName] + CASE
+                                        WHEN [MatchName] IS NULL
+                                        THEN ''
+                                        ELSE [MatchName]
+                                    END;
+						
+EXEC sp_rename 
+     'NewAddRequest.LeagueName', 
+     'Subject', 
+     'COLUMN';
+
+ALTER TABLE dbo.[NewAddRequest] DROP COLUMN MatchName;
