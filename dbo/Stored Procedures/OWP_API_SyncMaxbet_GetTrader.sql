@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE [dbo].[OWP_API_AdminsiteIntegration_GetTrader] @MatchId INT
+ALTER PROCEDURE [dbo].[OWP_API_SyncMaxbet_GetTrader] @OwpMatchId INT
 AS
 /*
 Created: 20201203@Carlos.Nguyen
@@ -16,10 +16,9 @@ BEGIN
 		,@OverUnderOU INT = 3
 		,@1H_HandicapHDP INT = 7
 		,@1H_OverUnder INT = 8
-		,@LeagueCategoryId_MJ INT = 1
 
-	SELECT am.Bettype,
+	SELECT am.Bettype AS BettypeId,
 		am.UserId
 	FROM Assignment AS am WITH (NOLOCK)
-	WHERE am.OWPMatchId= @MatchId AND am.Bettype IN (@HandicapHDP, @OverUnderOU, @1H_HandicapHDP, @1H_OverUnder)
+	WHERE am.OWPMatchId= @OwpMatchId AND am.Bettype IN (@HandicapHDP, @OverUnderOU, @1H_HandicapHDP, @1H_OverUnder)
 END
