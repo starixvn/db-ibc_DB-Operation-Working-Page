@@ -169,10 +169,18 @@ Revisions:
                    THEN u.[Username]
                    ELSE u.[Nickname]
                END AS 'Username',
-			   u.[Username] 'AccountName'
+			   u.[Username] 'AccountName',
+			   im.FileId,
+               CASE
+                   WHEN im.FileId IS NULL
+                        OR f.FileId IS NULL
+                   THEN 0
+                   ELSE 1
+               END AS 'IsFileAvailable'
         FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = p.PreMatchIssueId
              INNER JOIN dbo.[User] AS u ON u.UserId = im.UserId
+             LEFT JOIN dbo.[FileUpload] AS f ON im.FileId = f.FileId
         ORDER BY p.PreMatchIssueId DESC;
         IF @MarketKey = @earlyFilter
             BEGIN
