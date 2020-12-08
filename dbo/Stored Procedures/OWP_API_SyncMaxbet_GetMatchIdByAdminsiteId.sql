@@ -19,7 +19,7 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
-	SELECT im.InfoSiteMatchId
-	FROM InfoSiteMatch AS im WITH (NOLOCK)
-	WHERE im.AdminSiteMatchId=@AdminsiteId
+	SELECT om.OWPMatchId
+	FROM OWPMatch AS om WITH (NOLOCK)
+	WHERE om.MatchId=@AdminsiteId
 END
