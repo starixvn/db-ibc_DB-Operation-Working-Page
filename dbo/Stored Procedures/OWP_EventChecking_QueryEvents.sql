@@ -17,6 +17,7 @@ Revisions:
  20201102@Mira: remove pagination, IsHideDoneIssues - [Redmine: #143782]
  20201119@Carlos.nguyen: Event Tickets enhancement - Phase 1 (Task: Query two last message) - [Redmine: #145568]
  20201123@Esther: Event Tickets enhancement - Phase 1 (Task: Add filter) - [Redmine: #145568]
+ 20201207@Mira: Checked is File available [Redmine: #145591]
 */
 
     BEGIN
