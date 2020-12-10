@@ -17,6 +17,7 @@ Revisions:
  20201102@Mira: remove pagination, IsHideDoneIssues - [Redmine: #143782]
  20201119@Carlos.nguyen: Event Tickets enhancement - Phase 1 (Task: Query two last message) - [Redmine: #145568]
  20201123@Esther: Event Tickets enhancement - Phase 1 (Task: Add filter) - [Redmine: #145568]
+ 20201207@Mira: Checked is File available [Redmine: #145591]
 */
 
     BEGIN
@@ -169,10 +170,18 @@ Revisions:
                    THEN u.[Username]
                    ELSE u.[Nickname]
                END AS 'Username',
-			   u.[Username] 'AccountName'
+			   u.[Username] 'AccountName',
+			   im.FileId,
+               CASE
+                   WHEN im.FileId IS NULL
+                        OR f.FileId IS NULL
+                   THEN 0
+                   ELSE 1
+               END AS 'IsFileAvailable'
         FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = p.PreMatchIssueId
              INNER JOIN dbo.[User] AS u ON u.UserId = im.UserId
+             LEFT JOIN dbo.[FileUpload] AS f ON im.FileId = f.FileId
         ORDER BY p.PreMatchIssueId DESC;
         IF @MarketKey = @earlyFilter
             BEGIN
