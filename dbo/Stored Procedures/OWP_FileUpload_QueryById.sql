@@ -18,6 +18,6 @@ Revisions:
         SELECT [FileId], 
                [Title], 
                [FileContent]
-        FROM [bodb_OWP].[dbo].[FileUpload]
+        FROM [bodb_OWP].[dbo].[FileUpload] WITH(NOLOCK)
         WHERE [FileId] = @FileId;
     END;
