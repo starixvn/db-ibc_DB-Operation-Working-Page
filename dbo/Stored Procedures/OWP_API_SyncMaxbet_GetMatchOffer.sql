@@ -15,7 +15,7 @@ Revisions:
 
     BEGIN
         SELECT [OWPMatchId], 
-               [MatchOfferId], 
+               [MatchOfferId] AS 'ResourceId', 
                rr.[Value]
         FROM [bodb_OWP].[dbo].[MatchOfferDetail] AS mo
              INNER JOIN dbo.RefResource AS rr ON mo.MatchOfferId = rr.ResourceId
