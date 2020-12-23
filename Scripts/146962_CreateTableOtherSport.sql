@@ -45,7 +45,7 @@ CREATE TABLE [dbo].[OSMatch]
  [Sport]         [VARCHAR](50) NOT NULL, 
  [MatchStatus]   [VARCHAR](15) NOT NULL, 
  [EventDateTime] [DATETIME] NOT NULL, 
- [EventDate]     [DATETIME] NOT NULL, 
+ [EventDate]     [DATE] NOT NULL, 
  [LeagueId]      [INT] NOT NULL, 
  [HomeName]      [NVARCHAR](200) NOT NULL, 
  [AwayName]      [NVARCHAR](200) NOT NULL, 
