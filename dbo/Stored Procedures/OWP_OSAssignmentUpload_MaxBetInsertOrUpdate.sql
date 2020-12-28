@@ -36,7 +36,7 @@ Revisions:
                       OSMatchId, 
                       BetTypeName, 
                       MaxBet
-               FROM OPENXML(@idoc, '/Root/MaxBet', 1) WITH(OSMatchId INT, BetTypeName NVARCHAR(200), MaxBet MONEY);
+               FROM OPENXML(@idoc, '/Root/MatchMaxBet', 1) WITH(OSMatchId INT, BetTypeName NVARCHAR(200), MaxBet MONEY);
         EXEC sp_xml_removedocument 
              @idoc;
 

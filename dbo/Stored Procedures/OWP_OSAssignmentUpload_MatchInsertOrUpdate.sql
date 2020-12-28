@@ -43,13 +43,12 @@ Revisions:
              @idoc OUTPUT, 
              @Matches;
         INSERT INTO #tmpTable
-               SELECT DISTINCT 
-                      0, 
+               SELECT 0, 
                       HashKey, 
                       Sport, 
                       MatchStatus, 
                       [DateTime], 
-                      EventDate, 
+                      [DateTime], 
                       0, 
                       League, 
                       Home, 

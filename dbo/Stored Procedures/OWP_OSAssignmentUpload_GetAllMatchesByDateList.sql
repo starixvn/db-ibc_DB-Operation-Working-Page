@@ -42,8 +42,8 @@ Revisions:
                u.Username
         FROM dbo.OSMatch m
              INNER JOIN @tempMatch t ON m.EventDate = t.EventDate
-             INNER JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
-             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = m.UploadedBy;
+             LEFT JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
+             LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = m.UploadedBy;
 
         -- Select OSAssignment
         SELECT a.[OSMatchId], 
