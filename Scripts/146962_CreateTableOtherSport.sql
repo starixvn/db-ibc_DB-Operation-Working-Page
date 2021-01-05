@@ -78,7 +78,7 @@ CREATE TABLE [dbo].[OSAssignment]
  [OSMatchId]      [INT] NOT NULL, 
  [BettypeName]    [VARCHAR](50) NOT NULL, 
  [AssignmentType] [TINYINT] NOT NULL, 
- [UserId]         [INT] NOT NULL, 
+ [UserId]         [INT] NULL, 
  [AssignmentNote] [NVARCHAR](200) NULL, 
  CONSTRAINT [PK_OSAssignment] PRIMARY KEY CLUSTERED([OSAssignmentId] ASC)
  WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
