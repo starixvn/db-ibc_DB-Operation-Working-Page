@@ -1,6 +1,6 @@
 ﻿USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_API_SyncFromInfoSiteMatch180Day]    Script Date: 11/26/2020 10:33:20 ******/
+/****** Object:  StoredProcedure [dbo].[OWP_API_SyncFromInfoSiteMatch180Day]    Script Date: 01/06/2021 10:51:23 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -16,6 +16,8 @@ AS
     
  Revisions:
 	20201125@Carlos.nguyen: Initial SP - [Redmine: #145592]
+	20210106@Carlos.nguyen:  Enhance insert data NULL for Early Matches - [Redmine: #148284]
+	=> This enhance to fix agent.split object not set reference in case event upload
 	
 */
 BEGIN
@@ -144,7 +146,19 @@ BEGIN
 		AwayName,
 		AdminSiteMatchId,
 		UpdatedTime,
-		IsNeutral
+		IsNeutral,
+		[Round],
+		Division,
+		Agent,
+		TV,
+		Channel,
+		WB,
+		Website1,
+		Website2,
+		Website3,
+		Website4,
+		IPTV,
+		ETPK
 	)
 	SELECT 
 		tblim.OWPLeagueId,
@@ -157,7 +171,19 @@ BEGIN
 		tblim.AwayName,
 		tblim.AdminSiteId,
 		tblim.UpdatedTime,
-		tblim.IsNeutral
+		tblim.IsNeutral,
+		'',
+		'',
+		'',
+		'',
+		'',
+		'',
+		'',
+		'',
+		'',
+		'',
+		'',
+		''
 	FROM #tblInfoSiteMatch AS tblim
 	WHERE NOT EXISTS (
 			SELECT 1
