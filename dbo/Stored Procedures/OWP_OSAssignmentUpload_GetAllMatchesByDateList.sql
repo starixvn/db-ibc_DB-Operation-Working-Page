@@ -40,7 +40,7 @@ Revisions:
                m.[WB], 
                m.[Remark], 
                u.Username
-        FROM dbo.OSMatch m
+        FROM dbo.OSMatch m WITH(NOLOCK)
              INNER JOIN @tempMatch t ON m.EventDate = t.EventDate
              LEFT JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
              LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = m.UploadedBy;
@@ -51,7 +51,7 @@ Revisions:
                a.[BettypeName], 
                a.[UserId], 
                a.[AssignmentNote]
-        FROM dbo.OSAssignment a
+        FROM dbo.OSAssignment a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
              INNER JOIN @tempMatch t ON t.EventDate = m.EventDate;
 
@@ -59,7 +59,7 @@ Revisions:
         SELECT a.[OSMatchId], 
                a.[BettypeName], 
                a.[MaxBet]
-        FROM dbo.OSMaxBet a
+        FROM dbo.OSMaxBet a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
              INNER JOIN @tempMatch t ON t.EventDate = m.EventDate;
     END;

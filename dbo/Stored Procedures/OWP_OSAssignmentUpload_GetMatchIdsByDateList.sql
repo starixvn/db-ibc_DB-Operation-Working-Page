@@ -28,13 +28,14 @@ Revisions:
                FROM fnc_SplitStrings(@EventDates, ',') u OPTION(MAXRECURSION 0);
 
 		--Select OSMatchId
-        SELECT dbo.OSMatch.OSMatchId
-        FROM dbo.OSMatch
-        WHERE dbo.OSMatch.EventDate IN
+        SELECT OSMatchId
+        FROM dbo.[OSMatch] WITH(NOLOCK)
+        WHERE EventDate IN
         (
             SELECT EvenDates
             FROM #tmpTable
         );
+
         DROP TABLE #tmpTable;
     END;
 
