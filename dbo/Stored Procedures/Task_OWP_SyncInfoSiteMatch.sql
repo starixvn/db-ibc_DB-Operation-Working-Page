@@ -1,5 +1,11 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 01/13/2021 13:45:09 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 ALTER PROCEDURE [dbo].[Task_OWP_SyncInfoSiteMatch]
 AS
 /*    
@@ -30,6 +36,7 @@ AS
 	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   	
 	20200813@Jacob: Prematch Assignment - [Redmine: #138643]
 	20201106@Jacob: Increase casting size - [Redmine: #144570]
+	20210113@carlos.nguyen: Sync AdminSiteID on Interval Process- [Redmine: #148606]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -78,6 +85,7 @@ BEGIN
 		,OWPAwayId INT NOT NULL
 		,IsSync BIT NOT NULL
 		,IsNeutral BIT NOT NULL
+		,MatchId INT
 		);
 
 	CREATE TABLE #tblSimilarMatchInfo (
@@ -138,6 +146,7 @@ BEGIN
 		,OWPAwayId
 		,IsSync
 		,IsNeutral
+		,MatchId
 		)
 	SELECT m.OWPMatchId
 		,m.InfoSiteMatchId
@@ -147,6 +156,7 @@ BEGIN
 		,ISNULL(im.OWPAwayId, m.OWPAwayId) AS OWPAwayId
 		,1
 		,ISNULL(im.IsNeutral,0)
+		,im.AdminSiteMatchId
 	FROM (
 		SELECT m.OWPMatchId
 			,m.EventDateTime
@@ -269,6 +279,7 @@ BEGIN
 		,OldHomeId INT NOT NULL
 		,OldAwayId INT NOT NULL
 		,IsNeutral BIT NOT NULL
+		,MatchId INT
 		);
 
 	CREATE TABLE #tblAssigneeReceiver (
@@ -287,15 +298,21 @@ BEGIN
 		,om.OWPHomeId = tm.OWPHomeId
 		,om.OWPAwayId = tm.OWPAwayId
 		,om.IsNeutral = tm.IsNeutral
+		,om.MatchId=tm.MatchId
 	OUTPUT DELETED.OWPMatchId
 		,DELETED.OWPLeagueId
 		,DELETED.OWPHomeId
 		,DELETED.OWPAwayId
 		,DELETED.IsNeutral
-	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral)
+		,DELETED.MatchId
+	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral,MatchId)
 	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 	INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
-	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR om.OWPHomeId <> tm.OWPHomeId OR om.OWPAwayId <> tm.OWPAwayId OR om.IsNeutral <> tm.IsNeutral
+	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR
+	 om.OWPHomeId <> tm.OWPHomeId OR
+	 om.OWPAwayId <> tm.OWPAwayId OR
+	 om.IsNeutral <> tm.IsNeutral OR
+	 om.MatchId <> tm.MatchId
 
 	-- sync TVIds
 	TRUNCATE TABLE #tblMatchChangeLog
@@ -902,3 +919,4 @@ BEGIN
 	
 	DROP TABLE #tblMatchChangeLog
 END;
+
