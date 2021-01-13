@@ -11,7 +11,8 @@ Task : Archive plan for OWP tables
 DB: bodb_OWP
 
 Revisions:
-	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
+	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]
+	20210113@Esther: Adding SABA 6mins match to LA Report - [Redmine: #148267]
 	
 */
 
@@ -46,6 +47,7 @@ Revisions:
       [OtherProducts], 
       [FTCorner], 
       [ESoccer5Mins], 
+      [ESoccer6Mins], 
       [ESoccer15Mins], 
       [ESoccer20Mins], 
       [Others], 
@@ -70,6 +72,7 @@ Revisions:
                    [OtherProducts], 
                    [FTCorner], 
                    [ESoccer5Mins], 
+                   [ESoccer6Mins], 
                    [ESoccer15Mins], 
                    [ESoccer20Mins], 
                    [Others], 
