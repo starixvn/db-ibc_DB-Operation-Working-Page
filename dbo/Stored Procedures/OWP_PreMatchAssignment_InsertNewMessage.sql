@@ -18,6 +18,7 @@ Revisions:
 	20201021@Esther: update receivers  - [Redmine: #143939]
 	20201117@Esther: update event date  - [Redmine: #145409]
 	20201201@Tyler: file upload  - [Redmine: #145591]
+	202101130@Mira: save message in chat board - [Redmine: #148266]
 */
 
     BEGIN
@@ -37,14 +38,16 @@ Revisions:
          [CreatedDate], 
          [UserId], 
          [Message], 
-         [FileId]
+         [FileId],
+		 [IsSaved]
         )
         VALUES
         (@PreMatchIssueId, 
          @insertTime, 
          @ActorId, 
          @Message, 
-         @FileId
+         @FileId,
+		 0
         );
 
         -- Insert receivers

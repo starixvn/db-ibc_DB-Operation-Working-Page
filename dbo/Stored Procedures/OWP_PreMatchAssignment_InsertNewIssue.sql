@@ -20,7 +20,8 @@ Revisions:
 	20201021@Esther: update receivers  - [Redmine: #143939]
 	20201117@Esther: update event date  - [Redmine: #145409]
 	20201201@Tyler: file upload  - [Redmine: #145591]
-	
+	20210113@Mira: save message in chat board - [Redmine: #148266]
+
 */
 
     BEGIN
@@ -59,14 +60,16 @@ Revisions:
                  [CreatedDate], 
                  [UserId], 
                  [Message], 
-                 [FileId]
+                 [FileId], 
+                 [IsSaved]
                 )
                 VALUES
                 (@issueId, 
                  @insertTime, 
                  @ActorId, 
                  @Message, 
-                 @FileId
+                 @FileId, 
+                 0
                 );
 
                 -- Insert receivers
@@ -98,12 +101,12 @@ Revisions:
                        SELECT @issueId, 
                               @ActorId, 
                               1;
-            END;
+        END;
             ELSE
             BEGIN
                 EXEC dbo.[OWP_PreMatchAssignment_InsertNewMessage] 
                      @ActorId, 
                      @Message, 
                      @PreMatchIssueId = @issueId;
-            END;
+        END;
     END;
