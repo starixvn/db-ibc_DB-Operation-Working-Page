@@ -20,9 +20,9 @@ Revisions:
         DECLARE @LatestDate INT= 7;
         DECLARE @MarkDate DATETIME= DATEADD(DAY, -@LatestDate, @Today);
 
+        --delete
         DELETE FROM dbo.[PreMatchIssueMessage]
         WHERE CreatedDate < @MarkDate
-              AND IsSaved = 0;
-
-
+              AND (IsSaved = 0
+                   OR IsSaved IS NULL);
     END;

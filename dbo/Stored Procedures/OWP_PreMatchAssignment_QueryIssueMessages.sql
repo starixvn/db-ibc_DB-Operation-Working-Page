@@ -46,7 +46,7 @@ Revisions:
         FROM dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchIssue] AS i WITH(NOLOCK) ON im.PreMatchIssueId = i.PreMatchIssueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON u.UserId = im.UserId
-             LEFT JOIN dbo.[FileUpload] AS f ON im.FileId = f.FileId
+             LEFT JOIN dbo.[FileUpload] AS f WITH(NOLOCK) ON im.FileId = f.FileId
         WHERE i.PreMatchIssueId = @PreMatchIssueId
         ORDER BY CreatedDate ASC;
         SELECT DATEADD(HOUR, 12, GETDATE());
