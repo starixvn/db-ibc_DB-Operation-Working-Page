@@ -7,7 +7,6 @@ DB: bodb_OWP
 
 Revisions:
 	20200810@Jacob: Archive plan for OWP tables - [Redmine: #137757]
-	20210113@Esther: Adding SABA 6mins match to LA Report - [Redmine: #148267]
 */
 
 SET ANSI_NULLS ON;
@@ -96,6 +95,3 @@ CREATE TABLE [dbo].[LAReport]
 )
 ON [OWP_Data];
 GO
-
-ALTER TABLE [dbo].[LAReport]
-ADD [ESoccer6Mins]   INT NULL;
