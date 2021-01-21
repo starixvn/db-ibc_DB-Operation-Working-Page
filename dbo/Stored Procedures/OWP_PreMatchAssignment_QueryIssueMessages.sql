@@ -16,6 +16,7 @@ Revisions:
 	20201119@Mira: is my message  - [Redmine: #145568]
 	20201202@Esther: Show message in the last 24 hours  - [Redmine: #145591]
 	20201201@Tyler: file upload  - [Redmine: #145591]
+	20210113@Mira: save message in chat board - [Redmine: #148266]
 */
 
     BEGIN
@@ -39,11 +40,13 @@ Revisions:
                         OR f.FileId IS NULL
                    THEN 0
                    ELSE 1
-               END AS 'IsFileAvailable'
+               END AS 'IsFileAvailable',
+			   im.IsSaved,
+			   im.PreMatchIssueMessageId
         FROM dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchIssue] AS i WITH(NOLOCK) ON im.PreMatchIssueId = i.PreMatchIssueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON u.UserId = im.UserId
-             LEFT JOIN dbo.[FileUpload] AS f ON im.FileId = f.FileId
+             LEFT JOIN dbo.[FileUpload] AS f WITH(NOLOCK) ON im.FileId = f.FileId
         WHERE i.PreMatchIssueId = @PreMatchIssueId
         ORDER BY CreatedDate ASC;
         SELECT DATEADD(HOUR, 12, GETDATE());
