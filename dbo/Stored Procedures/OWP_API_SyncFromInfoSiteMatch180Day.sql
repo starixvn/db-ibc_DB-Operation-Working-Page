@@ -18,6 +18,7 @@ AS
 	20201125@Carlos.nguyen: Initial SP - [Redmine: #145592]
 	20210106@Carlos.nguyen:  Enhance insert data NULL for Early Matches - [Redmine: #148284]
 	=> This enhance to fix agent.split object not set reference in case event upload
+	20210128@CarlosNguyen: Sync MatchCode - [Redmine: #149347]
 	
 */
 BEGIN
@@ -158,7 +159,8 @@ BEGIN
 		Website3,
 		Website4,
 		IPTV,
-		ETPK
+		ETPK,
+		MatchCode
 	)
 	SELECT 
 		tblim.OWPLeagueId,
@@ -172,6 +174,7 @@ BEGIN
 		tblim.AdminSiteId,
 		tblim.UpdatedTime,
 		tblim.IsNeutral,
+		'',
 		'',
 		'',
 		'',
