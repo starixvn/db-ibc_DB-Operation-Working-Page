@@ -22,6 +22,7 @@ AS
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 	20201105@Jacob: New column ETPK - [Redmine: #144570]
 	20201106@Jacob: Increase casting size - [Redmine: #144570]
+	20210128@CarlosNguyen: Sync MatchCode - [Redmine: #149347]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -72,6 +73,7 @@ BEGIN
 		,[IsNeutral] BIT NULL
 		,[IPTV] NVARCHAR(2000) NULL
 		,[ETPK] NVARCHAR(2000) NULL
+		,[MatchCode] NVARCHAR(50)
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -97,6 +99,7 @@ BEGIN
 		,[IsNeutral]
 		,[IPTV]
 		,[ETPK]
+		,[MatchCode]
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -120,6 +123,7 @@ BEGIN
 		,[IsNeutral]
 		,[IPTV]
 		,[ETPK]
+		,[MatchCode]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
@@ -142,7 +146,8 @@ BEGIN
 			,[Website4] [nvarchar](1000)
 			,[IsNeutral] BIT
 			,[Iptv][nvarchar](2000)
-			,[ETPK][nvarchar](2000) 
+			,[ETPK][nvarchar](2000)
+			,[MatchCode][nvarchar](50) 
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -325,7 +330,8 @@ BEGIN
 			,[IsNeutral]
 			,[IPTV]
 			,[ETPK]
-			,[IsLive]			
+			,[IsLive]	
+			,[MatchCode]		
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -360,6 +366,7 @@ BEGIN
 				,t.[IPTV]=s.[IPTV]
 				,t.[ETPK]=s.[ETPK]
 				,t.[IsLive]=s.[IsLive]
+				,t.[MatchCode]=s.[MatchCode]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -391,6 +398,7 @@ BEGIN
 				,[IPTV]
 				,[ETPK]
 				,[IsLive]
+				,[MatchCode]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -421,6 +429,7 @@ BEGIN
 				,[IPTV]
 				,s.[ETPK]
 				,[IsLive]
+				,[MatchCode]
 				);
 
 	DROP TABLE #tblInfoSiteMatch

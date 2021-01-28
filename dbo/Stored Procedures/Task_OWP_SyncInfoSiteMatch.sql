@@ -1,7 +1,6 @@
 ﻿USE [bodb_OWP]
 GO
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 01/13/2021 13:45:09 ******/
+/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 01/28/2021 13:54:44 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -38,6 +37,7 @@ AS
 	20200813@Jacob: Prematch Assignment - [Redmine: #138643]
 	20201106@Jacob: Increase casting size - [Redmine: #144570]
 	20210113@carlos.nguyen: Sync AdminSiteID on Interval Process- [Redmine: #148606]
+	20210128@carlos.nguyen: Display Match Code - [Redmine: #149347]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -87,6 +87,7 @@ BEGIN
 		,IsSync BIT NOT NULL
 		,IsNeutral BIT NOT NULL
 		,MatchId INT
+		,MatchCode NVARCHAR(50)
 		);
 
 	CREATE TABLE #tblSimilarMatchInfo (
@@ -148,6 +149,7 @@ BEGIN
 		,IsSync
 		,IsNeutral
 		,MatchId
+		,MatchCode
 		)
 	SELECT m.OWPMatchId
 		,m.InfoSiteMatchId
@@ -158,6 +160,7 @@ BEGIN
 		,1
 		,ISNULL(im.IsNeutral,0)
 		,im.AdminSiteMatchId
+		,im.MatchCode
 	FROM (
 		SELECT m.OWPMatchId
 			,m.EventDateTime
@@ -281,6 +284,7 @@ BEGIN
 		,OldAwayId INT NOT NULL
 		,IsNeutral BIT NOT NULL
 		,MatchId INT
+		,MatchCode NVARCHAR(50)
 		);
 
 	CREATE TABLE #tblAssigneeReceiver (
@@ -300,20 +304,23 @@ BEGIN
 		,om.OWPAwayId = tm.OWPAwayId
 		,om.IsNeutral = tm.IsNeutral
 		,om.MatchId=tm.MatchId
+		,om.MatchCode= tm.MatchCode
 	OUTPUT DELETED.OWPMatchId
 		,DELETED.OWPLeagueId
 		,DELETED.OWPHomeId
 		,DELETED.OWPAwayId
 		,DELETED.IsNeutral
 		,DELETED.MatchId
-	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral,MatchId)
+		,DELETED.MatchCode
+	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral,MatchId, MatchCode)
 	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 	INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
 	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR
 	 om.OWPHomeId <> tm.OWPHomeId OR
 	 om.OWPAwayId <> tm.OWPAwayId OR
 	 om.IsNeutral <> tm.IsNeutral OR
-	 om.MatchId <> tm.MatchId
+	 om.MatchId <> tm.MatchId OR
+	 om.MatchCode<>tm.MatchCode
 
 	-- sync TVIds
 	TRUNCATE TABLE #tblMatchChangeLog
@@ -920,4 +927,5 @@ BEGIN
 	
 	DROP TABLE #tblMatchChangeLog
 END;
+
 
