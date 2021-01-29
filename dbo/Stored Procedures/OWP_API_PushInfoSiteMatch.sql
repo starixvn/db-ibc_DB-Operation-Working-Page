@@ -152,11 +152,12 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
+
 	-- not process on records deleted or not updated
 	DELETE tism
 	FROM #tblInfoSiteMatch AS tism
 	INNER JOIN dbo.InfoSiteMatch AS dism WITH (NOLOCK) ON tism.InfoSiteMatchId = dism.InfoSiteMatchId
-	WHERE (tism.UpdatedTime = dism.UpdatedTime AND tism.IsLive = dism.IsLive) OR dism.IsDeleted = 1 
+	WHERE dism.IsDeleted = 1 
 
 	-- insert new league
 	INSERT INTO dbo.OWPLeague (OWPLeagueName)
@@ -429,9 +430,10 @@ BEGIN
 				,[IPTV]
 				,s.[ETPK]
 				,[IsLive]
-				,[MatchCode]
+				,s.[MatchCode]
 				);
 
+	
 	DROP TABLE #tblInfoSiteMatch
 
 	DROP TABLE #tblTextList

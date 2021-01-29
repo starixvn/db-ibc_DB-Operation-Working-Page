@@ -1,6 +1,7 @@
 ﻿USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 01/28/2021 13:54:44 ******/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 02/01/2021 10:44:28 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -95,6 +96,7 @@ BEGIN
 		,OWPLeagueId INT NOT NULL
 		,OWPHomeId INT NOT NULL
 		,OWPAwayId INT NOT NULL
+		,MatchCode INT
 		);
 
 	CREATE TABLE #tblAssignee (
@@ -193,16 +195,19 @@ BEGIN
 			,OWPLeagueId
 			,OWPHomeId
 			,OWPAwayId
+			,MatchCode
 			)
 		SELECT EventDate
 			,OWPLeagueId
 			,OWPHomeId
 			,OWPAwayId
+			,MatchCode
 		FROM #tblMatch
 		GROUP BY EventDate
 			,OWPLeagueId
 			,OWPHomeId
 			,OWPAwayId
+			,MatchCode
 		HAVING COUNT(1) > 1;
 
 		UPDATE m
@@ -215,6 +220,7 @@ BEGIN
 			AND m.OWPLeagueId = mi.OWPLeagueId
 			AND m.OWPHomeId = mi.OWPHomeId
 			AND m.OWPAwayId = mi.OWPAwayId
+			AND m.MatchCode=m.MatchCode
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 		WHERE m.IsSync = 1;
 
@@ -927,5 +933,6 @@ BEGIN
 	
 	DROP TABLE #tblMatchChangeLog
 END;
+
 
 
