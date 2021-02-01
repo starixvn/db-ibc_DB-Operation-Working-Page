@@ -1,7 +1,7 @@
-﻿USE [bodb_OWP]
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+USE [bodb_OWP]
 GO
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 02/01/2021 10:44:28 ******/
+/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 02/01/2021 14:35:39 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -209,7 +209,7 @@ BEGIN
 			,OWPAwayId
 			,MatchCode
 		HAVING COUNT(1) > 1;
-
+		
 		UPDATE m
 		SET m.OWPLeagueId = om.OWPLeagueId
 			,m.OWPHomeId = om.OWPHomeId
@@ -303,6 +303,7 @@ BEGIN
 		OWPMatchId INT NOT NULL
 	);
 
+
 	-- sync Event
 	UPDATE om
 	SET om.OWPLeagueId = tm.OWPLeagueId
@@ -326,7 +327,7 @@ BEGIN
 	 om.OWPAwayId <> tm.OWPAwayId OR
 	 om.IsNeutral <> tm.IsNeutral OR
 	 om.MatchId <> tm.MatchId OR
-	 om.MatchCode<>tm.MatchCode
+	 ISNULL(om.MatchCode, '') <> ISNULL(tm.MatchCode, '')
 
 	-- sync TVIds
 	TRUNCATE TABLE #tblMatchChangeLog
