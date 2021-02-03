@@ -50,6 +50,7 @@ Revisions:
 	20190815@Kane.Le: Get LastUpdated note - [Feature: #117960]
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200713@Carlos.Nguyen: Build HomeName in live game list - [Redmine: #137417]
+	20210128@CarlosNguyen: Query MatchCode - [Redmine: #149347]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -140,6 +141,7 @@ BEGIN
 		,IsOneHourToKickOffTime BIT
 		,IsFiltered BIT
 		,IsNeutral BIT
+		,MatchCode NVARCHAR(50)
 		)
 
 	CREATE TABLE #tblMatchFiltered (
@@ -147,6 +149,7 @@ BEGIN
 		,ParentMatchId INT
 		,MinorBettypeId INT
 		,IsNeutral BIT
+		,MatchCode NVARCHAR(50)
 		)
 
 	CREATE TABLE #tblMatchSetting (
@@ -216,6 +219,7 @@ BEGIN
 			,IsMinorMatch
 			,IsAllowedToViewDetail
 			,IsNeutral
+			,MatchCode
 			)
 		SELECT om.OWPMatchId
 			,ISNULL(mm.ParentMatchId, om.OWPMatchId)
@@ -226,6 +230,7 @@ BEGIN
 				END
 			,1
 			,IsNeutral
+			,om.MatchCode
 		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 			INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = om.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
@@ -242,6 +247,7 @@ BEGIN
 			,IsMinorMatch
 			,IsAllowedToViewDetail
 			,IsNeutral
+			,MatchCode
 			)
 			--get match can view Live Detail
 		SELECT om.OWPMatchId
@@ -253,6 +259,7 @@ BEGIN
 				END
 			,1
 			,om.IsNeutral
+			,om.MatchCode
 		FROM dbo.OWPMatch AS om WITH (NOLOCK)
 			INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON mi.OWPMatchId = om.OWPMatchId
 			LEFT JOIN dbo.MinorMatch AS mm WITH (NOLOCK) ON mm.MinorMatchId = om.OWPMatchId
@@ -833,11 +840,13 @@ BEGIN
 		,ParentMatchId
 		,MinorBettypeId
 		,IsNeutral
+		,MatchCode
 		)
 	SELECT tm.OWPMatchId
 		,tm.ParentMatchId
 		,tm.MinorBettypeId
 		,tm.IsNeutral
+		,tm.MatchCode
 	FROM #tblMatch AS tm
 	WHERE tm.IsFiltered = 1
 
@@ -847,11 +856,13 @@ BEGIN
 		,ParentMatchId
 		,MinorBettypeId
 		,IsNeutral
+		,MatchCode
 		)
 	SELECT mf.ParentMatchId
 		,mf.ParentMatchId
 		,NULL
 		,mf.IsNeutral
+		,mf.MatchCode
 	FROM #tblMatchFiltered AS mf
 	WHERE mf.MinorBettypeId IN (@Specific15Mins, @Specific10Mins, @FastMarket, @AllInOne)
 		AND NOT EXISTS (
@@ -866,11 +877,13 @@ BEGIN
 		,ParentMatchId
 		,MinorBettypeId
 		,IsNeutral
+		,MatchCode
 		)
 	SELECT tm.OWPMatchId
 		,tm.ParentMatchId
 		,tm.MinorBettypeId
 		,tm.IsNeutral
+		,tm.MatchCode
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS tm ON tm.ParentMatchId = mf.OWPMatchId
 		AND tm.IsMinorMatch = 1
@@ -886,6 +899,7 @@ BEGIN
 		,minor1.ParentMatchId
 		,minor1.MinorBettypeId
 		,mf.IsNeutral
+		,mf.MatchCode
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatch AS minor ON minor.OWPMatchId = mf.OWPMatchId
 		AND minor.IsMinorMatch = 1
@@ -936,6 +950,7 @@ BEGIN
 		,tm.Phone
 		,tm.WatchBet
 		,tm.Channel
+		,tm.MatchCode
 		,STUFF((
 				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)

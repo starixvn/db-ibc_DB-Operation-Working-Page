@@ -28,6 +28,7 @@ AS
 	20200714@Esther.Nguyen: Build Home Name(N) - [Redmine: #137417]
 	20200722@Esther.Nguyen: Ready to Trade Status - [Redmine: #137751]
 	20200824@Tyler.Dang: Query trade ready date time - [Redmine: #140194]
+	20210128@CarlosNguyen: Query MatchCode - [Redmine: #149347]
 */
 BEGIN
 	DECLARE @FromTime DATETIME
@@ -402,6 +403,7 @@ BEGIN
 		,inf.Phone
 		,inf.WB AS WatchBet
 		,inf.Channel
+		,om.MatchCode
 		,STUFF((
 				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)
