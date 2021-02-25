@@ -20,8 +20,10 @@ Revisions:
                a.UserId, 
                a.GroupName, 
                a.ExtraTime, 
-               o.KickOffTime
+               o.KickOffTime,
+			   u.Username
         FROM dbo.AutoAssignmentResult a
              INNER JOIN dbo.OWPMatch o ON o.OWPMatchId = a.OWPMatchId
+             INNER JOIN dbo.[User] u ON u.UserId = a.UserId
         WHERE a.RequestId = @RequestId;
     END;
