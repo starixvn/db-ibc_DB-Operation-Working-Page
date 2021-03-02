@@ -1,13 +1,11 @@
 USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_OSLiveGameAssignment_Query]    Script Date: 01/20/2021 11:23:34 ******/
+/****** Object:  StoredProcedure [dbo].[OWP_OSLiveGameAssignment_Query]    Script Date: 03/08/2021 10:53:31 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-  
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/  
-  
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[OWP_OSLiveGameAssignment_Query] @FromDate DATE
 														,@ToDate DATE
 														,@Sports VARCHAR(500)
@@ -20,7 +18,8 @@ Task : Implement OS Live Game List
 DB: bodb_OWP  
   
 Revisions:  
- 20210113@Esther: Init SP [Redmine: #146963]  
+ 20210113@Esther: Init SP [Redmine: #146963] 
+ 20210309@Carlos.Nguyen: Enhance OS Live Assignment - Phase 1 [Redmine: #150978]
 */  
   
    BEGIN  
@@ -100,7 +99,7 @@ Revisions:
 			 INNER JOIN @tblMatchStatuses AS  tblms ON tblms.matchStatuses= m.MatchStatus
              INNER JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
 		WHERE m.EventDate BETWEEN @FromDate AND @ToDate
-  
+		
 		SELECT m.[OSMatchId],   
                m.[League],   
                m.[Home],   
@@ -119,6 +118,7 @@ Revisions:
                m.[WB],   
                m.[Remark]
         FROM @tblOsMatch m
+        ORDER BY m.[DateTime] ASC
  
         -- Select OSAssignment  
         SELECT osa.[OSMatchId],   
