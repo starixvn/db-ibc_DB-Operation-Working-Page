@@ -20,7 +20,7 @@ Revisions:
                a.UserId, 
                a.GroupName, 
                a.ExtraTime, 
-               o.KickOffTime,
+               o.EventDateTime,
 			   u.Username
         FROM dbo.AutoAssignmentResult a
              INNER JOIN dbo.OWPMatch o ON o.OWPMatchId = a.OWPMatchId
