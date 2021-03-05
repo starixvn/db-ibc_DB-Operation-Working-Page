@@ -1,5 +1,6 @@
-CREATE PROCEDURE OWP_AutoAssignment_GetLARealAssignment @UserIds NVARCHAR(MAX),
-															@EventDate DATE
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+CREATE PROCEDURE OWP_AutoAssignment_GetLARealAssignment @UserIds   NVARCHAR(MAX), 
+                                                        @EventDate DATE
 AS
 
 /*
@@ -19,17 +20,31 @@ Revisions:
         INSERT INTO @tblUserId
                SELECT DISTINCT 
                       [Value]
-               FROM fnc_SplitString(@UserIds, ',') u OPTION(MAXRECURSION 0);      
-
-        -- Result
-        SELECT u.Username,
-		rg.[Value] 'Group',
-		rl.[Value] 'Level'
-		FROM dbo.[User] u
-		inner join @tblUserId ud on ud.UserId = u.UserId
-		left join dbo.[RefResource] rg on rg.ResourceId = u.GroupId AND rg.RefName = 'UserGroup'
-		left join dbo.[RefResource] rl on rl.ResourceId = u.[Level] AND rl.RefName = 'UserLevel'
-		left join dbo.[EmployeeWorkingShift] ws on ws.EmployeeId = u.UserId AND ws.ShiftDate = @EventDate;
-
-		DELETE @tblUserId;
+               FROM fnc_SplitString(@UserIds, ',') u OPTION(MAXRECURSION 0);
+        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '04:00:00');
+        DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '11:59:59');
+        SELECT DISTINCT 
+               a.UserId, 
+               a.AssignmentId, 
+               p.ProviderName, 
+               mn.MinorBettypeId, 
+               ma.OWPMatchId, 
+               mn.ParentMatchId, 
+               ma.EventDateTime,
+			   l.OWPLeagueName,
+			   a.AssignmentNote
+        FROM dbo.Assignment a WITH(NOLOCK)
+             INNER JOIN @tblUserId ids ON ids.UserId = a.UserId
+             INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = a.OWPMatchId
+             INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
+             INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN dbo.MatchProvider mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
+             LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
+             LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
+        WHERE mi.MatchStatus = 'Live'
+              AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
+              AND l.OWPLeagueName NOT LIKE '%SABA%'
+        ORDER BY UserId ASC, 
+                 ma.EventDateTime ASC;
+        DELETE @tblUserId;
     END;
