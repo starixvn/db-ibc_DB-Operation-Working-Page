@@ -20,6 +20,7 @@ Revisions:
         (OSMatchId     INT, 
          HashKey       VARCHAR(200), 
          Sport         VARCHAR(50), 
+         MatchNo	   DOUBLE PRECISION,
          MatchStatus   VARCHAR(15), 
          EventDateTime DATETIME, 
          LeagueId      INT, 
@@ -44,7 +45,8 @@ Revisions:
         INSERT INTO #tmpTable
                SELECT 0, 
                       HashKey, 
-                      Sport, 
+                      Sport,
+                      MatchNo,
                       MatchStatus, 
                       [DateTime], 
                       0, 
@@ -90,6 +92,7 @@ Revisions:
            AND m.EventDateTime = om.EventDateTime
             WHEN MATCHED
             THEN UPDATE SET 
+							om.[MatchNo]= m.[MatchNo],
                             om.[MatchStatus] = m.[MatchStatus], 
                             om.[Sport] = m.[Sport], 
                             om.[Category] = m.[Category], 
@@ -108,6 +111,7 @@ Revisions:
               INSERT([LeagueId], 
                      [HomeName], 
                      [AwayName], 
+                     [MatchNo],
                      [MatchStatus], 
                      [EventDate], 
                      [EventDateTime], 
@@ -127,6 +131,7 @@ Revisions:
         (m.[LeagueId], 
          m.[Home], 
          m.[Away], 
+         m.[MatchNo],
          m.[MatchStatus], 
          m.[EventDateTime], 
          m.[EventDateTime], 
