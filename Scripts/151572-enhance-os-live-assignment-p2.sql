@@ -9,4 +9,5 @@ Revisions:
 	20221203@Tyler: Enhance OS Live Assignment - Phase 2 - [Redmine: #151572]
 */
 ALTER TABLE OSMatch
-ADD MatchNo DOUBLE PRECISION
+ADD MatchNo DOUBLE PRECISION, Reporter VARCHAR(200);
+
