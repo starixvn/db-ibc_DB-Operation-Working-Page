@@ -21,8 +21,7 @@ Revisions:
          HashKey       VARCHAR(200), 
          Sport         VARCHAR(50), 
          MatchStatus   VARCHAR(15), 
-         [DateTime]    DATETIME, 
-         EventDate     DATE, 
+         EventDateTime DATETIME, 
          LeagueId      INT, 
          League        NVARCHAR(500), 
          Home          NVARCHAR(200), 
@@ -48,7 +47,6 @@ Revisions:
                       Sport, 
                       MatchStatus, 
                       [DateTime], 
-                      [DateTime], 
                       0, 
                       League, 
                       Home, 
@@ -63,8 +61,8 @@ Revisions:
                       [Provider], 
                       OtherProvider, 
                       MatchOffer
-               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchStatus VARCHAR(15), [DateTime] DATETIME, EventDate DATETIME, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000))
-               ORDER BY EventDate ASC;
+               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchStatus VARCHAR(15), [DateTime] DATETIME, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000))
+               ORDER BY [DateTime] ASC;
         EXEC sp_xml_removedocument 
              @idoc;
 
@@ -89,11 +87,10 @@ Revisions:
         ON m.LeagueId = om.LeagueId
            AND m.Home = om.HomeName
            AND m.Away = om.AwayName
-           AND m.[EventDate] = om.EventDate
+           AND m.EventDateTime = om.EventDateTime
             WHEN MATCHED
             THEN UPDATE SET 
                             om.[MatchStatus] = m.[MatchStatus], 
-                            om.[EventDateTime] = m.[DateTime], 
                             om.[Sport] = m.[Sport], 
                             om.[Category] = m.[Category], 
                             om.[NoHDP] = m.[NoHDP], 
@@ -131,8 +128,8 @@ Revisions:
          m.[Home], 
          m.[Away], 
          m.[MatchStatus], 
-         m.[EventDate], 
-         m.[DateTime], 
+         m.[EventDateTime], 
+         m.[EventDateTime], 
          m.[Sport], 
          m.[Category], 
          m.[NoHDP], 
@@ -155,7 +152,7 @@ Revisions:
              INNER JOIN dbo.OSMatch om WITH(NOLOCK) ON m.LeagueId = om.LeagueId
                                                        AND m.Home = om.HomeName
                                                        AND m.Away = om.AwayName
-                                                       AND m.[DateTime] = om.[EventDateTime];
+                                                       AND m.[EventDateTime] = om.[EventDateTime];
 
         -- SELECT the result
         SELECT HashKey, 
