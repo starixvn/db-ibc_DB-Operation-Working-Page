@@ -19,6 +19,7 @@ Revisions:
         FROM dbo.custInfo AS ci WITH(NOLOCK)
         WHERE ci.closed = 0
               AND ci.reject = 0
-              AND ci.[Enabled] = 1;
+              AND ci.[Enabled] = 1
+			  AND ci.roleid > 4;
     END;
 GO
