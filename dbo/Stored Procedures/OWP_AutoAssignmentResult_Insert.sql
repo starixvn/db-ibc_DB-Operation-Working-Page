@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignmentResult_Insert] @RequestId VARCHAR(50)
+ALTER PROCEDURE [dbo].[OWP_AutoAssignmentResult_Insert] @RequestId VARCHAR(50)
 	,@Status INT
 	,@AutoAssignmentResultDoc NVARCHAR(MAX)
 	,@ErrCode INT  OUTPUT
@@ -58,13 +58,24 @@ BEGIN
 			,[Bettype]
 			,[UserId]
 			,[StatusCode]
+			,[GroupName]
+			,[ExtraTime]
 			)
 		SELECT @RequestId
 			,[OWPMatchId]
 			,[Bettype]
 			,NULLIF([UserId], '') AS [UserId]
 			,[StatusCode]
-		FROM OPENXML(@idoc, '/Root/Row', 1) WITH ([OWPMatchId] [int], [Bettype] [int], [UserId] [int], [StatusCode] [int])
+			,[Group]
+			,[ExtraTime]
+		FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
+			[OWPMatchId] [int]
+			,[Bettype] [int]
+			,[UserId] [int]
+			,[StatusCode] [int]
+			,[Group] [nvarchar](200)
+			,[ExtraTime] [nvarchar](10)
+			)
 
 		EXEC sp_xml_removedocument @idoc
 	END
