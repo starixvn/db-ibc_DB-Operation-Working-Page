@@ -20,6 +20,8 @@ Revisions:
         (OSMatchId     INT, 
          HashKey       VARCHAR(200), 
          Sport         VARCHAR(50), 
+         MatchNo	   DOUBLE PRECISION,
+		 Reporter	   VARCHAR(2000),
          MatchStatus   VARCHAR(15), 
          EventDateTime DATETIME, 
          LeagueId      INT, 
@@ -44,7 +46,9 @@ Revisions:
         INSERT INTO #tmpTable
                SELECT 0, 
                       HashKey, 
-                      Sport, 
+                      Sport,
+                      MatchNo,
+					  Reporter,
                       MatchStatus, 
                       [DateTime], 
                       0, 
@@ -61,7 +65,7 @@ Revisions:
                       [Provider], 
                       OtherProvider, 
                       MatchOffer
-               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchStatus VARCHAR(15), [DateTime] DATETIME, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000))
+               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchNo DOUBLE PRECISION, Reporter VARCHAR(2000), MatchStatus VARCHAR(15), [DateTime] DATETIME, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000))
                ORDER BY [DateTime] ASC;
         EXEC sp_xml_removedocument 
              @idoc;
@@ -90,6 +94,8 @@ Revisions:
            AND m.EventDateTime = om.EventDateTime
             WHEN MATCHED
             THEN UPDATE SET 
+							om.[MatchNo]= m.[MatchNo],
+							om.[Reporter]= m.[Reporter],
                             om.[MatchStatus] = m.[MatchStatus], 
                             om.[Sport] = m.[Sport], 
                             om.[Category] = m.[Category], 
@@ -108,6 +114,8 @@ Revisions:
               INSERT([LeagueId], 
                      [HomeName], 
                      [AwayName], 
+                     [MatchNo],
+					 [Reporter],
                      [MatchStatus], 
                      [EventDate], 
                      [EventDateTime], 
@@ -127,6 +135,8 @@ Revisions:
         (m.[LeagueId], 
          m.[Home], 
          m.[Away], 
+         m.[MatchNo],
+		 m.[Reporter],
          m.[MatchStatus], 
          m.[EventDateTime], 
          m.[EventDateTime], 
