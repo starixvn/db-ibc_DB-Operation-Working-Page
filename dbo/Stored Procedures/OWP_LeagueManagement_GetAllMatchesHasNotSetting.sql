@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_LeagueManagement_GetAllMatchesHasNotSetting] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_LeagueManagement_GetNoSettingsMatches] @EventDate DATE
 AS
 
 /*
@@ -25,10 +25,10 @@ Revisions:
         INSERT INTO #tblNotSettingLeague([LeagueId])
                SELECT DISTINCT 
                       o.OWPLeagueId
-               FROM dbo.OWPMatch o
-                    INNER JOIN dbo.OWPLeague ol ON ol.OWPLeagueId = o.OWPLeagueId
-                    LEFT JOIN dbo.LeagueSetting l ON l.LeagueId = o.OWPLeagueId
-               WHERE l.LeagueId IS NULL
+               FROM dbo.OWPMatch o WITH(NOLOCK)
+                    INNER JOIN dbo.OWPLeague ol WITH(NOLOCK) ON ol.OWPLeagueId = o.OWPLeagueId
+                    LEFT JOIN dbo.NewLeagueSetting l WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
+               WHERE l.OWPLeagueId IS NULL
                      AND o.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
                      AND ol.OWPLeagueName NOT LIKE '%Friendly%'
                      AND ol.OWPLeagueName NOT LIKE '%Tournament%';
@@ -38,7 +38,7 @@ Revisions:
                SELECT DISTINCT 
                       o.OWPMatchId
                FROM dbo.OWPMatch o
-                    LEFT JOIN dbo.MatchSetting ol ON ol.OWPMatchId = o.OWPMatchId
+                    LEFT JOIN dbo.MatchSetting ol WITH(NOLOCK) ON ol.OWPMatchId = o.OWPMatchId
                     LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON o.OWPMatchId = mm.MinorMatchId
                WHERE o.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
                      AND mm.ParentMatchId IS NULL;
@@ -57,8 +57,8 @@ Revisions:
             WHERE mp.OWPMatchId = o.OWPMatchId FOR XML PATH('')
         ), 1, 2, '') AS 'TV'
         FROM dbo.OWPMatch o
-             INNER JOIN dbo.OWPLeague ol ON ol.OWPLeagueId = o.OWPLeagueId
-             INNER JOIN #tblOWPMatchId t ON t.OWPMatchId = o.OWPMatchId;
+             INNER JOIN dbo.OWPLeague ol WITH(NOLOCK) ON ol.OWPLeagueId = o.OWPLeagueId
+             INNER JOIN #tblOWPMatchId t WITH(NOLOCK) ON t.OWPMatchId = o.OWPMatchId;
 
         -- Select Match Setting
         SELECT s.[OWPMatchId], 
@@ -67,7 +67,7 @@ Revisions:
                [Maxbet]
         FROM [dbo].[MatchSetting] s WITH(NOLOCK)
              INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
-             INNER JOIN #tblOWPMatchId t ON t.OWPMatchId = m.OWPMatchId;
+             INNER JOIN #tblOWPMatchId t WITH(NOLOCK) ON t.OWPMatchId = m.OWPMatchId;
 
         -- Drop temp table
         DROP TABLE #tblNotSettingLeague;
