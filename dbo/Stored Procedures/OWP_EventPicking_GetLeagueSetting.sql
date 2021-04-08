@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EventPicking_GetLeagueSetting]
+ALTER PROCEDURE [dbo].[OWP_EventPicking_GetLeagueSetting]
 AS
 /*  
  Created: Jack.Nguyen@20200707
@@ -8,6 +8,8 @@ AS
 
  Revisions:
 	20200707@Jack.Nguyen: Initial SP - [Redmine: #134339]
+	2020080407@carlos.Nguyen: Export picking priority - [Redmine: #150269]
+	
 */
    
 
@@ -33,6 +35,21 @@ SELECT ls.LeagueSettingId,
        ls.CN88MaxbetWD_OU,
        ls.CN88MaxbetWD_NoOfHDP,
 	   
+	    -- new
+	   ls.MaxbetWD_1H AS MaxbetWD_1HHDP,
+	   ls.MaxbetWD_1H AS MaxbetWD_1HOU,
+	   
+	   ls.MaxbetWK_1H AS MaxbetWK_1HHDP,
+	   ls.MaxbetWK_1H AS MaxbetWK_1HOU,
+	   
+	   ls.Spread_1HHDP,
+	   ls.Spread_1HOU,
+	   ls.MaxBet_FT1X2,
+	   ls.Speard_1X2,
+	   ls.MaxBet_1H1X2,
+	   --new
+	   
+	   l.IsBlackList,
        ls.MaxbetWK_MatchOffer, 
        ls.MaxbetWK_HDP, 
        ls.MaxbetWK_OU, 
