@@ -38,6 +38,7 @@ Revisions:
                SELECT DISTINCT 
                       o.OWPMatchId
                FROM dbo.OWPMatch o
+                    INNER JOIN #tblNotSettingLeague t ON t.LeagueId = o.OWPLeagueId
                     LEFT JOIN dbo.MatchSetting ol WITH(NOLOCK) ON ol.OWPMatchId = o.OWPMatchId
                     LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON o.OWPMatchId = mm.MinorMatchId
                WHERE o.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
