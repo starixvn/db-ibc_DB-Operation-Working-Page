@@ -121,6 +121,11 @@ Revisions:
                       END
                FROM #tmpTable;
 
+        SELECT LeagueSettingId, 
+               s.HasTV
+        FROM NewLeagueSetting s WITH(NOLOCK)
+             INNER JOIN #tmpTable t ON s.OWPLeagueId = t.OWPLeagueId;
+
         -- DROP tmpTable
         DROP TABLE #tmpTable;
     END;
