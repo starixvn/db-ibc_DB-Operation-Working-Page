@@ -68,17 +68,57 @@ Revisions:
         )
                SELECT DISTINCT 
                       OWPLeagueId, 
-                      HasTV, 
-                      MaxbetWD_1H, 
-                      MaxbetWD_HDP, 
-                      MaxbetWD_OU, 
-                      MaxbetWK_1H, 
-                      MaxbetWK_HDP, 
-                      MaxbetWK_OU, 
-                      Spread_1HHDP, 
-                      Spread_1HOU, 
-                      Spread_HDP, 
-                      Spread_OU
+                      HasTV,
+                      CASE
+                          WHEN MaxbetWD_1H = ''
+                          THEN NULL
+                          ELSE MaxbetWD_1H
+                      END,
+                      CASE
+                          WHEN MaxbetWD_HDP = ''
+                          THEN NULL
+                          ELSE MaxbetWD_HDP
+                      END,
+                      CASE
+                          WHEN MaxbetWD_OU = ''
+                          THEN NULL
+                          ELSE MaxbetWD_OU
+                      END,
+                      CASE
+                          WHEN MaxbetWK_1H = ''
+                          THEN NULL
+                          ELSE MaxbetWK_1H
+                      END,
+                      CASE
+                          WHEN MaxbetWK_HDP = ''
+                          THEN NULL
+                          ELSE MaxbetWK_HDP
+                      END,
+                      CASE
+                          WHEN MaxbetWK_OU = ''
+                          THEN NULL
+                          ELSE MaxbetWK_OU
+                      END,
+                      CASE
+                          WHEN Spread_1HHDP = ''
+                          THEN NULL
+                          ELSE Spread_1HHDP
+                      END,
+                      CASE
+                          WHEN Spread_1HOU = ''
+                          THEN NULL
+                          ELSE Spread_1HOU
+                      END,
+                      CASE
+                          WHEN Spread_HDP = ''
+                          THEN NULL
+                          ELSE Spread_HDP
+                      END,
+                      CASE
+                          WHEN Spread_OU = ''
+                          THEN NULL
+                          ELSE Spread_OU
+                      END
                FROM #tmpTable;
 
         -- DROP tmpTable
