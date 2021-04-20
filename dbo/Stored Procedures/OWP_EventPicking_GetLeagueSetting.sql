@@ -45,7 +45,7 @@ SELECT ls.LeagueSettingId,
 	   ls.Spread_1HHDP,
 	   ls.Spread_1HOU,
 	   ls.MaxBet_FT1X2,
-	   ls.Speard_1X2,
+	   ls.MaxBet_1X2Spread,
 	   ls.MaxBet_1H1X2,
 	   --new
 	   
