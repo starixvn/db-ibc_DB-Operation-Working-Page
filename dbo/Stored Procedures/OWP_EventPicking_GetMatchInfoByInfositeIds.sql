@@ -56,7 +56,7 @@ Revisions:
                FROM dbo.OWPMatch o WITH(NOLOCK)
                     LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON o.OWPMatchId = mm.MinorMatchId
                     INNER JOIN #tblOWPMatchByInfositeId t ON t.OWPMatchId = o.OWPMatchId
-               UNION
+               UNION ALL
                SELECT o.OWPMatchId, 
                       t.InfositeId, 
                       mm.MinorBettypeId, 
@@ -65,11 +65,16 @@ Revisions:
                     LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON o.OWPMatchId = mm.MinorMatchId
                     INNER JOIN #tblOWPMatchByInfositeId t ON t.OWPMatchId = mm.ParentMatchId;
 
+        -- Add index after insert
+        CREATE INDEX index_OWPMatchId ON #tblOWPMatch
+        (OWPMatchId
+        );
+
         -- Return match info
         SELECT t.OWPMatchId, 
                t.InfositeId, 
-			   mm.MinorBettypeId,
-			   mm.ParentMatchId,
+               mm.MinorBettypeId, 
+               mm.ParentMatchId, 
                o.MatchNo, 
                mi.MatchStatus, 
                o.OtherTime, 
@@ -77,7 +82,7 @@ Revisions:
                mi.Phone 'ReporterPhone'
         FROM #tblOWPMatchByInfositeId t
              INNER JOIN dbo.OWPMatch o WITH(NOLOCK) ON o.OWPMatchId = t.OWPMatchId
-			 LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON o.OWPMatchId = mm.MinorMatchId
+             LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON o.OWPMatchId = mm.MinorMatchId
              LEFT JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = t.OWPMatchId;
 
         -- Return assignment
@@ -90,15 +95,15 @@ Revisions:
                a.AssignmentNote, 
                minor.ParentMatchId
         FROM dbo.Assignment AS a WITH(NOLOCK)
-             INNER JOIN #tblOWPMatch AS ml WITH(NOLOCK) ON a.OWPMatchId = ml.owpmatchid
+             INNER JOIN #tblOWPMatch AS ml WITH(NOLOCK) ON a.OWPMatchId = ml.OWPMatchId
              LEFT JOIN dbo.MinorMatch AS minor WITH(NOLOCK) ON ml.OWPMatchId = minor.MinorMatchId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
         WHERE minor.MinorBettypeId IS NULL
-        UNION
+        UNION ALL
         SELECT ml.OWPMatchId, 
                mb.InheritedBettypeId AS Bettype, 
                minor.MinorBettypeId, 
-               a.UserId,
+               a.UserId, 
                u.Username, 
                a.AssignmentType, 
                a.AssignmentNote, 
