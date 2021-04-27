@@ -1,12 +1,11 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-USE [bodb_OWP]
+﻿USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 02/01/2021 14:35:39 ******/
+/****** Object:  StoredProcedure [dbo].[Task_OWP_SyncInfoSiteMatch]    Script Date: 04/27/2021 14:18:12 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[Task_OWP_SyncInfoSiteMatch]
 AS
 /*    
@@ -39,6 +38,7 @@ AS
 	20201106@Jacob: Increase casting size - [Redmine: #144570]
 	20210113@carlos.nguyen: Sync AdminSiteID on Interval Process- [Redmine: #148606]
 	20210128@carlos.nguyen: Display Match Code - [Redmine: #149347]
+	20210427@carlos.nguyen: Match-code is not displayed - [Redmine: #154164]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -96,7 +96,7 @@ BEGIN
 		,OWPLeagueId INT NOT NULL
 		,OWPHomeId INT NOT NULL
 		,OWPAwayId INT NOT NULL
-		,MatchCode INT
+		,MatchCode NVARCHAR(50)
 		);
 
 	CREATE TABLE #tblAssignee (
@@ -220,7 +220,7 @@ BEGIN
 			AND m.OWPLeagueId = mi.OWPLeagueId
 			AND m.OWPHomeId = mi.OWPHomeId
 			AND m.OWPAwayId = mi.OWPAwayId
-			AND m.MatchCode=m.MatchCode
+			AND m.MatchCode = mi.MatchCode
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 		WHERE m.IsSync = 1;
 
