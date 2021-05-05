@@ -48,7 +48,7 @@ Revisions:
                WHERE NOT EXISTS
                (
                    SELECT 1
-                   FROM dbo.InfoSiteMatch i
+                   FROM dbo.InfoSiteMatch i WITH(NOLOCK)
                    WHERE i.InfoSiteMatchId = t.ParentMatchId
                );
 
@@ -56,14 +56,14 @@ Revisions:
         UPDATE i
           SET 
               i.InfoSiteMatchId = t.NewInfositeMatchId
-        FROM dbo.InfoSiteMatch i WITH(NOLOCK)
+        FROM dbo.InfoSiteMatch i WITH(ROWLOCK)
              INNER JOIN #tmpExistDataTable t ON i.InfoSiteMatchId = t.OldInfositeMatchId;
 
         -- Update OWPMatch
         UPDATE o
           SET 
               o.InfoSiteMatchId = t.NewInfositeMatchId
-        FROM dbo.OWPMatch o WITH(NOLOCK)
+        FROM dbo.OWPMatch o WITH(ROWLOCK)
              INNER JOIN #tmpExistDataTable t ON o.InfoSiteMatchId = t.OldInfositeMatchId;
 
         -- DROP tmpTable
