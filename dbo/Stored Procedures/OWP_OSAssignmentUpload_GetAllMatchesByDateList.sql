@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201224@Mira: Init SP [Redmine: #146962]
+	202010506@Tyler: Get more props [Redmine: #153499]
 */
 
     BEGIN
@@ -50,10 +51,13 @@ Revisions:
                a.[AssignmentType], 
                a.[BettypeName], 
                a.[UserId], 
-               a.[AssignmentNote]
+               a.[AssignmentNote],
+			   u.[Username],
+			   u.[Nickname]
         FROM dbo.OSAssignment a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
-             INNER JOIN @tempMatch t ON t.EventDate = m.EventDate;
+             INNER JOIN @tempMatch t ON t.EventDate = m.EventDate
+			 INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId;
 
         --- Select OSMaxbet
         SELECT a.[OSMatchId], 
