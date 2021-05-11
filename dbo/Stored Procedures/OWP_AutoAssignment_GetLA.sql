@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetLA] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetLA] @EventDate DATE
 AS
 /*
 Created: @Carlos.Nguyen
@@ -10,6 +10,7 @@ DB: bodb_OWP
 Revisions:
 	20191004@Carlos.Nguyen: Initial SP - [Redmine: #121452]
 	20200427@Carlos.Nguyen: Update param [Redmine: #133428]
+	20210511@Mira: Auto trader assignment - [Redmine: #132710]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -28,7 +29,7 @@ BEGIN
 	SELECT DISTINCT
 		aur.RequestId,
 		au.OWPMatchId,
-		au.UserId,
+		au.UserId_LA 'UserId',
 		au.Bettype
 	FROM dbo.AutoAssignmentResult AS au WITH(NOLOCK)
 	INNER JOIN dbo.AutoAssignmentRequest AS aur WITH (NOLOCK)

@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetResult] @RequestId NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetResult] @RequestId NVARCHAR(MAX)
 AS
 
 /*
@@ -11,19 +11,24 @@ DB: bodb_OWP
 
 Revisions:
 	20201223@Mira: Init SP [Redmine: #146962]
+	20210511@Mira: Auto trader assignment - [Redmine: #132710]
 */
 
     BEGIN
         SET NOCOUNT ON;
         SELECT a.OWPMatchId, 
                a.Bettype, 
-               a.UserId, 
+               a.UserId_LA, 
+               a.UserId_FTHDP, 
+               a.UserId_1HHDP, 
+               a.UserId_FTOU, 
+               a.UserId_1HOU, 
                a.GroupName, 
                a.ExtraTime, 
-               o.EventDateTime,
-			   u.Username
+               o.EventDateTime, 
+               u.Username
         FROM dbo.AutoAssignmentResult a
              INNER JOIN dbo.OWPMatch o ON o.OWPMatchId = a.OWPMatchId
-             INNER JOIN dbo.[User] u ON u.UserId = a.UserId
+             INNER JOIN dbo.[User] u ON u.UserId = a.UserId_LA
         WHERE a.RequestId = @RequestId;
     END;
