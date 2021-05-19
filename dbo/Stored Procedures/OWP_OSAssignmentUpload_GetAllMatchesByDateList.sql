@@ -40,7 +40,8 @@ Revisions:
                m.[IPTV], 
                m.[WB], 
                m.[Remark], 
-               u.Username
+               u.Username,
+			   m.MatchNo
         FROM dbo.OSMatch m WITH(NOLOCK)
              INNER JOIN @tempMatch t ON m.EventDate = t.EventDate
              LEFT JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
