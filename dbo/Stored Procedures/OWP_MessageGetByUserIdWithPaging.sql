@@ -36,7 +36,7 @@ FROM
     SELECT ROW_NUMBER() OVER(
            ORDER BY mu.MessageId DESC) AS RowNumber, 
            mu.MessageId, 
-           MessageContent, 
+           REPLACE(REPLACE(MessageContent, '<b>', ''), '</b>', '') AS MessageContent, 
            IsViewed, 
            UserId, 
            CreatedBy, 
