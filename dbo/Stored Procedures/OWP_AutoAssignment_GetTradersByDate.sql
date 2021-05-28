@@ -53,6 +53,7 @@ Revisions:
                                                                  AND rb.ResourceId = ou.BetTypePreferencesId
                WHERE ou.[Level] <> @NullLevelId
                      AND LocationCode IS NOT NULL
+                     AND rb.[Value] IS NOT NULL -- Remove [BettypesPreferences] is NULL
                      AND ou.SectionId IN(3, 28); --'Live Trading-VN' and 'Live Trading-PH'
         SELECT DISTINCT 
                [TraderId], 
