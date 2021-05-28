@@ -20,6 +20,7 @@ DB: bodb_OWP
 Revisions:  
  20210113@Esther: Init SP [Redmine: #146963] 
  20210309@Carlos.Nguyen: Enhance OS Live Assignment - Phase 1 [Redmine: #150978]
+ 20210328@Carlos.Nguyen: Enhance OS Live Assignment - Phase 2 [Redmine: #155608]
 */  
   
    BEGIN  
@@ -106,7 +107,8 @@ Revisions:
              INNER JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
 		WHERE m.EventDate BETWEEN @FromDate AND @ToDate
 		
-		SELECT m.[OSMatchId],   
+		SELECT m.[OSMatchId],
+			   m.Sport,   
                m.[League],   
                m.[Home],   
                m.[Away],   
@@ -129,13 +131,13 @@ Revisions:
         ORDER BY m.[DateTime] ASC
  
         -- Select OSAssignment  
-        SELECT osa.[OSMatchId],   
+        SELECT osa.[OSMatchId], 
                osa.[AssignmentType],   
                osa.[BettypeName],   
                osa.[UserId],   
 			   u.[Username],
 			   u.Nickname,
-               osa.[AssignmentNote]  
+               osa.[AssignmentNote]
         FROM @tblOsMatch AS osm
 			INNER JOIN dbo.OSAssignment AS osa WITH(NOLOCK) ON osm.OSMatchId= osa.OSMatchId
 			LEFT JOIN dbo.[User] u WITH(NOLOCK) ON osa.UserId = u.UserId
