@@ -384,7 +384,8 @@ Revisions:
                END AS HasMessages, 
                i.IsRead, 
                n.PreMatchNoteId, 
-               n.HasNotes
+               n.HasNotes,
+               m.IsLive
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN @tblDayShiftTable AS l ON l.LeagueId = m.OWPLeagueId
              LEFT JOIN @tblInfoSiteMatchIssues AS i ON i.InfoSiteMatchId = m.InfoSiteMatchId
