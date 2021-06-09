@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopySingleShift] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopySingleShift] @ActorId INT
 	,@UserId INT
 	,@ShiftDate DATE
 	,@ShiftId INT
@@ -58,6 +58,7 @@ BEGIN
 			,ShiftEndTime
 			,ShiftId
 			,RefShiftId
+			,LastUpdated
 			)
 		VALUES (
 			@UserId
@@ -66,6 +67,7 @@ BEGIN
 			,@ShiftEndTime
 			,@ShiftId
 			,@RefShiftId
+			,DATEADD(HOUR, 12, GETDATE())
 			)
 	END
 	ELSE
@@ -75,6 +77,7 @@ BEGIN
 			,ShiftEndTime = @ShiftEndTime
 			,ShiftId = @ShiftId
 			,RefShiftId = @RefShiftId
+			,LastUpdated = DATEADD(HOUR, 12, GETDATE())
 		WHERE EmployeeId = @UserId
 			AND ShiftDate = @ShiftDate
 	END

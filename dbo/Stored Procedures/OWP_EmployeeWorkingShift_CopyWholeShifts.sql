@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWholeShifts] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWholeShifts] @ActorId INT
 	,@FromUserId INT
 	,@ToUserId INT
 	,@FromDate DATE
@@ -201,8 +201,15 @@ BEGIN
 		,ShiftEndTime
 		,ShiftId
 		,RefShiftId
+		,LastUpdated
 		)
-	SELECT EmployeeId, ShiftDate, ShiftStartTime, ShiftEndTime, ShiftId, RefShiftId
+	SELECT EmployeeId
+	, ShiftDate
+	, ShiftStartTime
+	, ShiftEndTime
+	, ShiftId
+	, RefShiftId
+	, DATEADD(HOUR, 12, GETDATE())
 	FROM @tblNewWorkingShift 
 
 	-- write log

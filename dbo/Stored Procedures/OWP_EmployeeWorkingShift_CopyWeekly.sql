@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWeekly] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWeekly] @ActorId INT
 	,@UserId INT
 	,@StartDateOfWeek DATE
 AS
@@ -32,6 +32,7 @@ BEGIN
 		,ShiftStartTime DATETIME
 		,ShiftEndTime DATETIME
 		,RefShiftId INT
+		,LastUpdated DATETIME
 		)
 	DECLARE @StartRun DATETIME
 		,@EndRun DATETIME
@@ -66,6 +67,7 @@ BEGIN
 		,DATEADD(DAY, 7, ShiftStartTime) AS ShiftStartTime
 		,DATEADD(DAY, 7, ShiftEndTime) AS ShiftEndTime
 		,RefShiftId
+		,LastUpdated =  DATEADD(HOUR, 12, GETDATE())
 	FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
 	WHERE EmployeeId = @UserId
 		AND ShiftDate >= @PreviousFromDate
@@ -85,6 +87,7 @@ BEGIN
 			,ShiftStartTime
 			,ShiftEndTime
 			,RefShiftId
+			,LastUpdated
 		FROM @CopyWorkingShift
 		) AS s ON s.EmployeeId = t.EmployeeId
 			AND s.ShiftDate = t.ShiftDate
@@ -94,6 +97,7 @@ BEGIN
 				,t.ShiftStartTime = s.ShiftStartTime
 				,t.ShiftEndTime = s.ShiftEndTime
 				,t.RefShiftId = s.RefShiftId
+				,t.LastUpdated=s.LastUpdated
 	WHEN NOT MATCHED BY TARGET THEN
 			INSERT (
 				EmployeeId
@@ -102,6 +106,7 @@ BEGIN
 				,ShiftStartTime
 				,ShiftEndTime
 				,RefShiftId
+				,LastUpdated
 				)
 			VALUES (
 				s.EmployeeId
@@ -110,6 +115,7 @@ BEGIN
 				,s.ShiftStartTime
 				,s.ShiftEndTime
 				,s.RefShiftId
+				,s.LastUpdated
 				);
 
 	-- write log

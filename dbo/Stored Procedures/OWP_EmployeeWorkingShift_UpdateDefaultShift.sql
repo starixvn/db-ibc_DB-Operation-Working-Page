@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateDefaultShift] @Actor INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateDefaultShift] @Actor INT
 	,@EmployeeId INT
 	,@DefaultShiftIds VARCHAR(100)
 	,@IsApplyCurrentWeek BIT
@@ -179,6 +179,7 @@ BEGIN
 							,t.ShiftStartTime = s.ShiftStartTime
 							,t.ShiftEndTime = s.ShiftEndTime
 							,t.RefShiftId = NULL
+							,t.LastUpdated=DATEADD(HOUR, 12, GETDATE())
 				WHEN NOT MATCHED BY target THEN
 						INSERT (
 							EmployeeId
@@ -186,6 +187,7 @@ BEGIN
 							,ShiftDate
 							,ShiftStartTime
 							,ShiftEndTime
+							,LastUpdated
 							)
 						VALUES (
 							s.EmployeeId
@@ -193,6 +195,7 @@ BEGIN
 							,s.ShiftDate
 							,s.ShiftStartTime
 							,s.ShiftEndTime
+							,DATEADD(HOUR, 12, GETDATE())
 							);
 			END
 

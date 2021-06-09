@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateShiftCode] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateShiftCode] @ActorId INT
 	,@EmployeeId INT
 	,@ShiftId INT
 	,@ShiftDate DATE
@@ -71,6 +71,7 @@ BEGIN
 			,ShiftStartTime = @ShiftStartTime
 			,ShiftEndTime = @ShiftEndTime
 			,RefShiftId = @RefShiftId
+			,LastUpdated = DATEADD(HOUR, 12, GETDATE())
 		WHERE EmployeeId = @EmployeeId
 			AND ShiftDate = @ShiftDate
 	END
@@ -83,6 +84,7 @@ BEGIN
 			,ShiftStartTime
 			,ShiftEndTime
 			,RefShiftId
+			,LastUpdated
 			)
 		VALUES (
 			@EmployeeId
@@ -91,6 +93,7 @@ BEGIN
 			,@ShiftStartTime
 			,@ShiftEndTime
 			,@RefShiftId
+			,DATEADD(HOUR, 12, GETDATE())
 			);
 	END
 

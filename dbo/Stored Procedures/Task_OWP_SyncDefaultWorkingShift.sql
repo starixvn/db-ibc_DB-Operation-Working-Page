@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift]
+ALTER PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift]
 	@CurrentDate DATETIME = NULL,
 	@SectionId INT=NULL,
 	@ActorId INT = 0
@@ -123,6 +123,7 @@ BEGIN
 		,ShiftDate
 		,ShiftStartTime
 		,ShiftEndTime
+		,LastUpdated
 		)
 	OUTPUT inserted.EmployeeId
 		,inserted.ShiftId
@@ -135,6 +136,7 @@ BEGIN
 		,ds.ShiftDate
 		,ds.ShiftStartDate + ds.ShiftStartTime
 		,ds.ShiftEndDate + ds.ShiftEndTime
+		,DATEADD(HOUR, 12, GETDATE())
 	FROM #tblDefaultWorkingShift AS ds WITH (NOLOCK)
 	WHERE ds.IsTimeShift = 1
 		AND NOT EXISTS (
@@ -150,6 +152,7 @@ BEGIN
 		,ds.ShiftDate
 		,NULL
 		,NULL
+		,DATEADD(HOUR, 12, GETDATE())
 	FROM #tblDefaultWorkingShift AS ds WITH (NOLOCK)
 	WHERE ds.IsTimeShift = 0
 		AND NOT EXISTS (
