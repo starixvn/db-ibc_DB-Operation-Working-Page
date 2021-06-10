@@ -24,7 +24,7 @@ Revisions:
          [Level]               INT, 
          [Role]                VARCHAR(20), 
          [BettypesPreferences] VARCHAR(10), 
-         [MaxGames]            INT
+         [MaxGames]            VARCHAR(10)
         );
 
         -- Select level
@@ -44,13 +44,15 @@ Revisions:
                       ou.[Level], 
                       r.[Value], 
                       rb.[Value], 
-                      ou.[MultipleGamesId]
+                      rm.[Value]
                FROM dbo.[User] AS ou WITH(NOLOCK)
                     LEFT JOIN dbo.UserRole AS ur WITH(NOLOCK) ON ur.UserId = ou.UserId
                     LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'UserRole'
                                                                 AND r.ResourceId = ou.SectionId
                     LEFT JOIN dbo.RefResource rb WITH(NOLOCK) ON rb.RefName = 'BetTypePreferences'
                                                                  AND rb.ResourceId = ou.BetTypePreferencesId
+                    LEFT JOIN dbo.RefResource rm WITH(NOLOCK) ON rm.RefName = 'MultipleGames'
+                                                                 AND rm.ResourceId = ou.BetTypePreferencesId
                WHERE ou.[Level] <> @NullLevelId
                      AND LocationCode IS NOT NULL
                      AND rb.[Value] IS NOT NULL -- Remove [BettypesPreferences] is NULL
@@ -60,7 +62,7 @@ Revisions:
                [Level], 
                [Role], 
                [BettypesPreferences], 
-               [MaxGames]
+               [MaxGames] 'MultipleGames'
         FROM #tblUser;
 
         -- select working shift
