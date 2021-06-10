@@ -57,14 +57,14 @@ Revisions:
                u4.Username 'Trader_FTOU', 
                u5.Username 'Trader_1HOU'
         FROM #tblRequest AS au WITH(NOLOCK)
-             INNER JOIN dbo.[User] AS u1 WITH(NOLOCK) ON au.UserId_LA = u1.UserId
-             INNER JOIN dbo.[User] AS u2 WITH(NOLOCK) ON au.UserId_FTHDP = u2.UserId
-             INNER JOIN dbo.[User] AS u3 WITH(NOLOCK) ON au.UserId_1HHDP = u3.UserId
-             INNER JOIN dbo.[User] AS u4 WITH(NOLOCK) ON au.UserId_FTOU = u4.UserId
-             INNER JOIN dbo.[User] AS u5 WITH(NOLOCK) ON au.UserId_1HOU = u5.UserId
+             LEFT JOIN dbo.[User] AS u1 WITH(NOLOCK) ON au.UserId_LA = u1.UserId
+             LEFT JOIN dbo.[User] AS u2 WITH(NOLOCK) ON au.UserId_FTHDP = u2.UserId
+             LEFT JOIN dbo.[User] AS u3 WITH(NOLOCK) ON au.UserId_1HHDP = u3.UserId
+             LEFT JOIN dbo.[User] AS u4 WITH(NOLOCK) ON au.UserId_FTOU = u4.UserId
+             LEFT JOIN dbo.[User] AS u5 WITH(NOLOCK) ON au.UserId_1HOU = u5.UserId
              LEFT JOIN dbo.MinorMatch AS m WITH(NOLOCK) ON m.ParentMatchId = au.OWPMatchId
                                                            AND m.MinorBettypeId = au.Bettype;
-        SELECT *
-        FROM #tblRequest;
+
+        --drop temp table
         DROP TABLE #tblRequest;
     END;
