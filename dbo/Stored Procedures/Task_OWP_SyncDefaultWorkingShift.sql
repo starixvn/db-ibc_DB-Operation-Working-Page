@@ -18,6 +18,7 @@ Revisions:
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
 	20191025@Carlos.Nguyen: Manual public working shift - [Redmine: #122661]
 	20200529@Tyler.Dang: Change week from Tuesday to next Monday - [Redmine: #134337]	
+    20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON

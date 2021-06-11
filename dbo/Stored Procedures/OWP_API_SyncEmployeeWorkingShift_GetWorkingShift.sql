@@ -28,7 +28,9 @@ Revisions:
 		, ew.ShiftEndTime
 		, ew.LastUpdated
 		, IsTimeShift
-		, Extension
+		, sc.Extension
     FROM EmployeeWorkingShift AS ew WITH (NOLOCK)
+    INNER JOIN [User] AS u WITH (NOLOCK) ON u.UserId=ew.EmployeeId
+    INNER JOIN EmployeeWorkingShiftPublish AS ewp WITH (NOLOCK) ON ew.ShiftDate BETWEEN ewp.FromDate AND ewp.ToDate AND ewp.SectionId=u.SectionId
     LEFT JOIN EmployeeWorkingShiftColor AS sc ON ew.ShiftId= sc.ShiftId
-    WHERE ew.ShiftDate BETWEEN  @FromDate AND @ToDate
+    WHERE ew.ShiftDate BETWEEN  @FromDate AND @ToDate AND ewp.IsPublished=1

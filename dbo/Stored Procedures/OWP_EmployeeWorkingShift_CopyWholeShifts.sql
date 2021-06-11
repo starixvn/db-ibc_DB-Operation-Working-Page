@@ -15,6 +15,7 @@ Revisions:
 	20190419@Lita.Tang: Initial SP - [Redmine: #111840]  
 	20190514@Lita.Tang: Save data to DB when pasting Default shift - [Redmine: #112737] 
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
+	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON;

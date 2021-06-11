@@ -21,6 +21,7 @@ Revisions:
 	20190515@Kane.Le: Change follow assign shift in next week - [Redmine: #112737]
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
 	20190524@Leo.Vo: Refactor code - [Redmine: #114047]
+	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON;

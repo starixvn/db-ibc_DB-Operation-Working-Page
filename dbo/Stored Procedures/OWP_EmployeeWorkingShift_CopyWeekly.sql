@@ -17,6 +17,7 @@ Revisions:
 	20190312@Leo.Vo: Add overtime - [Redmine: #109560]
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
 	20190531@Leo.Vo: Refactor SP [Redmine: #114442]
+	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON

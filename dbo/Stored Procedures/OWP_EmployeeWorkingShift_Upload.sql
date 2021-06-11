@@ -15,6 +15,7 @@ AS
 	 20190409@Kane.Le: Apply new rule StartTime >1 & StartTime <6 GMT 8 - [Redmine: #111068]
 	 20190520@Leo.Vo: Write log - [Redmine: #113763]
 	 20191002@Kane.Le: Add Extension ((REAL), (SPECIAL))  = '' - [Redmine: #121272]
+	 20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON;

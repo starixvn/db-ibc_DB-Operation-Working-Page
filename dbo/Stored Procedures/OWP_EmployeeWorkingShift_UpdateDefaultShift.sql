@@ -16,6 +16,7 @@ Revisions:
 	20190215@Leo.Vo: Initial SP - [Redmine: #108723]
 	20190404@Leo.Vo: Add write log - [Redmine: #111068]
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
+	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON;
