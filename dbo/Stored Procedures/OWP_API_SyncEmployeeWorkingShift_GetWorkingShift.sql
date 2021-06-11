@@ -23,10 +23,12 @@ Revisions:
 	SET NOCOUNT ON;
     SELECT ew.EmployeeId
 		, ew.ShiftDate
-		, sc.ShiftCode
+		, UPPER(sc.ShiftCode) AS ShiftCode
 		, ew.ShiftStartTime
 		, ew.ShiftEndTime
 		, ew.LastUpdated
+		, IsTimeShift
+		, Extension
     FROM EmployeeWorkingShift AS ew WITH (NOLOCK)
     LEFT JOIN EmployeeWorkingShiftColor AS sc ON ew.ShiftId= sc.ShiftId
     WHERE ew.ShiftDate BETWEEN  @FromDate AND @ToDate
