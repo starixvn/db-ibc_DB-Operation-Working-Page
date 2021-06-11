@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PrematchAssignment_GetLinkedOWPMatch] @InfositeMatchIds NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_PrematchAssignment_GetLinkedOWPMatch] @InfositeMatchIds NVARCHAR(MAX)
 AS
 
 /*
@@ -31,6 +31,7 @@ Revisions:
             SELECT TOP 1 o.OWPMatchId
             FROM dbo.OWPMatch o WITH(NOLOCK)
             WHERE o.InfoSiteMatchId = t.InfositeMatchId
+            ORDER BY o.EventDate DESC
         ) AS matchInfo
              LEFT JOIN dbo.[MatchInfo] mi WITH(NOLOCK) ON mi.OWPMatchId = matchInfo.OWPMatchId;
     END;
