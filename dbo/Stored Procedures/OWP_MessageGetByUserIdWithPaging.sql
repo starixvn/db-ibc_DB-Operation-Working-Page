@@ -15,6 +15,7 @@ Revisions:
 20200715@Jacob: Rewrite SP - [Redmine: #137417]
 20200720@Mira: Remove totalRecord - [Redmine: #137752]
 20200729@Esther: Ready to Trade Status  - [Redmine: #137751]
+20200729@Carlos.nguyen: os-notification - [Redmine: #153499]
 */
 
 
