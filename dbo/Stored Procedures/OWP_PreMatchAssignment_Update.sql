@@ -24,15 +24,17 @@ Revisions:
 	20200922@Tyler: Update Prematch issue - [Redmine: #140620]
 	20200914@Tyler: Update issue receiver - [Redmine: #142258]
 	20201110@Tyler: remove other assignment note - [Redmine: #144948]
+	20210615@Carlos.nguyen: Get old value (use to compare with new value to send noti) - [Redmine: #156321]
 */
 
     BEGIN
         SET NOCOUNT ON;
+        DECLARE @isDay BIT = NULL;
         DECLARE @hdpBettype INT= 1;
         DECLARE @ouBettype INT= 3;
         DECLARE @remarkOldValue NVARCHAR(2000);
         DECLARE @preMatchIssueId INT;
-
+		
         -- main assignment
         DECLARE @hdpOldValue NVARCHAR(30);
         DECLARE @ouOldValue NVARCHAR(30);
@@ -53,6 +55,7 @@ Revisions:
 
         -- main assignments
         SELECT @hdpOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -63,6 +66,7 @@ Revisions:
         SET @hdpOldValue = ISNULL(@hdpOldValue, '');
         --
         SELECT @ouOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -73,6 +77,7 @@ Revisions:
         SET @ouOldValue = ISNULL(@ouOldValue, '');
         --
         SELECT @hdpTakeOverOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -83,6 +88,7 @@ Revisions:
         SET @hdpTakeOverOldValue = ISNULL(@hdpTakeOverOldValue, '');
         --
         SELECT @ouTakeOverOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -94,6 +100,7 @@ Revisions:
 
         -- other assignments
         SELECT @otherHdpOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -104,6 +111,7 @@ Revisions:
         SET @otherHdpOldValue = ISNULL(@otherHdpOldValue, '');
         --
         SELECT @otherOuOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -114,6 +122,7 @@ Revisions:
         SET @otherOuOldValue = ISNULL(@otherOuOldValue, '');
         --
         SELECT @otherHdpTakeOverOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -124,6 +133,7 @@ Revisions:
         SET @otherHdpTakeOverOldValue = ISNULL(@otherHdpTakeOverOldValue, '');
         --
         SELECT @otherOuTakeOverOldValue = u.Username
+			, @isDay= l.IsDay
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -253,4 +263,18 @@ Revisions:
                      @PreMatchLeagueId = @PreMatchLeagueId, 
                      @Remark = @Remark;
             END;
+           
+        -- select main assignments
+        SELECT @PreMatchLeagueId
+        , @isDay
+         ,@hdpOldValue
+         ,@ouOldValue 
+         ,@hdpTakeOverOldValue 
+         ,@ouTakeOverOldValue 
+
+        -- selectother assignments
+         ,@otherHdpOldValue 
+         ,@otherOuOldValue 
+         ,@otherHdpTakeOverOldValue 
+         ,@otherOuTakeOverOldValue 
     END;
