@@ -52,7 +52,7 @@ Revisions:
                     LEFT JOIN dbo.RefResource rb WITH(NOLOCK) ON rb.RefName = 'BetTypePreferences'
                                                                  AND rb.ResourceId = ou.BetTypePreferencesId
                     LEFT JOIN dbo.RefResource rm WITH(NOLOCK) ON rm.RefName = 'MultipleGames'
-                                                                 AND rm.ResourceId = ou.BetTypePreferencesId
+                                                                 AND rm.ResourceId = ou.MultipleGamesId
                WHERE ou.[Level] <> @NullLevelId
                      AND LocationCode IS NOT NULL
                      AND rb.[Value] IS NOT NULL -- Remove [BettypesPreferences] is NULL
