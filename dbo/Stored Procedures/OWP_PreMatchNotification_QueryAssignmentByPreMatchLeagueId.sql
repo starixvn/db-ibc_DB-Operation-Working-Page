@@ -1,5 +1,5 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_Assignment_GetOldValue]  @PreMatchLeagueId INT
+ALTER PROCEDURE [dbo].[OWP_PreMatchNotification_QueryAssignmentByPreMatchLeagueId]  @PreMatchLeagueId INT
                                          
 AS
 /*
@@ -15,23 +15,39 @@ BEGIN
         DECLARE @hdpBettype INT= 1;
         DECLARE @ouBettype INT= 3;
      
-		 DECLARE @isDay BIT = NULL;
-		 
+		DECLARE @isDay BIT = NULL;
+		DECLARE @leagueName NVARCHAR(200);
+		
         -- main assignment
-        DECLARE @hdpOldValue NVARCHAR(30);
-        DECLARE @ouOldValue NVARCHAR(30);
-        DECLARE @hdpTakeOverOldValue NVARCHAR(30);
-        DECLARE @ouTakeOverOldValue NVARCHAR(30);
+        DECLARE @hdp NVARCHAR(30);
+        DECLARE @ou NVARCHAR(30);
+        DECLARE @hdpTakeOver NVARCHAR(30);
+        DECLARE @ouTakeOver NVARCHAR(30);
+        DECLARE @hdpUserId INT;
+        DECLARE @ouUserId INT;
+        DECLARE @hdpTakeOverUserId INT;
+        DECLARE @ouTakeOverUserId INT;
 
         -- other assignments
-        DECLARE @otherHdpOldValue NVARCHAR(30);
-        DECLARE @otherOuOldValue NVARCHAR(30);
-        DECLARE @otherHdpTakeOverOldValue NVARCHAR(30);
-        DECLARE @otherOuTakeOverOldValue NVARCHAR(30);
-
+        DECLARE @otherHdp NVARCHAR(30);
+        DECLARE @otherOu NVARCHAR(30);
+        DECLARE @otherHdpTakeOver NVARCHAR(30);
+        DECLARE @otherOuTakeOver NVARCHAR(30);
+        DECLARE @otherHdpUserId INT;
+        DECLARE @otherOuUserId INT;
+        DECLARE @otherHdpTakeOverUserId INT;
+        DECLARE @otherOuTakeOverUserId INT;
+	
+		-- league name
+		SELECT @leagueName= owpl.OWPLeagueName
+		FROM dbo.[PreMatchLeague] AS l WITH(NOLOCK)
+			INNER JOIN OWPLeague owpl WITH(NOLOCK) ON l.OWPLeagueId=owpl.OWPLeagueId
+		WHERE l.PreMatchLeagueId=@PreMatchLeagueId
+		
         -- main assignments
-        SELECT @hdpOldValue = u.Username
+        SELECT @hdp = u.Username
         , @isDay= l.IsDay
+        , @hdpUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -39,10 +55,12 @@ BEGIN
               AND a.Bettype = @hdpBettype
               AND a.IsTakeOver = 0
               AND a.AssignmentType = 1;
-        SET @hdpOldValue = ISNULL(@hdpOldValue, '');
+        SET @hdp = ISNULL(@hdp, '');
+        
         --
-        SELECT @ouOldValue = u.Username
+        SELECT @ou = u.Username
         , @isDay= l.IsDay
+         , @ouUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -50,10 +68,12 @@ BEGIN
               AND a.Bettype = @ouBettype
               AND a.IsTakeOver = 0
               AND a.AssignmentType = 1;
-        SET @ouOldValue = ISNULL(@ouOldValue, '');
+        SET @ou = ISNULL(@ou, '');
+        
         --
-        SELECT @hdpTakeOverOldValue = u.Username
+        SELECT @hdpTakeOver = u.Username
         , @isDay= l.IsDay
+         , @hdpTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -61,10 +81,12 @@ BEGIN
               AND a.Bettype = @hdpBettype
               AND a.IsTakeOver = 1
               AND a.AssignmentType = 1;
-        SET @hdpTakeOverOldValue = ISNULL(@hdpTakeOverOldValue, '');
+        SET @hdpTakeOver = ISNULL(@hdpTakeOver, '');
+        
         --
-        SELECT @ouTakeOverOldValue = u.Username
+        SELECT @ouTakeOver = u.Username
         , @isDay= l.IsDay
+         , @ouTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -72,11 +94,12 @@ BEGIN
               AND a.Bettype = @ouBettype
               AND a.IsTakeOver = 1
               AND a.AssignmentType = 1;
-        SET @ouTakeOverOldValue = ISNULL(@ouTakeOverOldValue, '');
+        SET @ouTakeOver = ISNULL(@ouTakeOver, '');
 
         -- other assignments
-        SELECT @otherHdpOldValue = u.Username
+        SELECT @otherHdp = u.Username
         , @isDay= l.IsDay
+         , @otherHdpUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -84,10 +107,12 @@ BEGIN
               AND a.Bettype = @hdpBettype
               AND a.IsTakeOver = 0
               AND a.AssignmentType = 2;
-        SET @otherHdpOldValue = ISNULL(@otherHdpOldValue, '');
+        SET @otherHdp = ISNULL(@otherHdp, '');
+        
         --
-        SELECT @otherOuOldValue = u.Username
+        SELECT @otherOu = u.Username
         , @isDay= l.IsDay
+         , @otherOuUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -95,10 +120,12 @@ BEGIN
               AND a.Bettype = @ouBettype
               AND a.IsTakeOver = 0
               AND a.AssignmentType = 2;
-        SET @otherOuOldValue = ISNULL(@otherOuOldValue, '');
+        SET @otherOu = ISNULL(@otherOu, '');
+        
         --
-        SELECT @otherHdpTakeOverOldValue = u.Username
+        SELECT @otherHdpTakeOver = u.Username
         , @isDay= l.IsDay
+         , @otherHdpTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -106,10 +133,12 @@ BEGIN
               AND a.Bettype = @hdpBettype
               AND a.IsTakeOver = 1
               AND a.AssignmentType = 2;
-        SET @otherHdpTakeOverOldValue = ISNULL(@otherHdpTakeOverOldValue, '');
+        SET @otherHdpTakeOver = ISNULL(@otherHdpTakeOver, '');
+        
         --
-        SELECT @otherOuTakeOverOldValue = u.Username
+        SELECT @otherOuTakeOver = u.Username
         , @isDay= l.IsDay
+        , @otherOuTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
@@ -117,20 +146,28 @@ BEGIN
               AND a.Bettype = @ouBettype
               AND a.IsTakeOver = 1
               AND a.AssignmentType = 2;
-        SET @otherOuTakeOverOldValue = ISNULL(@otherOuTakeOverOldValue, '');
+        SET @otherOuTakeOver = ISNULL(@otherOuTakeOver, '');
         
         -- select main assignments
-        SELECT @PreMatchLeagueId
-        , @isDay
-         ,@hdpOldValue
-         ,@ouOldValue 
-         ,@hdpTakeOverOldValue 
-         ,@ouTakeOverOldValue 
+        SELECT @PreMatchLeagueId AS PreMatchLeagueId
+		, @leagueName AS LeagueName
+        , @isDay AS IsDay
+         ,@hdp AS Hdp
+         ,@ou AS Ou
+         ,@hdpTakeOver AS HdpTakeOver
+         ,@ouTakeOver AS OuTakeOver
+         ,@hdpUserId AS HdpUserId
+         ,@ouUserId AS OuUserId
+         ,@hdpTakeOverUserId AS HdpTakeOverUserId
 
         -- selectother assignments
-         ,@otherHdpOldValue 
-         ,@otherOuOldValue 
-         ,@otherHdpTakeOverOldValue 
-         ,@otherOuTakeOverOldValue 
+         ,@otherHdp AS OtherHdp
+         ,@otherOu AS OtherOu
+         ,@otherHdpTakeOver AS OtherHdpTakeOver
+         ,@otherOuTakeOver AS OtherOuTakeOver
+         ,@otherHdpUserId AS OtherHdpUserId
+         ,@otherOuUserId AS OtherOuUserId
+         ,@otherHdpTakeOverUserId AS OtherHdpTakeOverUserId
+         ,@otherOuTakeOverUserId AS OtherOuTakeOverUserId
 END
                                                     
