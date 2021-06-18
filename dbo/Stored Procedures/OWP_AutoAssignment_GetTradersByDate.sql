@@ -48,7 +48,7 @@ Revisions:
                FROM dbo.[User] AS ou WITH(NOLOCK)
                     LEFT JOIN dbo.UserRole AS ur WITH(NOLOCK) ON ur.UserId = ou.UserId
                     LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'UserRole'
-                                                                AND r.ResourceId = ou.SectionId
+                                                                AND r.ResourceId = ur.RoleId
                     LEFT JOIN dbo.RefResource rb WITH(NOLOCK) ON rb.RefName = 'BetTypePreferences'
                                                                  AND rb.ResourceId = ou.BetTypePreferencesId
                     LEFT JOIN dbo.RefResource rm WITH(NOLOCK) ON rm.RefName = 'MultipleGames'
