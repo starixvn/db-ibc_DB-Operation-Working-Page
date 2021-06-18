@@ -30,6 +30,7 @@ Revisions:
         -- select assignee
         SELECT DISTINCT 
                pa.PreMatchLeagueId, 
+			   pl.OWPLeagueId,
                u.UserId AS AssigneeId, 
                u.Username AS AssigneeName
         FROM [dbo].PreMatchAssignment AS pa WITH(NOLOCK)

@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchNotification_QueryInfoSiteMatchesByDate] @EventFromDateTime DATE, 
+ALTER PROCEDURE [dbo].[OWP_PreMatchNotification_QueryInfoSiteMatchesByDate] @EventFromDateTime DATE, 
                                                                              @EventToDateTime   DATE
 AS
 
@@ -18,7 +18,13 @@ Revisions:
         SET NOCOUNT ON;
 
         -- select from infosite match
-        SELECT m.InfoSiteMatchId, 
+        SELECT m.OWPLeagueId,
+			   m.InfoSiteMatchId, 
+               m.LeagueName, 
+               m.HomeName, 
+               m.AwayName,
+			   m.EventDateTime,
+			   m.UpdatedTime, 
                l.PreMatchLeagueId
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
