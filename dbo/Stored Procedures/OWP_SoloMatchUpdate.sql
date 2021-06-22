@@ -1,5 +1,5 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_SoloMatchUpdate]
+ALTER PROCEDURE [dbo].[OWP_SoloMatchUpdate]
 AS
 /*    
  Created: 20161102@Harvey.Nguyen
@@ -30,7 +30,7 @@ BEGIN
 		,isSolo BIT
 		)
 
-	/* 1. Collect all major match from yesterday-->future*/
+	/* 1. Collect all major match from yesterday-->future MJ match is match has league is MJ */
 	INSERT INTO #tblMajorMatch (
 		owpmatchid
 		,eventdatetime
