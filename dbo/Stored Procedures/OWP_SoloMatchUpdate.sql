@@ -1,4 +1,11 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_SoloMatchUpdate]    Script Date: 06/25/2021 14:39:49 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 ALTER PROCEDURE [dbo].[OWP_SoloMatchUpdate]
 AS
 /*    
@@ -12,6 +19,7 @@ AS
    20191125@Carlos.Nguyen:  Change strategy log - [Redmine: #124374]
    20191203@Carlos.Nguyen:  Update condition detect solo match - [Redmine: #124861]
    20191209@Carlos.Nguyen:  Enhance performent - [Redmine: #125154]
+   20210625@Carlos.Nguyen:  Update condition detect solo match - [Redmine: #132710]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -22,6 +30,7 @@ BEGIN
 	CREATE TABLE #tblMajorMatch (
 		id INT IDENTITY(1,1) PRIMARY KEY
 		,owpmatchid INT
+		,owpLeagueId INT
 		,eventdatetime DATETIME
 		)
 
@@ -30,45 +39,43 @@ BEGIN
 		,isSolo BIT
 		)
 
-	/* 1. Collect all major match from yesterday-->future MJ match is match has league is MJ */
+	/* 1. Collect all major match from yesterday-->future MJ match is match has league is MJ,M1,M2 AND only apply for mainMatch*/
 	INSERT INTO #tblMajorMatch (
 		owpmatchid
+		,owpLeagueId
 		,eventdatetime
 		)
-	SELECT o.OWPMatchId
+	SELECT DISTINCT
+		o.OWPMatchId
+		,league.OWPLeagueId
 		,o.EventDateTime
 	FROM dbo.OWPMatch AS o WITH (NOLOCK)
+		INNER JOIN MatchInfo AS mi WITH(NOLOCK) ON o.OWPMatchId=mi.OWPMatchId
+		INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.ParentMatchId = o.OwpMatchId
 		INNER JOIN dbo.OWPLeague AS league WITH (NOLOCK) ON o.OWPLeagueId = league.OWPLeagueId
-	WHERE league.CategoryId = 1
+	WHERE league.CategoryId IN (1,2,3)
+		AND mi.MatchStatus <> 'Cancel'
 		AND o.EventDateTime >= @PmYesterDay
 	
 	/*2. Detect major match is solo match*/
 	INSERT INTO #tblSoloMatch (
-		owpmatchid,
-		isSolo
-		)
+			owpmatchid,
+			isSolo
+	)
 	SELECT DISTINCT mm1.owpmatchid,
 		CASE
 			WHEN mm2.owpmatchid IS NULL THEN 1
 			ELSE 0
 		END
 	FROM #tblMajorMatch AS mm1 WITH(NOLOCK) LEFT JOIN
-		 #tblMajorMatch AS mm2 WITH (NOLOCK) ON
-			mm1.owpmatchid<>mm2.owpmatchid AND
-		   ((mm2.eventdatetime BETWEEN DATEADD(MINUTE,-120,mm1.eventdatetime) AND mm1.eventdatetime) OR
-		   (mm2.eventdatetime BETWEEN mm1.eventdatetime AND DATEADD(MINUTE,60,mm1.eventdatetime)))
-		   
-	/*3. Insert minnor macht, status solo same with parent*/
-	INSERT INTO #tblSoloMatch (owpmatchid
-			,isSolo)
-	SELECT mm.MinorMatchId
-		, sm.isSolo
-	FROM dbo.MinorMatch AS mm WITH (NOLOCK)
-		INNER JOIN #tblSoloMatch AS sm WITH (NOLOCK)
-		ON sm.owpmatchid=mm.ParentMatchId
+			 #tblMajorMatch AS mm2 WITH (NOLOCK) ON
+				mm1.owpLeagueId=mm2.owpLeagueId AND
+				mm1.owpmatchid<>mm2.owpmatchid AND
+			   ((mm2.eventdatetime BETWEEN DATEADD(MINUTE,-45,mm1.eventdatetime) AND mm1.eventdatetime) OR
+			   (mm2.eventdatetime BETWEEN mm1.eventdatetime AND DATEADD(MINUTE,45,mm1.eventdatetime)))
 	
 	/*4. Detect match isn't solo match*/
-	/*4.1 cause: before it is solo match but user can change leuage, result in it isn't solo match*/
+	/*4.1 cause: before it is solo match but user can change leuage group, result in it isn't solo match*/
 	INSERT INTO #tblSoloMatch(
 		owpmatchid
 		,isSolo
@@ -76,6 +83,7 @@ BEGIN
 	SELECT om.OWPMatchId
 		,0
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
+		INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.ParentMatchId = om.OwpMatchId
 	WHERE om.EventDateTime>=@PmYesterDay
 		AND om.OWPMatchId NOT IN (SELECT mm.owpmatchid
 								FROM #tblSoloMatch AS mm WITH (NOLOCK))
