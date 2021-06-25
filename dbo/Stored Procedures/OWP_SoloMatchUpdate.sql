@@ -1,17 +1,11 @@
-USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_SoloMatchUpdate]    Script Date: 06/25/2021 14:39:49 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[OWP_SoloMatchUpdate]
 AS
 /*    
  Created: 20161102@Harvey.Nguyen
  Task : Check & update if match is solo-match (only linked matches)
  DB: bodb_OWP    
+    
     
  Revisions:
    20170420@Tim.Trinh: fix bug
@@ -75,7 +69,7 @@ BEGIN
 			   (mm2.eventdatetime BETWEEN mm1.eventdatetime AND DATEADD(MINUTE,45,mm1.eventdatetime)))
 	
 	/*4. Detect match isn't solo match*/
-	/*4.1 cause: before it is solo match but user can change leuage group, result in it isn't solo match*/
+	/*4.1 cause: before it is solo match but user can change leuage group(MJ, M1,M2), result in it isn't solo match*/
 	INSERT INTO #tblSoloMatch(
 		owpmatchid
 		,isSolo
