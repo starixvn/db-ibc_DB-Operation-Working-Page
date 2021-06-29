@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetMatctIsAssignedToday]
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetMatctIsAssignedToday]
 	@EventDate DATE
 AS
 /*
@@ -10,6 +10,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200527@Carlos.Nguyen: Initial SP - [Redmine: #126964]
+	20210511@Mira: Auto trader assignment - [Redmine: #132710]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -48,7 +49,7 @@ BEGIN
 			
 	SELECT DISTINCT r.OWPMatchId AS MatchId,
 		r.Bettype,
-		r.UserId
+		r.UserId_LA 'UserId'
 	FROM #tblMatch AS tblm WITH (NOLOCK)
 		INNER JOIN AutoAssignmentResult AS r WITH(NOLOCK) ON tblm.ParentMatchId=r.OWPMatchId
 	
