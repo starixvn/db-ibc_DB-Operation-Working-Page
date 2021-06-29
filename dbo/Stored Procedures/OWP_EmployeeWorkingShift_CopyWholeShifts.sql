@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWholeShifts] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_CopyWholeShifts] @ActorId INT
 	,@FromUserId INT
 	,@ToUserId INT
 	,@FromDate DATE
@@ -15,6 +15,7 @@ Revisions:
 	20190419@Lita.Tang: Initial SP - [Redmine: #111840]  
 	20190514@Lita.Tang: Save data to DB when pasting Default shift - [Redmine: #112737] 
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
+	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -201,8 +202,15 @@ BEGIN
 		,ShiftEndTime
 		,ShiftId
 		,RefShiftId
+		,LastUpdated
 		)
-	SELECT EmployeeId, ShiftDate, ShiftStartTime, ShiftEndTime, ShiftId, RefShiftId
+	SELECT EmployeeId
+	, ShiftDate
+	, ShiftStartTime
+	, ShiftEndTime
+	, ShiftId
+	, RefShiftId
+	, DATEADD(HOUR, 12, GETDATE())
 	FROM @tblNewWorkingShift 
 
 	-- write log

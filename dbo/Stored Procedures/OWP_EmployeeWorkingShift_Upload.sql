@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Upload] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_Upload] @ActorId INT
 	,@Data XML
 AS
 /*      
@@ -15,6 +15,7 @@ AS
 	 20190409@Kane.Le: Apply new rule StartTime >1 & StartTime <6 GMT 8 - [Redmine: #111068]
 	 20190520@Leo.Vo: Write log - [Redmine: #113763]
 	 20191002@Kane.Le: Add Extension ((REAL), (SPECIAL))  = '' - [Redmine: #121272]
+	 20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -95,6 +96,7 @@ BEGIN
 				,t1.ShiftStartTime = t2.ShiftStartTime
 				,t1.ShiftEndTime = t2.ShiftEndTime
 				,t1.RefShiftId = NULL
+				,t1.LastUpdated= DATEADD(HOUR, 12, GETDATE())
 	WHEN NOT MATCHED
 		THEN
 			INSERT (
@@ -103,6 +105,7 @@ BEGIN
 				,ShiftDate
 				,ShiftStartTime
 				,ShiftEndTime
+				,LastUpdated
 				)
 			VALUES (
 				t2.EmployeeId
@@ -110,6 +113,7 @@ BEGIN
 				,t2.ShiftDate
 				,t2.ShiftStartTime
 				,t2.ShiftEndTime
+				,DATEADD(HOUR, 12, GETDATE())
 				)
 	OUTPUT $ACTION -- value is 'INSERT' OR 'UPDATE'
 		,INSERTED.EmployeeId

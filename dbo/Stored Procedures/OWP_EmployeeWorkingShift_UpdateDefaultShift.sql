@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateDefaultShift] @Actor INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_UpdateDefaultShift] @Actor INT
 	,@EmployeeId INT
 	,@DefaultShiftIds VARCHAR(100)
 	,@IsApplyCurrentWeek BIT
@@ -16,6 +16,7 @@ Revisions:
 	20190215@Leo.Vo: Initial SP - [Redmine: #108723]
 	20190404@Leo.Vo: Add write log - [Redmine: #111068]
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
+	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -179,6 +180,7 @@ BEGIN
 							,t.ShiftStartTime = s.ShiftStartTime
 							,t.ShiftEndTime = s.ShiftEndTime
 							,t.RefShiftId = NULL
+							,t.LastUpdated=DATEADD(HOUR, 12, GETDATE())
 				WHEN NOT MATCHED BY target THEN
 						INSERT (
 							EmployeeId
@@ -186,6 +188,7 @@ BEGIN
 							,ShiftDate
 							,ShiftStartTime
 							,ShiftEndTime
+							,LastUpdated
 							)
 						VALUES (
 							s.EmployeeId
@@ -193,6 +196,7 @@ BEGIN
 							,s.ShiftDate
 							,s.ShiftStartTime
 							,s.ShiftEndTime
+							,DATEADD(HOUR, 12, GETDATE())
 							);
 			END
 

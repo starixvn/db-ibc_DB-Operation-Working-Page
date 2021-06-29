@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift]
+ALTER PROCEDURE [dbo].[Task_OWP_SyncDefaultWorkingShift]
 	@CurrentDate DATETIME = NULL,
 	@SectionId INT=NULL,
 	@ActorId INT = 0
@@ -18,6 +18,7 @@ Revisions:
 	20191003@Leo.Vo: Add WS extension - [Redmine: #121272]
 	20191025@Carlos.Nguyen: Manual public working shift - [Redmine: #122661]
 	20200529@Tyler.Dang: Change week from Tuesday to next Monday - [Redmine: #134337]	
+    20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -123,6 +124,7 @@ BEGIN
 		,ShiftDate
 		,ShiftStartTime
 		,ShiftEndTime
+		,LastUpdated
 		)
 	OUTPUT inserted.EmployeeId
 		,inserted.ShiftId
@@ -135,6 +137,7 @@ BEGIN
 		,ds.ShiftDate
 		,ds.ShiftStartDate + ds.ShiftStartTime
 		,ds.ShiftEndDate + ds.ShiftEndTime
+		,DATEADD(HOUR, 12, GETDATE())
 	FROM #tblDefaultWorkingShift AS ds WITH (NOLOCK)
 	WHERE ds.IsTimeShift = 1
 		AND NOT EXISTS (
@@ -150,6 +153,7 @@ BEGIN
 		,ds.ShiftDate
 		,NULL
 		,NULL
+		,DATEADD(HOUR, 12, GETDATE())
 	FROM #tblDefaultWorkingShift AS ds WITH (NOLOCK)
 	WHERE ds.IsTimeShift = 0
 		AND NOT EXISTS (
