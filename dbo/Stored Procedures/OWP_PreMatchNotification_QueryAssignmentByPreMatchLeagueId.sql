@@ -46,7 +46,6 @@ BEGIN
 		
         -- main assignments
         SELECT @hdp = u.Username
-        , @isDay= l.IsDay
         , @hdpUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -59,7 +58,6 @@ BEGIN
         
         --
         SELECT @ou = u.Username
-        , @isDay= l.IsDay
          , @ouUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -72,7 +70,6 @@ BEGIN
         
         --
         SELECT @hdpTakeOver = u.Username
-        , @isDay= l.IsDay
          , @hdpTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -85,7 +82,6 @@ BEGIN
         
         --
         SELECT @ouTakeOver = u.Username
-        , @isDay= l.IsDay
          , @ouTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -98,7 +94,6 @@ BEGIN
 
         -- other assignments
         SELECT @otherHdp = u.Username
-        , @isDay= l.IsDay
          , @otherHdpUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -111,7 +106,6 @@ BEGIN
         
         --
         SELECT @otherOu = u.Username
-        , @isDay= l.IsDay
          , @otherOuUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -124,7 +118,6 @@ BEGIN
         
         --
         SELECT @otherHdpTakeOver = u.Username
-        , @isDay= l.IsDay
          , @otherHdpTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -137,7 +130,6 @@ BEGIN
         
         --
         SELECT @otherOuTakeOver = u.Username
-        , @isDay= l.IsDay
         , @otherOuTakeOverUserId=u.UserId
         FROM dbo.[PreMatchAssignment] AS a WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] AS l WITH(NOLOCK) ON a.PreMatchLeagueId = l.PreMatchLeagueId
@@ -147,6 +139,8 @@ BEGIN
               AND a.IsTakeOver = 1
               AND a.AssignmentType = 2;
         SET @otherOuTakeOver = ISNULL(@otherOuTakeOver, '');
+        
+        SELECT @isDay= IsDay FROM PreMatchLeague WHERE PreMatchLeagueId= @PreMatchLeagueId
         
         -- select main assignments
         SELECT @PreMatchLeagueId AS PreMatchLeagueId
@@ -159,6 +153,7 @@ BEGIN
          ,@hdpUserId AS HdpUserId
          ,@ouUserId AS OuUserId
          ,@hdpTakeOverUserId AS HdpTakeOverUserId
+         ,@ouTakeOverUserId AS OuTakeOverUserId
 
         -- selectother assignments
          ,@otherHdp AS OtherHdp
