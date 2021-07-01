@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_PreMatchNotification_QueryInfoSiteMatchesByDate] @EventFromDateTime DATE, 
-                                                                             @EventToDateTime   DATE
+ALTER PROCEDURE [dbo].[OWP_PreMatchNotification_QueryInfoSiteMatchesByDate] @EventFromDateTime DATETIME, 
+                                                                            @EventToDateTime   DATETIME
 AS
 
 /*    
@@ -16,17 +16,20 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
+        DECLARE @EventDate DATE= @EventFromDateTime;
 
         -- select from infosite match
-        SELECT m.OWPLeagueId,
-			   m.InfoSiteMatchId, 
+        SELECT DISTINCT 
+               m.OWPLeagueId, 
+               m.InfoSiteMatchId, 
                m.LeagueName, 
                m.HomeName, 
-               m.AwayName,
-			   m.EventDateTime,
-			   m.UpdatedTime, 
+               m.AwayName, 
+               m.EventDateTime, 
+               m.UpdatedTime, 
                l.PreMatchLeagueId
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
-        WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime;
+        WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
+              AND l.EventDate = @EventDate;
     END;
