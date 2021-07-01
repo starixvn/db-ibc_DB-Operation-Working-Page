@@ -1,13 +1,15 @@
-﻿USE [bodb_OWP]
+﻿USE [bodb_OWP];
 GO
-SET ANSI_NULLS ON
+SET ANSI_NULLS ON;
 GO
-SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON;
 GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchNotification_QueryInfoSiteMatchByOWPLeagueIds] @OWPLeagueIds NVARCHAR(MAX)
+CREATE PROCEDURE [dbo].[OWP_PreMatchNotification_QueryInfoSiteMatchByOWPLeagueIds] @OWPLeagueIds NVARCHAR(MAX), 
+                                                                                   @FromDate     DATETIME, 
+                                                                                   @ToDate       DATETIME
 AS
 
 /*  
@@ -28,8 +30,10 @@ Revisions:
                FROM fnc_SplitStrings(@OWPLeagueIds, ',') u OPTION(MAXRECURSION 0);
 
         SELECT DISTINCT 
-			im.OWPLeagueId,
-			im.EventDateTime
+               im.OWPLeagueId, 
+               im.EventDateTime
         FROM [dbo].InfoSiteMatch AS im WITH(NOLOCK)
-             INNER JOIN @tempOWPLeagueId t ON t.OWPLeagueId = im.OWPLeagueId;
+             INNER JOIN @tempOWPLeagueId t ON t.OWPLeagueId = im.OWPLeagueId
+        WHERE im.EventDateTime >= @FromDate
+              AND im.EventDateTime <= @ToDate;
     END;
