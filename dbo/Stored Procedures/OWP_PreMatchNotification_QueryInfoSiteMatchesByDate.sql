@@ -19,14 +19,12 @@ Revisions:
         DECLARE @EventDate DATE= @EventFromDateTime;
 
         -- select from infosite match
-        SELECT DISTINCT 
-               m.OWPLeagueId, 
+        SELECT DISTINCT
                m.InfoSiteMatchId, 
                m.LeagueName, 
                m.HomeName, 
                m.AwayName, 
-               m.EventDateTime, 
-               m.UpdatedTime, 
+               m.EventDateTime,
                l.PreMatchLeagueId
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
