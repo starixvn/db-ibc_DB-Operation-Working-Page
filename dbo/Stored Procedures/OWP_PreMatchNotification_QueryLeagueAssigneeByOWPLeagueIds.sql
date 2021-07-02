@@ -7,7 +7,8 @@ GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_PreMatchNotification_QueryLeagueAssigneeByOWPLeagueIds] @OWPLeagueIds NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_PreMatchNotification_QueryLeagueAssigneeByOWPLeagueIds] @OWPLeagueIds NVARCHAR(MAX), 
+                                                                                   @EventDate    DATE
 AS
 
 /*  
@@ -30,11 +31,12 @@ Revisions:
         -- select assignee
         SELECT DISTINCT 
                pa.PreMatchLeagueId, 
-			   pl.OWPLeagueId,
+               pl.OWPLeagueId, 
                u.UserId AS AssigneeId, 
                u.Username AS AssigneeName
         FROM [dbo].PreMatchAssignment AS pa WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchLeague] pl WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
              INNER JOIN @tempOWPLeagueId t ON t.OWPLeagueId = pl.OWPLeagueId
-             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = pa.UserId;
+             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = pa.UserId
+        WHERE pl.EventDate = EventDate;
     END;
