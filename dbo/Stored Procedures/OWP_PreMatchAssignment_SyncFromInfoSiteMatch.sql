@@ -62,5 +62,19 @@ Revisions:
             FROM #tblLeague
             ORDER BY OWPLeagueId;
 
+     SELECT @ToDate = DATEADD(DAY, 1, @FromDate);
+
+     -- Delete empty leagues
+     DELETE l
+     FROM PreMatchLeague l
+     WHERE l.EventDate = CAST(@FromDate AS DATE)
+           AND NOT EXISTS
+     (
+         SELECT 1
+         FROM InfoSiteMatch m
+         WHERE m.OWPLeagueId = l.OWPLeagueId
+               AND m.EventDateTime BETWEEN @FromDate AND @ToDate
+     );
+
      -- DROP temp table
      DROP TABLE #tblLeague;
