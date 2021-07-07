@@ -38,5 +38,5 @@ Revisions:
              INNER JOIN dbo.[PreMatchLeague] pl WITH(NOLOCK) ON pa.PreMatchLeagueId = pl.PreMatchLeagueId
              INNER JOIN @tempOWPLeagueId t ON t.OWPLeagueId = pl.OWPLeagueId
              INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = pa.UserId
-        WHERE pl.EventDate = EventDate;
+        WHERE pl.EventDate = @EventDate;
     END;
