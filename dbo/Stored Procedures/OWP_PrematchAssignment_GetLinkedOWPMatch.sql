@@ -11,27 +11,28 @@ DB: bodb_OWP
 
 Revisions:
 	20210607@Mira: Initial - [Redmine: #156336]
+	20210712@Tyler: enhance looping - [Redmine: #156321]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @tempInfositeId TABLE(InfositeMatchId INT);
         INSERT INTO @tempInfositeId
-               SELECT DISTINCT 
-                      val
+               SELECT val
                FROM fnc_SplitStrings(@InfositeMatchIds, ',') u OPTION(MAXRECURSION 0);
 
         -- select owpmatch info
-        SELECT t.InfositeMatchId, 
-               matchInfo.OWPMatchId, 
-               mi.MatchStatus
-        FROM @tempInfositeId t
-             CROSS APPLY
-        (
-            SELECT TOP 1 o.OWPMatchId
-            FROM dbo.OWPMatch o WITH(NOLOCK)
-            WHERE o.InfoSiteMatchId = t.InfositeMatchId
-            ORDER BY o.EventDate DESC
-        ) AS matchInfo
-             LEFT JOIN dbo.[MatchInfo] mi WITH(NOLOCK) ON mi.OWPMatchId = matchInfo.OWPMatchId;
+        WITH matchInfo
+             AS (SELECT o.OWPMatchId, 
+                        o.InfoSiteMatchId, 
+                        ROW_NUMBER() OVER(PARTITION BY o.InfoSiteMatchId
+                        ORDER BY o.EventDate DESC) AS ranking
+                 FROM dbo.OWPMatch o WITH(NOLOCK)
+                      INNER JOIN @tempInfositeId t ON o.InfoSiteMatchId = t.InfositeMatchId)
+             SELECT matchInfo.OWPMatchId, 
+                    matchInfo.InfoSiteMatchId, 
+                    mi.MatchStatus
+             FROM matchInfo
+                  LEFT JOIN dbo.[MatchInfo] mi WITH(NOLOCK) ON mi.OWPMatchId = matchInfo.OWPMatchId
+             WHERE ranking = 1;
     END;
