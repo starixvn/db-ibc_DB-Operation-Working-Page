@@ -65,7 +65,7 @@ Revisions:
                       CASE
                           WHEN Spread = ''
                           THEN NULL
-                          ELSE Spread
+                          ELSE Spread/100
                       END
                FROM #tmpTable t;  
         -- DROP tmpTable
