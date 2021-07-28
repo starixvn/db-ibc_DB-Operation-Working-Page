@@ -29,3 +29,14 @@ AS
          FROM @tempMatch t
          WHERE m.InfoSiteMatchId = t.MatchId
      );
+
+	 UPDATE m
+       SET 
+           m.InfoSiteMatchId = NULL
+     FROM dbo.OWPMatch m
+     WHERE EXISTS
+     (
+         SELECT 1
+         FROM @tempMatch t
+         WHERE m.InfoSiteMatchId = t.MatchId
+     );
