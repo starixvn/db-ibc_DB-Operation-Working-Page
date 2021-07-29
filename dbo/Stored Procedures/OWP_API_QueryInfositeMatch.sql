@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   
+	20210729@Tyler: Exclude deleted matches - [Redmine: #159009]   
 */
 
      SET NOCOUNT ON;
@@ -21,4 +22,5 @@ Revisions:
             m.HomeName AS HomeName, 
             m.AwayName AS AwayName
      FROM dbo.InfoSiteMatch m WITH(NOLOCK)
-     WHERE m.EventDateTime >= @FromDate;
+     WHERE m.EventDateTime >= @FromDate
+           AND m.IsDeleted = 0;
