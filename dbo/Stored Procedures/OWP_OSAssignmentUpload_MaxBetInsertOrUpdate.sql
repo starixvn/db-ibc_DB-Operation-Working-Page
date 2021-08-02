@@ -25,7 +25,8 @@ Revisions:
         CREATE TABLE #tmpTable
         (OSMatchId   INT, 
          BetTypeName NVARCHAR(200), 
-         MaxBet      MONEY
+         MaxBet      MONEY,
+         Spread      MONEY
         );
         DECLARE @idoc INT;
         EXEC sp_xml_preparedocument 
@@ -35,8 +36,9 @@ Revisions:
                SELECT DISTINCT 
                       OSMatchId, 
                       BetTypeName, 
-                      MaxBet
-               FROM OPENXML(@idoc, '/Root/MatchMaxBet', 1) WITH(OSMatchId INT, BetTypeName NVARCHAR(200), MaxBet MONEY);
+                      MaxBet,
+                      Spread
+               FROM OPENXML(@idoc, '/Root/MatchSetting', 1) WITH(OSMatchId INT, BetTypeName NVARCHAR(200), MaxBet MONEY, Spread MONEY);
         EXEC sp_xml_removedocument 
              @idoc;
 
@@ -49,7 +51,8 @@ Revisions:
         INSERT INTO [dbo].[OSMaxBet]
         ([OSMatchId], 
          [BettypeName], 
-         [MaxBet]
+         [MaxBet],
+         [Spread]
         )
                SELECT DISTINCT 
                       OSMatchId, 
@@ -58,6 +61,11 @@ Revisions:
                           WHEN MaxBet = ''
                           THEN NULL
                           ELSE MaxBet
+                      END,
+                      CASE
+                          WHEN Spread = ''
+                          THEN NULL
+                          ELSE Spread/100
                       END
                FROM #tmpTable t;  
         -- DROP tmpTable
