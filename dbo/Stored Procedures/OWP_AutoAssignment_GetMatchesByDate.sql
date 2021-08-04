@@ -22,6 +22,7 @@ Revisions:
 	20200716@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
 	20200928@Carlos.Nguyen: Auto re-assign for LA - [Redmine: #126964]
 	20201109@Carlos.Nguyen: LA Auto Assignment - Determine ET/PK match - [Redmine: #144570]
+	20210804@Carlos.Nguyen: Ignore SABA match - [Redmine: #159179]
 */
 
 BEGIN
@@ -125,7 +126,7 @@ BEGIN
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON m.ParentMatchId = mi.OWPMatchId
 		INNER JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON m.OWPMatchId = mp.OWPMatchId
 		INNER JOIN dbo.Provider AS p WITH (NOLOCK) ON p.ProviderId=mp.ProviderId
-		INNER JOIN OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId=om.OWPLeagueId AND UPPER(ol.OWPLeagueName) NOT LIKE 'SABA %'
+		INNER JOIN OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId=om.OWPLeagueId AND UPPER(ol.OWPLeagueName) NOT LIKE '%SABA %'
 		LEFT JOIN OWPLeague AS owpl WITH(NOLOCK) ON om.OWPLeagueId=owpl.OWPLeagueId AND owpl.OWPLeagueName LIKE '%FANTASY%'
 	WHERE m.Maxbet IS NOT NULL
 		AND mi.MatchStatus = 'Live'
