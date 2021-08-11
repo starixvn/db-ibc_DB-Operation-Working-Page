@@ -27,6 +27,7 @@ AS
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 	20200913@Jacob: Sync Live Status to InfoSite - Ignore deleted match - [Redmine: #134336]
 	20210129@Esther: Display Match Code on Task List and LGA - [Redmine: #149347]
+	20210810@Mira: Sync Special Product Match - [Redmine: #153498]
 */
 
      SET NOCOUNT ON;
@@ -75,36 +76,37 @@ AS
 
      -- Match ID List by Date
      CREATE TABLE #owpMatchListByDate
-     (OWPMatchId      INT, 
-      MatchNo         NVARCHAR(50), 
-      EventDate       DATE, 
-      EventDateTime   DATETIME, 
-      KickOffTime     TIME(7), 
-      OtherTime       TIME(7), 
-      OWPLeagueId     INT, 
-      OWPHomeId       INT, 
-      OWPAwayId       INT, 
-      MatchId         INT, 
-      NoOfHDP         NVARCHAR(20), 
-      NoOfHDPId       INT, 
-      Channel         NVARCHAR(200), 
-      WatchBet        NVARCHAR(200), 
-      Phone           NVARCHAR(200), 
-      [Round]         NVARCHAR(2000), 
-      OutSide         NVARCHAR(2000), 
-      Remark          NVARCHAR(2000), 
-      Website1        NVARCHAR(1000), 
-      Website2        NVARCHAR(1000), 
-      Website3        NVARCHAR(1000), 
-      Website4        NVARCHAR(1000), 
-      MatchStatus     NVARCHAR(15), 
-      IsMinorMatch    BIT, 
-      MinorBettypeId  INT, 
-      ParentMatchId   INT, 
-      InfoSiteMatchId INT, 
-      IsNeutral       BIT, 
-      IpTv            NVARCHAR(2000), 
-      IsLive          BIT
+     (OWPMatchId        INT, 
+      MatchNo           NVARCHAR(50), 
+      EventDate         DATE, 
+      EventDateTime     DATETIME, 
+      KickOffTime       TIME(7), 
+      OtherTime         TIME(7), 
+      OWPLeagueId       INT, 
+      OWPHomeId         INT, 
+      OWPAwayId         INT, 
+      MatchId           INT, 
+      NoOfHDP           NVARCHAR(20), 
+      NoOfHDPId         INT, 
+      Channel           NVARCHAR(200), 
+      WatchBet          NVARCHAR(200), 
+      Phone             NVARCHAR(200), 
+      [Round]           NVARCHAR(2000), 
+      OutSide           NVARCHAR(2000), 
+      Remark            NVARCHAR(2000), 
+      Website1          NVARCHAR(1000), 
+      Website2          NVARCHAR(1000), 
+      Website3          NVARCHAR(1000), 
+      Website4          NVARCHAR(1000), 
+      MatchStatus       NVARCHAR(15), 
+      IsMinorMatch      BIT, 
+      MinorBettypeId    INT, 
+      ParentMatchId     INT, 
+      InfoSiteMatchId   INT, 
+      ParentAdminSiteId INT, 
+      IsNeutral         BIT, 
+      IpTv              NVARCHAR(2000), 
+      IsLive            BIT
      );
      INSERT INTO #owpMatchListByDate
      (OWPMatchId, 
@@ -134,6 +136,7 @@ AS
       MinorBettypeId, 
       ParentMatchId, 
       InfoSiteMatchId, 
+      ParentAdminSiteId, 
       IsNeutral, 
       IpTv, 
       IsLive
@@ -172,7 +175,12 @@ AS
                        THEN om.OWPMatchId
                        ELSE minor.ParentMatchId
                    END AS ParentMatchId, 
-                   om.InfoSiteMatchId, 
+                   om.InfoSiteMatchId,
+                   CASE
+                       WHEN minor.ParentMatchId IS NULL
+                       THEN om.MatchId
+                       ELSE mp.MatchId
+                   END 'ParentAdminSiteId', 
                    om.IsNeutral, 
                    mi.IPTV,
                    CASE
@@ -183,6 +191,7 @@ AS
             FROM dbo.OWPMatch AS om WITH(NOLOCK)
                  INNER JOIN dbo.MatchInfo AS mi WITH(NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
                  LEFT JOIN dbo.MinorMatch AS minor WITH(NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
+                 LEFT JOIN dbo.OWPMatch mp WITH(NOLOCK) ON mp.OWPMatchId = minor.ParentMatchId
                  LEFT JOIN #tblNoOfHDPResource AS r ON mi.NoOfHDPId = r.Id
             WHERE om.EventDateTime BETWEEN @FromDate AND @ToDate
                   AND mi.IsSelected = 1
