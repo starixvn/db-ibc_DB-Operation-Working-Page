@@ -76,37 +76,37 @@ AS
 
      -- Match ID List by Date
      CREATE TABLE #owpMatchListByDate
-     (OWPMatchId        INT, 
-      MatchNo           NVARCHAR(50), 
-      EventDate         DATE, 
-      EventDateTime     DATETIME, 
-      KickOffTime       TIME(7), 
-      OtherTime         TIME(7), 
-      OWPLeagueId       INT, 
-      OWPHomeId         INT, 
-      OWPAwayId         INT, 
-      MatchId           INT, 
-      NoOfHDP           NVARCHAR(20), 
-      NoOfHDPId         INT, 
-      Channel           NVARCHAR(200), 
-      WatchBet          NVARCHAR(200), 
-      Phone             NVARCHAR(200), 
-      [Round]           NVARCHAR(2000), 
-      OutSide           NVARCHAR(2000), 
-      Remark            NVARCHAR(2000), 
-      Website1          NVARCHAR(1000), 
-      Website2          NVARCHAR(1000), 
-      Website3          NVARCHAR(1000), 
-      Website4          NVARCHAR(1000), 
-      MatchStatus       NVARCHAR(15), 
-      IsMinorMatch      BIT, 
-      MinorBettypeId    INT, 
-      ParentMatchId     INT, 
-      InfoSiteMatchId   INT, 
-      ParentAdminSiteId INT, 
-      IsNeutral         BIT, 
-      IpTv              NVARCHAR(2000), 
-      IsLive            BIT
+     (OWPMatchId       INT, 
+      MatchNo          NVARCHAR(50), 
+      EventDate        DATE, 
+      EventDateTime    DATETIME, 
+      KickOffTime      TIME(7), 
+      OtherTime        TIME(7), 
+      OWPLeagueId      INT, 
+      OWPHomeId        INT, 
+      OWPAwayId        INT, 
+      MatchId          INT, 
+      NoOfHDP          NVARCHAR(20), 
+      NoOfHDPId        INT, 
+      Channel          NVARCHAR(200), 
+      WatchBet         NVARCHAR(200), 
+      Phone            NVARCHAR(200), 
+      [Round]          NVARCHAR(2000), 
+      OutSide          NVARCHAR(2000), 
+      Remark           NVARCHAR(2000), 
+      Website1         NVARCHAR(1000), 
+      Website2         NVARCHAR(1000), 
+      Website3         NVARCHAR(1000), 
+      Website4         NVARCHAR(1000), 
+      MatchStatus      NVARCHAR(15), 
+      IsMinorMatch     BIT, 
+      MinorBettypeId   INT, 
+      ParentMatchId    INT, 
+      InfoSiteMatchId  INT, 
+      ParentInfoSiteId INT, 
+      IsNeutral        BIT, 
+      IpTv             NVARCHAR(2000), 
+      IsLive           BIT
      );
      INSERT INTO #owpMatchListByDate
      (OWPMatchId, 
@@ -136,7 +136,7 @@ AS
       MinorBettypeId, 
       ParentMatchId, 
       InfoSiteMatchId, 
-      ParentAdminSiteId, 
+      ParentInfoSiteId, 
       IsNeutral, 
       IpTv, 
       IsLive
@@ -178,9 +178,9 @@ AS
                    om.InfoSiteMatchId,
                    CASE
                        WHEN minor.ParentMatchId IS NULL
-                       THEN om.MatchId
-                       ELSE mp.MatchId
-                   END 'ParentAdminSiteId', 
+                       THEN om.InfoSiteMatchId
+                       ELSE mp.InfoSiteMatchId
+                   END, 
                    om.IsNeutral, 
                    mi.IPTV,
                    CASE
@@ -295,7 +295,8 @@ AS
             ml.IsMinorMatch, 
             ml.MinorBettypeId, 
             ml.ParentMatchId, 
-            ml.InfoSiteMatchId, 
+            ml.InfoSiteMatchId,            
+            imn.AdminSiteMatchId 'ParentAdminSiteId', 
             ml.IpTv,
             CASE
                 WHEN im.InfoSiteMatchId IS NULL
@@ -317,6 +318,8 @@ AS
           LEFT JOIN #tblNoOfHDPResource AS ref ON ml.NoOfHDPId = ref.Id
           LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
                                                             AND im.IsDeleted = 0
+          LEFT JOIN dbo.InfoSiteMatch AS imn WITH(NOLOCK) ON ml.ParentInfoSiteId = imn.InfoSiteMatchId
+                                                             AND imn.IsDeleted = 0
      WHERE ml.OWPMatchId IN
      (
          SELECT OWPMatchId

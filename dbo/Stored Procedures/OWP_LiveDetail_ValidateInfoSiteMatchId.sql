@@ -14,26 +14,42 @@ Revisions:
 	20190820@Tyler.Dang: InitialSP - [Redmine: #118566]
 	20200913@Jacob: Sync Live Status to InfoSite - [Redmine: #134336]
 	20200913@Jacob: Sync Live Status to InfoSite - Ignore deleted match - [Redmine: #134336]
+	20210810@Mira: Sync Special Product Match - [Redmine: #153498]
 */
 
      SET NOCOUNT ON;
      DECLARE @owpIsLive BIT;
+     DECLARE @adminSiteId INT;
+     DECLARE @minorBettypeId INT;
      DECLARE @infoSiteIsLive BIT;
+     DECLARE @isMinorMatch INT;
 
      -- @owpIsLive
      SELECT @owpIsLive = CASE
                              WHEN mi.MatchStatus IN('Live', 'Postponed')
                              THEN 1
                              ELSE 0
-                         END
+                         END, 
+            @adminSiteId = imn.AdminSiteMatchId, 
+            @minorBettypeId = minor.MinorBettypeId, 
+            @isMinorMatch = CASE
+                                WHEN minor.MinorMatchId IS NULL
+                                THEN 0
+                                ELSE 1
+                            END
      FROM dbo.OWPMatch AS om WITH(NOLOCK)
           INNER JOIN dbo.MatchInfo AS mi WITH(NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
+          LEFT JOIN dbo.MinorMatch AS minor WITH(NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
+          LEFT JOIN dbo.OWPMatch mp WITH(NOLOCK) ON mp.OWPMatchId = minor.ParentMatchId
+          LEFT JOIN dbo.InfoSiteMatch AS imn WITH(NOLOCK) ON mp.InfoSiteMatchId = imn.InfoSiteMatchId
+                                                             AND imn.IsDeleted = 0
      WHERE om.OWPMatchId = @MatchId;
 
      -- @infoSiteIsLive
      SELECT @infoSiteIsLive = IsLive
      FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
-     WHERE im.InfoSiteMatchId = @InfoSiteMatchId AND im.IsDeleted = 0;
+     WHERE im.InfoSiteMatchId = @InfoSiteMatchId
+           AND im.IsDeleted = 0;
 
      -- Result
      SELECT CASE
@@ -45,4 +61,7 @@ Revisions:
                 WHEN @owpIsLive = @infoSiteIsLive
                 THEN 1
                 ELSE 0
-            END AS IsLiveStatusSynchronized;
+            END AS IsLiveStatusSynchronized, 
+            @minorBettypeId AS MinorBettypeId, 
+            @adminSiteId AS ParentAdminSiteId,
+			@isMinorMatch AS IsMinorMatch;
