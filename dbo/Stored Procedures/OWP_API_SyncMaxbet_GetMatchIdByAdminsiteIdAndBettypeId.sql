@@ -21,8 +21,10 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
-	SELECT mm.MinorMatchId AS OwpMatchId
+	SELECT TOP 1 mm.MinorMatchId AS OwpMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN MinorMatch AS mm WITH (NOLOCK) ON om.OWPMatchId = mm.ParentMatchId
 	WHERE om.MatchId=@AdminsiteId AND mm.MinorBettypeId=@BettypeId
+	AND om.EventDate=DATEADD(dd, 0, DATEDIFF(dd, 0, GETDATE()))
+	ORDER BY om.EventDateTime DESC
 END

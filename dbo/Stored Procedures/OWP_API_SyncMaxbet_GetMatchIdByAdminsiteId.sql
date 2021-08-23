@@ -16,10 +16,13 @@ DB: bodb_OWP
 
 Revisions:
 	20201203@Carlos.Nguyen: Get match id by adminsite id - [Redmine: #145096]
+	20210811@Carlos.Nguyen: Get match id by adminsite id [Redmine: #153498]
 */
 BEGIN
 	SET NOCOUNT ON
-	SELECT om.OWPMatchId
+	SELECT TOP 1 om.OWPMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
 	WHERE om.MatchId=@AdminsiteId
+	AND om.EventDate=DATEADD(dd, 0, DATEDIFF(dd, 0, GETDATE()))
+	ORDER BY om.EventDateTime DESC
 END
