@@ -21,10 +21,12 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
+	DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '11:59:59')
+	
 	SELECT TOP 1 mm.MinorMatchId AS OwpMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN MinorMatch AS mm WITH (NOLOCK) ON om.OWPMatchId = mm.ParentMatchId
 	WHERE om.MatchId=@AdminsiteId AND mm.MinorBettypeId=@BettypeId
-	AND om.EventDate<=DATEADD(dd, 0, DATEDIFF(dd, 0, GETDATE()))
+	AND om.EventDateTime<=@ToDate
 	ORDER BY om.EventDateTime DESC
 END

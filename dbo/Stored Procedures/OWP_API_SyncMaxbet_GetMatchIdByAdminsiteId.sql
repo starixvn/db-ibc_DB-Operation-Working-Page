@@ -20,9 +20,11 @@ Revisions:
 */
 BEGIN
 	SET NOCOUNT ON
+	DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '11:59:59')
+	
 	SELECT TOP 1 om.OWPMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
 	WHERE om.MatchId=@AdminsiteId
-	AND om.EventDate <= DATEADD(dd, 0, DATEDIFF(dd, 0, GETDATE()))
+	AND om.EventDateTime <= @ToDate
 	ORDER BY om.EventDateTime DESC
 END
