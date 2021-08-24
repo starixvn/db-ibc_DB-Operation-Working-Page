@@ -304,11 +304,7 @@ AS
                 THEN 0
                 ELSE 1
             END AS IsInfoSiteLinked,
-            CASE
-                WHEN im.IsLive = ml.IsLive
-                THEN 1
-                ELSE 0
-            END AS IsLiveStatusSynchronized, 
+			ml.IsLive AS IsLiveMatchStatus, 
             ma.MatchCode
      FROM #owpMatchListByDate AS ml WITH(NOLOCK)
           INNER JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId

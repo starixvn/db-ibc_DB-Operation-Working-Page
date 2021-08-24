@@ -21,8 +21,7 @@ Revisions:
      DECLARE @owpIsLive BIT;
      DECLARE @adminSiteId INT;
      DECLARE @minorBettypeId INT;
-     DECLARE @infoSiteIsLive BIT;
-     DECLARE @isMinorMatch INT;
+     DECLARE @isInfoSiteLinked BIT;
      DECLARE @infositeParentId INT;
 
      -- @owpIsLive
@@ -32,11 +31,6 @@ Revisions:
                              ELSE 0
                          END, 
             @minorBettypeId = minor.MinorBettypeId, 
-            @isMinorMatch = CASE
-                                WHEN minor.MinorMatchId IS NULL
-                                THEN 0
-                                ELSE 1
-                            END, 
             @infositeParentId = CASE
                                     WHEN minor.ParentMatchId IS NULL
                                     THEN om.InfoSiteMatchId
@@ -51,7 +45,7 @@ Revisions:
      WHERE om.OWPMatchId = @MatchId;
 
      -- @infoSiteIsLive
-     SELECT @infoSiteIsLive = IsLive
+     SELECT @isInfoSiteLinked = IsLive
      FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
      WHERE im.InfoSiteMatchId = @InfoSiteMatchId
            AND im.IsDeleted = 0;
@@ -64,15 +58,10 @@ Revisions:
 
      -- Result
      SELECT CASE
-                WHEN @infoSiteIsLive IS NULL
+                WHEN @isInfoSiteLinked IS NULL
                 THEN 0
                 ELSE 1
-            END AS IsInfoSiteLinked,
-            CASE
-                WHEN @owpIsLive = @infoSiteIsLive
-                THEN 1
-                ELSE 0
-            END AS IsLiveStatusSynchronized, 
+            END AS IsInfoSiteLinked, 
+            @owpIsLive AS IsLiveMatchStatus, 
             @minorBettypeId AS MinorBettypeId, 
-            @adminSiteId AS ParentAdminSiteId, 
-            @isMinorMatch AS IsMinorMatch;
+            @adminSiteId AS ParentAdminSiteId;
