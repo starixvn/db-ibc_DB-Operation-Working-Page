@@ -23,6 +23,6 @@ BEGIN
 	SELECT TOP 1 om.OWPMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
 	WHERE om.MatchId=@AdminsiteId
-	AND om.EventDate=DATEADD(dd, 0, DATEDIFF(dd, 0, GETDATE()))
+	AND om.EventDate <= DATEADD(dd, 0, DATEDIFF(dd, 0, GETDATE()))
 	ORDER BY om.EventDateTime DESC
 END
