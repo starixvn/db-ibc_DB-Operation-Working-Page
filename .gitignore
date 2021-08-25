@@ -4,3 +4,4 @@
 *.dbmdl
 *.jfm
 /obj
+*node_modules/*
