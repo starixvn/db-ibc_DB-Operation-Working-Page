@@ -33,4 +33,5 @@ BEGIN
 	,sp.LastUpdate
 	,sp.[Type]
 	FROM SpecialProduct AS sp WITH (NOLOCK)
+	WHERE sp.[Type] = 'MBC'
 END
