@@ -8,8 +8,6 @@ CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchSetting_Update] @UserId INT
 	,@MatchId INT
 	,@Maxbet MONEY = NULL
 	,@Spread SMALLMONEY = NULL
-	,@MaxbetCN88 MONEY = NULL
-	,@SpreadCN88 SMALLMONEY = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 AS
@@ -23,21 +21,18 @@ Revisions:
 	20190927@Leo.Vo: Write log - [Feature: #120415]
 	20191021@Leo.Vo: Fix error to compare NULL - [Feature: #120415]
 	20191125@Kane.Le: Cast Maxbet to Float - [Feature: #123167]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	DECLARE @minorMatchId INT
 		,@parentMatchId INT
 		,@OldMaxbet MONEY
 		,@OldSpread SMALLMONEY
-		,@OldMaxbetCN88 MONEY
-		,@OldSpreadCN88 SMALLMONEY
 
 	IF (@BettypeId IN (1, 3, 5, 7, 8, 15))
 	BEGIN
 		SELECT TOP 1 @OldMaxbet = mm.Maxbet
 			,@OldSpread = mm.Spread
-			,@OldMaxbetCN88 = mm.MaxbetCN88
-			,@OldSpreadCN88 = mm.SpreadCN88
 		FROM MatchSetting AS mm WITH (NOLOCK)
 		WHERE mm.OWPMatchId = @MatchId AND mm.Bettype = @BettypeId
 
@@ -49,17 +44,13 @@ BEGIN
 			OWPMatchId
 			,Bettype
 			,Maxbet
-			,MaxbetCN88
 			,Spread
-			,SpreadCN88
 			)
 		VALUES (
 			@MatchId
 			,@BettypeId
 			,@Maxbet
-			,@MaxbetCN88
 			,@Spread
-			,@SpreadCN88
 			)
 	END
 
@@ -85,8 +76,6 @@ BEGIN
 
 		SELECT TOP 1 @OldMaxbet = mm.Maxbet
 			,@OldSpread = mm.Spread
-			,@OldMaxbetCN88 = mm.MaxbetCN88
-			,@OldSpreadCN88 = mm.SpreadCN88
 		FROM MatchSetting AS mm WITH (NOLOCK)
 			INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK) ON mm.OWPMatchId = tblMm.MinorMatchId
 
@@ -99,16 +88,12 @@ BEGIN
 			OWPMatchId
 			,Bettype
 			,Maxbet
-			,MaxbetCN88
 			,Spread
-			,SpreadCN88
 			)
 		SELECT tblMm.MinorMatchId
 			,1
 			,@Maxbet
-			,@MaxbetCN88
 			,@Spread
-			,@SpreadCN88
 		FROM #tblMinorMatch AS tblMm WITH (NOLOCK)
 
 		DROP TABLE #tblMinorMatch
@@ -127,8 +112,6 @@ BEGIN
 
 		SELECT TOP 1 @OldMaxbet = mm.Maxbet
 			,@OldSpread = mm.Spread
-			,@OldMaxbetCN88 = mm.MaxbetCN88
-			,@OldSpreadCN88 = mm.SpreadCN88
 		FROM MatchSetting AS mm WITH (NOLOCK)
 		WHERE mm.OWPMatchId = @minorMatchId
 
@@ -140,22 +123,18 @@ BEGIN
 			OWPMatchId
 			,Bettype
 			,Maxbet
-			,MaxbetCN88
 			,Spread
-			,SpreadCN88
 			)
 		VALUES (
 			@minorMatchId
 			,1
 			,@Maxbet
-			,@MaxbetCN88
 			,@Spread
-			,@SpreadCN88
 			)
 	END
 
 	-- send message
-	IF (dbo.[fnc_IsMatchInTimeRange](@MatchId) = 1 AND (ISNULL(@OldMaxbet, - 1) <> ISNULL(@Maxbet, - 1) OR ISNULL(@OldSpread, - 1) <> ISNULL(@Spread, - 1) OR ISNULL(@OldMaxbetCN88, - 1) <> ISNULL(@MaxbetCN88, - 1) OR ISNULL(@OldSpreadCN88, - 1) <> ISNULL(@SpreadCN88, - 1)))
+	IF (dbo.[fnc_IsMatchInTimeRange](@MatchId) = 1 AND (ISNULL(@OldMaxbet, - 1) <> ISNULL(@Maxbet, - 1) OR ISNULL(@OldSpread, - 1) <> ISNULL(@Spread, - 1)))
 	BEGIN
 		DECLARE @UserReceivedAssigneeMessageMatchInfo TVP_INT
 			,@UserReceivedWatcherMessageMatchInfo TVP_INT
@@ -262,48 +241,6 @@ BEGIN
 				,@SessionId = @SessionId
 		END
 
-		IF (ISNULL(@OldMaxbetCN88, - 1) <> ISNULL(@MaxbetCN88, - 1))
-		BEGIN
-			DECLARE @MaxbetCN88FormatK VARCHAR(20)
-				,@OldMaxbetCN88FormatK VARCHAR(20)
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditMaxbetCN88'
-
-			IF (@MaxbetCN88 IS NOT NULL)
-			BEGIN
-				SET @MaxbetCN88FormatK =  CONVERT(VARCHAR, CAST(@MaxbetCN88 / 1000 AS FLOAT)) + 'K'
-			END
-
-			IF (@OldMaxbetCN88 IS NOT NULL)
-			BEGIN
-				SET @OldMaxbetCN88FormatK = CONVERT(VARCHAR, CAST(@OldMaxbetCN88 / 1000 AS FLOAT)) + 'K'
-			END
-
-			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', ISNULL(@MaxbetCN88FormatK, ''))
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', ISNULL(@OldMaxbetCN88FormatK, ''))
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
 		IF (ISNULL(@OldSpread, - 1) <> ISNULL(@Spread, - 1))
 		BEGIN
 			DECLARE @SpreadFormatPercent VARCHAR(20)
@@ -345,48 +282,6 @@ BEGIN
 				,@IsWatcher = 1
 				,@SessionId = @SessionId
 		END
-
-		IF (ISNULL(@OldSpreadCN88, - 1) <> ISNULL(@SpreadCN88, - 1))
-		BEGIN
-			DECLARE @SpreadCN88FormatPercent VARCHAR(20)
-				,@OldSpreadCN88FormatPercent VARCHAR(20)
-
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditSpreadCN88'
-
-			IF (@SpreadCN88 IS NOT NULL)
-			BEGIN
-				SET @SpreadCN88FormatPercent = CONVERT(VARCHAR, CAST(@SpreadCN88 * 100 AS FLOAT)) + '%'
-			END
-
-			IF (@OldSpreadCN88 IS NOT NULL)
-			BEGIN
-				SET @OldSpreadCN88FormatPercent = CONVERT(VARCHAR,  CAST(@OldSpreadCN88 * 100 AS FLOAT)) + '%'
-			END
-
-			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', ISNULL(@SpreadCN88FormatPercent, ''))
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', ISNULL(@OldSpreadCN88FormatPercent, ''))
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
 	END
 
 	--- Log
@@ -402,8 +297,6 @@ BEGIN
 	SET @Xml = (
 			SELECT ISNULL(@OldMaxbet, '') AS '@oldmbet'
 				,ISNULL(@OldSpread, '') AS '@oldspread'
-				,ISNULL(@OldMaxbetCN88, 0) AS '@oldmbetCN88'
-				,ISNULL(@OldSpreadCN88, '') AS '@oldsCN88'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)
@@ -413,8 +306,6 @@ BEGIN
 			SELECT ISNULL(@BettypeId, '') AS '@bttype'
 				,ISNULL(@Maxbet, '') AS '@mbet'
 				,ISNULL(@Spread, '') AS '@spread'
-				,ISNULL(@MaxbetCN88, 0) AS '@mbetCN88'
-				,ISNULL(@SpreadCN88, '') AS '@sCN88'
 			FOR XML PATH('z')
 				,ROOT('r')
 			)

@@ -9,6 +9,7 @@ DB: bodb_OWP
 
 Revisions:
 	20190813@Carlos: Initial SP - [Feature: #118595]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 
 BEGIN
@@ -21,9 +22,7 @@ BEGIN
 				BettypeId INT,
 				Bettype NVARCHAR(100),
 				Maxbet MONEY,
-				Spread SMALLMONEY,
-				MaxbetCN88 MONEY,
-				SpreadCN88 SMALLMONEY)
+				Spread SMALLMONEY)
 				
 	IF NOT EXISTS(SELECT 1
 			  FROM MinorMatch AS mb WITH (NOLOCK)
@@ -34,12 +33,10 @@ BEGIN
 			FROM MinorMatch AS mm WITH (NOLOCK)
 			WHERE mm.MinorBettypeId IN (-1,-88)AND mm.ParentMatchId=@MatchId
 			
-			INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread, MaxbetCN88, SpreadCN88)
+			INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread)
 			SELECT DISTINCT tblMm.BettypeId,
 				ms.Maxbet,
-				ms.Spread,
-				ms.MaxbetCN88,
-				ms.SpreadCN88
+				ms.Spread
 			FROM MatchSetting AS ms WITH (NOLOCK) INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK)
 				ON tblMm.MatchId=ms.OWPMatchId
 		END
@@ -61,12 +58,10 @@ BEGIN
 					WHERE mm.ParentMatchId=@parentMatchId
 								AND mm.MinorBettypeId = -5
 					
-					INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread, MaxbetCN88, SpreadCN88)
+					INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread)
 					SELECT DISTINCT tblMm.BettypeId,
 						ms.Maxbet,
-						ms.Spread,
-						ms.MaxbetCN88,
-						ms.SpreadCN88
+						ms.Spread
 					FROM MatchSetting AS ms WITH (NOLOCK) INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK)
 						ON tblMm.MatchId=ms.OWPMatchId
 				END
@@ -81,31 +76,25 @@ BEGIN
 					WHERE mm.ParentMatchId=@parentMatchId
 								AND mm.MinorBettypeId =-8
 					
-					INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread, MaxbetCN88, SpreadCN88)
+					INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread)
 					SELECT DISTINCT tblMm.BettypeId,
 						ms.Maxbet,
-						ms.Spread,
-						ms.MaxbetCN88,
-						ms.SpreadCN88
+						ms.Spread
 					FROM MatchSetting AS ms WITH (NOLOCK) INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK)
 						ON tblMm.MatchId=ms.OWPMatchId
 				END
 		END
 	BEGIN
-		INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread, MaxbetCN88, SpreadCN88)
+		INSERT INTO #tblMatchSetting(BettypeId, Maxbet, Spread)
 				SELECT DISTINCT ms.Bettype,
 					ms.Maxbet,
-					ms.Spread,
-					ms.MaxbetCN88,
-					ms.SpreadCN88
+					ms.Spread
 				FROM MatchSetting AS ms WITH (NOLOCK)
 				WHERE ms.OWPMatchId=@MatchId
 	END
 	SELECT tblMs.BettypeId,
 		tblMs.Maxbet,
-		tblMs.Spread,
-		tblMs.MaxbetCN88,
-		tblMs.SpreadCN88
+		tblMs.Spread
 	FROM #tblMatchSetting AS tblMs
 	
 	DROP TABLE #tblMatchSetting

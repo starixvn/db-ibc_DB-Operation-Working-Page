@@ -17,14 +17,13 @@ Revisions:
 	20190927@Leo.Vo: Write log - [Feature: #120415]
 	20191021@Leo.Vo: Fix error to compare NULL - [Feature: #120415]
 	20191125@Kane.Le: Cast Maxbet to Float - [Feature: #123167]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	DECLARE @MatchIdUseLog INT
 		,@ParentmatchIdUseLog INT
 		,@Maxbet MONEY
 		,@Spread SMALLMONEY
-		,@MaxbetCN88 MONEY
-		,@SpreadCN88 SMALLMONEY
 
 	CREATE TABLE #tblMinorMatch (MinorMatchId INT)
 
@@ -32,8 +31,6 @@ BEGIN
 	BEGIN
 		SELECT TOP 1 @Maxbet = ms.Maxbet
 			,@Spread = ms.Spread
-			,@MaxbetCN88 = ms.MaxbetCN88
-			,@SpreadCN88 = ms.SpreadCN88
 		FROM MatchSetting AS ms WITH (NOLOCK)
 		WHERE ms.OWPMatchId = @MatchId AND Bettype = @BettypeId
 		
@@ -64,8 +61,6 @@ BEGIN
 
 		SELECT TOP 1 @Maxbet = ms.Maxbet
 			,@Spread = ms.Spread
-			,@MaxbetCN88 = ms.MaxbetCN88
-			,@SpreadCN88 = ms.SpreadCN88
 		FROM MatchSetting AS ms WITH (NOLOCK)
 			INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK) ON tblMm.MinorMatchId = ms.OWPMatchId
 
@@ -96,8 +91,6 @@ BEGIN
 
 		SELECT TOP 1 @Maxbet = ms.Maxbet
 			,@Spread = ms.Spread
-			,@MaxbetCN88 = ms.MaxbetCN88
-			,@SpreadCN88 = ms.SpreadCN88
 		FROM MatchSetting AS ms WITH (NOLOCK)
 			INNER JOIN #tblMinorMatch AS tblMm WITH (NOLOCK) ON ms.OWPMatchId = tblMm.MinorMatchId
 
@@ -208,35 +201,6 @@ BEGIN
 				,@SessionId = @SessionId
 		END
 
-		IF (@MaxbetCN88 IS NOT NULL)
-		BEGIN
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditMaxbetCN88'
-
-			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', '')
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', CONVERT(VARCHAR, CAST(@MaxbetCN88 / 1000 AS FLOAT)) + 'K')
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
 		IF (@Spread IS NOT NULL)
 		BEGIN
 			SELECT @MessageTemplate = mt.MsgTemplateContent
@@ -248,35 +212,6 @@ BEGIN
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', '')
 			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', CONVERT(VARCHAR, CAST(@Spread * 100 AS FLOAT)) + '%')
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedAssigneeMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 0
-				,@SessionId = @SessionId
-
-			EXEC dbo.OWP_MessageInsert @UserId = @UserId
-				,@MessageContent = @MessageTemplate
-				,@MessageType = @MessageTypeId
-				,@MessageTo = @UserReceivedWatcherMessageMatchInfo
-				,@IsImportant = 0
-				,@IsWatcher = 1
-				,@SessionId = @SessionId
-		END
-
-		IF (@SpreadCN88 IS NOT NULL)
-		BEGIN
-			SELECT @MessageTemplate = mt.MsgTemplateContent
-				,@MessageTypeId = mt.MsgTemplateId
-			FROM MessageTemplate AS mt WITH (NOLOCK)
-			WHERE mt.MsgTemplateCode = 'EditSpreadCN88'
-
-			SET @MessageTemplate = dbo.fnc_ReplaceMessageTemplate(@MessageTemplate, @MatchId, @UserId)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Bettype>', @Bettype)
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<New>', '')
-			SET @MessageTemplate = REPLACE(@MessageTemplate, '<Old>', CONVERT(VARCHAR, CAST(@SpreadCN88 * 100 AS FLOAT)) + '%')
 
 			EXEC dbo.OWP_MessageInsert @UserId = @UserId
 				,@MessageContent = @MessageTemplate
