@@ -28,6 +28,7 @@ AS
 	20200913@Jacob: Sync Live Status to InfoSite - Ignore deleted match - [Redmine: #134336]
 	20210129@Esther: Display Match Code on Task List and LGA - [Redmine: #149347]
 	20210810@Mira: Sync Special Product Match - [Redmine: #153498]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 
      SET NOCOUNT ON;
@@ -407,9 +408,7 @@ AS
       Bettype        INT, 
       MinorBettypeId INT, 
       MaxBet         MONEY, 
-      Spread         MONEY, 
-      MaxBetCN88     MONEY, 
-      SpreadCN88     MONEY, 
+      Spread         MONEY,  
       IsMatchSetting BIT, 
       LeagueId       INT
      );
@@ -419,9 +418,7 @@ AS
       Bettype, 
       MinorBettypeId, 
       MaxBet, 
-      Spread, 
-      MaxBetCN88, 
-      SpreadCN88, 
+      Spread,
       IsMatchSetting
      )
             SELECT ml.owpmatchid, 
@@ -429,9 +426,7 @@ AS
                    ms.Bettype, 
                    ml.MinorBettypeId, 
                    ms.Maxbet, 
-                   ms.Spread, 
-                   ms.MaxbetCN88, 
-                   ms.SpreadCN88, 
+                   ms.Spread,
                    1
             FROM #owpMatchListByDate AS ml WITH(NOLOCK)
                  INNER JOIN dbo.MatchSetting AS ms WITH(NOLOCK) ON ml.owpmatchid = ms.OWPMatchId
@@ -534,9 +529,7 @@ AS
             mb.Bettype, 
             mb.MinorBettypeId, 
             mb.MaxBet, 
-            mb.Spread, 
-            mb.MaxBetCN88, 
-            mb.SpreadCN88
+            mb.Spread
      FROM #tblMaxBet AS mb WITH(NOLOCK);
 
      -- Return TV 

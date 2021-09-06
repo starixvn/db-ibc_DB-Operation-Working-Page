@@ -51,6 +51,7 @@ Revisions:
 	20191024@Kane.Le: Get Provider/Other Provider - [Redmine: #122194]
 	20200713@Carlos.Nguyen: Build HomeName in live game list - [Redmine: #137417]
 	20210128@CarlosNguyen: Query MatchCode - [Redmine: #149347]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -160,9 +161,7 @@ BEGIN
 		,ParentMatchId INT
 		,Maxbet MONEY
 		,Spread SMALLMONEY
-		,IsMatchSetting BIT
-		,MaxbetCN88 MONEY
-		,SpreadCN88 SMALLMONEY)
+		,IsMatchSetting BIT)
 
 	CREATE TABLE #tblParentMatchSetting (
 		OWPMatchId INT
@@ -277,8 +276,6 @@ BEGIN
 		,Maxbet
 		,Spread
 		,IsMatchSetting
-		,MaxbetCN88
-		,SpreadCN88
 		)
 	SELECT DISTINCT tm.OWPMatchId
 		,tm.ParentMatchId
@@ -287,15 +284,11 @@ BEGIN
 		,ms.Maxbet
 		,ms.Spread
 		,1
-		,ms.MaxbetCN88
-		,ms.SpreadCN88
 	FROM #tblMatch AS tm WITH (NOLOCK)
 		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON tm.OWPMatchId = ms.OWPMatchId
 		AND (
 			ms.Maxbet IS NOT NULL
 			OR ms.Spread IS NOT NULL
-			OR ms.MaxbetCN88 IS NOT NULL
-			OR ms.SpreadCN88 IS NOT NULL
 			)
 
 	
@@ -1003,8 +996,6 @@ BEGIN
 		,ms.MinorBettypeId
 		,ms.Maxbet
 		,ms.Spread
-		,ms.MaxbetCN88
-		,ms.SpreadCN88
 	FROM #tblMatchFiltered AS mf
 		INNER JOIN #tblMatchSetting AS ms ON mf.OWPMatchId = ms.OWPMatchId
 
