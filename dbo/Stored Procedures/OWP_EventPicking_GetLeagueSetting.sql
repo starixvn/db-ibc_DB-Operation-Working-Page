@@ -9,7 +9,7 @@ AS
  Revisions:
 	20200707@Jack.Nguyen: Initial SP - [Redmine: #134339]
 	2020080407@carlos.Nguyen: Export picking priority - [Redmine: #150269]
-	
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
    
 
@@ -21,19 +21,12 @@ SELECT ls.LeagueSettingId,
        ls.Round, 
        ls.HasTV, 
 	   ls.Spread_HDP, 
-	   ls.Spread_OU, 
-	   ls.CN88Spread_HDP, 
-	   ls.CN88Spread_OU,
+	   ls.Spread_OU,
 	   
-
        ls.MaxbetWD_MatchOffer, 
        ls.MaxbetWD_HDP, 
        ls.MaxbetWD_OU, 
-       ls.MaxbetWD_NoOfHDP, 
-       ls.CN88MaxbetWD_MatchOffer, 
-       ls.CN88MaxbetWD_HDP, 
-       ls.CN88MaxbetWD_OU,
-       ls.CN88MaxbetWD_NoOfHDP,
+       ls.MaxbetWD_NoOfHDP,
 	   
 	    -- new
 	   ls.MaxbetWD_1H AS MaxbetWD_1HHDP,
@@ -53,11 +46,7 @@ SELECT ls.LeagueSettingId,
        ls.MaxbetWK_MatchOffer, 
        ls.MaxbetWK_HDP, 
        ls.MaxbetWK_OU, 
-       ls.MaxbetWK_NoOfHDP, 
-       ls.CN88MaxbetWK_MatchOffer, 
-       ls.CN88MaxbetWK_HDP, 
-       ls.CN88MaxbetWK_OU, 
-       ls.CN88MaxbetWK_NoOfHDP,
+       ls.MaxbetWK_NoOfHDP,
 	   ls.FullConditionDescription
 FROM OWPLeague AS l WITH(NOLOCK)
      INNER JOIN dbo.[NewLeagueSetting] AS ls WITH(NOLOCK) ON ls.OWPLeagueId = l.OWPLeagueId
