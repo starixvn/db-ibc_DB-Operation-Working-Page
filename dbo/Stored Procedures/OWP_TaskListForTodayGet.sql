@@ -32,6 +32,7 @@ AS
 	20200824@Tyler.Dang: Query trade ready date time - [Redmine: #140194]
 	20210128@CarlosNguyen: Query MatchCode - [Redmine: #149347]
 	20210128@Esther.Nguyen: Hide Completed Match on Task List - [Redmine: #148228]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 
     BEGIN
@@ -48,9 +49,7 @@ AS
          ParentMatchId  INT, 
          Maxbet         MONEY, 
          Spread         SMALLMONEY, 
-         IsMatchSetting BIT, 
-         MaxbetCN88     MONEY, 
-         SpreadCN88     SMALLMONEY
+         IsMatchSetting BIT
         );
         CREATE TABLE #tblParentMatchSetting
         (Id             INT IDENTITY(1, 1) PRIMARY KEY CLUSTERED , 
@@ -221,9 +220,7 @@ AS
          MinorBettypeId, 
          Maxbet, 
          Spread, 
-         IsMatchSetting, 
-         MaxbetCN88, 
-         SpreadCN88
+         IsMatchSetting
         )
                SELECT DISTINCT 
                       ml.OWPMatchId, 
@@ -232,15 +229,11 @@ AS
                       ml.MinorBettypeId, 
                       ms.Maxbet, 
                       ms.Spread, 
-                      1, 
-                      ms.MaxbetCN88, 
-                      ms.SpreadCN88
+                      1
                FROM #tblTodayMatch AS ml WITH(NOLOCK)
                     INNER JOIN dbo.MatchSetting AS ms WITH(NOLOCK) ON ml.OWPMatchId = ms.OWPMatchId
                                                                       AND (ms.Maxbet IS NOT NULL
-                                                                           OR ms.Spread IS NOT NULL
-                                                                           OR ms.MaxbetCN88 IS NOT NULL
-                                                                           OR ms.SpreadCN88 IS NOT NULL);
+                                                                           OR ms.Spread IS NOT NULL);
         INSERT INTO #tblMatchSetting
         (OWPMatchId, 
          ParentMatchId, 
@@ -583,9 +576,7 @@ AS
                BettypeId, 
                MinorBettypeId, 
                Maxbet, 
-               Spread, 
-               MaxbetCN88, 
-               SpreadCN88
+               Spread
         FROM #tblMatchSetting WITH(NOLOCK);
 
         -- Return Match Notes

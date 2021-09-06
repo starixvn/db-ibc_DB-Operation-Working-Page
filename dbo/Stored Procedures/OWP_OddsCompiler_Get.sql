@@ -22,7 +22,7 @@ AS
 	20191218@Kane.Le: Get WatchBet - [Redmine: #124448]
 	20200609@Tyler.Dang: Get match television - [Redmine: #135526]
 	20200713@Carlos.Nguyen: Build HomeName - [Redmine: #137417]
-	20210901@Luca.Duong: Remove cn88
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	SET NOCOUNT ON
