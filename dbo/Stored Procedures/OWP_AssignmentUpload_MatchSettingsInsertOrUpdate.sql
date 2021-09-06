@@ -13,6 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 	
 */
 
@@ -26,9 +27,7 @@ Revisions:
      (MatchId    INT, 
       BetType    INT, 
       Spread     MONEY, 
-      MaxBet     MONEY, 
-      MaxBetCN88 MONEY, 
-      SpreadCN88 MONEY
+      MaxBet     MONEY
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -39,10 +38,8 @@ Revisions:
                    MatchId, 
                    BetType, 
                    Spread, 
-                   MaxBet, 
-                   MaxBetCN88, 
-                   SpreadCN88
-            FROM OPENXML(@idoc, '/Root/MatchSetting', 1) WITH(MatchId INT, BetType INT, Spread MONEY, MaxBet MONEY, MaxBetCN88 MONEY, SpreadCN88 MONEY);
+                   MaxBet
+            FROM OPENXML(@idoc, '/Root/MatchSetting', 1) WITH(MatchId INT, BetType INT, Spread MONEY, MaxBet MONEY);
      EXEC sp_xml_removedocument 
           @idoc;
 
@@ -66,9 +63,7 @@ Revisions:
      ([OWPMatchId], 
       [Bettype], 
       [Spread], 
-      [Maxbet], 
-      [MaxbetCN88], 
-      [SpreadCN88]
+      [Maxbet]
      )
             SELECT DISTINCT 
                    MatchId, 
@@ -83,16 +78,6 @@ Revisions:
 							THEN NULL
 						ELSE MaxBet
 						END  
-                   ,CASE 
-						WHEN MaxBetCN88 = ''
-							THEN NULL
-						ELSE MaxBetCN88
-						END 
-                   ,CASE 
-						WHEN SpreadCN88 = ''
-							THEN NULL
-						ELSE SpreadCN88
-						END 
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
@@ -103,9 +88,7 @@ Revisions:
      ([OWPMatchId], 
       [Bettype], 
       [Spread], 
-      [Maxbet], 
-      [MaxbetCN88], 
-      [SpreadCN88]
+      [Maxbet]
      )
             SELECT DISTINCT 
                    MatchId, 
@@ -120,16 +103,6 @@ Revisions:
 							THEN NULL
 						ELSE MaxBet
 						END  
-                   ,CASE 
-						WHEN MaxBetCN88 = ''
-							THEN NULL
-						ELSE MaxBetCN88
-						END 
-                   ,CASE 
-						WHEN SpreadCN88 = ''
-							THEN NULL
-						ELSE SpreadCN88
-						END 
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId

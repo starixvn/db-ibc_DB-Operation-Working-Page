@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 
      SET NOCOUNT ON;
@@ -29,8 +30,6 @@ Revisions:
             [Bettype], 
             [Spread], 
             [Maxbet], 
-            [MaxbetCN88], 
-            [SpreadCN88]
      FROM [dbo].[MatchSetting] s WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
