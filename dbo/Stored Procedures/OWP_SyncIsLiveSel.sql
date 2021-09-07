@@ -16,21 +16,29 @@ Revisions:
 	20200913@Jacob: Sync Live Status to InfoSite - Ignore SABA match - [Redmine: #134336]
 	20201004@Jacob: Sync Live Status to InfoSite - Fix bug FromDate - [Redmine: #134336]
 	20201105@Jacob: Only sync today match - [Redmine: #144570]
+	20210810@Tyler: Sync special products - [Redmine: #153498]
 */
 
     BEGIN
-        SET NOCOUNT ON;    
+        SET NOCOUNT ON;
+
         -- @tempOWPMatch
         DECLARE @tempOWPMatch TABLE
-        (InfoSiteMatchId INT, 
-         IsLive          BIT
+        (InfoSiteMatchId  INT, 
+         AdminSiteMatchId INT, 
+         OWPMatchId       INT, 
+         IsLive           BIT
         );
         INSERT INTO @tempOWPMatch
         (InfoSiteMatchId, 
+         AdminSiteMatchId, 
+         OWPMatchId, 
          IsLive
         )
                SELECT DISTINCT 
-                      m.InfoSiteMatchId,
+                      m.InfoSiteMatchId, 
+                      im.AdminSiteMatchId, 
+                      m.OWPMatchId,
                       CASE
                           WHEN mi.MatchStatus IN('Live', 'Postponed')
                           THEN 1
@@ -39,52 +47,29 @@ Revisions:
                FROM dbo.OWPMatch m WITH(NOLOCK)
                     INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
                     INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
+                    LEFT JOIN dbo.InfoSiteMatch im WITH(NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
                WHERE m.EventDateTime BETWEEN @FromTime AND @ToTime
                      AND m.InfoSiteMatchId IS NOT NULL
+                     AND im.AdminSiteMatchId > 0
                      AND l.OWPLeagueName NOT LIKE '%SABA %';
 
-        -- @tempInfoSiteMatch
-        DECLARE @tempInfoSiteMatch TABLE
-        (InfoSiteMatchId INT, 
-         IsLive          BIT
-        );
-        INSERT INTO @tempInfoSiteMatch
-        (InfoSiteMatchId, 
-         IsLive
-        )
-               SELECT DISTINCT 
-                      m.InfoSiteMatchId, 
-                      i.IsLive
-               FROM @tempOWPMatch m
-                    INNER JOIN dbo.InfoSiteMatch i WITH(NOLOCK) ON m.InfoSiteMatchId = i.InfoSiteMatchId
-                                                                   AND i.IsDeleted = 0;
-
-        -- Duplicated InfoSiteId
-        DECLARE @tempDuplicatedInfoSiteMatch TABLE(InfoSiteMatchId INT);
-        INSERT INTO @tempDuplicatedInfoSiteMatch(InfoSiteMatchId)
-               SELECT InfoSiteMatchId
-               FROM @tempOWPMatch
-               GROUP BY InfoSiteMatchId
-               HAVING COUNT(IsLive) > 1;
-
-        -- Non Duplicated InfoSiteId
-        DECLARE @tempNonDuplicatedInfoSiteMatch TABLE(InfoSiteMatchId INT);
-        INSERT INTO @tempNonDuplicatedInfoSiteMatch(InfoSiteMatchId)
-               SELECT InfoSiteMatchId
-               FROM @tempOWPMatch
-               GROUP BY InfoSiteMatchId
-               HAVING COUNT(IsLive) = 1;
-
         -- Result
-        SELECT t.InfoSiteMatchId, 
-               m.IsLive
-        FROM @tempNonDuplicatedInfoSiteMatch t
-             INNER JOIN @tempOWPMatch m ON t.InfoSiteMatchId = m.InfoSiteMatchId
-             INNER JOIN @tempInfoSiteMatch i ON t.InfoSiteMatchId = i.InfoSiteMatchId
-        WHERE m.IsLive <> i.IsLive
-        UNION
-        SELECT t.InfoSiteMatchId, 
-               m.IsLive
-        FROM @tempDuplicatedInfoSiteMatch t
-             INNER JOIN @tempOWPMatch m ON m.InfoSiteMatchId = t.InfoSiteMatchId;
+        SELECT m.InfoSiteMatchId, 
+               m.AdminSiteMatchId, 
+               m.IsLive, 
+               NULL 'MinorBettypeId'
+        FROM @tempOWPMatch m
+        UNION ALL
+        SELECT DISTINCT 
+               pm.InfoSiteMatchId, 
+               pm.AdminSiteMatchId,
+               CASE
+                   WHEN mi.MatchStatus IN('Live', 'Postponed')
+                   THEN 1
+                   ELSE 0
+               END IsLive, 
+               m.MinorBettypeId
+        FROM dbo.MinorMatch m WITH(NOLOCK)
+             INNER JOIN @tempOWPMatch pm ON pm.OWPMatchId = m.ParentMatchId
+             INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON m.MinorMatchId = mi.OWPMatchId;
     END;
