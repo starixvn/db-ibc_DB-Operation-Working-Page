@@ -13,7 +13,8 @@ Revisions:
 
 CREATE TABLE LinkLeagueAndTeam(
 	OWPTeamId INT NOT NULL PRIMARY KEY,
-	LeagueGroupId INT
+	LeagueGroupId INT,
+	LastUpdate DATETIME
 )
 
 CREATE INDEX idx_OWPTeamId
