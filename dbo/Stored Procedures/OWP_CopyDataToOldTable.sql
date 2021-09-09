@@ -12,7 +12,8 @@ AS
  Revisions:
 	20200817@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 	20200825@Jacob: Use index - [Redmine: #137757]	
-	20200826@Jacob: Fix bug missing Odds - [Redmine: #137757]	
+	20200826@Jacob: Fix bug missing Odds - [Redmine: #137757]
+	20210909@Luca.Duong: Remove cn88 - [Feature: #160666]	
 */
 
      SET NOCOUNT ON;
@@ -317,16 +318,12 @@ AS
      ([OWPMatchId], 
       [Bettype], 
       [Spread], 
-      [Maxbet], 
-      [MaxbetCN88], 
-      [SpreadCN88]
+      [Maxbet]
      )
             SELECT [OWPMatchId], 
                    [Bettype], 
                    [Spread], 
-                   [Maxbet], 
-                   [SpreadCN88], 
-                   [MaxbetCN88]
+                   [Maxbet]
             FROM [dbo].[MatchSetting] m WITH(NOLOCK)
                  INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id; 
      -- DELETE MatchTelevision_Old
