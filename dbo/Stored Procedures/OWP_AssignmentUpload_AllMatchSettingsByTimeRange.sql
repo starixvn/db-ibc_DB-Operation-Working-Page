@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_AllMatchSettingsByTimeRange] @EventDate DATE
+CREATE PROCEDURE [dbo].[OWP_AssignmentUpload_AllMatchSettingsByTimeRange] @EventDate DATE
 AS
 
 /*
@@ -29,7 +29,7 @@ Revisions:
      SELECT s.[OWPMatchId] MatchId, 
             [Bettype], 
             [Spread], 
-            [Maxbet], 
+            [Maxbet]
      FROM [dbo].[MatchSetting] s WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
