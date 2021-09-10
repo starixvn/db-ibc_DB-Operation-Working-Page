@@ -10,7 +10,7 @@ DB: bodb_OWP
 Revisions:
    20200410@Tyler.Dang: Init Redmine: #132234
    20200616@Tyler.Dang: Check default modifier (System): #135658
-   20210831@Johnny.Thai: Remove CN88
+   20210831@Johnny.Thai: Remove CN88 - [Feature: #160666]
 */
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from

@@ -12,7 +12,7 @@ DB: bodb_OWP
 
 Revisions:
    20200330@Tyler.Dang: Init [Redmine: #131598]
-   20210831@Johnny.Thai: Remove CN88
+   20210831@Johnny.Thai: Remove CN88 - [Feature: #160666]
 
 */
 BEGIN
