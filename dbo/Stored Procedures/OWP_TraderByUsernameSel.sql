@@ -11,17 +11,18 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
+	20210913@Tyler: Hot fix - Allow username with 200 characters [Redmine: #137209]
 	
 */
 
      SET NOCOUNT ON;
      -- temp User
-     DECLARE @tempUser TABLE(Username NVARCHAR(50));
+     DECLARE @tempUser TABLE(Username NVARCHAR(200));
      INSERT INTO @tempUser
             SELECT DISTINCT 
                    val
             FROM fnc_SplitStrings(@Username, ',') u OPTION(MAXRECURSION 0);
-     DECLARE @duplicatedUser TABLE(Username NVARCHAR(50));
+     DECLARE @duplicatedUser TABLE(Username NVARCHAR(200));
      -- Duplicated User
      INSERT INTO @duplicatedUser(Username)
             SELECT t.Username
