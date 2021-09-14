@@ -11,10 +11,12 @@ DB: bodb_OWP
 
 Revisions:
 	20210428@Mira: Initial - [Redmine: #154249]
+	20210914@Mira: Insert Service Log - [Redmine: #161379]
 */
 
     BEGIN
         SET NOCOUNT ON;
+        DECLARE @LogDate DATETIME= GETDATE();
         CREATE TABLE #tmpTable
         (InfositeMatchId INT, 
          ParentMatchId   INT
@@ -23,6 +25,15 @@ Revisions:
         (OldInfositeMatchId INT, 
          NewInfositeMatchId INT
         );
+        CREATE TABLE #tmpLog
+        (DataOld      NVARCHAR(MAX), 
+         DataNew      NVARCHAR(MAX), 
+         UpdatedField NCHAR(100), 
+         TableName    NCHAR(100), 
+         OWPMatchId   INT
+        );
+
+        -- Parse data
         DECLARE @idoc INT;
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
@@ -52,12 +63,44 @@ Revisions:
                    WHERE i.InfoSiteMatchId = t.ParentMatchId
                );
 
+        -- Write temp Log before updating InfoSiteMatch
+        INSERT INTO #tmpLog
+        ([DataOld], 
+         [DataNew], 
+         [UpdatedField], 
+         [TableName], 
+         [OWPMatchId]
+        )
+               SELECT i.InfoSiteMatchId, 
+                      t.NewInfositeMatchId, 
+                      'InfoSiteMatchId', 
+                      'InfoSiteMatch', 
+                      NULL
+               FROM dbo.InfoSiteMatch i WITH(ROWLOCK)
+                    INNER JOIN #tmpExistDataTable t ON i.InfoSiteMatchId = t.OldInfositeMatchId;
+
         -- Update InfositeMatch table
         UPDATE i
           SET 
               i.InfoSiteMatchId = t.NewInfositeMatchId
         FROM dbo.InfoSiteMatch i WITH(ROWLOCK)
              INNER JOIN #tmpExistDataTable t ON i.InfoSiteMatchId = t.OldInfositeMatchId;
+
+        -- Write temp Log before updating OWPMatch
+        INSERT INTO #tmpLog
+        ([DataOld], 
+         [DataNew], 
+         [UpdatedField], 
+         [TableName], 
+         [OWPMatchId]
+        )
+               SELECT o.InfoSiteMatchId, 
+                      t.NewInfositeMatchId, 
+                      'InfoSiteMatchId', 
+                      'OWPMatch', 
+                      o.OWPMatchId
+               FROM dbo.OWPMatch o WITH(ROWLOCK)
+                    INNER JOIN #tmpExistDataTable t ON o.InfoSiteMatchId = t.OldInfositeMatchId;
 
         -- Update OWPMatch
         UPDATE o
@@ -66,7 +109,29 @@ Revisions:
         FROM dbo.OWPMatch o WITH(ROWLOCK)
              INNER JOIN #tmpExistDataTable t ON o.InfoSiteMatchId = t.OldInfositeMatchId;
 
+        -- Insert Service Log
+        INSERT INTO dbo.ServiceActionLog
+        ([ActionBy], 
+         [LogDate], 
+         [DataOld], 
+         [DataNew], 
+         [UpdatedField], 
+         [TableName], 
+         [OWPMatchId], 
+         [SPName]
+        )
+               SELECT 'MergeMatch', 
+                      @LogDate, 
+                      DataOld, 
+                      DataNew, 
+                      UpdatedField, 
+                      TableName, 
+                      OWPMatchId, 
+                      'OWP_API_UpdateInfositeIdForMergedMatch'
+               FROM #tmpLog t;
+
         -- DROP tmpTable
         DROP TABLE #tmpTable;
-		DROP TABLE #tmpExistDataTable;
+        DROP TABLE #tmpExistDataTable;
+        DROP TABLE #tmpLog;
     END;
