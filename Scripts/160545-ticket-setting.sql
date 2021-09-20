@@ -50,10 +50,10 @@ ON [OWP_Data];
 GO
 
 -- Table TypeRecipient
-IF OBJECT_ID('dbo.TypeRecipient', 'U') IS NOT NULL
-    DROP TABLE dbo.[TypeRecipient]; 
+IF OBJECT_ID('dbo.TicketTypeRecipient', 'U') IS NOT NULL
+    DROP TABLE dbo.[TicketTypeRecipient]; 
 GO
-CREATE TABLE [dbo].[TypeRecipient]
+CREATE TABLE [dbo].[TicketTypeRecipient]
 ([TicketTypeRecipientId] [INT] IDENTITY(1, 1) NOT NULL, 
  [TypeId]                [INT] NOT NULL, 
  [RecipientType]         [TINYINT] NOT NULL, 
