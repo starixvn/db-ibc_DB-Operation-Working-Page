@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_AllMatchSettingsByTimeRange] @EventDate DATE
+CREATE PROCEDURE [dbo].[OWP_AssignmentUpload_AllMatchSettingsByTimeRange] @EventDate DATE
 AS
 
 /*
@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 
      SET NOCOUNT ON;
@@ -28,9 +29,7 @@ Revisions:
      SELECT s.[OWPMatchId] MatchId, 
             [Bettype], 
             [Spread], 
-            [Maxbet], 
-            [MaxbetCN88], 
-            [SpreadCN88]
+            [Maxbet]
      FROM [dbo].[MatchSetting] s WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = s.OWPMatchId
           LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId

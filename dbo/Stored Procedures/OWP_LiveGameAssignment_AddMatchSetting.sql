@@ -13,6 +13,7 @@ AS
  Revisions:
 	20190729@Kane.Le: Initial SP - [Feature: #117461]
 	20190802@Kane.Le: Insert list MatchSettings - [Feature: #117461]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -22,8 +23,6 @@ BEGIN
 		,Bettype INT
 		,Spread SMALLMONEY
 		,Maxbet MONEY
-		,SpreadCN88 SMALLMONEY
-		,MaxbetCN88 MONEY
 		)
 
 	DECLARE @idoc INT
@@ -36,21 +35,15 @@ BEGIN
 		,Bettype
 		,Spread
 		,Maxbet
-		,SpreadCN88
-		,MaxbetCN88
 		)
 	SELECT @OWPMatchId
 		,data.Bettype
 		,data.Spread
 		,data.Maxbet
-		,data.SpreadCN88
-		,data.MaxbetCN88
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			Bettype INT
 			,Spread SMALLMONEY
 			,Maxbet MONEY
-			,SpreadCN88 SMALLMONEY
-			,MaxbetCN88 MONEY
 			) AS data
 
 	EXEC sp_xml_removedocument @idoc
@@ -60,15 +53,11 @@ BEGIN
 		,Bettype
 		,Spread
 		,Maxbet
-		,SpreadCN88
-		,MaxbetCN88
 		)
 	SELECT OWPMatchId
 		,Bettype
 		,Spread
 		,Maxbet
-		,SpreadCN88
-		,MaxbetCN88
 	FROM #tblMatchSetting
 
 	DROP TABLE #tblMatchSetting

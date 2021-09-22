@@ -26,7 +26,8 @@ AS;
 	20200610@Jack.Nguyen: add EventDateTime @MatchStatusIds- [Feature: #135525]
 	20200713@Tyler.Dang: sort follow MatchNo - [Feature: #137416]
 	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
-20200729@Jack.Nguyen: get IPTV, MatchId  - [Redmine: #137756]
+	20200729@Jack.Nguyen: get IPTV, MatchId  - [Redmine: #137756]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -333,8 +334,6 @@ BEGIN
 		,MinorBettypeId INT
 		,MaxBet MONEY
 		,Spread SMALLMONEY
-		,MaxBetCN88 MONEY
-		,SpreadCN88 SMALLMONEY
 		,IsMatchSetting BIT
 		,LeagueId INT
 		)
@@ -346,8 +345,6 @@ BEGIN
 		,MinorBettypeId
 		,MaxBet
 		,Spread
-		,MaxBetCN88
-		,SpreadCN88
 		,IsMatchSetting
 		)
 	SELECT ml.owpmatchid
@@ -356,8 +353,6 @@ BEGIN
 		,ml.MinorBettypeId
 		,ms.Maxbet
 		,ms.Spread
-		,ms.MaxbetCN88
-		,ms.SpreadCN88
 		,1
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.MatchSetting AS ms WITH (NOLOCK) ON ml.owpmatchid = ms.OWPMatchId
@@ -442,8 +437,6 @@ BEGIN
 		,mb.MinorBettypeId
 		,mb.MaxBet
 		,mb.Spread
-		,mb.MaxBetCN88
-		,mb.SpreadCN88
 	FROM #tblMaxBet AS mb WITH (NOLOCK)
 
 	-- Return TV 

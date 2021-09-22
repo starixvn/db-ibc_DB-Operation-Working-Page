@@ -21,6 +21,7 @@ AS
 	20190816@Leo.Vo: Initial SP - [Feature: #117960]
 	20190927@Kane.Le: Update message MatchNo - [Feature: #120415]
 	20191021@Kane.Le: Fix MinorBettypeId IS NULL - [Feature: #120415]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -55,12 +56,8 @@ BEGIN
 		,@MessageChangeOfAssignment NVARCHAR(500)
 		,@MessageEditMaxbet NVARCHAR(500)
 		,@MessageEditMaxbetId INT
-		,@MessageEditMaxbetCN88 NVARCHAR(500)
-		,@MessageEditMaxbetCN88Id INT
 		,@MessageEditSpread NVARCHAR(500)
-		,@MessageEditSpreadId INT
-		,@MessageEditSpreadCN88 NVARCHAR(500)
-		,@MessageEditSpreadCN88Id INT
+		,@MessageEditSpreadId INT		
 		,@ActorName NVARCHAR(30)
 		,@AssigneeMatchInfoNotificationSettingId INT = 5
 		,@WatcherMatchInfoNotificationSettingId INT = 9
@@ -349,8 +346,6 @@ BEGIN
 		,Bettype INT
 		,Maxbet MONEY
 		,Spread SMALLMONEY
-		,MaxbetCN88 MONEY
-		,SpreadCN88 SMALLMONEY
 		)
 
 	DELETE ms
@@ -358,9 +353,7 @@ BEGIN
 		,deleted.Bettype
 		,deleted.Maxbet
 		,deleted.Spread
-		,deleted.MaxbetCN88
-		,deleted.SpreadCN88
-	INTO @tblRemoveMatchSetting(OWPMatchId, Bettype, Maxbet, Spread, MaxbetCN88, SpreadCN88)
+	INTO @tblRemoveMatchSetting(OWPMatchId, Bettype, Maxbet, Spread)
 	FROM dbo.MatchSetting AS ms WITH (ROWLOCK)
 		INNER JOIN @tblRemoveMatch AS rm ON ms.OWPMatchId = rm.OWPMatchId
 
@@ -415,23 +408,12 @@ BEGIN
 			,@MessageEditMaxbetId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditMaxbet'
-		
-		SELECT @MessageEditMaxbetCN88 = mt.MsgTemplateContent
-			,@MessageEditMaxbetCN88Id = mt.MsgTemplateId
-		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-		WHERE mt.MsgTemplateCode = 'EditMaxbetCN88'
-		
+				
 		SELECT @MessageEditSpread = mt.MsgTemplateContent
 			,@MessageEditSpreadId = mt.MsgTemplateId
 		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
 		WHERE mt.MsgTemplateCode = 'EditSpread'
-		
-		SELECT @MessageEditSpreadCN88 = mt.MsgTemplateContent
-			,@MessageEditSpreadCN88Id = mt.MsgTemplateId
-		FROM dbo.MessageTemplate AS mt WITH (NOLOCK)
-		WHERE mt.MsgTemplateCode = 'EditSpreadCN88'
-		
-			
+						
 		PRINT 'send message for invalid assignment removed'
 		
 		INSERT INTO #tblMessage (
@@ -702,29 +684,7 @@ BEGIN
 		WHERE ms.Maxbet IS NOT NULL
 		
 		UNION
-		
-		SELECT REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(@MessageEditMaxbetCN88
-									,'<User>', @ActorName)
-								,'<Event>', @HomeName + ' -vs- ' + @AwayName)
-							,'<Bettype>', mb.MinorBettypeName)
-						,'<Old>', ms.MaxbetCN88)
-					,'<New>', '')
-				,'<League>', @LeagueName)
-			,'<Match.No>', @MatchNo) AS MessageContent
-			,@MessageEditMaxbetCN88Id
-		FROM @tblRemoveMatchSetting AS ms
-		INNER JOIN @tblRemoveMatch AS m ON ms.OWPMatchId = m.OWPMatchId
-		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON m.MinorBettypeId = mb.MinorBettypeId
-		WHERE ms.MaxbetCN88 IS NOT NULL
-		
-		UNION
-		
+				
 		SELECT REPLACE(
 				REPLACE(
 					REPLACE(
@@ -744,28 +704,6 @@ BEGIN
 		INNER JOIN @tblRemoveMatch AS m ON ms.OWPMatchId = m.OWPMatchId
 		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON m.MinorBettypeId = mb.MinorBettypeId
 		WHERE ms.Spread IS NOT NULL
-		
-		UNION
-		
-		SELECT REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(@MessageEditSpreadCN88
-									,'<User>', @ActorName)
-								,'<Event>', @HomeName + ' -vs- ' + @AwayName)
-							,'<Bettype>', mb.MinorBettypeName)
-						,'<Old>', ms.SpreadCN88)
-					,'<New>', '')
-				,'<League>', @LeagueName)
-			,'<Match.No>', @MatchNo) AS MessageContent
-			,@MessageEditSpreadCN88Id
-		FROM @tblRemoveMatchSetting AS ms
-		INNER JOIN @tblRemoveMatch AS m ON ms.OWPMatchId = m.OWPMatchId
-		INNER JOIN dbo.MinorBettype AS mb WITH (NOLOCK) ON m.MinorBettypeId = mb.MinorBettypeId
-		WHERE ms.SpreadCN88 IS NOT NULL
 		
 		-- send to assignee
 		TRUNCATE TABLE #tblAssigneeMessage
@@ -1037,31 +975,6 @@ BEGIN
 						REPLACE(
 							REPLACE(
 								REPLACE(
-									REPLACE(@MessageEditMaxbetCN88
-									,'<User>', @ActorName)
-								,'<Event>', @HomeName + ' -vs- ' + @AwayName)
-							,'<Bettype>', mb.ShortName)
-						,'<New>', ms.MaxbetCN88)
-					,'<Old>', '')
-				,'<League>', @LeagueName)
-			,'<Match.No>', CASE 
-								WHEN ISNULL(@MatchNo, '') = ''
-									THEN ''
-								ELSE '#' + @MatchNo
-								END) AS MessageContent
-			,@MessageEditMaxbetCN88Id
-		FROM dbo.MatchSetting AS ms
-		INNER JOIN dbo.MajorBettype as mb ON ms.Bettype = mb.BettypeId
-		WHERE ms.OWPMatchId = @OWPMatchId AND ms.MaxbetCN88 IS NOT NULL
-		
-		UNION
-		
-		SELECT REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
 									REPLACE(@MessageEditSpread
 									,'<User>', @ActorName)
 								,'<Event>', @HomeName + ' -vs- ' + @AwayName)
@@ -1078,32 +991,7 @@ BEGIN
 		FROM dbo.MatchSetting AS ms
 		INNER JOIN dbo.MajorBettype as mb ON ms.Bettype = mb.BettypeId
 		WHERE ms.OWPMatchId = @OWPMatchId AND ms.Spread IS NOT NULL
-		
-		UNION
-		
-		SELECT REPLACE(
-				REPLACE(
-					REPLACE(
-						REPLACE(
-							REPLACE(
-								REPLACE(
-									REPLACE(@MessageEditSpreadCN88
-									,'<User>', @ActorName)
-								,'<Event>', @HomeName + ' -vs- ' + @AwayName)
-							,'<Bettype>', mb.ShortName)
-						,'<New>', ms.SpreadCN88)
-					,'<Old>', '')
-				,'<League>', @LeagueName)
-			,'<Match.No>', CASE 
-								WHEN ISNULL(@MatchNo, '') = ''
-									THEN ''
-								ELSE '#' + @MatchNo
-								END) AS MessageContent
-			,@MessageEditSpreadCN88Id
-		FROM dbo.MatchSetting AS ms
-		INNER JOIN dbo.MajorBettype as mb ON ms.Bettype = mb.BettypeId
-		WHERE ms.OWPMatchId = @OWPMatchId AND ms.SpreadCN88 IS NOT NULL
-		
+				
 		-- send to assignee
 		TRUNCATE TABLE #tblAssigneeMessage
 		

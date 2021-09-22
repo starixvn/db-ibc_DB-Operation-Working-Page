@@ -12,18 +12,14 @@ DB: bodb_OWP
 
 Revisions:
 	20201207@Tyler.Dang: Get maxbet - [Redmine: #145096]
+	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @HandicapHDP INT= 1, @OverUnderOU INT= 3, @1H_HandicapHDP INT= 7, @1H_OverUnder INT= 8;
 
-        SELECT ms.Bettype AS 'BettypeId',
-               CASE
-                   WHEN @IsCN88 = 0
-                   THEN ms.Maxbet
-                   ELSE ms.MaxbetCN88
-               END AS 'Value'
+        SELECT ms.Bettype AS 'BettypeId', ms.Maxbet AS 'Value'
         FROM MatchSetting AS ms WITH(NOLOCK)
         WHERE ms.Bettype IN(@HandicapHDP, @OverUnderOU, @1H_HandicapHDP, @1H_OverUnder)
         AND ms.OWPMatchId = @OwpMatchId;

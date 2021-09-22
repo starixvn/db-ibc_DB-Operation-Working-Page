@@ -10,6 +10,7 @@ DB: bodb_OWP
 Revisions:
    20200410@Tyler.Dang: Init Redmine: #132234
    20200616@Tyler.Dang: Check default modifier (System): #135658
+   20210831@Johnny.Thai: Remove CN88 - [Feature: #160666]
 */
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -45,24 +46,6 @@ BEGIN
       ,ls.MaxBet_FT1X2
       ,ls.MaxBet_1H1X2
       ,ls.MaxBet_1X2_MatchOffer
-      ,ls.CN88Spread_HDP
-      ,ls.CN88Spread_OU
-      ,ls.CN88Spread_1HHDP
-      ,ls.CN88Spread_1HOU
-      ,ls.CN88MaxbetWD_HDP
-      ,ls.CN88MaxbetWD_OU
-      ,ls.CN88MaxbetWD_1H
-      ,ls.CN88MaxbetWD_NoOfHDP
-      ,ls.CN88MaxbetWD_MatchOffer
-      ,ls.CN88MaxbetWK_HDP
-      ,ls.CN88MaxbetWK_OU
-      ,ls.CN88MaxbetWK_1H
-      ,ls.CN88MaxbetWK_NoOfHDP
-      ,ls.CN88MaxbetWK_MatchOffer
-      ,ls.CN88MaxBet_1X2Spread
-      ,ls.CN88MaxBet_FT1X2
-      ,ls.CN88MaxBet_1H1X2
-      ,ls.CN88MaxBet_1X2_MatchOffer
 	  ,ls.IsApplied
 	  ,(CASE WHEN ls.LastModifiedBy = 0 THEN 'System' ELSE u.Username END) AS LastModifiedBy
 	FROM dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)

@@ -16,6 +16,7 @@ DB: bodb_OWP
 
 Revisions:
    20200417@Tyler.Dang: Init Redmine: #132506
+   20210909@Luca.Duong: Remove cn88 - [Feature: #160666]
 */
 BEGIN
 	-- SET NOCOUNT ON added to prevent extra result sets from
@@ -62,24 +63,6 @@ BEGIN
 				  ,ls.MaxBet_FT1X2 AS '@mbft1x2'
 				  ,ls.MaxBet_1H1X2 AS '@mb1h1x2'
 				  ,ls.MaxBet_1X2_MatchOffer AS '@mb1x2mo'
-				  ,ls.CN88Spread_HDP AS '@cn88shdp'
-				  ,ls.CN88Spread_OU AS '@cn88sou'
-				  ,ls.CN88Spread_1HHDP AS '@cn88s1hhdp'
-				  ,ls.CN88Spread_1HOU AS '@cn88s1hou'
-				  ,ls.CN88MaxbetWD_HDP AS '@cn88mwdhdp'
-				  ,ls.CN88MaxbetWD_OU AS '@cn88mwdou'
-				  ,ls.CN88MaxbetWD_1H AS '@cn88mwd1h'
-				  ,ls.CN88MaxbetWD_NoOfHDP AS '@cn88mwdnohdp'
-				  ,ls.CN88MaxbetWD_MatchOffer AS '@cn88mwdmo'
-				  ,ls.CN88MaxbetWK_HDP AS '@cn88mwkhdp'
-				  ,ls.CN88MaxbetWK_OU AS '@cn88mwkou'
-				  ,ls.CN88MaxbetWK_1H AS '@cn88mwk1h'
-				  ,ls.CN88MaxbetWK_NoOfHDP AS '@cn88mwknohdp'
-				  ,ls.CN88MaxbetWK_MatchOffer AS '@cn88mwkmo'
-				  ,ls.CN88MaxBet_1X2Spread AS '@cn88mb1x2s'
-				  ,ls.CN88MaxBet_FT1X2 AS '@cn88mbft1x2'
-				  ,ls.CN88MaxBet_1H1X2 AS '@cn88mb1h1x2'
-				  ,ls.CN88MaxBet_1X2_MatchOffer AS '@cn88mb1x2mo'
 				  ,ls.IsApplied AS '@ia'
 				FROM dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
 				WHERE @LeagueSettingId = ls.LeagueSettingId 
@@ -132,24 +115,6 @@ BEGIN
 				  ,ls.MaxBet_FT1X2 AS '@mbft1x2'
 				  ,ls.MaxBet_1H1X2 AS '@mb1h1x2'
 				  ,ls.MaxBet_1X2_MatchOffer AS '@mb1x2mo'
-				  ,ls.CN88Spread_HDP AS '@cn88shdp'
-				  ,ls.CN88Spread_OU AS '@cn88sou'
-				  ,ls.CN88Spread_1HHDP AS '@cn88s1hhdp'
-				  ,ls.CN88Spread_1HOU AS '@cn88s1hou'
-				  ,ls.CN88MaxbetWD_HDP AS '@cn88mwdhdp'
-				  ,ls.CN88MaxbetWD_OU AS '@cn88mwdou'
-				  ,ls.CN88MaxbetWD_1H AS '@cn88mwd1h'
-				  ,ls.CN88MaxbetWD_NoOfHDP AS '@cn88mwdnohdp'
-				  ,ls.CN88MaxbetWD_MatchOffer AS '@cn88mwdmo'
-				  ,ls.CN88MaxbetWK_HDP AS '@cn88mwkhdp'
-				  ,ls.CN88MaxbetWK_OU AS '@cn88mwkou'
-				  ,ls.CN88MaxbetWK_1H AS '@cn88mwk1h'
-				  ,ls.CN88MaxbetWK_NoOfHDP AS '@cn88mwknohdp'
-				  ,ls.CN88MaxbetWK_MatchOffer AS '@cn88mwkmo'
-				  ,ls.CN88MaxBet_1X2Spread AS '@cn88mb1x2s'
-				  ,ls.CN88MaxBet_FT1X2 AS '@cn88mbft1x2'
-				  ,ls.CN88MaxBet_1H1X2 AS '@cn88mb1h1x2'
-				  ,ls.CN88MaxBet_1X2_MatchOffer AS '@cn88mb1x2mo'
 				  ,ls.IsApplied AS '@ia'
 				FROM dbo.[NewLeagueSetting] AS ls WITH (NOLOCK)
 				WHERE @LeagueSettingId = ls.LeagueSettingId 

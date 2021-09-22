@@ -8,6 +8,7 @@ DB: bodb_OWP
 
 Revisions:
 	20180617@Carlos.Nguyen: Init sp - [Redmine: #134338]
+	20210831@Johnny.Thai: Remove CN88 - [Feature: #160666]
 */
 
 BEGIN
@@ -33,4 +34,5 @@ BEGIN
 	,sp.LastUpdate
 	,sp.[Type]
 	FROM SpecialProduct AS sp WITH (NOLOCK)
+	WHERE sp.[Type] = 'MBC'
 END
