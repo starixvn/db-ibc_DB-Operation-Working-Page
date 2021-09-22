@@ -13,6 +13,7 @@ DB: bodb_OWP
 Revisions:
 	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]
 	20210113@Esther: Adding SABA 6mins match to LA Report - [Redmine: #148267]
+	20210907@Liam: Adding SABA 16mins match to LA Report - [Redmine: #160544]
 	
 */
 
@@ -49,6 +50,7 @@ Revisions:
       [ESoccer5Mins], 
       [ESoccer6Mins], 
       [ESoccer15Mins], 
+      [ESoccer16Mins],
       [ESoccer20Mins], 
       [Others], 
       [CreatedDate]
@@ -73,10 +75,11 @@ Revisions:
                    [FTCorner], 
                    [ESoccer5Mins], 
                    [ESoccer6Mins], 
-                   [ESoccer15Mins], 
+                   [ESoccer15Mins],
+		           [ESoccer16Mins], 
                    [ESoccer20Mins], 
                    [Others], 
                    GETDATE()
-            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] [INT], [Username] [VARCHAR](50), [TotalMatches] [INT], [LinkLowerThan3] INT, [LinkX3] INT, [LinkX6] INT, [LinkX9Plus] INT, [ProviderTv] INT, [Provider] INT, [TV] INT, [Reporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer20Mins] INT, [Others] INT);
+            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] [INT], [Username] [VARCHAR](50), [TotalMatches] [INT], [LinkLowerThan3] INT, [LinkX3] INT, [LinkX6] INT, [LinkX9Plus] INT, [ProviderTv] INT, [Provider] INT, [TV] INT, [Reporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT);
      EXEC sp_xml_removedocument 
           @idoc;
