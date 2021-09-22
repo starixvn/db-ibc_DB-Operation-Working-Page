@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_API_SyncMaxbet_GetMaxbet] @OWPMatchId INT, 
-                                                              @IsCN88     BIT
+ALTER PROCEDURE [dbo].[OWP_API_SyncMaxbet_GetMaxbet] @OWPMatchId INT
+                                           
 AS
 
 /*
