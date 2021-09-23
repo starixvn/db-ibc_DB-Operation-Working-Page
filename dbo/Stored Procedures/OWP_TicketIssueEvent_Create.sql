@@ -8,8 +8,8 @@ GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE[dbo].[OWP_TicketIssueEvent_Create] @TicketId INT,
 	@OwpLeagueId INT,
-	@OwpHomeId INT,
-	@OwpAwayId INT,
+	@OwpHomeId INT = NULL,
+	@OwpAwayId INT = NULL,
 	@IsLeague BIT
 AS
 /*      
