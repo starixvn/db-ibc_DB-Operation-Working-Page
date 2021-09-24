@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LeagueManagement_Get] @League NVARCHAR(500) = ''
+ALTER PROCEDURE [dbo].[OWP_LeagueManagement_Get] @League NVARCHAR(500) = ''
 	,@LeagueGroupId INT = -1
 	,@Category NVARCHAR(50) = 'Live'
 	,@IsActive BIT = 1
@@ -221,7 +221,7 @@ BEGIN
 		LEFT JOIN #tblLeagueLastUse AS llu WITH (NOLOCK)
 			ON owpl.OWPLeagueId = llu.OWPLeagueId	
 	ORDER BY owpl.OrderValue ASC, owpl.LeagueName ASC
-
+	
 	DROP TABLE #tblLeagueIds
 	DROP TABLE #tblTempLeagueSetting
 	DROP TABLE #tblFinalLeagueSetting
