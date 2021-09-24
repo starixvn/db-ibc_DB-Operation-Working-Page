@@ -24,5 +24,5 @@ Revisions:
                u.Username
         FROM dbo.RecipientGroup rg WITH(NOLOCK)
              INNER JOIN dbo.TicketGroup t WITH(NOLOCK) ON t.GroupId = rg.GroupId
-             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = rg.RecipientId;
+             LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = rg.RecipientId;
     END;
