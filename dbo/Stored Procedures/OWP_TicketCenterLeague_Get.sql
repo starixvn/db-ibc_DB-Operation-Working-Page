@@ -7,7 +7,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE[dbo].[OWP_TicketCenterLeague_Get] @ActorId INT,
-	@LeagueKeyword NVARCHAR(255) = NULL,
+	@Keyword NVARCHAR(255) = NULL,
 	@TicketId NVARCHAR(255) = NULL,
 	@TicketTypeId INT = 0
 AS
@@ -43,14 +43,14 @@ BEGIN
 	 END AS Username
 	FROM TicketIssue AS tis WITH (NOLOCK)
 		INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId=tis.TicketId
-		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketId=ty.TypeId 
+		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketType=ty.TypeId 
 		INNER JOIN TicketIssueLeague AS tl WITH (NOLOCK) ON tis.TicketId=tl.TicketId
 		INNER JOIN TicketMessage AS tm WITH (NOLOCK)ON tis.TicketId=tm.TicketId
 		INNER JOIN OWPLeague AS owpl WITH (NOLOCK) ON owpl.OWPLeagueId=tl.OwpLeagueId
 		INNER JOIN [User] AS u WITH (NOLOCk) ON tm.UserId=u.UserId
-	WHERE (@LeagueKeyword IS NULL OR
-	@LeagueKeyword ='' OR
-	owpl.OWPLeagueName LIKE '%'+@LeagueKeyword+'%')
+	WHERE (@Keyword IS NULL OR
+	@Keyword ='' OR
+	owpl.OWPLeagueName LIKE '%'+@Keyword+'%')
 	AND
 		(
 			@TicketId IS NULL OR

@@ -35,4 +35,6 @@ BEGIN
 		@UserId,
 		0
 	)
+	SELECT MAX(tm.Id)
+	FROM TicketMessage AS tm
 END

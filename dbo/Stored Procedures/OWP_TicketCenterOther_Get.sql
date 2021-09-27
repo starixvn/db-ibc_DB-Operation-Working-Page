@@ -7,7 +7,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE[dbo].[OWP_TicketCenterOther_Get] @ActorId INT,
-	@SubjectKeyword NVARCHAR(255)= NULL,
+	@Keyword NVARCHAR(255)= NULL,
 	@TicketId NVARCHAR(255) = NULL,
 	@TicketTypeId INT = 0
 AS
@@ -42,13 +42,13 @@ BEGIN
 	 tm.[Message]
 	FROM TicketIssue AS tis WITH (NOLOCK)
 		INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId=tis.TicketId
-		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketId=ty.TypeId 
+		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketType=ty.TypeId 
 		INNER JOIN TicketIssueOther AS tl WITH (NOLOCK) ON tis.TicketId=tl.TicketId
 		INNER JOIN TicketMessage AS tm WITH (NOLOCK)ON tis.TicketId=tm.TicketId
 		INNER JOIN [User] AS u WITH (NOLOCk) ON tm.UserId=u.UserId
-	WHERE (@SubjectKeyword IS NULL OR
-		@SubjectKeyword ='' OR
-		tl.[Subject] LIKE '%'+@SubjectKeyword+'%'
+	WHERE (@Keyword IS NULL OR
+		@Keyword ='' OR
+		tl.[Subject] LIKE '%'+@Keyword+'%'
 		) AND
 		(
 			@TicketId IS NULL OR

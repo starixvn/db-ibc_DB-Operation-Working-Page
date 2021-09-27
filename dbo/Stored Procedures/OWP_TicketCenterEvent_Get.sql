@@ -47,7 +47,7 @@ BEGIN
 	 END AS Username
 	FROM TicketIssue AS tis WITH (NOLOCK)
 		INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId=tis.TicketId
-		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketId=ty.TypeId 
+		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketType=ty.TypeId 
 		INNER JOIN TicketIssueEvent AS tl WITH (NOLOCK) ON tis.TicketId=tl.TicketId
 		INNER JOIN InfoSiteMatch AS ifm ON ifm.OWPHomeId=tl.OwpHomeId AND ifm.OWPAwayId=tl.OwpAwayId
 		INNER JOIN TicketMessage AS tm WITH (NOLOCK)ON tis.TicketId=tm.TicketId
