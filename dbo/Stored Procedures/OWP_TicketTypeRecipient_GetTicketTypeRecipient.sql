@@ -17,17 +17,18 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @GroupType INT= 2;
         SELECT t.TypeId, 
-               t.TypeName, 
-               r.TicketTypeRecipientId, 
+               t.TypeName
+        FROM dbo.TicketType t WITH(NOLOCK);
+        SELECT r.TicketTypeRecipientId, 
                r.RecipientId, 
-               r.RecipientType,
+               r.RecipientType, 
+               r.TypeId,
                CASE
                    WHEN r.RecipientType = @GroupType
                    THEN g.GroupName
                    ELSE u.Username
                END 'RecipientName'
-        FROM dbo.TicketType t WITH(NOLOCK)
-             INNER JOIN dbo.TicketTypeRecipient r WITH(NOLOCK) ON t.TypeId = r.TypeId
+        FROM dbo.TicketTypeRecipient r WITH(NOLOCK)
              LEFT JOIN dbo.TicketGroup g WITH(NOLOCK) ON r.RecipientId = g.GroupId
              LEFT JOIN dbo.[User] u WITH(NOLOCK) ON r.RecipientId = u.UserId;
     END;
