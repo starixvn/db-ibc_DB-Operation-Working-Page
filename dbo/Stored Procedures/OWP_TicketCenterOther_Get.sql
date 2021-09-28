@@ -34,9 +34,9 @@ BEGIN
 	 tis.TicketType,
 	 ty.TypeName,
 	 tm.UserId,
-	 CASE WHEN u.Username IS NULL
-		THEN u.Nickname
-		ELSE u.Username
+	 CASE WHEN u.Nickname IS NULL
+		THEN u.Username
+		ELSE u.Nickname
 	 END AS Username,
 	 tm.CreatedDate,
 	 tm.[Message]

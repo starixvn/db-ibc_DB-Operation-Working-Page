@@ -41,15 +41,16 @@ BEGIN
 	 tm.UserId,
 	 tm.CreatedDate,
 	 tm.[Message],
-	 CASE WHEN u.Username IS NULL
-		THEN u.Nickname
-		ELSE u.Username
+	 ifm.EventDateTime AS KOTime,
+	 CASE WHEN u.Nickname IS NULL
+		THEN u.Username
+		ELSE u.Nickname
 	 END AS Username
 	FROM TicketIssue AS tis WITH (NOLOCK)
 		INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId=tis.TicketId
 		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketType=ty.TypeId 
 		INNER JOIN TicketIssueEvent AS tl WITH (NOLOCK) ON tis.TicketId=tl.TicketId
-		INNER JOIN InfoSiteMatch AS ifm ON ifm.OWPHomeId=tl.OwpHomeId AND ifm.OWPAwayId=tl.OwpAwayId
+		INNER JOIN InfoSiteMatch AS ifm ON ifm.OWPHomeId=tl.OwpHomeId AND ifm.OWPAwayId=tl.OwpAwayId AND tl.OwpLeagueId=ifm.OWPLeagueId
 		INNER JOIN TicketMessage AS tm WITH (NOLOCK)ON tis.TicketId=tm.TicketId
 		INNER JOIN OWPLeague AS owpl WITH (NOLOCK) ON owpl.OWPLeagueId=tl.OwpLeagueId
 		INNER JOIN [User] AS u WITH (NOLOCk) ON tm.UserId=u.UserId

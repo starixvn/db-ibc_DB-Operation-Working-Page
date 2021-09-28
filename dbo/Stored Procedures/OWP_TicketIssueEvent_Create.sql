@@ -9,8 +9,7 @@ GO
 ALTER PROCEDURE[dbo].[OWP_TicketIssueEvent_Create] @TicketId INT,
 	@OwpLeagueId INT,
 	@OwpHomeId INT = NULL,
-	@OwpAwayId INT = NULL,
-	@IsLeague BIT
+	@OwpAwayId INT = NULL
 AS
 /*      
  ALTERd: 20210917@Carlos.Nguyen
@@ -26,12 +25,11 @@ BEGIN
 		TicketId,
 		OwpLeagueId ,
 		OwpHomeId ,
-		OwpAwayId ,
-		IsLeague
+		OwpAwayId 
 	 )
 	VALUES(@TicketId,
 		@OwpLeagueId ,
 		@OwpHomeId ,
-		@OwpAwayId ,
-		@IsLeague)
+		@OwpAwayId
+		)
 END
