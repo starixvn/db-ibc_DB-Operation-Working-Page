@@ -15,13 +15,14 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
+        DECLARE @GroupType INT= 2;
         SELECT t.TypeId, 
                t.TypeName, 
-			   r.TicketTypeRecipientId,
-               r.RecipientId,
-			   r.RecipientType,
+               r.TicketTypeRecipientId, 
+               r.RecipientId, 
+               r.RecipientType,
                CASE
-                   WHEN r.RecipientType = 1
+                   WHEN r.RecipientType = @GroupType
                    THEN g.GroupName
                    ELSE u.Username
                END 'RecipientName'
