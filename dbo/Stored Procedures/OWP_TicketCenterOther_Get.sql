@@ -9,7 +9,8 @@ GO
 ALTER PROCEDURE[dbo].[OWP_TicketCenterOther_Get] @ActorId INT,
 	@Keyword NVARCHAR(255)= NULL,
 	@TicketId NVARCHAR(255) = NULL,
-	@TicketTypeId INT = 0
+	@TicketTypeId INT = 0,
+	@MarketKey INT=1
 AS
 /*      
  ALTERd: 20210917@Carlos.Nguyen
@@ -24,7 +25,7 @@ BEGIN
 	
 	DECLARE @tblTicketRecipient TABLE (TicketId INT)
 	DECLARE @allTicketTypeId INT=0
-	DECLARE @otherTicketTypeId INT=2
+	DECLARE @allMarketKey INT=1
 	
 	INSERT INTO @tblTicketRecipient
 	EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] @ActorId=@ActorId
@@ -57,6 +58,6 @@ BEGIN
 		)AND
 		(
 			@TicketTypeId=@allTicketTypeId OR
-			tis.TicketType = @otherTicketTypeId
-		)
+			tis.TicketType = @TicketTypeId
+		) AND @MarketKey=@allMarketKey
 END
