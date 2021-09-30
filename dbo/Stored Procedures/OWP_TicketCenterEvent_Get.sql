@@ -28,7 +28,21 @@ BEGIN
 	DECLARE @allMarketKey INT=1
 	DECLARE @earlyMarketKey INT=2
 	DECLARE @todayMarketKey INT=3
+	DECLARE @earlyFilter INT= 2 
+	DECLARE @fromDate DATETIME
+	DECLARE @toDate DATETIME;
 	
+	IF @MarketKey = @earlyMarketKey
+    BEGIN
+		SET @fromDate= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '12:00:00');
+	END
+	
+	IF @MarketKey = @todayMarketKey
+    BEGIN
+        SET @fromDate= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00');
+        SET @toDate = DATEADD(DAY, DATEDIFF(DAY, -1, @fromDate), '11:59:59')
+    END;
+    
 	INSERT INTO @tblTicketRecipient
 	EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] @ActorId=@ActorId
 	
@@ -72,5 +86,9 @@ BEGIN
 			@TicketTypeId=@allTicketTypeId OR
 			tis.TicketType = @TicketTypeId
 		) AND
-		 @MarketKey IN (@allMarketKey, @earlyMarketKey, @todayMarketKey)
+		 (
+			@MarketKey = @allMarketKey OR
+			(@MarketKey = @earlyMarketKey AND ifm.EventDateTime>=@fromDate)OR
+			(@MarketKey = @todayMarketKey AND ifm.EventDateTime BETWEEN @fromDate AND @toDate)
+		 )
 END
