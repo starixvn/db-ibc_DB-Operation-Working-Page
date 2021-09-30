@@ -9,7 +9,8 @@ GO
 ALTER PROCEDURE[dbo].[OWP_TicketIssueMessage_Create] @TicketId INT,
 	@Message NVARCHAR(2000),
 	@UserId INT,
-	@IsSaved BIT
+	@IsSaved BIT,
+	@FileId INT = NULL
 AS
 /*      
  ALTERd: 20210917@Carlos.Nguyen
@@ -26,14 +27,16 @@ BEGIN
 		CreatedDate,
 		[Message],
 		UserId,
-		IsSaved 
+		IsSaved,
+		FileId
 	 )
 	VALUES (
 		@TicketId,
 		DATEADD(HOUR, 12, GETDATE()),
 		@Message,
 		@UserId,
-		0
+		0,
+		@FileId
 	)
 	SELECT MAX(tm.Id)
 	FROM TicketMessage AS tm
