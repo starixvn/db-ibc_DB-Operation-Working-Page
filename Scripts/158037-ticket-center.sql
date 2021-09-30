@@ -43,6 +43,9 @@ CREATE TABLE TicketMessage (
 	IsSaved BIT
 )
 
+ALTER TABLE TicketMessage
+ADD FileId INT
+
 CREATE TABLE TicketRecipient(
 	Id INT IDENTITY(1,1) PRIMARY KEY,
 	TicketId INT NOT NULL,
