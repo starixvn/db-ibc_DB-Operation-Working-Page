@@ -38,6 +38,8 @@ BEGIN
 	 tm.UserId,
 	 tm.CreatedDate,
 	 tm.[Message],
+	 tm.FileId,
+	 tm.Id AS MessageId,
 	 CASE WHEN u.Nickname IS NULL
 		THEN u.Username
 		ELSE u.Nickname

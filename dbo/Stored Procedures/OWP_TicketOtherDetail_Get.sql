@@ -27,6 +27,7 @@ BEGIN
 		tm.Id AS MessageId,
 		tm.[Message],
 		tm.UserId,
+		tm.FileId,
 		CASE WHEN u.Nickname IS NULL
 			THEN u.Username
 			ELSE u.Nickname

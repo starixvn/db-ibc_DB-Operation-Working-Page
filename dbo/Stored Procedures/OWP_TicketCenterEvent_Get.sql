@@ -59,6 +59,8 @@ BEGIN
 	 tm.CreatedDate,
 	 tm.[Message],
 	 ifm.EventDateTime AS KOTime,
+	 tm.FileId,
+	  tm.Id AS MessageId,
 	 CASE WHEN u.Nickname IS NULL
 		THEN u.Username
 		ELSE u.Nickname

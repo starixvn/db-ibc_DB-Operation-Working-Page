@@ -32,6 +32,7 @@ BEGIN
 		tm.Id AS MessageId,
 		tm.[Message],
 		tm.UserId,
+		tm.FileId,
 		ifm.EventDateTime AS KOTime,
 		CASE WHEN u.Nickname IS NULL
 			THEN u.Username

@@ -35,6 +35,8 @@ BEGIN
 	 tis.TicketType,
 	 ty.TypeName,
 	 tm.UserId,
+	 tm.Id AS MessageId,
+	 tm.FileId,
 	 CASE WHEN u.Nickname IS NULL
 		THEN u.Username
 		ELSE u.Nickname
