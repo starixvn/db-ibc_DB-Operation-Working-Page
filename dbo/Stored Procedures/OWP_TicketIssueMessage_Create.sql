@@ -38,6 +38,19 @@ BEGIN
 		0,
 		@FileId
 	)
-	SELECT MAX(tm.Id)
+	
+	DECLARE @id INT
+	
+	SELECT @id=MAX(tm.Id)
 	FROM TicketMessage AS tm
+	
+	SELECT u.UserId,
+		u.Username AS UserName,
+		u.Nickname AS NickName,
+		tm.CreatedDate,
+		tm.[Message],
+		tm.Id AS MessageId
+	FROM TicketMessage AS tm
+	INNER JOIN [User] AS u ON tm.UserId=u.UserId
+	WHERE tm.Id=@id
 END

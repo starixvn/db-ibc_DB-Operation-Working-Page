@@ -37,6 +37,5 @@ BEGIN
 		INNER JOIN TicketType AS tt ON tt.TypeId=ti.TicketType
 		INNER JOIN TicketMessage AS tm ON tm.TicketId=ti.TicketId
 		INNER JOIN [User] AS u ON u.UserId=tm.UserId
-
 	WHERE ti.TicketId=@TicketId
 END
