@@ -40,11 +40,16 @@ CREATE TABLE TicketMessage (
 	[CreatedDate] DATETIME NOT NULL,
 	[Message] NVARCHAR(2000) NOT NULL,
 	UserId INT NOT NULL,
-	IsSaved BIT
+	IsSaved BIT,
+	FileId INT
 )
 
-ALTER TABLE TicketMessage
-ADD FileId INT
+CREATE TABLE TicketCreator(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	TicketId INT NOT NULL,
+	CreatorId INT NOT NULL,
+	CreatedDate DATETIME NOT NULL
+)
 
 CREATE TABLE TicketRecipient(
 	Id INT IDENTITY(1,1) PRIMARY KEY,
