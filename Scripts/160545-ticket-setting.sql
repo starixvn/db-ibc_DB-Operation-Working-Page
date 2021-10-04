@@ -63,3 +63,14 @@ CREATE TABLE [dbo].[TicketTypeRecipient]
 )
 ON [OWP_Data];
 GO
+
+DELETE t
+FROM [dbo].[TicketType] t
+WHERE t.TypeName IN('Event Checking', 'Others');
+
+INSERT INTO [dbo].[TicketType]
+           ([TypeName])
+     VALUES
+           ('Event Checking'),
+		   ('Others')
+GO
