@@ -6,8 +6,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE[dbo].[OWP_TicketCenter_UpdateIsRead] 
+ALTER PROCEDURE[dbo].[OWP_TicketCenter_InsertManyReader] 
 	@TicketId INT,
+	@RecipientIds VARCHAR(2000),
 	@IsRead BIT = NULL
 AS
 /*      
@@ -21,7 +22,20 @@ AS
 BEGIN
 	SET NOCOUNT ON
 	
-	UPDATE TicketRecipient
-	SET IsRead=@IsRead
-	WHERE TicketId=@TicketId
+	DECLARE @tempRecipientIds TABLE(Id INT);
+    
+     INSERT INTO @tempRecipientIds(Id)
+     SELECT DISTINCT 
+                   val
+     FROM fnc_SplitStrings(@RecipientIds, ',') u OPTION(MAXRECURSION 0);
+     
+	INSERT INTO TicketMessageReader( 
+		TicketId,
+		RecipientId,
+		IsRead
+	)
+	SELECT @TicketId,
+		tmp.Id,
+		@IsRead
+	FROM @tempRecipientIds tmp
 END
