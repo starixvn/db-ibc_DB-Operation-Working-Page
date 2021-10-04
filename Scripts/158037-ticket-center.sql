@@ -5,7 +5,7 @@ Task : New table
 DB: bodb_OWP	
 
 Revisions:
-	20210922@Tyler: Initial - [Redmine: #156929]
+	20211011@carlos: Initial - [Redmine: #158037]
 	
 */
 CREATE TABLE TicketIssue (
@@ -55,7 +55,13 @@ CREATE TABLE TicketRecipient(
 	Id INT IDENTITY(1,1) PRIMARY KEY,
 	TicketId INT NOT NULL,
 	RecipientId INT NOT NULL,
-	RecipientType INT,
+	RecipientType INT
+)
+
+CREATE TABLE TicketMessageReader(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	TicketId INT NOT NULL,
+	RecipientId INT NOT NULL,
 	IsRead BIT
 )
 
