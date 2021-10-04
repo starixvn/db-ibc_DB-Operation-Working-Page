@@ -45,11 +45,14 @@ BEGIN
 	FROM TicketMessage AS tm
 	
 	SELECT u.UserId,
-		u.Username AS UserName,
-		u.Nickname AS NickName,
 		tm.CreatedDate,
 		tm.[Message],
-		tm.Id AS MessageId
+		tm.Id AS MessageId,
+		tm.FileId,
+		CASE WHEN u.Nickname IS NULL
+		THEN u.Username
+		ELSE u.Nickname
+	 END AS Username
 	FROM TicketMessage AS tm
 	INNER JOIN [User] AS u ON tm.UserId=u.UserId
 	WHERE tm.Id=@id
