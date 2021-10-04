@@ -55,6 +55,7 @@ CREATE TABLE TicketRecipient(
 	Id INT IDENTITY(1,1) PRIMARY KEY,
 	TicketId INT NOT NULL,
 	RecipientId INT NOT NULL,
-	RecipientType INT
+	RecipientType INT,
+	IsRead BIT
 )
 
