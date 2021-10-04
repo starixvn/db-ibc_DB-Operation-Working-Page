@@ -17,14 +17,16 @@ DB: bodb_OWP
 Revisions:
 	20201203@Carlos.Nguyen: Get match id by adminsite id - [Redmine: #145096]
 	20210811@Carlos.Nguyen: Get match id by adminsite id [Redmine: #153498]
+	20211004@Carlos.Nguyen: Get latest match Id in timae range [Redmine: #162609]
 */
 BEGIN
 	SET NOCOUNT ON
-	DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '11:59:59')
+	DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+	DECLARE @ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, -2, @FromDate), '11:59:59')
 	
 	SELECT TOP 1 om.OWPMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
 	WHERE om.MatchId=@AdminsiteId
-	AND om.EventDateTime <= @ToDate
+	AND om.EventDateTime BETWEEN @FromDate AND @ToDate
 	ORDER BY om.EventDateTime DESC
 END
