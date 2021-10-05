@@ -38,4 +38,5 @@ BEGIN
 		tmp.Id,
 		@IsRead
 	FROM @tempRecipientIds tmp
+	WHERE tmp.Id>0
 END
