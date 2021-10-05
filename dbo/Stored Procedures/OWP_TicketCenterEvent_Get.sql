@@ -64,7 +64,8 @@ BEGIN
 	 CASE WHEN u.Nickname IS NULL
 		THEN u.Username
 		ELSE u.Nickname
-	 END AS Username
+	 END AS Username,
+	 reader.IsRead
 	FROM TicketIssue AS tis WITH (NOLOCK)
 		INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId=tis.TicketId
 		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketType=ty.TypeId 
@@ -73,6 +74,7 @@ BEGIN
 		INNER JOIN TicketMessage AS tm WITH (NOLOCK)ON tis.TicketId=tm.TicketId
 		INNER JOIN OWPLeague AS owpl WITH (NOLOCK) ON owpl.OWPLeagueId=tl.OwpLeagueId
 		INNER JOIN [User] AS u WITH (NOLOCk) ON tm.UserId=u.UserId
+		LEFT JOIN TicketMessageReader AS reader WITH (NOLOCK)ON tbltk.TicketId=reader.TicketId AND reader.RecipientId=@ActorId
 	WHERE (@Keyword IS NULL OR
 		@Keyword ='' OR
 		owpl.OWPLeagueName LIKE '%'+@Keyword+'%' OR

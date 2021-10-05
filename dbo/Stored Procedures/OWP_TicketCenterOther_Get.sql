@@ -42,13 +42,15 @@ BEGIN
 		ELSE u.Nickname
 	 END AS Username,
 	 tm.CreatedDate,
-	 tm.[Message]
+	 tm.[Message],
+	 reader.IsRead
 	FROM TicketIssue AS tis WITH (NOLOCK)
 		INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId=tis.TicketId
 		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketType=ty.TypeId 
 		INNER JOIN TicketIssueOther AS tl WITH (NOLOCK) ON tis.TicketId=tl.TicketId
 		INNER JOIN TicketMessage AS tm WITH (NOLOCK)ON tis.TicketId=tm.TicketId
-		INNER JOIN [User] AS u WITH (NOLOCk) ON tm.UserId=u.UserId
+		INNER JOIN [User] AS u WITH (NOLOCK) ON tm.UserId=u.UserId
+		LEFT JOIN TicketMessageReader AS reader WITH (NOLOCK)ON tbltk.TicketId=reader.TicketId AND reader.RecipientId=@ActorId
 	WHERE (@Keyword IS NULL OR
 		@Keyword ='' OR
 		tl.[Subject] LIKE '%'+@Keyword+'%'
