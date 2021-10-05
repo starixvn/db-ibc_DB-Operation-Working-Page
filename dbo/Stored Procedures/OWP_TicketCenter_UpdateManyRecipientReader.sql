@@ -1,12 +1,12 @@
 USE [bodb_OWP]
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_TicketCenter_UpdateRecipientReader]    Script Date: 09/23/2021 11:18:03 ******/
+/****** Object:  StoredProcedure [dbo].[OWP_TicketCenter_UpdateManyRecipientReader]    Script Date: 09/23/2021 11:18:03 ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE[dbo].[OWP_TicketCenter_UpdateRecipientReader] 
+CREATE PROCEDURE[dbo].[OWP_TicketCenter_UpdateManyRecipientReader] 
 	@TicketId INT,
 	@IsRead BIT = NULL
 AS
