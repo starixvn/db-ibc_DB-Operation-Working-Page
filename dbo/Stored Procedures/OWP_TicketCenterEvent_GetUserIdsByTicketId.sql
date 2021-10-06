@@ -16,6 +16,7 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211006@Liam.Pham: Event ticket - [Redmine: #158037]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -23,5 +24,5 @@ BEGIN
 	-- Get all userId individual & belong to group
 	SELECT reader.RecipientId
 	FROM TicketMessageReader AS reader
-	WHERE reader.RecipientId=@TicketId
+	WHERE reader.TicketId=@TicketId
 END
