@@ -19,9 +19,10 @@ DB: bodb_OWP
 
 Revisions:
 	20210608@Carlos.nguyen: API sync Working Shifts to HRM - [Redmine: #156338]	
+	20211008@Tyler: Update emp id - [Redmine: #162852]	
 */
 	SET NOCOUNT ON;
-    SELECT ew.EmployeeId
+    SELECT u.EmployeeId
 		, ew.ShiftDate
 		, UPPER(sc.ShiftCode) AS ShiftCode
 		, ew.ShiftStartTime
