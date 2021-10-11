@@ -6,14 +6,14 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE[dbo].[OWP_TicketIssueMessage_Create] @TicketId INT,
+ALTER PROCEDURE [dbo].[OWP_TicketIssueMessage_Create] @TicketId INT,
 	@Message NVARCHAR(2000),
 	@UserId INT,
 	@IsSaved BIT,
 	@FileId INT = NULL
 AS
 /*      
- ALTERd: 20210917@Carlos.Nguyen
+ Created: 20210917@Carlos.Nguyen
  Task : New ticket issue message
  DB: bodb_OWP      
       

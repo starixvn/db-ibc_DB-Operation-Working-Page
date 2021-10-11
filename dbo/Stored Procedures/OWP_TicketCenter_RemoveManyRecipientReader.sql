@@ -6,12 +6,12 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE[dbo].[OWP_TicketCenter_RemoveManyRecipientReader] 
+ALTER PROCEDURE [dbo].[OWP_TicketCenter_RemoveManyRecipientReader] 
 	@TicketId INT,
 	@RecipientIds VARCHAR(MAX)
 AS
 /*
- ALTERd: 20210917@Carlos.Nguyen
+ Created: 20210917@Carlos.Nguyen
  Task : Remove many recipient reader
  DB: bodb_OWP      
       

@@ -6,13 +6,13 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE[dbo].[OWP_TicketCenter_InsertManyReader] 
+ALTER PROCEDURE [dbo].[OWP_TicketCenter_InsertManyReader] 
 	@TicketId INT,
 	@RecipientIds VARCHAR(2000),
 	@IsRead BIT = NULL
 AS
 /*      
- ALTERd: 20210917@Carlos.Nguyen
+ Created: 20210917@Carlos.Nguyen
  Task : Upate is read
  DB: bodb_OWP      
       

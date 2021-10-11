@@ -6,10 +6,10 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE[dbo].[OWP_TicketMatchDetail_Get] @TicketId INT
+ALTER PROCEDURE [dbo].[OWP_TicketMatchDetail_Get] @TicketId INT
 AS
 /*      
- ALTERd: 20210917@Carlos.Nguyen
+ Created: 20210917@Carlos.Nguyen
  Task : Get ticket match detail
  DB: bodb_OWP      
       

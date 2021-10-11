@@ -5,15 +5,16 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE[dbo].[OWP_TicketCenterEvent_Get] @ActorId INT,
+ALTER PROCEDURE [dbo].[OWP_TicketCenterEvent_Get] @ActorId INT,
 	@Keyword NVARCHAR(255) = NULL,
 	@TicketId NVARCHAR(255) = NULL,
 	@TicketTypeId INT = 0,
 	@MarketKey INT=1
 AS
 /*      
- ALTERd: 20210917@Carlos.Nguyen
+ Created: 20210917@Carlos.Nguyen
  Task : New ticket issue event
  DB: bodb_OWP      
       
