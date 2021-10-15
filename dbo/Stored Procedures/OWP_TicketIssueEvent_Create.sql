@@ -9,7 +9,8 @@ GO
 ALTER PROCEDURE [dbo].[OWP_TicketIssueEvent_Create] @TicketId INT,
 	@OwpLeagueId INT,
 	@OwpHomeId INT = NULL,
-	@OwpAwayId INT = NULL
+	@OwpAwayId INT = NULL,
+	@InfoSiteMatchId INT = NULL
 AS
 /*      
  Created: 20210917@Carlos.Nguyen
@@ -18,18 +19,22 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211015@Liam.Pham: update create ticket event - [Redmine: #158037]
 */
+
 BEGIN
 	SET NOCOUNT ON
 	INSERT INTO TicketIssueEvent(
 		TicketId,
 		OwpLeagueId ,
 		OwpHomeId ,
-		OwpAwayId 
+		OwpAwayId ,
+		InfoSiteMatchId
 	 )
 	VALUES(@TicketId,
 		@OwpLeagueId ,
 		@OwpHomeId ,
-		@OwpAwayId
+		@OwpAwayId,
+		@InfoSiteMatchId
 		)
 END

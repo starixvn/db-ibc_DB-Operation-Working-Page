@@ -20,6 +20,7 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211015@Liam.Pham: Event ticket - [Redmine: #158037]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -71,7 +72,7 @@ BEGIN
 		INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId=tis.TicketId
 		INNER JOIN TicketType AS ty WITH (NOLOCK)ON tis.TicketType=ty.TypeId 
 		INNER JOIN TicketIssueEvent AS tl WITH (NOLOCK) ON tis.TicketId=tl.TicketId
-		INNER JOIN InfoSiteMatch AS ifm ON ifm.OWPHomeId=tl.OwpHomeId AND ifm.OWPAwayId=tl.OwpAwayId AND tl.OwpLeagueId=ifm.OWPLeagueId
+		INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId=tl.InfoSiteMatchId
 		INNER JOIN TicketMessage AS tm WITH (NOLOCK)ON tis.TicketId=tm.TicketId
 		INNER JOIN OWPLeague AS owpl WITH (NOLOCK) ON owpl.OWPLeagueId=tl.OwpLeagueId
 		INNER JOIN [User] AS u WITH (NOLOCk) ON tm.UserId=u.UserId
