@@ -15,6 +15,7 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211018@Liam.Pham: Update ticket match detail - [Redmine: #158037]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -44,8 +45,6 @@ BEGIN
 	INNER JOIN TicketType AS tt ON tt.TypeId=ti.TicketType
 	INNER JOIN TicketMessage AS tm ON tm.TicketId=ti.TicketId
 	INNER JOIN [User] AS u ON u.UserId=tm.UserId
-	INNER JOIN InfoSiteMatch AS ifm ON ifm.OWPHomeId=til.OwpHomeId AND
-	 ifm.OWPAwayId=til.OwpAwayId AND
-	 ifm.OWPLeagueId=til.OwpLeagueId
+	INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId=til.InfoSiteMatchId
 	WHERE ti.TicketId=@TicketId
 END
