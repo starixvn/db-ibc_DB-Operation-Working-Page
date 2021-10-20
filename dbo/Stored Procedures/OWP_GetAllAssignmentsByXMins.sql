@@ -13,6 +13,7 @@ Revisions:
 	20200723@Esther.Nguyen: Staff's readiness notification - [Redmine: #137751]
 	20200810@Mira.Nguyen: edit xMins - [Redmine: #137751]
 	20200928@Mira.Nguyen: fix bug get special minor bettype - [Redmine: #137751]
+	20211020@Mira.Nguyen: hot fix duplicate message - [Redmine: #163466]
 */
 
      SET NOCOUNT ON;
@@ -48,7 +49,8 @@ Revisions:
                                                            OR a.[OWPMatchId] = r.MatchId)
                                                           AND r.UserId = a.UserId
      WHERE i.IsSelected = 1
-           AND m.EventDateTime BETWEEN @FromTime AND @LastTimeNotification
+           AND m.EventDateTime > @FromTime
+           AND m.EventDateTime <= @LastTimeNotification
            AND r.ReadyDateTime IS NULL
            AND i.MatchStatus LIKE 'Live'
-		   AND a.[UserId] IS NOT NULL
+           AND a.[UserId] IS NOT NULL;
