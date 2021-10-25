@@ -6,6 +6,7 @@ DB: bodb_OWP
 
 Revisions:
 	20211011@carlos: Initial - [Redmine: #158037]
+	20211015@Liam: Adding InfoSiteMatchId to TicketIssueEvent - [Redmine: #158037]
 	
 */
 CREATE TABLE TicketIssue (
@@ -23,6 +24,7 @@ CREATE TABLE TicketIssueLeague(
 CREATE TABLE TicketIssueEvent(
 	Id INT IDENTITY(1,1) PRIMARY KEY,
 	TicketId INT NOT NULL,
+	[InfoSiteMatchId] INT NULL,
 	OwpLeagueId INT NOT NULL,
 	OwpHomeId INT NOT NULL,
 	OwpAwayId INT NOT NULL
