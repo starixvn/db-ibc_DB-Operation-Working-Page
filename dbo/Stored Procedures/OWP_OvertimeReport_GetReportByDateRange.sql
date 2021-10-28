@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_OvertimeReport_GetReportByDateRange] @TraderName NVARCHAR(30), 
-                                                                @Location   NVARCHAR(10) = NULL, 
+                                                                @Location   NVARCHAR(10), 
                                                                 @FromDate   DATE, 
                                                                 @ToDate     DATE
 AS
@@ -40,10 +40,9 @@ Revisions:
                WHERE u.SectionId IN(@SecionLiveTradingVN, @SecionLiveTradingPH)
                AND (u.Username LIKE '%' + @TraderName + '%'
                     OR u.Nickname LIKE '%' + @TraderName + '%')
-               AND ((@Location IS NOT NULL
-                     AND u.LocationCode LIKE '%' + @Location + '%')
-                    OR (@Location IS NULL
-                        AND u.LocationCode IS NULL))
+               AND ((@Location = 'None'
+                     AND u.LocationCode IS NULL)
+                    OR (u.LocationCode LIKE '%' + @Location + '%'))
                ORDER BY u.LocationCode, 
                         u.Username;
 
