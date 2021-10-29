@@ -15,16 +15,13 @@ IF OBJECT_ID('dbo.OvertimeReport', 'U') IS NOT NULL
 GO
 CREATE TABLE [dbo].[OvertimeReport](
 	[ReportDate] [date] NOT NULL,
-	[TraderId] [int] NOT NULL,
-	[TraderName] [varchar](30) NULL,
-	[Hour] [float] NULL,
+	[UserId] [int] NOT NULL,
+	[Hour] [decimal](4, 2) NULL,
 	[IsOffDay] [bit] NULL,
-	[IsWeekend] [bit] NULL,
-	[DayOfWeek] [nchar](20) NULL,
  CONSTRAINT [PK_OvertimeReport] PRIMARY KEY CLUSTERED 
 (
 	[ReportDate] ASC,
-	[TraderId] ASC
+	[UserId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 ) ON [OWP_Data]
 GO
