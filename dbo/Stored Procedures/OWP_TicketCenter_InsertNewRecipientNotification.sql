@@ -1,3 +1,13 @@
+USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_TicketCenter_InsertNewRecipientNotification]    Script Date: 10/29/2021 08:08:08 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 ALTER PROC [dbo].[OWP_TicketCenter_InsertNewRecipientNotification] 
 	@NotificationContent NVARCHAR(MAX),
 	@SessionId VARCHAR(100)  = NULL,
