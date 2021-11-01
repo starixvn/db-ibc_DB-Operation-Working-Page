@@ -40,9 +40,10 @@ Revisions:
                WHERE u.SectionId IN(@SecionLiveTradingVN, @SecionLiveTradingPH)
                AND (u.Username LIKE '%' + @TraderName + '%'
                     OR u.Nickname LIKE '%' + @TraderName + '%')
-               AND ((@Location = 'None'
-                     AND u.LocationCode IS NULL)
-                    OR (u.LocationCode LIKE '%' + @Location + '%'))
+               AND (@Location = 'All'
+                    OR (@Location = 'None'
+                        AND u.LocationCode IS NULL)
+                    OR u.LocationCode = @Location)
                ORDER BY u.LocationCode, 
                         u.Username;
 
