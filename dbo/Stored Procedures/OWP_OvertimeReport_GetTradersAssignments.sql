@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_OvertimeReport_GetTradersAssignments] @EventDate DATETIME, 
+ALTER PROCEDURE [dbo].[OWP_OvertimeReport_GetTradersAssignments] @EventDate DATE, 
                                                                  @UserIds   NVARCHAR(MAX)
 AS
 
@@ -23,24 +23,67 @@ Revisions:
                SELECT DISTINCT 
                       [Value]
                FROM fnc_SplitString(@UserIds, ',') u OPTION(MAXRECURSION 0);
-        SELECT a.UserId, 
-               a.Bettype, 
-               a.AssignmentNote, 
-               m.EventDateTime, 
-               m.EventDate + m.OtherTime 'OtherDateTime', 
-               l.OWPLeagueName
-        FROM Assignment a
-             INNER JOIN @tblUserId ui ON ui.UserId = a.UserId
-             INNER JOIN [User] u WITH(NOLOCK) ON u.UserId = a.UserId
-             INNER JOIN OWPMatch m WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
-             INNER JOIN OWPLeague l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
-             INNER JOIN MatchInfo i WITH(NOLOCK) ON i.OWPMatchId = m.OWPMatchId
-        WHERE i.MatchStatus LIKE '%live%'
-              AND m.EventDateTime BETWEEN @FromDate AND @ToDate
-              AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN)
-             AND (CASE
-                      WHEN m.OtherTime IS NOT NULL
-                      THEN m.EventDate + m.OtherTime
-                      ELSE m.EventDateTime
-                  END) BETWEEN @FromDate AND @ToDate;
+        DECLARE @tblAssignment TABLE
+        (UserId         INT, 
+         OWPMatchId     INT, 
+         ParentMatchId  INT NULL, 
+         MinorBettypeId INT NULL, 
+         Bettype        INT, 
+         Remark         NVARCHAR(2000), 
+         EventDateTime  DATETIME, 
+         OWPLeagueName  NVARCHAR(2000)
+        );
+        INSERT INTO @tblAssignment
+        (UserId, 
+         OWPMatchId, 
+         ParentMatchId, 
+         MinorBettypeId, 
+         Bettype, 
+         Remark, 
+         EventDateTime, 
+         OWPLeagueName
+        )
+               SELECT a.UserId, 
+                      m.OWPMatchId, 
+                      mm.ParentMatchId, 
+                      mm.MinorBettypeId, 
+                      a.Bettype, 
+                      i.Remark,
+                      CASE
+                          WHEN m.OtherTime IS NOT NULL
+                          THEN m.EventDate + m.OtherTime
+                          ELSE m.EventDateTime
+                      END EventDateTime, 
+                      l.OWPLeagueName
+               FROM Assignment a
+                    INNER JOIN @tblUserId ui ON ui.UserId = a.UserId
+                    INNER JOIN [User] u WITH(NOLOCK) ON u.UserId = a.UserId
+                    INNER JOIN OWPMatch m WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+                    LEFT JOIN MinorMatch mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
+                    INNER JOIN OWPLeague l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
+                    INNER JOIN MatchInfo i WITH(NOLOCK) ON i.OWPMatchId = m.OWPMatchId
+               WHERE i.MatchStatus LIKE '%live%'
+                     AND m.EventDateTime BETWEEN @FromDate AND @ToDate
+                     AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN)
+                    AND (CASE
+                             WHEN m.OtherTime IS NOT NULL
+                             THEN m.EventDate + m.OtherTime
+                             ELSE m.EventDateTime
+                         END) BETWEEN @FromDate AND @ToDate;
+        SELECT UserId, 
+               OWPMatchId, 
+               ParentMatchId, 
+               MinorBettypeId, 
+               Bettype, 
+               Remark, 
+               EventDateTime, 
+               OWPLeagueName
+        FROM @tblAssignment;
+
+		-- Select main matches remark to detect Corner & Booking ET
+        SELECT DISTINCT 
+               m.OWPMatchId, 
+               m.Remark
+        FROM MatchInfo m WITH(NOLOCK)
+             INNER JOIN @tblAssignment a ON a.ParentMatchId = m.OWPMatchId;
     END;
