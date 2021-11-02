@@ -8,7 +8,8 @@ GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[OWP_TicketCenter_UpdateManyRecipientReader] 
 	@TicketId INT,
-	@IsRead BIT = NULL
+	@IsRead BIT = NULL,
+	@ActorId int
 AS
 /*
  Created: 20210917@Carlos.Nguyen
@@ -17,11 +18,12 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211102@Liam.Pham: Ignore ActorId - [Redmine: #162851]
 */
 BEGIN
 	SET NOCOUNT ON
      
 	UPDATE TicketMessageReader
 	SET IsRead = @IsRead
-	WHERE TicketId=@TicketId
+	WHERE TicketId=@TicketId and RecipientId <> @ActorId
 END
