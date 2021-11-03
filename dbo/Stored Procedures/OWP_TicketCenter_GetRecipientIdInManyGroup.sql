@@ -16,6 +16,7 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211103@Liam.Pham: Get recipient by GroupId  - [Redmine: #162851]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -29,5 +30,5 @@ BEGIN
      
 	SELECT DISTINCT rg.RecipientId
 	FROM RecipientGroup AS rg
-	INNER JOIN @tempRecipientIds as tmp ON tmp.Id=rg.RecipientGroupId 
+	INNER JOIN @tempRecipientIds as tmp ON tmp.Id=rg.GroupId 
 END
