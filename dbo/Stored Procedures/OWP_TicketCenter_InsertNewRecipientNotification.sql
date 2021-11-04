@@ -14,6 +14,7 @@ ALTER PROC [dbo].[OWP_TicketCenter_InsertNewRecipientNotification]
 	@IsImportant BIT,
 	@IsWatcher BIT,
 	@ReceivedUserId INT,
+	@ReceivedUserType INT,
 	@ActorId INT,
 	@NotificationType INT 
   
@@ -30,12 +31,31 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON;
 	DECLARE @tblReceivedUser TVP_INT;
-
-	INSERT INTO @tblReceivedUser(Id) VALUES(@ReceivedUserId);
-
+	DECLARE @messageTemplate NVARCHAR(MAX);
+	DECLARE @actorName NVARCHAR(50);
+	--
+	SELECT TOP 1 @actorName = CASE
+           WHEN Nickname IS NOT NULL
+           THEN Nickname
+           ELSE Username
+		END
+     FROM dbo.[User] WITH(NOLOCK)
+     WHERE UserId = @ActorId;
+	SELECT @messageTemplate = REPLACE(@NotificationContent, '<username>', @actorName);
+	--
+	IF @ReceivedUserType = 1
+	BEGiN
+		INSERT INTO @tblReceivedUser(Id) VALUES(@ReceivedUserId);
+	END
+	ELSE
+	BEGIN
+		INSERT INTO @tblReceivedUser(Id)
+		SELECT RecipientId FROM RecipientGroup WHERE GroupId = @ReceivedUserId;
+	END
+	--
 	EXEC dbo.OWP_MessageInsert 
 		@UserId = @ActorId,
-		@MessageContent = @NotificationContent,
+		@MessageContent = @messageTemplate,
 		@SessionId = @SessionId,
 		@IsImportant = @IsImportant, 
         @IsWatcher = @IsWatcher,
