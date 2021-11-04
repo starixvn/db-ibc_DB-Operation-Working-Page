@@ -4,7 +4,8 @@
 ALTER PROCEDURE [dbo].[OWP_OvertimeReport_GetReportByDateRange] @TraderName NVARCHAR(30), 
                                                                 @Location   NVARCHAR(10), 
                                                                 @FromDate   DATE, 
-                                                                @ToDate     DATE
+                                                                @ToDate     DATE, 
+                                                                @SiteId     INT
 AS
 
 /*    
@@ -37,13 +38,20 @@ Revisions:
                       u.[UserId], 
                       u.[Username]
                FROM dbo.[User] u WITH(NOLOCK)
+                    INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
+                    INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
+                                                                                            AND us.SiteId = @SiteId
                WHERE u.SectionId IN(@SecionLiveTradingVN, @SecionLiveTradingPH)
-               AND (u.Username LIKE '%' + @TraderName + '%'
-                    OR u.Nickname LIKE '%' + @TraderName + '%')
-               AND (@Location = 'All'
-                    OR (@Location = 'None'
-                        AND u.LocationCode IS NULL)
-                    OR u.LocationCode = @Location)
+                    AND (u.Username LIKE '%' + @TraderName + '%'
+                         OR u.Nickname LIKE '%' + @TraderName + '%')
+                    AND (@Location = 'All'
+                         OR (@Location = 'None'
+                             AND u.LocationCode IS NULL)
+                         OR u.LocationCode = @Location)
+                    AND ci.closed = 0
+                    AND ci.reject = 0
+                    AND ci.[Enabled] = 1
+                    AND us.IsActive = 1
                ORDER BY u.LocationCode, 
                         u.Username;
 
