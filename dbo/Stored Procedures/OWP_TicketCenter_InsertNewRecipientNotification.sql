@@ -53,6 +53,9 @@ BEGIN
 		SELECT RecipientId FROM RecipientGroup WHERE GroupId = @ReceivedUserId;
 	END
 	--
+	 DELETE FROM @tblReceivedUser
+	 WHERE Id=@ActorId
+	--
 	EXEC dbo.OWP_MessageInsert 
 		@UserId = @ActorId,
 		@MessageContent = @messageTemplate,
