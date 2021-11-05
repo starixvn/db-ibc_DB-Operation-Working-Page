@@ -63,7 +63,6 @@ Revisions:
                     INNER JOIN OWPLeague l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
                     INNER JOIN MatchInfo i WITH(NOLOCK) ON i.OWPMatchId = m.OWPMatchId
                WHERE i.MatchStatus LIKE '%live%'
-                     AND m.EventDateTime BETWEEN @FromDate AND @ToDate
                      AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN)
                     AND (CASE
                              WHEN m.OtherTime IS NOT NULL
@@ -80,7 +79,7 @@ Revisions:
                OWPLeagueName
         FROM @tblAssignment;
 
-		-- Select main matches remark to detect Corner & Booking ET
+        -- Select main matches remark to detect Corner & Booking ET
         SELECT DISTINCT 
                m.OWPMatchId, 
                m.Remark
