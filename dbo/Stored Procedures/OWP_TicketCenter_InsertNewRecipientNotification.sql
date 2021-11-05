@@ -20,12 +20,12 @@ ALTER PROC [dbo].[OWP_TicketCenter_InsertNewRecipientNotification]
   
 AS
 /*
-Created: Luca.Duong
+Created: 20211009@Luca.Duong
 Task : send notification when there's add new recipient
 DB: bodb_OWP
 
 Revisions:
-	Luca.Duong: Init SP - [Redmine: #162851]
+	20211009@Luca.Duong: Init SP - [Redmine: #163895]
 	
 */
 BEGIN
