@@ -5,18 +5,20 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+ALTER PROCEDURE [dbo].[OWP_RecipientGroup_RemoveMessageReader]
+	@GroupId INT,
+	@UserIds VARCHAR(MAX)
+AS
 /*      
  Created: 20211104@Johnny.Thai
  Task : Remove recipientIndividual reader when remove user to group
  DB: bodb_OWP      
       
  Revisions:          
-	20211104@Johnny.Thai: Event ticket - [Redmine: #158037]
+	20211104@Johnny.Thai:Notification for Ticket Center - [Redmine: #162851]
 */
-ALTER PROCEDURE [dbo].[OWP_RecipientGroup_RemoveMessageReader]
-	@GroupId INT,
-	@UserIds VARCHAR(MAX)
-AS
 BEGIN
 
 	SET NOCOUNT ON
