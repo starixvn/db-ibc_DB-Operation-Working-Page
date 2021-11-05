@@ -18,17 +18,15 @@ Revisions:
         DECLARE @SecionLiveTradingVN INT= 3, @SecionLiveTradingPH INT= 28;
         SELECT w.[EmployeeId], 
                [ShiftDate], 
-               c.StartTime, 
-               c.EndTime, 
-               c.[ShiftId], 
-               w.RefShiftId, 
-               c.Extension
+               w.ShiftStartTime, 
+               w.ShiftEndTime, 
+               w.RefShiftId
         FROM [bodb_OWP].[dbo].[EmployeeWorkingShift] w WITH(NOLOCK)
              INNER JOIN dbo.EmployeeWorkingShiftColor c WITH(NOLOCK) ON c.ShiftId = w.ShiftId
              INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = w.EmployeeId
         WHERE ShiftDate = @EventDate
               AND c.IsTimeShift = 1
-              AND c.StartTime IS NOT NULL
-              AND c.EndTime IS NOT NULL
-        --AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN);
+              AND w.ShiftStartTime IS NOT NULL
+              AND w.ShiftEndTime IS NOT NULL
+              AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN);
     END;
