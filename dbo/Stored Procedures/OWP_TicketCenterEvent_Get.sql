@@ -21,6 +21,7 @@ AS
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211015@Liam.Pham: Event ticket - [Redmine: #158037]
+	20211104@Liam.Pham: fix duplicate messages - [Redmine: #162851]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -48,7 +49,7 @@ BEGIN
 	INSERT INTO @tblTicketRecipient
 	EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] @ActorId=@ActorId
 	
-	SELECT tbltk.TicketId,
+	SELECT DISTINCT tbltk.TicketId,
 	 owpl.OWPLeagueId,
 	 owpl.OWPLeagueName,
 	 tl.OwpHomeId,
