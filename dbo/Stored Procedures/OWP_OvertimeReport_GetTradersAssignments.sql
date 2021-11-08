@@ -82,7 +82,13 @@ Revisions:
         -- Select main matches remark to detect Corner & Booking ET
         SELECT DISTINCT 
                m.OWPMatchId, 
-               m.Remark
+               m.Remark,
+               CASE
+                   WHEN om.OtherTime IS NOT NULL
+                   THEN om.EventDate + om.OtherTime
+                   ELSE om.EventDateTime
+               END EventDateTime
         FROM MatchInfo m WITH(NOLOCK)
+             INNER JOIN OWPMatch om WITH(NOLOCK) ON om.OWPMatchId = m.OWPMatchId
              INNER JOIN @tblAssignment a ON a.ParentMatchId = m.OWPMatchId;
     END;
