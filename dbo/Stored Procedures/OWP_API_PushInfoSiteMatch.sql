@@ -152,7 +152,9 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
-
+	CREATE CLUSTERED INDEX IX_tbl#tblInfoSiteMatch_InfoSiteMatchId
+	ON #tblInfoSiteMatch(InfoSiteMatchId ASC)
+	
 	-- not process on records deleted or not updated
 	DELETE tism
 	FROM #tblInfoSiteMatch AS tism
