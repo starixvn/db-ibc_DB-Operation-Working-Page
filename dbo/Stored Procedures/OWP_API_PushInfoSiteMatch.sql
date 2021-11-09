@@ -23,6 +23,7 @@ AS
 	20201105@Jacob: New column ETPK - [Redmine: #144570]
 	20201106@Jacob: Increase casting size - [Redmine: #144570]
 	20210128@CarlosNguyen: Sync MatchCode - [Redmine: #149347]
+	20211109@CarlosNguyen: Solve deadlock issue of InfoSite event sync - [Redmine: #164343]
 */
 BEGIN
 	SET NOCOUNT ON
