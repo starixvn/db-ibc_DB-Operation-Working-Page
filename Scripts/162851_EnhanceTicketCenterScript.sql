@@ -11,3 +11,27 @@ Revisions:
 ALTER TABLE [dbo].[TicketMessageReader]
 ADD [RecipientType]   INT NULL,
     [GroupId]   INT NULL
+	
+CREATE INDEX idx_pname
+ON TicketIssueLeague (TicketId);
+
+CREATE INDEX idx_pname
+ON TicketIssueEvent (TicketId);
+
+CREATE INDEX idx_pname
+ON TicketIssueOther (TicketId);
+
+CREATE INDEX idx_pname
+ON TicketMessage (TicketId);
+
+CREATE INDEX idx_pname
+ON TicketCreator (TicketId);
+
+CREATE INDEX idx_pname
+ON TicketRecipient (TicketId);
+
+CREATE INDEX idx_pname
+ON TicketMessageReader (TicketId, RecipientId, RecipientType, GroupId );
+
+
+
