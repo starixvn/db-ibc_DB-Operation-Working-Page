@@ -2,7 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TaskListForTodayGet] @UserId              INT, 
-                                                @IsGetYesterdayEvent BIT = 0
+                                                @EventDate           DATE, 
+                                                @IsGetYesterdayEvent BIT  = 0
 AS
 
 /*
@@ -33,6 +34,7 @@ AS
 	20210128@CarlosNguyen: Query MatchCode - [Redmine: #149347]
 	20210128@Esther.Nguyen: Hide Completed Match on Task List - [Redmine: #148228]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20211117@Tyler: Filter by EventDate - [Redmine: #164493]
 */
 
     BEGIN
@@ -80,17 +82,8 @@ AS
                       Value
                FROM dbo.RefResource WITH(NOLOCK)
                WHERE RefName = 'NoOfHDP';
-        IF(@IsGetYesterdayEvent = 1)
-            BEGIN
-                SET @FromTime = DATEADD(DAY, DATEDIFF(DAY, 0, @Today) - 1, '12:00:00');
-                SET @ToTime = DATEADD(DAY, DATEDIFF(DAY, -1, @Today) - 1, '11:59:59');
-        END;
-            ELSE -- If not get yesterday event, set FromTime-ToTime in Time Range
-            BEGIN
-                SELECT @FromTime = FromTime, 
-                       @ToTime = ToTime
-                FROM dbo.fnc_GetDateTimeForTraderViewTime();
-        END;
+        SET @FromTime = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00');
+        SET @ToTime = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59');
 
         -- get events can view detail
         INSERT INTO #tblTodayMatch
@@ -377,8 +370,8 @@ AS
                inf.Remark, 
                inf.Phone, 
                inf.WB AS WatchBet, 
-               inf.Channel,
-			   om.MatchCode,
+               inf.Channel, 
+               om.MatchCode, 
                STUFF(
         (
             SELECT ', ' + rs.OtherProviderName
