@@ -24,6 +24,7 @@ AS
 	20201106@Jacob: Increase casting size - [Redmine: #144570]
 	20210128@CarlosNguyen: Sync MatchCode - [Redmine: #149347]
 	20211109@CarlosNguyen: Solve deadlock issue of InfoSite event sync - [Redmine: #164343]
+	20211119@CarlosNguyen: Enhance-auto-assignment - [Redmine: #163362]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -75,6 +76,7 @@ BEGIN
 		,[IPTV] NVARCHAR(2000) NULL
 		,[ETPK] NVARCHAR(2000) NULL
 		,[MatchCode] NVARCHAR(50)
+		,[Provider] NVARCHAR(2000)
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -101,6 +103,7 @@ BEGIN
 		,[IPTV]
 		,[ETPK]
 		,[MatchCode]
+		,[Provider]
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -125,6 +128,7 @@ BEGIN
 		,[IPTV]
 		,[ETPK]
 		,[MatchCode]
+		,[Provider]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
@@ -149,6 +153,7 @@ BEGIN
 			,[Iptv][nvarchar](2000)
 			,[ETPK][nvarchar](2000)
 			,[MatchCode][nvarchar](50) 
+			,[Provider][nvarchar](2000) 
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -335,7 +340,8 @@ BEGIN
 			,[IPTV]
 			,[ETPK]
 			,[IsLive]	
-			,[MatchCode]		
+			,[MatchCode]
+			,[Provider]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -371,6 +377,7 @@ BEGIN
 				,t.[ETPK]=s.[ETPK]
 				,t.[IsLive]=s.[IsLive]
 				,t.[MatchCode]=s.[MatchCode]
+				,t.[Provider]=s.[Provider]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -403,6 +410,7 @@ BEGIN
 				,[ETPK]
 				,[IsLive]
 				,[MatchCode]
+				,[Provider]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -434,6 +442,7 @@ BEGIN
 				,s.[ETPK]
 				,[IsLive]
 				,s.[MatchCode]
+				,s.[Provider]
 				);
 
 	
