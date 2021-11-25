@@ -9,5 +9,5 @@ Revisions:
 	
 */
 ALTER TABLE InfoSiteMatch
-ADD Provider NVARCHAR(2000)
+ADD OtherProvider NVARCHAR(2000)
 
