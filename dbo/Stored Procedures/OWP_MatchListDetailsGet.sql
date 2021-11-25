@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[OWP_MatchListDetailsGet] @EventDate DATE, @MatchStatusIds VARCHAR(MAX)
 AS;
 /*
@@ -28,6 +27,7 @@ AS;
 	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 	20200729@Jack.Nguyen: get IPTV, MatchId  - [Redmine: #137756]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20211122@Liam.Pham: add filter sync live status  - [Redmine: #159109]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -119,6 +119,8 @@ BEGIN
 		,ParentMatchId INT
 		,InfoSiteMatchId INT
 		,IsNeutral BIT
+		,IsLive           BIT
+		,ParentInfoSiteId INT 
 		)
 
 	INSERT INTO #owpMatchListByDate (
@@ -151,6 +153,8 @@ BEGIN
 		,ParentMatchId
 		,InfoSiteMatchId
 		,IsNeutral
+		,IsLive
+		,ParentInfoSiteId
 		)
 	SELECT om.OWPMatchId
 		,om.MatchNo
@@ -187,9 +191,20 @@ BEGIN
 			END AS ParentMatchId
 		,om.InfoSiteMatchId
 		,om.IsNeutral
+		,CASE
+            WHEN mi.MatchStatus IN('Live', 'Postponed')
+            THEN 1
+            ELSE 0
+            END AS IsLive   
+		,CASE
+            WHEN minor.ParentMatchId IS NULL
+            THEN om.InfoSiteMatchId
+            ELSE mp.InfoSiteMatchId
+            END
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
+		LEFT JOIN dbo.OWPMatch mp WITH(NOLOCK) ON mp.OWPMatchId = minor.ParentMatchId
 		LEFT JOIN #tblNoOfHDPResource AS r ON mi.NoOfHDPId = r.Id
 	WHERE om.EventDateTime BETWEEN @FromDate
 			AND @ToDate
@@ -267,11 +282,15 @@ BEGIN
 		,ml.InfoSiteMatchId
 		,ml.EventDate
 		,ml.EventDateTime
+		,ml.IsLive 
+		,imn.AdminSiteMatchId 'ParentAdminSiteId'
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
 		INNER JOIN dbo.OWPTeam AS a WITH (NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
 		INNER JOIN dbo.OWPMatch AS ma WITH (NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
+		LEFT JOIN dbo.InfoSiteMatch AS imn WITH(NOLOCK) 
+				ON ml.ParentInfoSiteId = imn.InfoSiteMatchId AND imn.IsDeleted = 0
 		LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
 	WHERE (
 			ml.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
