@@ -616,6 +616,18 @@ AS
              INNER JOIN dbo.MatchOfferDetail AS mo WITH(NOLOCK) ON tm.OWPMatchId = mo.OWPMatchId
              LEFT JOIN dbo.RefResource AS rr WITH(NOLOCK) ON mo.MatchOfferId = rr.ResourceId
         WHERE rr.RefName = 'MatchOffer';
+
+        SELECT DISTINCT 
+               om.OWPMatchId, 
+               (CASE
+                    WHEN maindb.eventstatus = @str_Completed
+                    THEN 1
+                    ELSE 0
+                END) AS IsCompletedMatch
+        FROM dbo.OWPMatch AS om WITH(NOLOCK)
+             INNER JOIN #tblTodayMatch AS m WITH(NOLOCK) ON m.ParentMatchId = om.OWPMatchId
+             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = om.MatchId;
+
         DROP TABLE #tblTodayMatch;
         DROP TABLE #tblMatchSetting;
         DROP TABLE #tblParentMatchSetting;
