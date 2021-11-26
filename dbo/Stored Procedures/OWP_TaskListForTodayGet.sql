@@ -2,7 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TaskListForTodayGet] @UserId              INT, 
-                                                @IsGetYesterdayEvent BIT = 0
+                                                @EventDate           DATE, 
+                                                @IsGetYesterdayEvent BIT  = 0
 AS
 
 /*
@@ -33,6 +34,7 @@ AS
 	20210128@CarlosNguyen: Query MatchCode - [Redmine: #149347]
 	20210128@Esther.Nguyen: Hide Completed Match on Task List - [Redmine: #148228]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20211117@Tyler: Filter by EventDate - [Redmine: #164493]
 */
 
     BEGIN
@@ -80,17 +82,8 @@ AS
                       Value
                FROM dbo.RefResource WITH(NOLOCK)
                WHERE RefName = 'NoOfHDP';
-        IF(@IsGetYesterdayEvent = 1)
-            BEGIN
-                SET @FromTime = DATEADD(DAY, DATEDIFF(DAY, 0, @Today) - 1, '12:00:00');
-                SET @ToTime = DATEADD(DAY, DATEDIFF(DAY, -1, @Today) - 1, '11:59:59');
-        END;
-            ELSE -- If not get yesterday event, set FromTime-ToTime in Time Range
-            BEGIN
-                SELECT @FromTime = FromTime, 
-                       @ToTime = ToTime
-                FROM dbo.fnc_GetDateTimeForTraderViewTime();
-        END;
+        SET @FromTime = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00');
+        SET @ToTime = DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59');
 
         -- get events can view detail
         INSERT INTO #tblTodayMatch
@@ -377,8 +370,8 @@ AS
                inf.Remark, 
                inf.Phone, 
                inf.WB AS WatchBet, 
-               inf.Channel,
-			   om.MatchCode,
+               inf.Channel, 
+               om.MatchCode, 
                STUFF(
         (
             SELECT ', ' + rs.OtherProviderName
@@ -429,7 +422,8 @@ AS
              INNER JOIN dbo.OWPTeam AS home WITH(NOLOCK) ON om.OWPHomeId = home.OWPTeamId
              INNER JOIN dbo.OWPTeam AS away WITH(NOLOCK) ON om.OWPAwayId = away.OWPTeamId
              LEFT JOIN #tblNoOfHDPResource AS ref WITH(NOLOCK) ON inf.NoOfHDPId = ref.Id
-             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = om.MatchId
+			 LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON om.InfoSiteMatchId = im.InfoSiteMatchId
+             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = im.AdminSiteMatchId
              LEFT JOIN dbo.ReadyTradeStatus AS rd WITH(NOLOCK) ON m.OWPMatchId = rd.MatchId
                                                                   AND rd.UserId = @UserId
         WHERE m.MinorBettypeId NOT IN(@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
@@ -623,6 +617,19 @@ AS
              INNER JOIN dbo.MatchOfferDetail AS mo WITH(NOLOCK) ON tm.OWPMatchId = mo.OWPMatchId
              LEFT JOIN dbo.RefResource AS rr WITH(NOLOCK) ON mo.MatchOfferId = rr.ResourceId
         WHERE rr.RefName = 'MatchOffer';
+
+        SELECT DISTINCT 
+               om.OWPMatchId, 
+               (CASE
+                    WHEN maindb.eventstatus = @str_Completed
+                    THEN 1
+                    ELSE 0
+                END) AS IsCompletedMatch
+        FROM dbo.OWPMatch AS om WITH(NOLOCK)
+             INNER JOIN #tblTodayMatch AS m WITH(NOLOCK) ON m.ParentMatchId = om.OWPMatchId
+			 LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON om.InfoSiteMatchId = im.InfoSiteMatchId
+             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = im.AdminSiteMatchId;
+
         DROP TABLE #tblTodayMatch;
         DROP TABLE #tblMatchSetting;
         DROP TABLE #tblParentMatchSetting;
