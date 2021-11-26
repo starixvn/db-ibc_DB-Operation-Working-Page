@@ -1,10 +1,10 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetInfositeMatchesByDate] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetInfositeMatchesByIds] @Ids VARCHAR(MAX)
 AS
 /*
 Created: 20211119@carlos.Nguyen
-Task : Get match list by date for auto assignment
+Task : Get match list by ids for auto assignment
 DB: bodb_OWP
 
 Revisions:
@@ -14,61 +14,53 @@ Revisions:
 BEGIN
 	SET NOCOUNT ON
 	
-	/* Declare variable*/
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
+	DECLARE @tempMatch TABLE(InfoSiteId INT);
+	
+	 INSERT INTO @tempMatch
+            SELECT DISTINCT 
+                   val
+            FROM fnc_SplitStrings(@Ids, ',') u OPTION(MAXRECURSION 0);
 		
 	CREATE TABLE #tblInfositeMatch(
-		MatchId INT,
-		HasTV BIT,
-		MaxBetMainMatch MONEY,
-		MaxBetNoOfCorner MONEY,
-		MaxBetNextCorner MONEY,
+		InfoSiteId INT,
+		LeagueName NVARCHAR(2000),
+		Tv NVARCHAR(2000),
 		KOTime DATETIME,
-		RequireChinese BIT,
+		Provider NVARCHAR(2000),
 		IsSoloMatch BIT,
 		IsMajorLeague BIT,
-		ExtraTime NVARCHAR(500),
-		Provider NVARCHAR(2000),
-		Venue NVARCHAR(2000),
-		IsFantasy BIT,
-		HasChannel BIT
+		Remark NVARCHAR(500),
+		OtherProvider NVARCHAR(2000),
+		Location NVARCHAR(2000),
+		Channel NVARCHAR(500),
 	)
 	
 	INSERT INTO #tblInfositeMatch(
-		MatchId,
-		HasTV,
-		MaxBetMainMatch,
-		MaxBetNoOfCorner,
-		MaxBetNextCorner,
+		InfoSiteId,
+		LeagueName,
+		Tv,
 		KOTime,
-		RequireChinese,
+		Provider,
 		IsSoloMatch,
 		IsMajorLeague,
-		ExtraTime,
-		Provider,
-		Venue,
-		IsFantasy,
-		HasChannel
+		Remark,
+		OtherProvider,
+		Location,
+		Channel
 	)
-	SELECT im.InfoSiteMatchId,
-		CASE WHEN LEN(im.TV)>0 THEN 1 ELSE 0 END,
-		0,
-		0,
-		0,
+	SELECT DISTINCT im.InfoSiteMatchId,
+		im.LeagueName,
+		im.TV,
 		im.EventDateTime,
-		CASE WHEN CHARINDEX('Chinese', im.Agent) > 0 OR CHARINDEX('C Only', im.Agent) > 0 THEN 1 ELSE 0 END,
-		0,
-		CASE WHEN l.CategoryId IS NOT NULL THEN 1 ELSE 0 END,
-		im.ETPK,
 		im.Provider,
+		CASE WHEN tmp.InfoSiteId IN (SELECT InfoSiteId FROM InfoSiteSoloMatch) THEN 1 ELSE 0 END,
+		CASE WHEN l.CategoryId = 1 THEN 1 ELSE 0 END,
+		im.Remark,
+		im.OtherProvider,
 		im.Venue,
-		CASE WHEN im.LeagueName LIKE '%FANTASY%' THEN 1 ELSE 0 END,
-		CASE WHEN LEN(im.Channel)>0 THEN 1 ELSE 0 END
-		
-	FROM InfoSiteMatch AS im LEFT JOIN dbo.OWPLeague AS l WITH (NOLOCK)
-		ON im.OWPLeagueId = l.OWPLeagueId AND l.CategoryId=1
-	WHERE im.EventDateTime BETWEEN @FromDate
-			AND @ToDate
+		im.Channel
+	FROM @tempMatch AS tmp
+		INNER JOIN InfoSiteMatch AS im ON tmp.InfoSiteId=im.InfoSiteMatchId
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON im.OWPLeagueId = l.OWPLeagueId
 	DROP TABLE #tblInfositeMatch
 END
