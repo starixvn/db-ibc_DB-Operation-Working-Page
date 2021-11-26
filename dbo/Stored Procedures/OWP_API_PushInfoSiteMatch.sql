@@ -78,6 +78,7 @@ BEGIN
 		,[MatchCode] NVARCHAR(50)
 		,[Provider] NVARCHAR(2000)
 		,[OtherProvider] NVARCHAR(2000)
+		,[Remark] NVARCHAR(2000)
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -106,6 +107,7 @@ BEGIN
 		,[MatchCode]
 		,[Provider]
 		,[OtherProvider]
+		,[Remark]
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -132,6 +134,7 @@ BEGIN
 		,[MatchCode]
 		,[Provider]
 		,[OtherProvider]
+		,[Remark]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
@@ -158,6 +161,7 @@ BEGIN
 			,[MatchCode][nvarchar](50) 
 			,[Provider][nvarchar](2000) 
 			,[OtherProvider][nvarchar](2000) 
+			,[Remark] NVARCHAR(2000)
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -347,6 +351,7 @@ BEGIN
 			,[MatchCode]
 			,[Provider]
 			,[OtherProvider]
+			,[Remark]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -384,6 +389,7 @@ BEGIN
 				,t.[MatchCode]=s.[MatchCode]
 				,t.[Provider]=s.[Provider]
 				,t.[OtherProvider]=s.[OtherProvider]
+				,t.[Remark]=s.[Remark]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -418,6 +424,7 @@ BEGIN
 				,[MatchCode]
 				,[Provider]
 				,[OtherProvider]
+				,[Remark]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -451,6 +458,7 @@ BEGIN
 				,s.[MatchCode]
 				,s.[Provider]
 				,s.[OtherProvider]
+				,s.[Remark]
 				);
 
 	
