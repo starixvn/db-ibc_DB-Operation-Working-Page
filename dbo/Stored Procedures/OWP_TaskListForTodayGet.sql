@@ -422,7 +422,8 @@ AS
              INNER JOIN dbo.OWPTeam AS home WITH(NOLOCK) ON om.OWPHomeId = home.OWPTeamId
              INNER JOIN dbo.OWPTeam AS away WITH(NOLOCK) ON om.OWPAwayId = away.OWPTeamId
              LEFT JOIN #tblNoOfHDPResource AS ref WITH(NOLOCK) ON inf.NoOfHDPId = ref.Id
-             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = om.MatchId
+			 LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON om.InfoSiteMatchId = im.InfoSiteMatchId
+             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = im.AdminSiteMatchId
              LEFT JOIN dbo.ReadyTradeStatus AS rd WITH(NOLOCK) ON m.OWPMatchId = rd.MatchId
                                                                   AND rd.UserId = @UserId
         WHERE m.MinorBettypeId NOT IN(@Specific10Mins, @Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
@@ -626,7 +627,8 @@ AS
                 END) AS IsCompletedMatch
         FROM dbo.OWPMatch AS om WITH(NOLOCK)
              INNER JOIN #tblTodayMatch AS m WITH(NOLOCK) ON m.ParentMatchId = om.OWPMatchId
-             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = om.MatchId;
+			 LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON om.InfoSiteMatchId = im.InfoSiteMatchId
+             LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = im.AdminSiteMatchId;
 
         DROP TABLE #tblTodayMatch;
         DROP TABLE #tblMatchSetting;
