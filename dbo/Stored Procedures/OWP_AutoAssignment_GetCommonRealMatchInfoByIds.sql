@@ -1,6 +1,13 @@
-﻿
+﻿USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_AutoAssignment_GetCommonRealMatchInfoByIds]    Script Date: 11/29/2021 10:55:51 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetInfositeMatchesByIds] @Ids VARCHAR(MAX)
+CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetCommonRealMatchInfoByIds] @Ids VARCHAR(MAX)
 AS
 /*
 Created: 20211119@carlos.Nguyen
