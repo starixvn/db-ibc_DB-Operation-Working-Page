@@ -1,11 +1,6 @@
-USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_TicketOtherDetail_Get]    Script Date: 09/23/2021 11:18:03 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 ALTER PROCEDURE [dbo].[OWP_TicketOtherDetail_Get] @TicketId INT
 AS
 /*      
@@ -15,6 +10,7 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211130@Mira: Get ticket status - [Redmine: #165017]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -22,6 +18,7 @@ BEGIN
 	SELECT DISTINCT til.[Subject],
 		ti.TicketId,
 		ti.TicketType,
+		ti.TicketStatus,
 		tt.TypeName,
 		tm.CreatedDate,
 		tm.Id AS MessageId,

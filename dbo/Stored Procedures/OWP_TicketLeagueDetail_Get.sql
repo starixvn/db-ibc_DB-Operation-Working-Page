@@ -16,6 +16,7 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20211130@Mira: Get ticket status - [Redmine: #165017]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -24,6 +25,7 @@ BEGIN
 		owpl.OWPLeagueName,
 		ti.TicketId,
 		ti.TicketType,
+		ti.TicketStatus,
 		tt.TypeName,
 		tm.CreatedDate,
 		tm.Id AS MessageId,

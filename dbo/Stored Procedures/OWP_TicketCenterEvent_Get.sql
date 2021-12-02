@@ -1,15 +1,9 @@
-USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_TicketCenterEvent_Get]    Script Date: 09/23/2021 11:18:03 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 ALTER PROCEDURE [dbo].[OWP_TicketCenterEvent_Get] @ActorId INT,
 	@Keyword NVARCHAR(255) = NULL,
 	@TicketId NVARCHAR(255) = NULL,
+	@TicketStatus VARCHAr(10) = 'All',
 	@TicketTypeId INT = 0,
 	@MarketKey INT=1
 AS
@@ -22,6 +16,7 @@ AS
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211015@Liam.Pham: Event ticket - [Redmine: #158037]
 	20211104@Liam.Pham: fix duplicate messages - [Redmine: #162851]
+	20211130@Mira: Add ticket status column - [Redmine: #165017]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -57,6 +52,7 @@ BEGIN
 	 ifm.HomeName,
 	 ifm.AwayName,
 	 tis.TicketType,
+	 tis.TicketStatus,
 	 ty.TypeName,
 	 tm.UserId,
 	 tm.CreatedDate,
@@ -97,5 +93,9 @@ BEGIN
 			@MarketKey = @allMarketKey OR
 			(@MarketKey = @earlyMarketKey AND ifm.EventDateTime>=@fromDate)OR
 			(@MarketKey = @todayMarketKey AND ifm.EventDateTime BETWEEN @fromDate AND @toDate)
-		 )
+		 ) AND
+		 (
+			@TicketStatus = 'All' OR
+			tis.TicketStatus = @TicketStatus 
+		 );
 END

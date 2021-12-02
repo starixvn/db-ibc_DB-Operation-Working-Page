@@ -9,6 +9,7 @@ GO
 ALTER PROCEDURE [dbo].[OWP_TicketCenterOther_Get] @ActorId INT,
 	@Keyword NVARCHAR(255)= NULL,
 	@TicketId NVARCHAR(255) = NULL,
+	@TicketStatus VARCHAr(10) = 'All',
 	@TicketTypeId INT = 0,
 	@MarketKey INT=1
 AS
@@ -20,6 +21,7 @@ AS
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211104@Liam.Pham: fix duplicate messages - [Redmine: #162851]
+	20211130@Mira: Add ticket status column - [Redmine: #165017]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -34,6 +36,7 @@ BEGIN
 	SELECT DISTINCT tbltk.TicketId,
 	 tl.[Subject],
 	 tis.TicketType,
+	 tis.TicketStatus,
 	 ty.TypeName,
 	 tm.UserId,
 	 tm.Id AS MessageId,
@@ -65,4 +68,9 @@ BEGIN
 			@TicketTypeId=@allTicketTypeId OR
 			tis.TicketType = @TicketTypeId
 		) AND @MarketKey=@allMarketKey
+		AND
+		(
+			@TicketStatus = 'All' OR
+			tis.TicketStatus = @TicketStatus 
+		);
 END

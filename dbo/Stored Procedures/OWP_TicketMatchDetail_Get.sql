@@ -16,6 +16,7 @@ AS
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211018@Liam.Pham: Update ticket match detail - [Redmine: #158037]
+	20211130@Mira: Get ticket status - [Redmine: #165017]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -27,6 +28,7 @@ BEGIN
 		ifm.HomeName,
 		ifm.AwayName,
 		ti.TicketId,
+		ti.TicketStatus,
 		ti.TicketType,
 		tt.TypeName,
 		tm.CreatedDate,
