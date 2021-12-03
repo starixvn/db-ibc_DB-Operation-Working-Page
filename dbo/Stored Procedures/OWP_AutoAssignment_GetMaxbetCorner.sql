@@ -1,0 +1,40 @@
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetMaxbetCorner] @XML NVARCHAR(MAX)
+AS
+/*
+Created: 20211203@Carlos.nguyen
+Task : Get maxbet corner
+DB: bodb_OWP
+
+Revisions:
+	20211203@Raymond.Le: Initial SP - [Redmine: #163362]
+*/
+
+BEGIN
+	SET NOCOUNT ON
+
+	DECLARE @idoc INT
+	
+	EXEC sp_xml_preparedocument @idoc OUTPUT
+		,@XML
+		
+	CREATE TABLE #tblMaxbet(
+		InfoSiteMatchId INT,
+		MaxBetFTHDP MONEY
+	)
+	
+	INSERT INTO #tblMaxbet(
+		InfoSiteMatchId,
+		MaxBetFTHDP
+	)
+	SELECT [InfoSiteMatchId],
+		[MaxBetFTHDP]
+	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
+		[InfoSiteMatchId] INT,
+		[MaxBetFTHDP] MONEY
+	)
+	EXEC sp_xml_removedocument @idoc
+	
+	-- TODO
+END
