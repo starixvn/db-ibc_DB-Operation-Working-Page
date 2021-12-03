@@ -35,6 +35,11 @@ BEGIN
 		[MaxBetFTHDP] MONEY
 	)
 	EXEC sp_xml_removedocument @idoc
-	
-	-- TODO
+
+	SELECT m.InfoSiteMatchId, 
+       sp.Maxbet_NextCorner as MaxBetNextCorner, 
+       sp.Maxbet_NoOfCorner as MaxBetNoOfCorner
+	FROM #tblMaxbet AS m
+		INNER JOIN SpecialProduct AS sp ON m.MaxBetFTHDP = sp.Maxbet_FTHDP
+                                        AND sp.[Type] = 'MBC';
 END
