@@ -18,6 +18,7 @@ Revisions:
 	20201203@Carlos.Nguyen: Get match id by adminsite id - [Redmine: #145096]
 	20210811@Carlos.Nguyen: Get match id by adminsite id [Redmine: #153498]
 	20211004@Carlos.Nguyen: Get latest match Id in timae range [Redmine: #162609]
+	20211118@Carlos.nguyen: Handle merge match [Redmine: #163030]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -26,7 +27,8 @@ BEGIN
 	
 	SELECT TOP 1 om.OWPMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
-	WHERE om.MatchId=@AdminsiteId
-	AND om.EventDateTime BETWEEN @FromDate AND @ToDate
+		INNER JOIN InfoSiteMatch AS im WITH (NOLOCK) ON im.InfoSiteMatchId=om.InfoSiteMatchId
+	WHERE im.AdminSiteMatchId=@AdminsiteId AND im.ParentId IS NULL
+		AND om.EventDateTime BETWEEN @FromDate AND @ToDate
 	ORDER BY om.EventDateTime DESC
 END

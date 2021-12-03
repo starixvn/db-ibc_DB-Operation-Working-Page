@@ -21,6 +21,7 @@ Revisions:
 	20211004@Carlos.Nguyen: Get latest match Id in timae range [Redmine: #162609]
 	20211118@Luca.Duong: Get latest minor match id and main match id [Redmine: #163030]
 	20211118@Carlos.nguyen: Get latest minor match id and main match id [Redmine: #163030]
+	20211118@Carlos.nguyen: Handle merge match [Redmine: #163030]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -31,7 +32,8 @@ BEGIN
 		mm.ParentMatchId
 	FROM OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN MinorMatch AS mm WITH (NOLOCK) ON om.OWPMatchId = mm.ParentMatchId
-	WHERE om.MatchId=@AdminsiteId AND mm.MinorBettypeId=@BettypeId
-	AND om.EventDateTime BETWEEN @FromDate AND @ToDate
+		INNER JOIN InfoSiteMatch AS im WITH (NOLOCK) ON im.InfoSiteMatchId=om.InfoSiteMatchId
+	WHERE im.AdminSiteMatchId=@AdminsiteId AND im.ParentId IS NULL AND mm.MinorBettypeId=@BettypeId
+		AND om.EventDateTime BETWEEN @FromDate AND @ToDate
 	ORDER BY om.EventDateTime DESC
 END
