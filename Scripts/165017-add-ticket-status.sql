@@ -25,3 +25,6 @@ CREATE TABLE [dbo].[TicketStatusLog]
 )
 ON [OWP_Data];
 GO
+
+ALTER TABLE TicketRecipient
+ADD IsPinned BIT NOT NULL DEFAULT(0);
