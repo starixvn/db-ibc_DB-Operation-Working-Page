@@ -10,7 +10,7 @@ Task : Get maxbet corner
 DB: bodb_OWP
 
 Revisions:
-	20211203@Raymond.Le: Initial SP - [Redmine: #163362]
+	20211203@Carlos.nguyen: Initial SP - [Redmine: #163362]
 */
 
     BEGIN
