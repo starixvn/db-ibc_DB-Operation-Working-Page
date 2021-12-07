@@ -7,7 +7,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetCommonRealMatchInfoByIds] @Ids VARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetCommonRealMatchInfoByIds] @Ids VARCHAR(MAX)
 AS
 /*
 Created: 20211119@carlos.Nguyen
@@ -60,7 +60,7 @@ BEGIN
 		im.TV,
 		im.EventDateTime,
 		im.Provider,
-		CASE WHEN tmp.InfoSiteId IN (SELECT InfoSiteId FROM InfoSiteSoloMatch) THEN 1 ELSE 0 END,
+		im.IsSoloMatch,
 		CASE WHEN l.CategoryId = 1 THEN 1 ELSE 0 END,
 		im.Remark,
 		im.OtherProvider,
