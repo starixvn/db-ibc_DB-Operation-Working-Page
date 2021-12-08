@@ -31,6 +31,6 @@ ALTER TABLE TicketRecipient
 ADD IsPinned BIT NOT NULL DEFAULT(0);
 
 -- Update ticket type
-UPDATE TicketType
+UPDATE dbo.TicketType
 SET TypeName = 'Group Chat'
 WHERE TypeId = 2
