@@ -24,7 +24,7 @@ BEGIN
 			,@CurrentTime DATETIME
 			,@LiveStatus NVARCHAR(15)
 
-		SET @EventDateTime = (@EventDate + @KickOffTime)
+		SET @EventDateTime = (@EventDate + CAST(@KickOffTime AS DATETIME))
 		SET @CompletedTime = DATEADD(minute, 120, @EventDateTime)
 		SET @CurrentTime = DATEADD(HOUR,12,GETDATE())
 
