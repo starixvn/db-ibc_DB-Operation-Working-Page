@@ -7,6 +7,7 @@ DB: bodb_OWP
 
 Revisions:
 	20211130@Mira: Enhance Ticket Center - [Redmine: #165017]
+    2021208@Luca: Enhance Ticket Center - [Redmine: #165017]
 */
 
 -- Add TicketStatus column
@@ -28,3 +29,8 @@ GO
 
 ALTER TABLE TicketRecipient
 ADD IsPinned BIT NOT NULL DEFAULT(0);
+
+-- Update ticket type
+UPDATE TicketType
+SET TypeName = 'Group Chat'
+WHERE TypeId = 2
