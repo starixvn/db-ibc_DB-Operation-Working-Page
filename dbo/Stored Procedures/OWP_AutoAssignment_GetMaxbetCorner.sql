@@ -29,7 +29,7 @@ Revisions:
         )
                SELECT [InfoSiteMatchId], 
                       [MaxBetFTHDP]
-               FROM OPENXML(@idoc, '/Root/Row', 1) WITH([InfoSiteMatchId] INT, [MaxBetFTHDP] MONEY);
+               FROM OPENXML(@idoc, '/Root/MaxBetOfFTHDP', 1) WITH([InfoSiteMatchId] INT, [MaxBetFTHDP] MONEY);
         EXEC sp_xml_removedocument 
              @idoc;
         SELECT m.InfoSiteMatchId, 
