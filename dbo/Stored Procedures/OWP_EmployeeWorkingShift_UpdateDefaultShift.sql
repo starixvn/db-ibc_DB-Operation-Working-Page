@@ -108,7 +108,7 @@ BEGIN
 			,@ShiftId INT
 			,@ShiftStartTime DATETIME = NULL
 			,@ShiftEndTime DATETIME = NULL
-			,@ShiftDate DATE
+			,@ShiftDate DATETIME
 			,@TimezoneOffset INT = dbo.[fnc_GetWorkingShiftTimezoneOffset](@Actor)
 			,@ShiftStartHour INT
 			,@Extension INT
@@ -135,7 +135,7 @@ BEGIN
 			BEGIN
 				DELETE dbo.EmployeeWorkingShift WITH (ROWLOCK)
 				WHERE EmployeeId = @EmployeeId
-					AND ShiftDate = @ShiftDate
+					AND ShiftDate = CAST(@ShiftDate AS DATE)
 			END
 			ELSE
 			BEGIN

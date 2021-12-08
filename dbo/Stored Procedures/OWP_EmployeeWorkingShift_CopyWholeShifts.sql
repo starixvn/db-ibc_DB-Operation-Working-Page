@@ -155,8 +155,8 @@ BEGIN
 		)
 		SELECT @ToUserId
 			,t.ShiftDate
-			,t.ShiftDate + CAST(c.StartTime AS DATETIME)
-			,t.ShiftDate + CAST(c.EndTime AS DATETIME)
+			,CAST(t.ShiftDate AS DATETIME) + CAST(c.StartTime AS DATETIME)
+			,CAST(t.ShiftDate AS DATETIME) + CAST(c.EndTime AS DATETIME)
 			,t.ShiftId
 			,t.RefShiftId
 			,c.Extension

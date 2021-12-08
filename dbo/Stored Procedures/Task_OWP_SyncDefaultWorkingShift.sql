@@ -135,8 +135,8 @@ BEGIN
 	SELECT ds.UserId
 		,ds.ShiftId
 		,ds.ShiftDate
-		,ds.ShiftStartDate + ds.ShiftStartTime
-		,ds.ShiftEndDate + ds.ShiftEndTime
+		,CAST(ds.ShiftStartDate AS DATETIME) + ds.ShiftStartTime
+		,CAST(ds.ShiftEndDate AS DATETIME) + ds.ShiftEndTime
 		,DATEADD(HOUR, 12, GETDATE())
 	FROM #tblDefaultWorkingShift AS ds WITH (NOLOCK)
 	WHERE ds.IsTimeShift = 1
