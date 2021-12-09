@@ -33,8 +33,7 @@ AS
     BEGIN
         SET NOCOUNT ON;
         DECLARE @tblTicketRecipient TABLE
-        (TicketId INT, 
-         IsPinned BIT
+        (TicketId INT
         );
         DECLARE @allTicketTypeId INT= 0;
         DECLARE @allMarketKey INT= 1;
@@ -58,7 +57,7 @@ AS
                tm.CreatedDate, 
                tm.[Message], 
                reader.IsRead, 
-               tbltk.IsPinned
+               reader.IsPinned
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId

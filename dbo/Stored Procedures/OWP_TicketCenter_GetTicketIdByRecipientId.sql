@@ -20,19 +20,16 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
-	20211130@Tyler: Get pinned prop - [Redmine: #165017]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT tr.TicketId, 
-               tr.IsPinned
+        SELECT tr.TicketId
         FROM TicketRecipient AS tr
         WHERE tr.RecipientType = 1
               AND tr.RecipientId = @ActorId
         UNION
-        SELECT tr.TicketId, 
-               tr.IsPinned
+        SELECT tr.TicketId
         FROM TicketRecipient AS tr
              INNER JOIN RecipientGroup AS rg ON tr.RecipientId = rg.GroupId
         WHERE tr.RecipientType = 2
