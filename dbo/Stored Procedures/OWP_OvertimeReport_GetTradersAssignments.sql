@@ -51,7 +51,7 @@ Revisions:
                       i.Remark,
                       CASE
                           WHEN m.OtherTime IS NOT NULL
-                          THEN m.EventDate + m.OtherTime
+                          THEN m.EventDate + CAST(m.OtherTime AS DATETIME)
                           ELSE m.EventDateTime
                       END EventDateTime, 
                       l.OWPLeagueName
@@ -66,7 +66,7 @@ Revisions:
                      AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN)
                     AND (CASE
                              WHEN m.OtherTime IS NOT NULL
-                             THEN m.EventDate + m.OtherTime
+                             THEN m.EventDate + CAST(m.OtherTime AS DATETIME)
                              ELSE m.EventDateTime
                          END) BETWEEN @FromDate AND @ToDate;
         SELECT UserId, 
@@ -85,7 +85,7 @@ Revisions:
                m.Remark,
                CASE
                    WHEN om.OtherTime IS NOT NULL
-                   THEN om.EventDate + om.OtherTime
+                   THEN om.EventDate + CAST(om.OtherTime AS DATETIME)
                    ELSE om.EventDateTime
                END EventDateTime
         FROM MatchInfo m WITH(NOLOCK)
