@@ -17,3 +17,12 @@ IsSoloMatch BIT
 DROP TABLE AutoAssignmentMatchHistory
 DROP TABLE AutoAssignmentSuspenderHistory
 
+DROP PROCEDURE [dbo].[OWP_AutoAssignment_GetHistoryMatchToday]
+DROP PROCEDURE [dbo].[OWP_AutoAssignment_GetHistorySuspenderToday]
+DROP PROCEDURE [dbo].[OWP_AutoAssignment_GetMatchesByDate]
+DROP PROCEDURE [dbo].[OWP_AutoAssignment_GetMatctIsAssignedToday]
+DROP PROCEDURE [dbo].[OWP_AutoAssignment_GetRequestExtra]
+DROP PROCEDURE [dbo].[OWP_AutoAssignment_WriteHistoryMatch]
+DROP PROCEDURE [dbo].[OWP_AutoAssignment_WriteHistorySuspender]
+
+
