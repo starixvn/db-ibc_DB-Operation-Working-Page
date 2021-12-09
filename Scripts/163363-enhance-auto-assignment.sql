@@ -6,13 +6,14 @@ DB: bodb_OWP
 
 Revisions:
 	20211119@CarlosNguyen: Enhance-auto-assignment - [Redmine: #163362]
-	20211203@LucaDuong: Add ProviderUsed Column - [Redmine: #163362]
 	
 */
 ALTER TABLE InfoSiteMatch
 ADD OtherProvider NVARCHAR(2000),
 Provider NVARCHAR(2000),
-ProviderUsed NVARCHAR(2000),
 Remark NVARCHAR(2000),
 IsSoloMatch BIT
+
+DROP TABLE AutoAssignmentMatchHistory
+DROP TABLE AutoAssignmentSuspenderHistory
 
