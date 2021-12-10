@@ -1,12 +1,12 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TicketCenterLeague_Get] @ActorId      INT, 
-                                                   @Keyword      NVARCHAR(255) = NULL, 
-                                                   @TicketId     NVARCHAR(255) = NULL, 
-                                                   @TicketStatus VARCHAR(10)   = 'All', 
-                                                   @TicketTypeId INT           = 0, 
-                                                   @MarketKey    INT           = 1
+ALTER PROCEDURE [dbo].[OWP_TicketCenterLeague_Get] @ActorId        INT, 
+                                                   @Keyword        NVARCHAR(255) = NULL, 
+                                                   @TicketId       NVARCHAR(255) = NULL, 
+                                                   @TicketStatuses VARCHAR(100), 
+                                                   @TicketTypeId   INT           = 0, 
+                                                   @MarketKey      INT           = 1
 AS
 
 /* 
@@ -23,11 +23,14 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @tblTicketRecipient TABLE
-        (TicketId INT
-        );
+        DECLARE @tblTicketRecipient TABLE(TicketId INT);
         DECLARE @allTicketTypeId INT= 0;
         DECLARE @allMarketKey INT= 1;
+        DECLARE @tblTicketStatus TABLE(TicketStatus VARCHAR(10));
+        INSERT INTO @tblTicketStatus
+               SELECT DISTINCT 
+                      val
+               FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
         INSERT INTO @tblTicketRecipient
         EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] 
              @ActorId = @ActorId;
@@ -68,6 +71,9 @@ AS
              AND (@TicketTypeId = @allTicketTypeId
                   OR tis.TicketType = @TicketTypeId)
              AND @MarketKey = @allMarketKey
-             AND (@TicketStatus = 'All'
-                  OR tis.TicketStatus = @TicketStatus);
+             AND tis.TicketStatus IN
+        (
+            SELECT TicketStatus
+            FROM @tblTicketStatus
+        );
     END;

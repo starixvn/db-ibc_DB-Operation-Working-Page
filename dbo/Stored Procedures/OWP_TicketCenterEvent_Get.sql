@@ -1,12 +1,12 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TicketCenterEvent_Get] @ActorId      INT, 
-                                                  @Keyword      NVARCHAR(255) = NULL, 
-                                                  @TicketId     NVARCHAR(255) = NULL, 
-                                                  @TicketStatus VARCHAR(10)   = 'All', 
-                                                  @TicketTypeId INT           = 0, 
-                                                  @MarketKey    INT           = 1
+ALTER PROCEDURE [dbo].[OWP_TicketCenterEvent_Get] @ActorId        INT, 
+                                                  @Keyword        NVARCHAR(255) = NULL, 
+                                                  @TicketId       NVARCHAR(255) = NULL, 
+                                                  @TicketStatuses VARCHAR(100), 
+                                                  @TicketTypeId   INT           = 0, 
+                                                  @MarketKey      INT           = 1
 AS
 
 /*      
@@ -24,9 +24,7 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @tblTicketRecipient TABLE
-        (TicketId INT
-        );
+        DECLARE @tblTicketRecipient TABLE(TicketId INT);
         DECLARE @allTicketTypeId INT= 0;
         DECLARE @allMarketKey INT= 1;
         DECLARE @earlyMarketKey INT= 2;
@@ -34,6 +32,11 @@ AS
         DECLARE @earlyFilter INT= 2;
         DECLARE @fromDate DATETIME;
         DECLARE @toDate DATETIME;
+        DECLARE @tblTicketStatus TABLE(TicketStatus VARCHAR(10));
+        INSERT INTO @tblTicketStatus
+               SELECT DISTINCT 
+                      val
+               FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
         IF @MarketKey = @earlyMarketKey
             BEGIN
                 SET @fromDate = DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '12:00:00');
@@ -95,6 +98,9 @@ AS
                       AND ifm.EventDateTime >= @fromDate)
                   OR (@MarketKey = @todayMarketKey
                       AND ifm.EventDateTime BETWEEN @fromDate AND @toDate))
-             AND (@TicketStatus = 'All'
-                  OR tis.TicketStatus = @TicketStatus);
+             AND tis.TicketStatus IN
+        (
+            SELECT TicketStatus
+            FROM @tblTicketStatus
+        );
     END;
