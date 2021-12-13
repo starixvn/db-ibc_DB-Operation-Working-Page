@@ -31,12 +31,15 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @idoc INT;
         DECLARE @requestLast VARCHAR(255), @eventDateGetRequest DATE;
+        
         SELECT TOP 1 @eventDateGetRequest = req.EventDate
         FROM AutoAssignmentRequest AS req WITH(NOLOCK)
         WHERE req.RequestId = @RequestId;
+        
         SELECT TOP 1 @requestLast = req.RequestId
         FROM AutoAssignmentRequest AS req WITH(NOLOCK)
         WHERE req.EventDate = @eventDateGetRequest
+        
         ORDER BY req.CreatedDate DESC;
         UPDATE dbo.AutoAssignmentRequest WITH(ROWLOCK)
           SET 
@@ -44,28 +47,35 @@ Revisions:
               ResponseDate = GETDATE()
         WHERE RequestId = @requestLast
               AND [Status] <> @Status;
+              
         IF @@ROWCOUNT = 1
            AND @Status = 0 -- save result if success
             BEGIN
                 EXEC sp_xml_preparedocument 
                      @idoc OUTPUT, 
                      @AutoAssignmentResultDoc;
-                INSERT INTO dbo.AutoAssignmentResult
+                INSERT INTO dbo.InfoSiteAutoAssignmentResult
                 (RequestId, 
-                 [OWPMatchId], 
-                 [Bettype], 
+                 [InfoSiteMatchId], 
+                 [Bettype],
+                 [IsSaba],
+                 [IsFutsal],
+                 [PcCode],
                  [UserId_LA], 
                  [UserId_FTHDP], 
                  [UserId_1HHDP], 
                  [UserId_FTOU], 
                  [UserId_1HOU], 
                  [StatusCode], 
-                 [GroupName], 
+                 [Group], 
                  [ExtraTime]
                 )
                        SELECT @RequestId, 
-                              [OWPMatchId], 
-                              [Bettype], 
+                              [InfoSiteMatchId], 
+                              [Bettype],
+                              [IsSaba],
+							  [IsFutsal],
+							  [PcCode],
                               [UserId_LA], 
                               [UserId_FTHDP], 
                               [UserId_1HHDP], 
@@ -74,7 +84,21 @@ Revisions:
                               [StatusCode], 
                               [Group], 
                               [ExtraTime]
-                       FROM OPENXML(@idoc, '/Root/Row', 1) WITH([OWPMatchId] INT, [Bettype] INT, [UserId_LA] INT, [UserId_FTHDP] INT, [UserId_1HHDP] INT, [UserId_FTOU] INT, [UserId_1HOU] INT, [StatusCode] INT, [Group] NVARCHAR(200), [ExtraTime] NVARCHAR(10));
+                       FROM OPENXML(@idoc, '/Root/Row', 1) WITH(
+                       [InfoSiteMatchId] INT,
+                       [Bettype] INT,
+                       [IsSaba] BIT,
+					   [IsFutsal] BIT,
+					   [PcCode] NVARCHAR(2000),
+                       [UserId_LA] INT,
+                       [UserId_FTHDP] INT,
+                       [UserId_1HHDP] INT,
+                       [UserId_FTOU] INT,
+                       [UserId_1HOU] INT,
+                       [StatusCode] INT,
+                       [Group] NVARCHAR(200),
+                       [ExtraTime] NVARCHAR(10)
+                       );
                 EXEC sp_xml_removedocument 
                      @idoc;
         END;
