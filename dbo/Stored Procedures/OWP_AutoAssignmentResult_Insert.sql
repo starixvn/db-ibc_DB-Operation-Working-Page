@@ -25,27 +25,18 @@ Revisions:
 	20200601@Carlos.Nguyen: Return ErrorCode, ErrorMessage - [Redmine: #124448]
 	20200528@Carlos.Nguyen: Update status code for request last - [Redmine: #126964]
 	20210511@Mira: Auto trader assignment - [Redmine: #132710]
+	20211213@Carlos: Auto enhance auto assignment - [Redmine: #163362]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @idoc INT;
-        DECLARE @requestLast VARCHAR(255), @eventDateGetRequest DATE;
         
-        SELECT TOP 1 @eventDateGetRequest = req.EventDate
-        FROM AutoAssignmentRequest AS req WITH(NOLOCK)
-        WHERE req.RequestId = @RequestId;
-        
-        SELECT TOP 1 @requestLast = req.RequestId
-        FROM AutoAssignmentRequest AS req WITH(NOLOCK)
-        WHERE req.EventDate = @eventDateGetRequest
-        
-        ORDER BY req.CreatedDate DESC;
         UPDATE dbo.AutoAssignmentRequest WITH(ROWLOCK)
           SET 
               [Status] = @Status, 
               ResponseDate = GETDATE()
-        WHERE RequestId = @requestLast
+        WHERE RequestId = @RequestId
               AND [Status] <> @Status;
               
         IF @@ROWCOUNT = 1
