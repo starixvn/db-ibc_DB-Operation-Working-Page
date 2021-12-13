@@ -25,4 +25,22 @@ DROP PROCEDURE [dbo].[OWP_AutoAssignment_GetRequestExtra]
 DROP PROCEDURE [dbo].[OWP_AutoAssignment_WriteHistoryMatch]
 DROP PROCEDURE [dbo].[OWP_AutoAssignment_WriteHistorySuspender]
 
+CREATE TABLE InfoSiteAutoAssignmentResult(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	RequestId VARCHAR(2000) NOT NULL,
+	InfoSiteMatchId INT NOT NULL,
+	IsSaba BIT,
+	IsFutsal BIT,
+	PcCode NVARCHAR(2000),
+	UserId_FTHDP INT,
+	UserId_1HHDP INT,
+	UserId_FTOU INT,
+	UserId_1HOU INT,
+	Bettype INT,
+	[Group] NVARCHAR(200),
+	UserId_LA INT,
+	ExtraTime NVARCHAR(200),
+	StatusCode INT
+)
+
 
