@@ -27,10 +27,12 @@ CREATE TABLE [dbo].[TicketStatusLog]
 ON [OWP_Data];
 GO
 
-ALTER TABLE TicketRecipient
-ADD IsPinned BIT NOT NULL DEFAULT(0);
+ALTER TABLE TicketMessageReader
+ADD IsPinned BIT NOT NULL
+                 DEFAULT(0);
 
 -- Update ticket type
 UPDATE dbo.TicketType
-SET TypeName = 'Group Chat'
-WHERE TypeId = 2
+  SET 
+      TypeName = 'Group Chat'
+WHERE TypeId = 2;
