@@ -12,7 +12,8 @@ ALTER TABLE InfoSiteMatch
 ADD OtherProvider NVARCHAR(2000),
 Provider NVARCHAR(2000),
 Remark NVARCHAR(2000),
-IsSoloMatch BIT
+IsSoloMatch BIT,
+ProviderTV NVARCHAR(200)
 
 DROP TABLE AutoAssignmentMatchHistory
 DROP TABLE AutoAssignmentSuspenderHistory
