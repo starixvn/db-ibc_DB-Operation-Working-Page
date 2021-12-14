@@ -24,20 +24,22 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        CREATE TABLE #tblMatchId(InfoSiteMatchId INT);
-        INSERT INTO #tblMatchId(InfoSiteMatchId)
-               SELECT i.InfoSiteMatchId
-               FROM InfoSiteAutoAssignmentResult AS i, 
-               (
-                   SELECT ar.RequestId
-                   FROM AutoAssignmentRequest AS ar
-                   WHERE ar.CreatedDate =
-                   (
-                       SELECT MAX(ar.CreatedDate)
-                       FROM AutoAssignmentRequest AS ar
-                       WHERE ar.EventDate = @EventDate
-                   )
-               ) AS b
-               WHERE i.RequestId = b.RequestId;
-        DROP TABLE #tblMatchId;
+        DECLARE @MaxCreatedDateByEventDate AS DATE;
+        DECLARE @RequestIdLatestByEventDate AS VARCHAR(50);
+        SET @MaxCreatedDateByEventDate =
+        (
+            SELECT MAX(ar.CreatedDate)
+            FROM AutoAssignmentRequest AS ar
+            WHERE ar.EventDate = @EventDate
+                  AND ar.[Status] = 0
+        );
+        SET @RequestIdLatestByEventDate =
+        (
+            SELECT ar.RequestId
+            FROM AutoAssignmentRequest AS ar
+            WHERE ar.CreatedDate = @MaxCreatedDateByEventDate
+        );
+        SELECT *
+        FROM InfoSiteAutoAssignmentResult AS i
+        WHERE i.RequestId = @RequestIdLatestByEventDate;
     END;
