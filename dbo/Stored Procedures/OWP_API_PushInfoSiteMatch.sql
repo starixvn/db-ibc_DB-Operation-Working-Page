@@ -1,5 +1,11 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_API_PushInfoSiteMatch]    Script Date: 12/14/2021 11:21:23 AM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 ALTER PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
 AS
 /*    
@@ -25,6 +31,7 @@ AS
 	20210128@CarlosNguyen: Sync MatchCode - [Redmine: #149347]
 	20211109@CarlosNguyen: Solve deadlock issue of InfoSite event sync - [Redmine: #164343]
 	20211119@CarlosNguyen: Enhance-auto-assignment - [Redmine: #163362]
+	20211214@Liam.Pham: Sync ProviderTV - [Redmine: #163362]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -80,6 +87,7 @@ BEGIN
 		,[OtherProvider] NVARCHAR(2000)
 		,[Remark] NVARCHAR(2000)
 		,[ProviderUsed] NVARCHAR(2000)
+		,[ProviderTV] NVARCHAR(200)
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -110,6 +118,7 @@ BEGIN
 		,[OtherProvider]
 		,[Remark]
 		,[ProviderUsed]
+		,[ProviderTV]
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -138,6 +147,7 @@ BEGIN
 		,[OtherProvider]
 		,[Remark]
 		,[ProviderUsed]
+		,[ProviderTV]
 	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
@@ -166,6 +176,7 @@ BEGIN
 			,[OtherProvider][nvarchar](2000) 
 			,[Remark] NVARCHAR(2000)
 			,[ProviderUsed][nvarchar](2000)
+			,[ProviderTV][nvarchar](200)
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -357,6 +368,7 @@ BEGIN
 			,[OtherProvider]
 			,[Remark]
 			,[ProviderUsed]
+			,[ProviderTV]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -396,6 +408,7 @@ BEGIN
 				,t.[OtherProvider]=s.[OtherProvider]
 				,t.[Remark]=s.[Remark]
 				,t.[ProviderUsed] = s.[ProviderUsed]
+				,t.[ProviderTV]=s.[ProviderTV]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -432,6 +445,7 @@ BEGIN
 				,[OtherProvider]
 				,[Remark]
 				,[ProviderUsed]
+				,[ProviderTV]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -467,6 +481,7 @@ BEGIN
 				,s.[OtherProvider]
 				,s.[Remark]
 				,s.[ProviderUsed]
+				,s.[ProviderTV]
 				);
 
 	
