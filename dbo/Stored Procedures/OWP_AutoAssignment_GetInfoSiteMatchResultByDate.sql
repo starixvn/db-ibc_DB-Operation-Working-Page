@@ -19,7 +19,7 @@ Task : Get MatchId By Date
 DB: bodb_OWP  
   
 Revisions:  
- 20211213@Johnny.Thai : Get InfoSite MatchId By Date 
+ 20211213@Johnny.Thai : Get InfoSite MatchId By Date - [Redmine: #166030]
 */
 
     BEGIN
