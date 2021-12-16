@@ -36,12 +36,13 @@ Revisions:
         (InfoSiteMatchId, 
          Bettype
         )
-               SELECT [InfoSiteMatchId], 
-                      [BetType]
-               FROM OPENXML(@idoc, '/Root/BetTypeById', 1) WITH([InfoSiteMatchId] INT, [BetType] INT);
+        SELECT [InfoSiteMatchId], 
+                [BetType]
+        FROM OPENXML(@idoc, '/Root/Row', 1) WITH([InfoSiteMatchId] INT, [BetType] INT);
         EXEC sp_xml_removedocument 
              @idoc;
-        SELECT i.EventDateTime,
+             
+        SELECT DISTINCT i.EventDateTime,
                CASE
                    WHEN b.Bettype = -3
                    THEN i.HomeName + ' No.of Corners'
@@ -74,9 +75,9 @@ Revisions:
                i.Website1, 
                i.Website2, 
                i.Website3, 
-               i.Website4
-        FROM InfoSiteMatch AS i, 
-             #tblBettypeById AS b
-        WHERE i.InfoSiteMatchId = b.InfoSiteMatchId;
+               i.Website4,
+               b.Bettype
+        FROM InfoSiteMatch AS i INNER JOIN 
+             #tblBettypeById AS b ON i.AdminSiteMatchId = b.InfoSiteMatchId
         DROP TABLE #tblBettypeById;
     END;
