@@ -36,8 +36,8 @@ BEGIN
 
 	IF @IsTimeShift = 1
 	BEGIN
-		SELECT @ShiftStartTime = @ShiftDate + CAST(@StartTime AS DATETIME)
-			,@ShiftEndTime = @ShiftDate + CAST(@EndTime AS DATETIME)
+		SELECT @ShiftStartTime = CAST(@ShiftDate AS DATETIME) + CAST(@StartTime AS DATETIME)
+			,@ShiftEndTime = CAST(@ShiftDate AS DATETIME) + CAST(@EndTime AS DATETIME)
 
 		IF @Extension = @SPECIAL
 		BEGIN

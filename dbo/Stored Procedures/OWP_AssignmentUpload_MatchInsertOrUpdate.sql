@@ -160,7 +160,7 @@ Revisions:
                          om.EventDate = m.EventDate, 
                          om.KickOffTime = m.KickOffTime, 
                          om.OtherTime = m.OtherTime, 
-                         om.EventDateTime = m.EventDate + m.KickOffTime, 
+                         om.EventDateTime = m.EventDate + CAST(m.KickOffTime AS DATETIME), 
                          om.InfoSiteMatchId = m.InfoSiteMatchId, 
                          om.MatchId = m.AdminSiteId, 
                          om.IsNeutral = m.IsNeutral
@@ -185,7 +185,7 @@ Revisions:
       m.[HomeId], 
       m.[AwayId], 
       m.[OtherTime], 
-      m.EventDate + m.KickOffTime, 
+      m.EventDate + CAST(m.KickOffTime AS DATETIME), 
       m.[InfoSiteMatchId], 
       m.[AdminSiteId], 
       m.[IsNeutral]

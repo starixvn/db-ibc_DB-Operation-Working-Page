@@ -23,7 +23,7 @@ BEGIN
 		,away.OWPTeamName AS AwayName
 		,om.MatchNo
 		,om.EventDate
-		,(om.EventDate + om.KickOffTime) AS KickOffTime
+		,(om.EventDate + CAST(om.KickOffTime AS DATETIME)) AS KickOffTime
 		,mi.Channel
 		,mi.IPTV AS IpTv
 		,mi.WB
