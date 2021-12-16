@@ -69,15 +69,6 @@ Revisions:
                i.Channel, 
                i.IPTV, 
                i.Agent,
-               CASE
-                   WHEN i.Provider LIKE '%WOO%'
-                   THEN 'WOO'
-                   WHEN i.Provider LIKE '%AL%'
-                   THEN 'AL'
-                   WHEN i.Provider LIKE '%SLR%'
-                   THEN 'SLR'
-                   ELSE NULL
-               END AS ReporterPhone, 
                i.InfoSiteMatchId, 
                i.AdminSiteMatchId, 
                i.Website1, 
