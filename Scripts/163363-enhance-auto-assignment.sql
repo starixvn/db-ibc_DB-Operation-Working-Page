@@ -6,6 +6,8 @@ DB: bodb_OWP
 
 Revisions:
 	20211119@CarlosNguyen: Enhance-auto-assignment - [Redmine: #163362]
+	20211214@Liam.Pham: add column ProviderTV - [Redmine: #163362]
+	20211217@Liam.Pham: add table AutoAssignmentHistory - [Redmine: #163362]
 	
 */
 ALTER TABLE InfoSiteMatch
@@ -44,4 +46,15 @@ CREATE TABLE InfoSiteAutoAssignmentResult(
 	StatusCode INT
 )
 
-
+CREATE TABLE AutoAssignmentHistory
+(Id                INT IDENTITY(1, 1) PRIMARY KEY, 
+ RequestId         NVARCHAR(2000) NOT NULL, 
+ InfoSiteMatchId   INT NOT NULL, 
+ LeagueSettingId   INT, 
+ MaxBetFTHDP       MONEY, 
+ Maxbet_NextCorner MONEY, 
+ Maxbet_NoOfCorner MONEY, 
+ Provider          NVARCHAR(2000), 
+ OtherProvider     NVARCHAR(2000), 
+ ProviderTV        NVARCHAR(200),
+);
