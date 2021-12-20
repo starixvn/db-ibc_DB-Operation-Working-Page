@@ -78,6 +78,6 @@ Revisions:
                i.Website4,
                b.Bettype
         FROM InfoSiteMatch AS i INNER JOIN 
-             #tblBettypeById AS b ON i.AdminSiteMatchId = b.InfoSiteMatchId
+             #tblBettypeById AS b ON i.InfoSiteMatchId = b.InfoSiteMatchId
         DROP TABLE #tblBettypeById;
     END;
