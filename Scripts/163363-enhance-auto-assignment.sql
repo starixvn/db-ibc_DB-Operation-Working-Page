@@ -57,4 +57,5 @@ CREATE TABLE AutoAssignmentHistory
  Provider          NVARCHAR(2000), 
  OtherProvider     NVARCHAR(2000), 
  ProviderTV        NVARCHAR(200),
+ EventDateTime     DATETIME
 );
