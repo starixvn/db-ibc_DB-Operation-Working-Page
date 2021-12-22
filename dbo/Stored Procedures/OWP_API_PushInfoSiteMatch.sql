@@ -6,6 +6,8 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 ALTER PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
 AS
 /*    
