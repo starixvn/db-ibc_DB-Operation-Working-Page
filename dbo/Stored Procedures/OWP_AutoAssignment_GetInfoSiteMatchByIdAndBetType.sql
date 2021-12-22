@@ -70,11 +70,7 @@ Revisions:
                i.Channel, 
                i.IPTV, 
                i.Agent,
-               CASE
-                   WHEN b.Bettype = -3 OR b.Bettype = -4
-                   THEN NULL
-                   ELSE i.InfoSiteMatchId
-               END AS InfoSiteMatchId, 
+               i.InfoSiteMatchId, 
                i.AdminSiteMatchId, 
                i.Website1, 
                i.Website2, 
