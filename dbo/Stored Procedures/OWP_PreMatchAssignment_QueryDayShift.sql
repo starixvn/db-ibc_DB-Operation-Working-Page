@@ -2,7 +2,6 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryDayShift] @EventDate         DATE, 
-                                                             @ActorId           INT, 
                                                              @EventFromDateTime DATETIME, 
                                                              @EventToDateTime   DATETIME, 
                                                              @IsDay             BIT
@@ -21,6 +20,7 @@ Revisions:
  20201029@Tyler: Clone assignment to NightShift  - [Redmine: #144400] 
  20201110@Tyler: remove other assignment note - [Redmine: #144948]
  20210607@Mira: Link Match Status - [Redmine: #156336]
+ 20211222@Mira: Integrate my ticket - [Redmine: #163766]
 */
 
     BEGIN
@@ -281,38 +281,6 @@ Revisions:
                WHERE pl.EventDate = @EventDate
                      AND pl.IsDay = @IsDay;
 
-        -- Table league issue
-        DECLARE @tblLeagueIssues TABLE
-        (PreMatchIssueId INT, 
-         OWPLeagueId     INT, 
-         [Message]       VARCHAR(MAX), 
-         IsRead          BIT
-        );
-        INSERT INTO @tblLeagueIssues
-        (PreMatchIssueId, 
-         OWPLeagueId, 
-         [Message], 
-         IsRead
-        )
-        EXEC dbo.[OWP_PreMatchAssignment_QueryLeagueIssues] 
-             @ActorId = @ActorId;
-
-        -- Table infositematch issue
-        DECLARE @tblInfoSiteMatchIssues TABLE
-        (PreMatchIssueId INT, 
-         InfoSiteMatchId INT, 
-         [Message]       VARCHAR(MAX), 
-         IsRead          BIT
-        );
-        INSERT INTO @tblInfoSiteMatchIssues
-        (PreMatchIssueId, 
-         InfoSiteMatchId, 
-         [Message], 
-         IsRead
-        )
-        EXEC dbo.[OWP_PreMatchAssignment_QueryInfoSiteMatchIssues] 
-             @ActorId = @ActorId;
-
         -- Table league notes
         DECLARE @tblLeagueNotes TABLE
         (PreMatchNoteId INT, 
@@ -355,19 +323,11 @@ Revisions:
                OtherHDPTakeOverNickname, 
                OtherOUTakeOverNickname, 
                BlackList, 
-               Remark, 
-               i.PreMatchIssueId,
-               CASE
-                   WHEN i.[Message] IS NOT NULL
-                   THEN 1
-                   ELSE 0
-               END AS HasMessages, 
-               i.IsRead, 
+               Remark,
                n.PreMatchNoteId, 
                n.HasNotes, 
                l.IsDeleted
         FROM @tblDayShiftTable AS l
-             LEFT JOIN @tblLeagueIssues AS i ON l.LeagueId = i.OWPLeagueId
              LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId;
 
         -- Query InfoSiteMatches --
@@ -376,20 +336,12 @@ Revisions:
                m.HomeName, 
                m.AwayName, 
                m.EventDateTime, 
-               l.PreMatchLeagueId, 
-               i.PreMatchIssueId,
-               CASE
-                   WHEN i.[Message] IS NOT NULL
-                   THEN 1
-                   ELSE 0
-               END AS HasMessages, 
-               i.IsRead, 
+               l.PreMatchLeagueId,
                n.PreMatchNoteId, 
                n.HasNotes,
                m.IsLive
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN @tblDayShiftTable AS l ON l.LeagueId = m.OWPLeagueId
-             LEFT JOIN @tblInfoSiteMatchIssues AS i ON i.InfoSiteMatchId = m.InfoSiteMatchId
              LEFT JOIN @tblMatchNotes AS n ON n.InfoSiteMatchId = m.InfoSiteMatchId
         WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
         ORDER BY m.EventDateTime ASC;
