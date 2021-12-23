@@ -59,7 +59,8 @@ Revisions:
                  [UserId_1HOU], 
                  [StatusCode], 
                  [Group], 
-                 [ExtraTime]
+                 [ExtraTime],
+                 [SabaType]
                 )
                        SELECT @RequestId, 
                               [InfoSiteMatchId], 
@@ -74,7 +75,8 @@ Revisions:
                               [UserId_1HOU], 
                               [StatusCode], 
                               [Group], 
-                              [ExtraTime]
+                              [ExtraTime],
+                              [SabaType]
                        FROM OPENXML(@idoc, '/Root/Row', 1) WITH(
                        [InfoSiteMatchId] INT,
                        [Bettype] INT,
@@ -88,7 +90,8 @@ Revisions:
                        [UserId_1HOU] INT,
                        [StatusCode] INT,
                        [Group] NVARCHAR(200),
-                       [ExtraTime] NVARCHAR(10)
+                       [ExtraTime] NVARCHAR(10),
+                       [SabaType] INT
                        );
                 EXEC sp_xml_removedocument 
                      @idoc;
