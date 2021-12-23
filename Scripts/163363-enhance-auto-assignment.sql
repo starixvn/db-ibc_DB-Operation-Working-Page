@@ -43,7 +43,8 @@ CREATE TABLE InfoSiteAutoAssignmentResult(
 	[Group] NVARCHAR(200),
 	UserId_LA INT,
 	ExtraTime NVARCHAR(200),
-	StatusCode INT
+	StatusCode INT,
+	SabaType INT
 )
 
 CREATE TABLE AutoAssignmentHistory
