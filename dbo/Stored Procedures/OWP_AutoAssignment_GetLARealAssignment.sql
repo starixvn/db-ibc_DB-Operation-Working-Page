@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201223@Tyler: Initial - [Redmine: #150268]
+	20211222@Tyler: add SABA - [Redmine: #166161]
 	
 */
 
@@ -38,7 +39,9 @@ Revisions:
          ParentMatchId  INT, 
          EventDateTime  DATETIME, 
          OWPLeagueName  VARCHAR(500), 
-         ETPK           VARCHAR(2000)
+         ETPK           VARCHAR(2000), 
+         Maxbet         MONEY, 
+         IsSaba         BIT
         );
         INSERT INTO @tblAssignment
                SELECT DISTINCT 
@@ -50,7 +53,9 @@ Revisions:
                       mn.ParentMatchId, 
                       ma.EventDateTime, 
                       l.OWPLeagueName, 
-                      im.ETPK
+                      im.ETPK, 
+                      h.MaxBetFTHDP, 
+                      ir.IsSaba
                FROM dbo.Assignment a WITH(NOLOCK)
                     INNER JOIN @tblUserId ids ON ids.UserId = a.UserId
                     INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = a.OWPMatchId
@@ -60,17 +65,18 @@ Revisions:
                     LEFT JOIN dbo.MatchProvider mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
                     LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
                     LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
+                    LEFT JOIN dbo.AutoAssignmentHistory h WITH(NOLOCK) ON h.InfoSiteMatchId = ma.InfoSiteMatchId
+                    LEFT JOIN dbo.InfoSiteAutoAssignmentResult ir WITH(NOLOCK) ON ir.InfoSiteMatchId = ma.InfoSiteMatchId
                WHERE mi.MatchStatus = 'Live'
                      AND a.Bettype = -1002
-                     AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
-                     AND l.OWPLeagueName NOT LIKE '%SABA%';
+                     AND ma.EventDateTime BETWEEN @FromDate AND @ToDate;
         INSERT INTO @tblFTETPK
                SELECT a.ParentMatchId, 
                       im.ETPK
                FROM dbo.InfoSiteMatch im WITH(NOLOCK)
                     INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.InfoSiteMatchId = im.InfoSiteMatchId
                     INNER JOIN @tblAssignment a ON ma.OWPMatchId = a.ParentMatchId;
-        SELECT a.UserId, 
+        SELECT a.UserId 'UserId_LA', 
                a.AssignmentId, 
                a.ProviderName, 
                a.MinorBettypeId, 
@@ -83,7 +89,9 @@ Revisions:
                    WHEN a.ParentMatchId IS NOT NULL
                    THEN et.ETPK
                    ELSE ''
-               END 'FullTimeETPK'
+               END 'FullTimeETPK', 
+               a.Maxbet, 
+               a.IsSaba
         FROM @tblAssignment a
              LEFT JOIN @tblFTETPK et ON a.ParentMatchId = et.OWPMatchId
         ORDER BY UserId ASC, 
