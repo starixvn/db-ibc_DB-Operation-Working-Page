@@ -20,6 +20,7 @@ DB: bodb_OWP
 Revisions:
 	20210608@Carlos.nguyen: API sync Working Shifts to HRM - [Redmine: #156338]	
 	20211008@Tyler: Update emp id - [Redmine: #162852]	
+	20211228@Carlos: Support sync OT shift to HRM - [Redmine: #166487]
 */
 	SET NOCOUNT ON;
     SELECT u.EmployeeId
@@ -30,6 +31,10 @@ Revisions:
 		, ew.LastUpdated
 		, IsTimeShift
 		, sc.Extension
+		,CASE WHEN ew.RefShiftId=190 THEN 'OFF'
+			WHEN ew.RefShiftId=192 THEN 'PH'
+			ELSE NULL
+			END AS ShiftOT
     FROM EmployeeWorkingShift AS ew WITH (NOLOCK)
     INNER JOIN [User] AS u WITH (NOLOCK) ON u.UserId=ew.EmployeeId
     INNER JOIN EmployeeWorkingShiftPublish AS ewp WITH (NOLOCK) ON ew.ShiftDate BETWEEN ewp.FromDate AND ewp.ToDate AND ewp.SectionId=u.SectionId
