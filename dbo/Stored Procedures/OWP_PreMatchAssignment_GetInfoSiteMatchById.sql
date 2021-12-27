@@ -24,9 +24,7 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT i.AwayName, 
-               i.HomeName, 
-               i.OWPAwayId, 
+        SELECT i.OWPAwayId, 
                i.OWPHomeId, 
                i.OWPLeagueId, 
                i.InfoSiteMatchId, 
