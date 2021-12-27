@@ -24,7 +24,7 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT u.UserId, 
+        SELECT u.UserId as RecipientId, 
                u.Nickname, 
                u.Username
         FROM PreMatchAssignment AS p
