@@ -1,4 +1,5 @@
-USE [bodb_OWP];
+
+    USE [bodb_OWP];
 GO
 
 /****** Object:  StoredProcedure [dbo].[OWP_AutoAssignment_GetInfoSiteMatchResultByDate]    Script Date: 12/13/2021 8:43:41 AM ******/
@@ -7,10 +8,7 @@ SET ANSI_NULLS ON;
 GO
 SET QUOTED_IDENTIFIER ON;
 GO
-
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-
-ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetInfoSiteMatchResultByDate] @EventDate DATE
+CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetInfoSiteMatchResultByDate] @EventDate DATE
 AS
 
 /*  
@@ -106,7 +104,12 @@ Revisions:
         INNER JOIN #tblInfoSiteAutoAssignmentResult AS t1
         ON t1.InfoSiteMatchId=r.InfoSiteMatchId
         AND t1.Bettype=r.Bettype 
-        AND t1.ResponseDate=r.ResponseDate
+        AND t1.CreatedDate=r.CreatedDate
         
         DROP TABLE #tblInfoSiteAutoAssignmentResult
     END;
+GO
+GRANT EXECUTE ON [dbo].[OWP_AutoAssignment_GetInfoSiteMatchResultByDate] TO [bodbOWPNet]
+GO
+
+    
