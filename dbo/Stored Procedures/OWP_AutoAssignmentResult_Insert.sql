@@ -25,47 +25,49 @@ Revisions:
 	20200601@Carlos.Nguyen: Return ErrorCode, ErrorMessage - [Redmine: #124448]
 	20200528@Carlos.Nguyen: Update status code for request last - [Redmine: #126964]
 	20210511@Mira: Auto trader assignment - [Redmine: #132710]
+	20211213@Carlos: Auto enhance auto assignment - [Redmine: #163362]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @idoc INT;
-        DECLARE @requestLast VARCHAR(255), @eventDateGetRequest DATE;
-        SELECT TOP 1 @eventDateGetRequest = req.EventDate
-        FROM AutoAssignmentRequest AS req WITH(NOLOCK)
-        WHERE req.RequestId = @RequestId;
-        SELECT TOP 1 @requestLast = req.RequestId
-        FROM AutoAssignmentRequest AS req WITH(NOLOCK)
-        WHERE req.EventDate = @eventDateGetRequest
-        ORDER BY req.CreatedDate DESC;
+        
         UPDATE dbo.AutoAssignmentRequest WITH(ROWLOCK)
           SET 
               [Status] = @Status, 
               ResponseDate = GETDATE()
-        WHERE RequestId = @requestLast
+        WHERE RequestId = @RequestId
               AND [Status] <> @Status;
+              
         IF @@ROWCOUNT = 1
            AND @Status = 0 -- save result if success
             BEGIN
                 EXEC sp_xml_preparedocument 
                      @idoc OUTPUT, 
                      @AutoAssignmentResultDoc;
-                INSERT INTO dbo.AutoAssignmentResult
+                INSERT INTO dbo.InfoSiteAutoAssignmentResult
                 (RequestId, 
-                 [OWPMatchId], 
-                 [Bettype], 
+                 [InfoSiteMatchId], 
+                 [Bettype],
+                 [IsSaba],
+                 [IsFutsal],
+                 [PcCode],
                  [UserId_LA], 
                  [UserId_FTHDP], 
                  [UserId_1HHDP], 
                  [UserId_FTOU], 
                  [UserId_1HOU], 
                  [StatusCode], 
-                 [GroupName], 
-                 [ExtraTime]
+                 [Group], 
+                 [ExtraTime],
+                 [SabaType]
                 )
                        SELECT @RequestId, 
-                              [OWPMatchId], 
-                              [Bettype], 
+                              [InfoSiteMatchId], 
+                              [Bettype],
+                              [IsSaba],
+							  [IsFutsal],
+							  [PcCode],
                               [UserId_LA], 
                               [UserId_FTHDP], 
                               [UserId_1HHDP], 
@@ -73,8 +75,24 @@ Revisions:
                               [UserId_1HOU], 
                               [StatusCode], 
                               [Group], 
-                              [ExtraTime]
-                       FROM OPENXML(@idoc, '/Root/Row', 1) WITH([OWPMatchId] INT, [Bettype] INT, [UserId_LA] INT, [UserId_FTHDP] INT, [UserId_1HHDP] INT, [UserId_FTOU] INT, [UserId_1HOU] INT, [StatusCode] INT, [Group] NVARCHAR(200), [ExtraTime] NVARCHAR(10));
+                              [ExtraTime],
+                              [SabaType]
+                       FROM OPENXML(@idoc, '/Root/Row', 1) WITH(
+                       [InfoSiteMatchId] INT,
+                       [Bettype] INT,
+                       [IsSaba] BIT,
+					   [IsFutsal] BIT,
+					   [PcCode] NVARCHAR(2000),
+                       [UserId_LA] INT,
+                       [UserId_FTHDP] INT,
+                       [UserId_1HHDP] INT,
+                       [UserId_FTOU] INT,
+                       [UserId_1HOU] INT,
+                       [StatusCode] INT,
+                       [Group] NVARCHAR(200),
+                       [ExtraTime] NVARCHAR(10),
+                       [SabaType] INT
+                       );
                 EXEC sp_xml_removedocument 
                      @idoc;
         END;
