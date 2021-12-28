@@ -8,11 +8,13 @@ Revisions:
 	20211119@CarlosNguyen: Enhance-auto-assignment - [Redmine: #163362]
 	20211214@Liam.Pham: add column ProviderTV - [Redmine: #163362]
 	20211217@Liam.Pham: add table AutoAssignmentHistory - [Redmine: #163362]
+	20211203@LucaDuong: Add ProviderUsed Column - [Redmine: #163362]
 	
 */
 ALTER TABLE InfoSiteMatch
 ADD OtherProvider NVARCHAR(2000),
 Provider NVARCHAR(2000),
+ProviderUsed NVARCHAR(2000),
 Remark NVARCHAR(2000),
 IsSoloMatch BIT,
 ProviderTV NVARCHAR(200)
