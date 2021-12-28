@@ -106,7 +106,7 @@ Revisions:
         INNER JOIN #tblInfoSiteAutoAssignmentResult AS t1
         ON t1.InfoSiteMatchId=r.InfoSiteMatchId
         AND t1.Bettype=r.Bettype 
-        AND t1.CreatedDate=r.CreatedDate
+        AND t1.ResponseDate=r.ResponseDate
         
         DROP TABLE #tblInfoSiteAutoAssignmentResult
     END;
