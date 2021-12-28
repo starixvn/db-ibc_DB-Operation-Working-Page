@@ -17,6 +17,7 @@ Remark NVARCHAR(2000),
 IsSoloMatch BIT,
 ProviderTV NVARCHAR(200)
 
+/*
 DROP TABLE AutoAssignmentMatchHistory
 DROP TABLE AutoAssignmentSuspenderHistory
 
@@ -28,6 +29,7 @@ DROP PROCEDURE [dbo].[OWP_AutoAssignment_GetRequestExtra]
 DROP PROCEDURE [dbo].[OWP_AutoAssignment_WriteHistoryMatch]
 DROP PROCEDURE [dbo].[OWP_AutoAssignment_WriteHistorySuspender]
 
+*/
 CREATE TABLE InfoSiteAutoAssignmentResult(
 	Id INT IDENTITY(1,1) PRIMARY KEY,
 	RequestId VARCHAR(2000) NOT NULL,
