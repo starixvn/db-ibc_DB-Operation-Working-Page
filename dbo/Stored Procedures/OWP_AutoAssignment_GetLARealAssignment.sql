@@ -39,9 +39,7 @@ Revisions:
          ParentMatchId  INT, 
          EventDateTime  DATETIME, 
          OWPLeagueName  VARCHAR(500), 
-         ETPK           VARCHAR(2000), 
-         Maxbet         MONEY, 
-         IsSaba         BIT
+         ETPK           VARCHAR(2000)
         );
         INSERT INTO @tblAssignment
                SELECT DISTINCT 
@@ -53,9 +51,7 @@ Revisions:
                       mn.ParentMatchId, 
                       ma.EventDateTime, 
                       l.OWPLeagueName, 
-                      im.ETPK, 
-                      h.MaxBetFTHDP, 
-                      ir.IsSaba
+                      im.ETPK
                FROM dbo.Assignment a WITH(NOLOCK)
                     INNER JOIN @tblUserId ids ON ids.UserId = a.UserId
                     INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = a.OWPMatchId
@@ -65,8 +61,6 @@ Revisions:
                     LEFT JOIN dbo.MatchProvider mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
                     LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
                     LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
-                    LEFT JOIN dbo.AutoAssignmentHistory h WITH(NOLOCK) ON h.InfoSiteMatchId = ma.InfoSiteMatchId
-                    LEFT JOIN dbo.InfoSiteAutoAssignmentResult ir WITH(NOLOCK) ON ir.InfoSiteMatchId = ma.InfoSiteMatchId
                WHERE mi.MatchStatus = 'Live'
                      AND a.Bettype = -1002
                      AND ma.EventDateTime BETWEEN @FromDate AND @ToDate;
@@ -89,9 +83,7 @@ Revisions:
                    WHEN a.ParentMatchId IS NOT NULL
                    THEN et.ETPK
                    ELSE ''
-               END 'FullTimeETPK', 
-               a.Maxbet, 
-               a.IsSaba
+               END 'FullTimeETPK'
         FROM @tblAssignment a
              LEFT JOIN @tblFTETPK et ON a.ParentMatchId = et.OWPMatchId
         ORDER BY UserId ASC, 

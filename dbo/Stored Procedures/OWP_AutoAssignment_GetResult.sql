@@ -22,13 +22,10 @@ Revisions:
                a.[Group] 'GroupName', 
                a.ExtraTime, 
                o.EventDateTime, 
-               u.Username, 
-               h.MaxBetFTHDP, 
+               u.Username,
                a.IsSaba, 
                a.SabaType
         FROM dbo.InfoSiteAutoAssignmentResult a
-             INNER JOIN AutoAssignmentHistory h ON h.InfoSiteMatchId = a.InfoSiteMatchId
-                                                   AND h.RequestId = a.RequestId
              INNER JOIN InfoSiteMatch o ON o.InfoSiteMatchId = a.InfoSiteMatchId
              INNER JOIN dbo.[User] u ON u.UserId = a.UserId_LA
         WHERE a.RequestId = @RequestId;
