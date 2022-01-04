@@ -5,7 +5,7 @@ Task : Create table InfoSiteSoloMatch
 DB: bodb_OWP	
 
 Revisions:
-	20211231@Johnny.Thai: Create table TicketIssueSupport
+	20211231@Johnny.Thai: Enhance Ticket Center - [Redmine: #166353]
 */
 
 -- Table TicketIssueSupport
@@ -21,3 +21,10 @@ CREATE TABLE [dbo].[TicketIssueSupport]
 )
 ON [OWP_Data];
 GO
+
+--Insert Ticket Type
+
+INSERT INTO [dbo].[TicketType]
+           ([TypeName])
+     VALUES
+           ('Ticket Support')
