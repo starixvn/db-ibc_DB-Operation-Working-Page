@@ -1,11 +1,3 @@
-USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_TicketCenter_InsertNewTicketSupportNotification]    Script Date: 12/31/2021 11:10:44 AM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenter_InsertNewTicketSupportNotification] @ActorId             INT, 
@@ -13,7 +5,7 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenter_InsertNewTicketSupportNotification] @Act
                                                                             @IsWatcher           BIT, 
                                                                             @NotificationType    INT, 
                                                                             @SessionId           VARCHAR(100)  = NULL, 
-                                                                            @TicketId     INT, 
+                                                                            @TicketId            INT, 
                                                                             @NotificationContent NVARCHAR(MAX)
 AS
 
@@ -29,36 +21,33 @@ Revisions:
 
      SET NOCOUNT ON;
      DECLARE @messageTemplate NVARCHAR(MAX);
-     
      DECLARE @eventName NVARCHAR(2000);
-     
+
      -- username
      DECLARE @actorName NVARCHAR(50);
      DECLARE @tblReceivedUser TVP_INT;
      SELECT TOP 1 @actorName = CASE
-                             WHEN Nickname IS NOT NULL
-                             THEN Nickname
-                             ELSE Username
-                         END
+                                   WHEN Nickname IS NOT NULL
+                                   THEN Nickname
+                                   ELSE Username
+                               END
      FROM dbo.[User] WITH(NOLOCK)
      WHERE UserId = @ActorId;
      -- end
-     
-      -- Subject name
-     SELECT TOP 1 @eventName=tis.[Subject]
+     -- Subject name
+     SELECT TOP 1 @eventName = tis.[Subject]
      FROM dbo.[TicketIssueSupport] AS tis WITH(NOLOCK)
-     WHERE tis.TicketId=@TicketId
+     WHERE tis.TicketId = @TicketId;
      -- end
-     
+
      SELECT @messageTemplate = REPLACE(REPLACE(@NotificationContent, '<Event>', @eventName), '<username>', @actorName);
-     
      INSERT INTO @tblReceivedUser(Id)
-	 EXEC [dbo].[OWP_TicketCenterEvent_GetUserIdsByTicketId] @TicketId=@TicketId
-	 
-	 -- Delete creatorId
-	 DELETE FROM @tblReceivedUser
-	 WHERE Id=@ActorId
-	 
+     EXEC [dbo].[OWP_TicketCenterEvent_GetUserIdsByTicketId] 
+          @TicketId = @TicketId;
+
+     -- Delete creatorId
+     DELETE FROM @tblReceivedUser
+     WHERE Id = @ActorId;
      EXEC dbo.OWP_MessageInsert 
           @UserId = @ActorId, 
           @MessageContent = @messageTemplate, 

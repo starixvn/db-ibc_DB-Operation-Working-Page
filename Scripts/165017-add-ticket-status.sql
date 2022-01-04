@@ -36,10 +36,3 @@ UPDATE dbo.TicketType
   SET 
       TypeName = 'Group Chat'
 WHERE TypeId = 2;
-
---Inser Ticket Type
-
-INSERT INTO [dbo].[TicketType]
-           ([TypeName])
-     VALUES
-           ('Ticket Support')
