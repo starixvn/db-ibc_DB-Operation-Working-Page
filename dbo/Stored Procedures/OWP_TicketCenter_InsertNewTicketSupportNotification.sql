@@ -10,12 +10,12 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenter_InsertNewTicketSupportNotification] @Act
 AS
 
 /*
-Created: 20211026@Carlos
+Created: 20211231@Johnny.Thai
 Task : send notification when there's a new message inserted
 DB: bodb_OWP
 
 Revisions:
-	20211026@Carlos: Init SP - [Redmine: #162851]
+	20211231@Johnny.Thai: Init SP - [Redmine: #162851]
 	
 */
 
