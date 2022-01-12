@@ -13,6 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20211130@Mira: Add ticket status - [Redmine: #165017]
+	20220110@Mira: Enhance ticket status - [Redmine: #165017]
 */
 
     BEGIN
@@ -33,11 +34,15 @@ Revisions:
                       t.TicketStatus, 
                       @TicketStatus
                FROM dbo.[TicketIssue] t
-               WHERE t.TicketId = @TicketId;
+               WHERE t.TicketId = @TicketId
+                     AND @ModifiedBy > 0
+                     AND t.TicketStatus <> @TicketStatus;
 
         -- Update Status
         UPDATE dbo.[TicketIssue]
           SET 
               TicketStatus = @TicketStatus
-        WHERE TicketId = @TicketId;
+        WHERE TicketId = @TicketId
+              AND @ModifiedBy > 0
+              AND TicketStatus <> @TicketStatus;
     END;
