@@ -9,7 +9,8 @@ GO
 ALTER PROCEDURE [dbo].[OWP_OSLiveGameAssignment_Query] @FromDate DATE
 														,@ToDate DATE
 														,@Sports VARCHAR(500)
-														,@MatchStatuses VARCHAR(500)
+														,@OfferLives VARCHAR(500)
+														,@LinkedMatches VARCHAR(500)
 AS  
   
 /*  
@@ -21,21 +22,24 @@ Revisions:
  20210113@Esther: Init SP [Redmine: #146963] 
  20210309@Carlos.Nguyen: Enhance OS Live Assignment - Phase 1 [Redmine: #150978]
  20210328@Carlos.Nguyen: Enhance OS Live Assignment - Phase 2 [Redmine: #155608]
+ 20220113@Carlos.Nguyen: Link to AdminSite matches and filter by status [Redmine: #167315]
 */  
   
    BEGIN  
         SET NOCOUNT ON;       
   
+		DECLARE @tblLinkedMatches TABLE (mode VARCHAR(50))
 		DECLARE @tblSports TABLE (sport VARCHAR(50))
-		DECLARE @tblMatchStatuses TABLE (matchStatuses VARCHAR(15))
+		DECLARE @tblOfferLives TABLE (offerLive VARCHAR(15))
 		DECLARE @tblOsMatch TABLE (
 			[OSMatchId] INT,
+			[AdminsiteMatchId] INT,
 			[League] VARCHAR(500),   
 			[Home] VARCHAR(200),   
             [Away]VARCHAR(200),   
             [MatchNo] DOUBLE PRECISION,
 			[Reporter] VARCHAR(2000),
-            [MatchStatus] VARCHAR(15),   
+            [OfferLiveStatus] VARCHAR(15),   
             [DateTime] DATETIME,   
             [Sport] VARCHAR(50),   
             [Category] VARCHAR(100),   
@@ -47,27 +51,34 @@ Revisions:
             [Service] VARCHAR(7),   
             [IPTV] VARCHAR(100),   
             [WB] VARCHAR(100),   
-            [Remark] VARCHAR(2000)
+            [Remark] VARCHAR(2000),
+            [LinkMode] VARCHAR(10)
 		)
 
+		INSERT INTO @tblLinkedMatches(mode)
+		SELECT t.val
+		FROM dbo.fnc_SplitStrings(@LinkedMatches, ',') AS t
+		OPTION (MAXRECURSION 0)
+		
 		INSERT INTO @tblSports (sport)
 		SELECT t.val
 		FROM dbo.fnc_SplitStrings(@Sports, ',') AS t
 		OPTION (MAXRECURSION 0)
 
-		INSERT INTO @tblMatchStatuses (matchStatuses)
+		INSERT INTO @tblOfferLives(offerLive)
 		SELECT t.val
-		FROM dbo.fnc_SplitStrings(@MatchStatuses, ',') AS t
+		FROM dbo.fnc_SplitStrings(@OfferLives, ',') AS t
 		OPTION (MAXRECURSION 0)
 		
 		INSERT INTO @tblOsMatch(
 			[OSMatchId],
+			[AdminsiteMatchId],
 			[League],   
 			[Home],   
             [Away],   
             [MatchNo],
 			[Reporter],
-            [MatchStatus],   
+            [OfferLiveStatus],   
             [DateTime],   
             [Sport],   
             [Category],   
@@ -79,16 +90,18 @@ Revisions:
             [Service],   
             [IPTV],   
             [WB],   
-            [Remark]
+            [Remark],
+            [LinkMode]
           )
         -- Select OSMatch  
-        SELECT m.[OSMatchId],   
+        SELECT m.[OSMatchId],  
+			   m.[AdminsiteMatchId], 
                l.[LeagueName],   
                m.[HomeName],   
                m.[AwayName],
                m.[MatchNo],
 			   m.[Reporter],	
-               m.[MatchStatus],   
+               m.[OfferLiveStatus],   
                m.[EventDateTime],   
                m.[Sport],   
                m.[Category],   
@@ -100,21 +113,26 @@ Revisions:
                m.[Service],   
                m.[IPTV],   
                m.[WB],   
-               m.[Remark]
+               m.[Remark],
+               CASE WHEN m.[AdminsiteMatchId] IS NULL OR m.[AdminsiteMatchId]=0
+				   THEN 'Unlink'
+				   ELSE 'Link'
+               END
         FROM dbo.OSMatch m
 			 INNER JOIN @tblSports AS tbls ON tbls.sport = m.Sport
-			 INNER JOIN @tblMatchStatuses AS  tblms ON tblms.matchStatuses= m.MatchStatus
+			 INNER JOIN @tblOfferLives AS  tblol ON tblol.offerLive= m.OfferLiveStatus
              INNER JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
 		WHERE m.EventDate BETWEEN @FromDate AND @ToDate
 		
 		SELECT m.[OSMatchId],
+			   m.[AdminsiteMatchId],
 			   m.Sport,   
                m.[League],   
                m.[Home],   
                m.[Away],   
                m.[MatchNo],
 			   m.[Reporter],
-               m.[MatchStatus],   
+               m.[OfferLiveStatus] AS OfferLive,   
                m.[DateTime],   
                m.[Sport],   
                m.[Category],   
@@ -127,7 +145,8 @@ Revisions:
                m.[IPTV],   
                m.[WB],   
                m.[Remark]
-        FROM @tblOsMatch m
+        FROM @tblOsMatch m 
+        INNER JOIN @tblLinkedMatches AS lm ON LOWER(m.LinkMode)=LOWER(lm.mode)
         ORDER BY m.[DateTime] ASC
  
         -- Select OSAssignment  
@@ -139,6 +158,7 @@ Revisions:
 			   u.Nickname,
                osa.[AssignmentNote]
         FROM @tblOsMatch AS osm
+			INNER JOIN @tblLinkedMatches AS lm ON LOWER(osm.LinkMode)=LOWER(lm.mode)
 			INNER JOIN dbo.OSAssignment AS osa WITH(NOLOCK) ON osm.OSMatchId= osa.OSMatchId
 			LEFT JOIN dbo.[User] u WITH(NOLOCK) ON osa.UserId = u.UserId
 			 
@@ -148,4 +168,5 @@ Revisions:
                a.[MaxBet]  
         FROM dbo.OSMaxBet a 
              INNER JOIN @tblOsMatch m ON m.OSMatchId = a.OSMatchId
+             INNER JOIN @tblLinkedMatches AS lm ON LOWER(m.LinkMode)=LOWER(lm.mode)
     END;
