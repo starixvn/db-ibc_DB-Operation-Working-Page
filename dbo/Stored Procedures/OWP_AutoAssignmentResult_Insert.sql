@@ -26,6 +26,7 @@ Revisions:
 	20200528@Carlos.Nguyen: Update status code for request last - [Redmine: #126964]
 	20210511@Mira: Auto trader assignment - [Redmine: #132710]
 	20211213@Carlos: Auto enhance auto assignment - [Redmine: #163362]
+	20220105@Liam.Pham: Auto assignment time table - [Redmine: #166161]
 */
 
     BEGIN
@@ -60,7 +61,8 @@ Revisions:
                  [StatusCode], 
                  [Group], 
                  [ExtraTime],
-                 [SabaType]
+                 [SabaType],
+				 [GroupTrader]
                 )
                        SELECT @RequestId, 
                               [InfoSiteMatchId], 
@@ -76,7 +78,8 @@ Revisions:
                               [StatusCode], 
                               [Group], 
                               [ExtraTime],
-                              [SabaType]
+                              [SabaType],
+							  [GroupTrader]
                        FROM OPENXML(@idoc, '/Root/Row', 1) WITH(
                        [InfoSiteMatchId] INT,
                        [Bettype] INT,
@@ -91,7 +94,8 @@ Revisions:
                        [StatusCode] INT,
                        [Group] NVARCHAR(200),
                        [ExtraTime] NVARCHAR(10),
-                       [SabaType] INT
+                       [SabaType] INT,
+					   [GroupTrader]NVARCHAR(200)
                        );
                 EXEC sp_xml_removedocument 
                      @idoc;

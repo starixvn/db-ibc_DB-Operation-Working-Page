@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201223@Tyler: Initial - [Redmine: #150268]
+	20211222@Tyler: add SABA - [Redmine: #166161]
 	
 */
 
@@ -62,15 +63,14 @@ Revisions:
                     LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
                WHERE mi.MatchStatus = 'Live'
                      AND a.Bettype = -1002
-                     AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
-                     AND l.OWPLeagueName NOT LIKE '%SABA%';
+                     AND ma.EventDateTime BETWEEN @FromDate AND @ToDate;
         INSERT INTO @tblFTETPK
                SELECT a.ParentMatchId, 
                       im.ETPK
                FROM dbo.InfoSiteMatch im WITH(NOLOCK)
                     INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.InfoSiteMatchId = im.InfoSiteMatchId
                     INNER JOIN @tblAssignment a ON ma.OWPMatchId = a.ParentMatchId;
-        SELECT a.UserId, 
+        SELECT a.UserId 'UserId_LA', 
                a.AssignmentId, 
                a.ProviderName, 
                a.MinorBettypeId, 
