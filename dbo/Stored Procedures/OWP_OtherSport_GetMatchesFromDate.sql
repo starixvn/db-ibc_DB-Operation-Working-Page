@@ -17,7 +17,7 @@ AS
     BEGIN
         SET NOCOUNT ON;
         SELECT m.OSMatchId, 
-               m.MatchId, 
+               m.AdminSiteMatchId, 
                l.LeagueName, 
                m.HomeName, 
                m.AwayName, 
