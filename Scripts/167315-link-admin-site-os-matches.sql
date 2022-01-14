@@ -15,3 +15,57 @@ EXEC sp_rename
      'COLUMN';
 ALTER TABLE dbo.OSMatch
 ADD AdminSiteMatchId INT;
+INSERT INTO [dbo].[Module]
+([ModuleId], 
+ [ModuleName]
+)
+VALUES
+(13, 
+ 'OtherSport'
+);
+INSERT INTO [dbo].[ModuleObject]
+([ModuleObjectId], 
+ [ModuleObjectName], 
+ [ModuleId]
+)
+VALUES
+(41, 
+ 'Match', 
+ 13
+);
+INSERT INTO [dbo].[LogAction]
+([ActionId], 
+ [ModuleId], 
+ [ModuleObjectId], 
+ [ActionTypeId], 
+ [ActionName], 
+ [SPName], 
+ [LogItems]
+)
+VALUES
+(120, 
+ 13, 
+ 41, 
+ 1, 
+ 'OWP_OSSport_LinkAdminSiteMatch', 
+ 'OWP_OtherSport_UpdateUnlinkedMatches', 
+ '<root><xml path="r/z" /><row item="OWPMatch" alias="om" /><row item="AdminSiteMatch" alias="am" /></root>'
+);
+INSERT INTO [dbo].[LogAction]
+([ActionId], 
+ [ModuleId], 
+ [ModuleObjectId], 
+ [ActionTypeId], 
+ [ActionName], 
+ [SPName], 
+ [LogItems]
+)
+VALUES
+(121, 
+ 13, 
+ 41, 
+ 2, 
+ 'OWP_OSSport_UpdateLinkedAdminSiteMatch', 
+ 'OWP_OtherSport_UpdateLinkedMatches', 
+ '<root><xml path="r/z" /><row item="OWPMatch" alias="om" /><row item="AdminSiteMatch" alias="am" /></root>'
+);
