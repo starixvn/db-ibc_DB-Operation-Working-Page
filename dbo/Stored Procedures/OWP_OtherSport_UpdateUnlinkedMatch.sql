@@ -28,7 +28,9 @@ AS
          OWPAway             NVARCHAR(500), 
          OWPHome             NVARCHAR(500), 
          OWPLeague           NVARCHAR(500), 
-         OldAdminSiteMatchId INT NULL
+         OldAdminSiteMatchId INT NULL, 
+         OldEventDate        DATETIME, 
+         NewEventDate        DATETIME
         );
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
@@ -42,7 +44,9 @@ AS
          OWPAway, 
          OWPHome, 
          OWPLeague, 
-         OldAdminSiteMatchId
+         OldAdminSiteMatchId, 
+         OldEventDate, 
+         NewEventDate
         )
                SELECT OSMatchId, 
                       AdminSiteMatchId, 
@@ -52,20 +56,21 @@ AS
                       OWPAway, 
                       OWPHome, 
                       OWPLeague, 
-                      OldAdminSiteMatchId
-               FROM OPENXML(@idoc, '/Root/LinkedMatch', 1) WITH([OSMatchId] INT, [AdminSiteMatchId] INT, [AdminSiteAway] NVARCHAR(500), [AdminSiteHome] NVARCHAR(500), [AdminSiteLeague] NVARCHAR(500), [OWPAway] NVARCHAR(500), [OWPHome] NVARCHAR(500), [OWPLeague] NVARCHAR(500), [OldAdminSiteMatchId] INT);
+                      OldAdminSiteMatchId, 
+                      OldEventDate, 
+                      NewEventDate
+               FROM OPENXML(@idoc, '/Root/LinkedMatch', 1) WITH([OSMatchId] INT, [AdminSiteMatchId] INT, [AdminSiteAway] NVARCHAR(500), [AdminSiteHome] NVARCHAR(500), [AdminSiteLeague] NVARCHAR(500), [OWPAway] NVARCHAR(500), [OWPHome] NVARCHAR(500), [OWPLeague] NVARCHAR(500), [OldAdminSiteMatchId] INT, [OldEventDate] DATETIME, [NewEventDate] DATETIME);
         UPDATE m
           SET 
               m.AdminSiteMatchId = t.AdminSiteMatchId
         FROM OSMatch m
              INNER JOIN #tmpTable t ON m.OSMatchId = t.OSMatchId
         WHERE ISNULL(m.AdminSiteMatchId, 0) = 0;
-
         -- LOG
         DECLARE @OSMatchId INT= 0;
         WHILE(1 = 1)
             BEGIN
-                DECLARE @NewAdminSiteMatchId INT, @AdminSiteAway NVARCHAR(500), @AdminSiteHome NVARCHAR(500), @AdminSiteLeague NVARCHAR(500), @OWPAway NVARCHAR(500), @OWPHome NVARCHAR(500), @OWPLeague NVARCHAR(500), @OldAdminSiteMatchId INT;
+                DECLARE @NewAdminSiteMatchId INT, @AdminSiteAway NVARCHAR(500), @AdminSiteHome NVARCHAR(500), @AdminSiteLeague NVARCHAR(500), @OWPAway NVARCHAR(500), @OWPHome NVARCHAR(500), @OWPLeague NVARCHAR(500), @OldAdminSiteMatchId INT, @OldEventDate DATETIME, @NewEventDate DATETIME;
                 SELECT TOP 1 @OSMatchId = OSMatchId, 
                              @NewAdminSiteMatchId = AdminSiteMatchId, 
                              @AdminSiteAway = AdminSiteAway, 
@@ -74,7 +79,9 @@ AS
                              @OWPAway = OWPAway, 
                              @OWPHome = OWPHome, 
                              @OWPLeague = OWPLeague, 
-                             @OldAdminSiteMatchId = NULL
+                             @OldAdminSiteMatchId = NULL, 
+                             @NewEventDate = NewEventDate, 
+                             @OldEventDate = OldEventDate
                 FROM #tmpTable
                 WHERE OSMatchId > @OSMatchId
                 ORDER BY OSMatchId;
@@ -87,14 +94,16 @@ AS
                     SELECT @OWPAway AS '@a', 
                            @OWPHome AS '@h', 
                            @OWPLeague AS '@l', 
-                           @OldAdminSiteMatchId AS '@aid' FOR XML PATH('z'), ROOT('r')
+                           @OldAdminSiteMatchId AS '@aid', 
+                           @OldEventDate AS '@e' FOR XML PATH('z'), ROOT('r')
                 );
                 SET @newData =
                 (
                     SELECT @AdminSiteAway AS '@a', 
                            @AdminSiteHome AS '@h', 
                            @AdminSiteLeague AS '@l', 
-                           @NewAdminSiteMatchId AS '@aid' FOR XML PATH('z'), ROOT('r')
+                           @NewAdminSiteMatchId AS '@aid', 
+                           @NewEventDate AS '@e' FOR XML PATH('z'), ROOT('r')
                 );
                 SET @OldLogData = REPLACE(CONVERT(NVARCHAR(MAX), @oldData), '" />', '"/"');
                 SET @NewLogData = REPLACE(CONVERT(NVARCHAR(MAX), @newData), '" />', '"/"');

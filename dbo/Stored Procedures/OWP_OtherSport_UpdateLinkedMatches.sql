@@ -16,19 +16,17 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @NewLogData NVARCHAR(MAX), @OldLogData NVARCHAR(MAX);
+        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @OldLogData NVARCHAR(MAX);
         SET @StartRun = GETDATE();
         DECLARE @idoc INT;
         CREATE TABLE #tmpTable
         (OSMatchId           INT, 
          AdminSiteMatchId    INT NULL, 
-         AdminSiteAway       NVARCHAR(500), 
-         AdminSiteHome       NVARCHAR(500), 
-         AdminSiteLeague     NVARCHAR(500), 
          OWPAway             NVARCHAR(500), 
          OWPHome             NVARCHAR(500), 
          OWPLeague           NVARCHAR(500), 
-         OldAdminSiteMatchId INT NULL
+         OldAdminSiteMatchId INT NULL, 
+         OldEventDate        DATETIME
         );
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
@@ -36,24 +34,22 @@ AS
         INSERT INTO #tmpTable
         (OSMatchId, 
          AdminSiteMatchId, 
-         AdminSiteAway, 
-         AdminSiteHome, 
-         AdminSiteLeague, 
          OWPAway, 
          OWPHome, 
          OWPLeague, 
-         OldAdminSiteMatchId
+         OldAdminSiteMatchId, 
+         OldEventDate
         )
                SELECT OSMatchId, 
-                      AdminSiteMatchId, 
-                      AdminSiteAway, 
-                      AdminSiteHome, 
-                      AdminSiteLeague, 
+                      NULL, 
                       OWPAway, 
                       OWPHome, 
                       OWPLeague, 
-                      OldAdminSiteMatchId
-               FROM OPENXML(@idoc, '/Root/LinkedMatch', 1) WITH([OSMatchId] INT, [AdminSiteMatchId] INT, [AdminSiteAway] NVARCHAR(500), [AdminSiteHome] NVARCHAR(500), [AdminSiteLeague] NVARCHAR(500), [OWPAway] NVARCHAR(500), [OWPHome] NVARCHAR(500), [OWPLeague] NVARCHAR(500), [OldAdminSiteMatchId] INT);
+                      OldAdminSiteMatchId, 
+                      OldEventDate
+               FROM OPENXML(@idoc, '/Root/LinkedMatch', 1) WITH([OSMatchId] INT, [OWPAway] NVARCHAR(500), [OWPHome] NVARCHAR(500), [OWPLeague] NVARCHAR(500), [OldAdminSiteMatchId] INT, [OldEventDate] DATETIME);
+
+        -- Update info
         UPDATE m
           SET 
               m.AdminSiteMatchId = t.AdminSiteMatchId
@@ -65,16 +61,13 @@ AS
         DECLARE @OSMatchId INT= 0;
         WHILE(1 = 1)
             BEGIN
-                DECLARE @NewAdminSiteMatchId INT, @AdminSiteAway NVARCHAR(500), @AdminSiteHome NVARCHAR(500), @AdminSiteLeague NVARCHAR(500), @OWPAway NVARCHAR(500), @OWPHome NVARCHAR(500), @OWPLeague NVARCHAR(500), @OldAdminSiteMatchId INT;
+                DECLARE @OWPAway NVARCHAR(500), @OWPHome NVARCHAR(500), @OWPLeague NVARCHAR(500), @OldAdminSiteMatchId INT, @OldEventDate DATETIME;
                 SELECT TOP 1 @OSMatchId = OSMatchId, 
-                             @NewAdminSiteMatchId = AdminSiteMatchId, 
-                             @AdminSiteAway = AdminSiteAway, 
-                             @AdminSiteHome = AdminSiteHome, 
-                             @AdminSiteLeague = AdminSiteLeague, 
                              @OWPAway = OWPAway, 
                              @OWPHome = OWPHome, 
                              @OWPLeague = OWPLeague, 
-                             @OldAdminSiteMatchId = OldAdminSiteMatchId
+                             @OldAdminSiteMatchId = OldAdminSiteMatchId, 
+                             @OldEventDate = OldEventDate
                 FROM #tmpTable
                 WHERE OSMatchId > @OSMatchId
                 ORDER BY OSMatchId;
@@ -87,17 +80,10 @@ AS
                     SELECT @OWPAway AS '@a', 
                            @OWPHome AS '@h', 
                            @OWPLeague AS '@l', 
-                           @OldAdminSiteMatchId AS '@aid' FOR XML PATH('z'), ROOT('r')
-                );
-                SET @newData =
-                (
-                    SELECT @AdminSiteAway AS '@a', 
-                           @AdminSiteHome AS '@h', 
-                           @AdminSiteLeague AS '@l', 
-                           @NewAdminSiteMatchId AS '@aid' FOR XML PATH('z'), ROOT('r')
+                           @OldAdminSiteMatchId AS '@aid', 
+                           @OldEventDate AS '@e' FOR XML PATH('z'), ROOT('r')
                 );
                 SET @OldLogData = REPLACE(CONVERT(NVARCHAR(MAX), @oldData), '" />', '"/"');
-                SET @NewLogData = REPLACE(CONVERT(NVARCHAR(MAX), @newData), '" />', '"/"');
                 SET @EndRun = GETDATE();
                 SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
                 EXEC dbo.OWP_WriteLog 
@@ -106,7 +92,6 @@ AS
                      @LoggedDate = @StartRun, 
                      @Duration = @Duration, 
                      @ObjectId = @OSMatchId, 
-                     @Data = @NewLogData, 
                      @DataOld = @OldLogData;
             END;
         DROP TABLE #tmpTable;
