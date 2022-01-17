@@ -25,5 +25,5 @@ AS
                m.EventDate
         FROM dbo.OSMatch m WITH(NOLOCK)
              INNER JOIN OSLeague l WITH(NOLOCK) ON m.LeagueId = l.OSLeagueId
-        WHERE m.EventDateTime = @EventDate;
+        WHERE m.EventDateTime >= @EventDate;
     END;
