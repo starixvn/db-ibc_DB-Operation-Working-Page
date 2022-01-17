@@ -49,7 +49,7 @@ VALUES
  1, 
  'OWP_OSSport_LinkAdminSiteMatch', 
  'OWP_OtherSport_UpdateUnlinkedMatches', 
- '<root><xml path="r/z" /><row item="OWPMatch" alias="om" /><row item="AdminSiteMatch" alias="am" /></root>'
+ '<root><xml path="r/z" /><row item="League" alias="l" /><row item="Home" alias="h" /><row item="Away" alias="a" /><row item="AdminSiteMatchId" alias="aid" /><row item="EventDate" alias="e" /></root>'
 );
 INSERT INTO [dbo].[LogAction]
 ([ActionId], 
@@ -67,5 +67,5 @@ VALUES
  2, 
  'OWP_OSSport_UpdateLinkedAdminSiteMatch', 
  'OWP_OtherSport_UpdateLinkedMatches', 
- '<root><xml path="r/z" /><row item="OWPMatch" alias="om" /><row item="AdminSiteMatch" alias="am" /></root>'
+ '<root><xml path="r/z" /><row item="League" alias="l" /><row item="Home" alias="h" /><row item="Away" alias="a" /><row item="AdminSiteMatchId" alias="aid" /><row item="EventDate" alias="e" /></root>'
 );
