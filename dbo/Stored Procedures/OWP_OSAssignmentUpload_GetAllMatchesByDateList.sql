@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20201224@Mira: Init SP [Redmine: #146962]
 	202010506@Tyler: Get more props [Redmine: #153499]
+	20220113@Mira: Change MatchStatus name [Redmine: #167315]
 */
 
     BEGIN
@@ -27,7 +28,7 @@ Revisions:
                l.[LeagueName] AS 'League', 
                m.[HomeName] AS 'Home', 
                m.[AwayName] AS 'Away', 
-               m.[MatchStatus], 
+               m.[OfferLiveStatus] AS 'OfferLive', 
                m.[EventDateTime] AS 'DateTime', 
                m.[Sport], 
                m.[Category], 
