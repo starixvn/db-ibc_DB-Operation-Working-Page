@@ -12,6 +12,7 @@ AS
     
  Revisions:
 	20200817@Mira: Archive plan for OWP tables - [Redmine: #137757]	
+	20220120@Liam.Pham: Add esoccer trader report - [Redmine: #167636]
 */
 
      SET NOCOUNT ON;
@@ -49,7 +50,12 @@ AS
             SUM([Robot3_X2]) AS [Robot3_X2], 
             SUM([Robot3_X3]) AS [Robot3_X3], 
             SUM([Robot3_X3_Plus]) AS [Robot3_X3_Plus], 
-            SUM([Robot5_X5]) AS [Robot5_X5]
+            SUM([Robot5_X5]) AS [Robot5_X5], 
+            SUM([Esoccer_5mins]) AS [Esoccer_5mins], 
+            SUM([ESoccer_6Mins]) AS [ESoccer_6Mins], 
+            SUM([ESoccer_15Mins]) AS [ESoccer_15Mins], 
+            SUM([ESoccer_16Mins]) AS [ESoccer_16Mins], 
+            SUM([ESoccer_20Mins]) AS [ESoccer_20Mins]
      FROM dbo.TraderReport AS rp WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON rp.UserId = u.UserId
           INNER JOIN dbo.[RefResource] AS rs WITH(NOLOCK) ON u.SectionId = rs.ResourceId
