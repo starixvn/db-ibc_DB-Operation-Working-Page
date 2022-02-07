@@ -1,3 +1,10 @@
+USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_OSAssignmentUpload_GetAllMatchesByDateList]    Script Date: 07/22/2021 16:40:09 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
@@ -12,6 +19,7 @@ DB: bodb_OWP
 Revisions:
 	20201224@Mira: Init SP [Redmine: #146962]
 	202010506@Tyler: Get more props [Redmine: #153499]
+	20210713@Carlos.nguyen: Get spread - [Redmine: #158285]
 	20220113@Mira: Change MatchStatus name [Redmine: #167315]
 */
 
@@ -64,7 +72,8 @@ Revisions:
         --- Select OSMaxbet
         SELECT a.[OSMatchId], 
                a.[BettypeName], 
-               a.[MaxBet]
+               a.[MaxBet],
+               a.[Spread]
         FROM dbo.OSMaxBet a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
              INNER JOIN @tempMatch t ON t.EventDate = m.EventDate;

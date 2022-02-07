@@ -17,7 +17,9 @@ Revisions:
  20210113@Esther: Init SP [Redmine: #146963] 
  20210309@Carlos.Nguyen: Enhance OS Live Assignment - Phase 1 [Redmine: #150978]
  20210328@Carlos.Nguyen: Enhance OS Live Assignment - Phase 2 [Redmine: #155608]
+ 20210713@Carlos.nguyen: Get spread - [Redmine: #158285]
  20220113@Carlos.Nguyen: Link to AdminSite matches and filter by status [Redmine: #167315]
+ 
 */
 
     BEGIN
@@ -155,7 +157,8 @@ Revisions:
         --- Select OSMaxbet  
         SELECT a.[OSMatchId], 
                a.[BettypeName], 
-               a.[MaxBet]
+               a.[MaxBet],
+               a.[Spread]
         FROM dbo.OSMaxBet a
              INNER JOIN @tblOsMatch m ON m.OSMatchId = a.OSMatchId
              INNER JOIN @tblLinkedMatches AS lm ON LOWER(m.LinkMode) = LOWER(lm.mode);
