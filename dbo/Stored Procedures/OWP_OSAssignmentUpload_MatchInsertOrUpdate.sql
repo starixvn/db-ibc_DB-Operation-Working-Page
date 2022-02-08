@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201223@Mira: Init SP [Redmine: #146962]
+	20220113@Mira: Change MatchStatus name [Redmine: #167315]
 */
 
     BEGIN
@@ -20,8 +21,8 @@ Revisions:
         (OSMatchId     INT, 
          HashKey       VARCHAR(200), 
          Sport         VARCHAR(50), 
-         MatchNo	   DOUBLE PRECISION,
-		 Reporter	   VARCHAR(2000),
+         MatchNo       DOUBLE PRECISION, 
+         Reporter      VARCHAR(2000), 
          MatchStatus   VARCHAR(15), 
          EventDateTime DATETIME, 
          LeagueId      INT, 
@@ -46,9 +47,9 @@ Revisions:
         INSERT INTO #tmpTable
                SELECT 0, 
                       HashKey, 
-                      Sport,
-                      MatchNo,
-					  Reporter,
+                      Sport, 
+                      MatchNo, 
+                      Reporter, 
                       MatchStatus, 
                       [DateTime], 
                       0, 
@@ -94,9 +95,9 @@ Revisions:
            AND m.EventDateTime = om.EventDateTime
             WHEN MATCHED
             THEN UPDATE SET 
-							om.[MatchNo]= m.[MatchNo],
-							om.[Reporter]= m.[Reporter],
-                            om.[MatchStatus] = m.[MatchStatus], 
+                            om.[MatchNo] = m.[MatchNo], 
+                            om.[Reporter] = m.[Reporter], 
+                            om.[OfferLiveStatus] = m.[MatchStatus], 
                             om.[Sport] = m.[Sport], 
                             om.[Category] = m.[Category], 
                             om.[NoHDP] = m.[NoHDP], 
@@ -114,9 +115,9 @@ Revisions:
               INSERT([LeagueId], 
                      [HomeName], 
                      [AwayName], 
-                     [MatchNo],
-					 [Reporter],
-                     [MatchStatus], 
+                     [MatchNo], 
+                     [Reporter], 
+                     [OfferLiveStatus], 
                      [EventDate], 
                      [EventDateTime], 
                      [Sport], 
@@ -135,8 +136,8 @@ Revisions:
         (m.[LeagueId], 
          m.[Home], 
          m.[Away], 
-         m.[MatchNo],
-		 m.[Reporter],
+         m.[MatchNo], 
+         m.[Reporter], 
          m.[MatchStatus], 
          m.[EventDateTime], 
          m.[EventDateTime], 

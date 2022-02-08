@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201224@Esther: New structure of Event Upload for Othersports - [Redmine: #146962]
+	20210722@Carlos.nguyen: Add Spread info into OS LGA - [Redmine: #156929]
 	
 */
 
