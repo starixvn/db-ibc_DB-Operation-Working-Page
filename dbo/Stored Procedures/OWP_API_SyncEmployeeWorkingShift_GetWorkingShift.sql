@@ -21,14 +21,15 @@ Revisions:
 	20210608@Carlos.nguyen: API sync Working Shifts to HRM - [Redmine: #156338]	
 	20211008@Tyler: Update emp id - [Redmine: #162852]	
 	20211228@Carlos: Support sync OT shift to HRM - [Redmine: #166487]
+	20220207@Carlos: Update timezone ShiftStartTime, ShiftEndTime to gmt+7 before sync data to HRM - [Redmine: #168078]
 */
 	SET NOCOUNT ON;
     SELECT u.EmployeeId
 		, ew.ShiftDate
 		, UPPER(sc.ShiftCode) AS ShiftCode
-		, ew.ShiftStartTime
-		, ew.ShiftEndTime
-		, ew.LastUpdated
+		, DATEADD(MINUTE,-60, ew.ShiftStartTime) AS ShiftStartTime
+		, DATEADD(MINUTE,-60, ew.ShiftEndTime) AS ShiftEndTime
+		, DATEADD(MINUTE,-60, ew.LastUpdated) AS LastUpdated
 		, IsTimeShift
 		, sc.Extension
 		,CASE WHEN ew.RefShiftId=190 THEN 'OFF'
