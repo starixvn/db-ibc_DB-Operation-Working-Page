@@ -43,8 +43,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @hpdBettype, 
-             @IsTakeOver = 0,
-			 @AssignmentType = 1;
+             @IsTakeOver = 0, 
+             @AssignmentType = 1;
 
         --
         DECLARE @tblOUMainAssignment TABLE
@@ -61,8 +61,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @ouBettype, 
-             @IsTakeOver = 0,
-			 @AssignmentType = 1;
+             @IsTakeOver = 0, 
+             @AssignmentType = 1;
 
         --
         DECLARE @tblHDPTOMainAssignment TABLE
@@ -79,8 +79,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @hpdBettype, 
-             @IsTakeOver = 1,
-			 @AssignmentType = 1;
+             @IsTakeOver = 1, 
+             @AssignmentType = 1;
 
         --
         DECLARE @tblOUTOMainAssignment TABLE
@@ -97,8 +97,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @ouBettype, 
-             @IsTakeOver = 1,
-			 @AssignmentType = 1;
+             @IsTakeOver = 1, 
+             @AssignmentType = 1;
 
         ---- insert usernames for OtherAssignments
         DECLARE @tblOtherHDPAssignment TABLE
@@ -115,8 +115,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @hpdBettype, 
-             @IsTakeOver = 0,
-			 @AssignmentType = 2;
+             @IsTakeOver = 0, 
+             @AssignmentType = 2;
 
         --
         DECLARE @tblOtherOUAssignment TABLE
@@ -133,8 +133,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @ouBettype, 
-             @IsTakeOver = 0,
-			 @AssignmentType = 2;
+             @IsTakeOver = 0, 
+             @AssignmentType = 2;
 
         --
         DECLARE @tblOtherHDPTOAssignment TABLE
@@ -151,8 +151,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @hpdBettype, 
-             @IsTakeOver = 1,
-			 @AssignmentType = 2;
+             @IsTakeOver = 1, 
+             @AssignmentType = 2;
 
         --
         DECLARE @tblOtherOUTOAssignment TABLE
@@ -169,8 +169,8 @@ Revisions:
              @EventDate = @EventDate, 
              @IsDay = @IsDay, 
              @Bettype = @ouBettype, 
-             @IsTakeOver = 1,
-			 @AssignmentType = 2;
+             @IsTakeOver = 1, 
+             @AssignmentType = 2;
 
         ---- match count for league ----
         DECLARE @tblMatchCount TABLE
@@ -189,6 +189,7 @@ Revisions:
                      AND m1.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
                      AND pl.IsDay = @IsDay
                      AND pl.IsDeleted = 0
+                     AND m1.ParentId IS NULL
                GROUP BY m1.OWPLeagueId;
 
         -- insert table day shift--
@@ -263,7 +264,7 @@ Revisions:
                       oh.Nickname, 
                       oo.Nickname, 
                       oht.Nickname, 
-                      oot.Nickname,
+                      oot.Nickname, 
                       l.IsBlackList, 
                       pl.Remark, 
                       pl.IsDeleted
@@ -323,7 +324,7 @@ Revisions:
                OtherHDPTakeOverNickname, 
                OtherOUTakeOverNickname, 
                BlackList, 
-               Remark,
+               Remark, 
                n.PreMatchNoteId, 
                n.HasNotes, 
                l.IsDeleted
@@ -336,13 +337,14 @@ Revisions:
                m.HomeName, 
                m.AwayName, 
                m.EventDateTime, 
-               l.PreMatchLeagueId,
+               l.PreMatchLeagueId, 
                n.PreMatchNoteId, 
-               n.HasNotes,
+               n.HasNotes, 
                m.IsLive
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN @tblDayShiftTable AS l ON l.LeagueId = m.OWPLeagueId
              LEFT JOIN @tblMatchNotes AS n ON n.InfoSiteMatchId = m.InfoSiteMatchId
         WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
+              AND m.ParentId IS NULL
         ORDER BY m.EventDateTime ASC;
     END;
