@@ -21,6 +21,7 @@ Revisions:
  20201110@Tyler: remove other assignment note - [Redmine: #144948]
  20210607@Mira: Link Match Status - [Redmine: #156336]
  20211222@Mira: Integrate my ticket - [Redmine: #163766]
+20220216@Johnny: get match parentId is null only - [Redmine: #168050]
 */
 
     BEGIN
