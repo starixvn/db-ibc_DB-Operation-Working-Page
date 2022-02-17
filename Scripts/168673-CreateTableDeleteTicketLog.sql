@@ -10,7 +10,7 @@
 
 CREATE TABLE TicketDeleteLog
 (Id        INT IDENTITY(1, 1) PRIMARY KEY, 
- UserId    INT NOT NULL, 
+ ModifiedBy    INT NOT NULL, 
  TicketId	INT NOT NULL,
- EventDate DATETIME NOT NULL
+ LogDate DATETIME NOT NULL
 );
