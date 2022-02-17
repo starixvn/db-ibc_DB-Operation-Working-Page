@@ -10,7 +10,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
-	
+	20220217@Tyler: Update condition for PENALTY SHOOT-OUT - [Redmine: #168465]	
 */
  
 	SET NOCOUNT ON;
@@ -2012,7 +2012,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE LeagueName LIKE '%- PENALTY SHOOT-OUT'
+			WHERE LeagueName LIKE '%- PENALTY SHOOT-OUT%'
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
