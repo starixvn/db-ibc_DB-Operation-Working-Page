@@ -11,6 +11,7 @@ DB: bodb_OWP
     
 Revisions:    
   20210914@Tyler: Initial SP - [Redmine: #160545]  
+  20220222@Mira: Save subtypes - [Redmine: #168468]
 */
 
     BEGIN
