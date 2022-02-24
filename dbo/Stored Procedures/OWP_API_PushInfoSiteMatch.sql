@@ -34,6 +34,7 @@ AS
 	20211109@CarlosNguyen: Solve deadlock issue of InfoSite event sync - [Redmine: #164343]
 	20211119@CarlosNguyen: Enhance-auto-assignment - [Redmine: #163362]
 	20211214@Liam.Pham: Sync ProviderTV - [Redmine: #163362]
+	20220224@tyler: upgrade XML package - [Redmine: #168050]   
 */
 BEGIN
 	SET NOCOUNT ON
@@ -150,7 +151,7 @@ BEGIN
 		,[Remark]
 		,[ProviderUsed]
 		,[ProviderTV]
-	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
+	FROM OPENXML(@idoc, '/Root/Event', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
 			,[IsLive] BIT

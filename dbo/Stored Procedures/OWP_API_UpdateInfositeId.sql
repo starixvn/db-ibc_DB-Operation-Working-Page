@@ -11,6 +11,7 @@ DB: bodb_OWP
   
 Revisions:  
 	20200824@Jacob: Infosite-Link matches between two sites - [Redmine: #140195]   
+	20220224@tyler: upgrade XML package - [Redmine: #168050]   
 */
 
      SET NOCOUNT ON;
@@ -30,7 +31,7 @@ Revisions:
                    InfositeMatchId, 
                    AdminsiteMatchId, 
                    EventDateTime
-            FROM OPENXML(@idoc, '/Root/Row', 1) WITH(OWPMatchId INT, InfositeMatchId INT, AdminsiteMatchId INT, EventDateTime DATETIME);
+            FROM OPENXML(@idoc, '/Root/MatchMappingWithInfosite', 1) WITH(OWPMatchId INT, InfositeMatchId INT, AdminsiteMatchId INT, EventDateTime DATETIME);
      EXEC sp_xml_removedocument 
           @idoc;
 

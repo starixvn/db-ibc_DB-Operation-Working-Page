@@ -19,7 +19,7 @@ AS
 	20210106@Carlos.nguyen:  Enhance insert data NULL for Early Matches - [Redmine: #148284]
 	=> This enhance to fix agent.split object not set reference in case event upload
 	20210128@CarlosNguyen: Sync MatchCode - [Redmine: #149347]
-	
+	20220224@tyler: upgrade XML package - [Redmine: #168050]   
 */
 BEGIN
 	SET NOCOUNT ON
@@ -61,7 +61,7 @@ BEGIN
 		,[AdminSiteId]
 		,[UpdatedTime]
 		,[IsNeutral]
-	FROM OPENXML(@idoc, '/Root/Row', 1) WITH (
+	FROM OPENXML(@idoc, '/Root/MatchModelFor180Day', 1) WITH (
 			[MatchId] [INT]
 			,[KOTime] DATETIME
 			,[LeagueName] NVARCHAR(500)
