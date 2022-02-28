@@ -73,13 +73,6 @@ Revisions:
                FROM @tmpRecipient r
                WHERE r.TicketTypeRecipientId = 0;
 
-        -- Delete subtype
-        DELETE s
-        FROM dbo.TicketSubtype s
-             LEFT JOIN @tmpSubtype t ON s.SubtypeId = t.SubtypeId
-        WHERE t.SubtypeName IS NULL
-              AND s.TypeId = @TicketTypeId;
-
         -- Update subtype
         UPDATE s
           SET 
