@@ -25,3 +25,7 @@ GO
 ALTER TABLE dbo.TicketIssue
 ADD SubtypeId INT NULL;
 GO
+-- add subtype to log delete ticket
+UPDATE LogAction
+SET LogItems = N'<root><xml path="r/z" /><row item="TicketId" alias="tId" /><row item="TicketType" alias="tType" /><row item="SubtypeId" alias="tSubtypeId" /><row item="CreatedDate" alias="tCreDate" /><row item="TicketStatus" alias="tStatus" /><row item="CreatorId" alias="tCreId" /><row item="OWPLeagueName" alias="OwpLeagueName" /><row item="HomeName" alias="HomeName" /><row item="AwayName" alias="AwayName" /><row item="Subject" alias="Subject" /><row item="InfoSiteMatchId" alias="InfoSiteMatchId" /><row item="EventDateTime" alias="EventDateTime" /></root>'
+WHERE ActionId = 122
