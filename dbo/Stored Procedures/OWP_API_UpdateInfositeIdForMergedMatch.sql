@@ -13,6 +13,7 @@ Revisions:
 	20210428@Mira: Initial - [Redmine: #154249]
 	20210914@Mira: Insert Service Log - [Redmine: #161379]
 	20211112@Mira: Modify merge match behavior - [Redmine: #164484]
+	20220304@Mira: Update adminsiteMatchId - [Redmine: #169279]
 */
 
     BEGIN
@@ -25,7 +26,7 @@ Revisions:
         CREATE TABLE #tmpLog
         (DataOld         NVARCHAR(MAX), 
          DataNew         NVARCHAR(MAX), 
-         UpdatedField    NCHAR(100), 
+         UpdatedField    NVARCHAR(100), 
          TableName       NCHAR(100), 
          OWPMatchId      INT, 
          InfoSiteMatchId INT
@@ -81,20 +82,23 @@ Revisions:
          [TableName], 
          [OWPMatchId]
         )
-               SELECT o.InfoSiteMatchId, 
-                      t.ParentMatchId, 
-                      'InfoSiteMatchId', 
+               SELECT CAST(o.InfoSiteMatchId AS VARCHAR) + ',' + CAST(o.MatchId AS VARCHAR), 
+                      CAST(t.ParentMatchId AS VARCHAR) + ',' + CAST(im.AdminSiteMatchId AS VARCHAR), 
+                      'InfoSiteMatchId, MatchId', 
                       'OWPMatch', 
                       o.OWPMatchId
                FROM dbo.OWPMatch o WITH(ROWLOCK)
-                    INNER JOIN #tmpTable t ON o.InfoSiteMatchId = t.InfositeMatchId;
+                    INNER JOIN #tmpTable t ON o.InfoSiteMatchId = t.InfositeMatchId
+                    INNER JOIN dbo.InfoSiteMatch im ON im.InfoSiteMatchId = t.ParentMatchId;
 
         -- Update OWPMatch
         UPDATE o
           SET 
-              o.InfoSiteMatchId = t.ParentMatchId
+              o.InfoSiteMatchId = t.ParentMatchId, 
+              o.MatchId = im.AdminSiteMatchId
         FROM dbo.OWPMatch o WITH(ROWLOCK)
-             INNER JOIN #tmpTable t ON o.InfoSiteMatchId = t.InfositeMatchId;
+             INNER JOIN #tmpTable t ON o.InfoSiteMatchId = t.InfositeMatchId
+             INNER JOIN dbo.InfoSiteMatch im ON im.InfoSiteMatchId = t.ParentMatchId;
 
         -- Insert Service Log
         INSERT INTO dbo.ServiceActionLog
