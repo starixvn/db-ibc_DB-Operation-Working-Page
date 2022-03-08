@@ -17,6 +17,7 @@ AS
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211018@Liam.Pham: Update ticket match detail - [Redmine: #158037]
 	20211130@Mira: Get ticket status - [Redmine: #165017]
+	20220222@Luca: Get TicketSubType - [Redmine: #168624]	
 */
 BEGIN
 	SET NOCOUNT ON
@@ -40,7 +41,9 @@ BEGIN
 		CASE WHEN u.Nickname IS NULL
 			THEN u.Username
 			ELSE u.Nickname
-		END AS Username
+		END AS Username,
+		tst.SubtypeId AS TicketSubTypeId,
+		tst.SubtypeName AS TicketSubTypeName
 	FROM TicketIssue AS ti
 	INNER JOIN TicketIssueEvent AS til ON ti.TicketId=til.TicketId
 	INNER JOIN OWPLeague AS owpl ON owpl.OWPLeagueId=til.OwpLeagueId
@@ -48,5 +51,6 @@ BEGIN
 	INNER JOIN TicketMessage AS tm ON tm.TicketId=ti.TicketId
 	INNER JOIN [User] AS u ON u.UserId=tm.UserId
 	INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId=til.InfoSiteMatchId
+	LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId AND ti.SubtypeId = tst.SubtypeId
 	WHERE ti.TicketId=@TicketId
 END

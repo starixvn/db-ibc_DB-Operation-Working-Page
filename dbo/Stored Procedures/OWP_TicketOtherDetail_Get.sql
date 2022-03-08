@@ -11,6 +11,7 @@ AS
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211130@Mira: Get ticket status - [Redmine: #165017]
+	20220222@Luca: Get TicketSubType - [Redmine: #168624]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -28,11 +29,14 @@ BEGIN
 		CASE WHEN u.Nickname IS NULL
 			THEN u.Username
 			ELSE u.Nickname
-		END AS Username
+		END AS Username,
+		tst.SubtypeId AS TicketSubTypeId,
+		tst.SubtypeName AS TicketSubTypeName
 	FROM TicketIssue AS ti
 		INNER JOIN TicketIssueOther AS til ON ti.TicketId=til.TicketId
 		INNER JOIN TicketType AS tt ON tt.TypeId=ti.TicketType
 		INNER JOIN TicketMessage AS tm ON tm.TicketId=ti.TicketId
 		INNER JOIN [User] AS u ON u.UserId=tm.UserId
+		LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId AND ti.SubtypeId = tst.SubtypeId
 	WHERE ti.TicketId=@TicketId
 END
