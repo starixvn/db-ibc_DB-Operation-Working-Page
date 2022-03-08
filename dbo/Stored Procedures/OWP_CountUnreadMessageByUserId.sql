@@ -11,7 +11,7 @@ ALTER PROCEDURE [dbo].[OWP_CountUnreadMessageByUserId] @UserId INT
 AS
 /*    
  Created: 20220217@Carlos.nguyen
- Task : Count unread message follow TicketId (because db store
+ Task : CountUnreadMessage
  DB: bodb_OWP    
     
  Revisions:
@@ -26,7 +26,7 @@ BEGIN
 	
 	-- Ticket order
 	INSERT INTO @tblTicketMessageUnread(Total)
-	SELECT COUNT (DISTINCT tis.TicketId)
+	SELECT COUNT(tl.Id)
 	FROM TicketIssue AS tis WITH(NOLOCK)
 	INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
 	INNER JOIN TicketIssueOther AS tl WITH(NOLOCK) ON tis.TicketId = tl.TicketId
@@ -39,7 +39,7 @@ BEGIN
 	
 	-- Ticket support
 	INSERT INTO @tblTicketMessageUnread(Total)
-	SELECT COUNT (DISTINCT tis.TicketId)
+	SELECT COUNT(ts.Id)
 	FROM TicketIssue AS tis WITH(NOLOCK)
 	INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId 
 	INNER JOIN TicketIssueSupport AS ts WITH(NOLOCK) ON tis.TicketId = ts.TicketId
@@ -52,7 +52,7 @@ BEGIN
 	
 	-- Ticket event
 	INSERT INTO @tblTicketMessageUnread(Total)
-	SELECT COUNT (DISTINCT tis.TicketId)
+	SELECT COUNT(te.Id)
 	FROM TicketIssue AS tis WITH(NOLOCK)
 	INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId 
 	INNER JOIN TicketIssueEvent AS te WITH(NOLOCK) ON tis.TicketId = te.TicketId
@@ -67,7 +67,7 @@ BEGIN
 	
 	-- Ticket event
 	INSERT INTO @tblTicketMessageUnread(Total)
-	SELECT COUNT (DISTINCT tis.TicketId)
+	SELECT COUNT(tl.Id)
 	FROM TicketIssue AS tis WITH(NOLOCK)
 	INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId 
 	INNER JOIN TicketIssueLeague AS tl WITH(NOLOCK)ON tis.TicketId = tl.TicketId
