@@ -1,6 +1,12 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_AutoAssignmentResult_Insert]    Script Date: 03/09/2022 14:29:47 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
 
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[OWP_AutoAssignmentResult_Insert] @RequestId               VARCHAR(50), 
                                                         @Status                  INT, 
                                                         @AutoAssignmentResultDoc NVARCHAR(MAX), 
@@ -27,6 +33,8 @@ Revisions:
 	20210511@Mira: Auto trader assignment - [Redmine: #132710]
 	20211213@Carlos: Auto enhance auto assignment - [Redmine: #163362]
 	20220105@Liam.Pham: Auto assignment time table - [Redmine: #166161]
+	20220310@Carlos.nguyen: get request new - [Redmine: #163362]
+	
 */
 
     BEGIN
@@ -39,9 +47,8 @@ Revisions:
               ResponseDate = GETDATE()
         WHERE RequestId = @RequestId
               AND [Status] <> @Status;
-              
-        IF @@ROWCOUNT = 1
-           AND @Status = 0 -- save result if success
+             
+        IF @Status = 0 -- save result if success
             BEGIN
                 EXEC sp_xml_preparedocument 
                      @idoc OUTPUT, 
@@ -65,7 +72,7 @@ Revisions:
 				 [GroupTrader]
                 )
                        SELECT @RequestId, 
-                              [InfoSiteMatchId], 
+                              [MatchId], 
                               [Bettype],
                               [IsSaba],
 							  [IsFutsal],
@@ -80,8 +87,8 @@ Revisions:
                               [ExtraTime],
                               [SabaType],
 							  [GroupTrader]
-                       FROM OPENXML(@idoc, '/Root/Row', 1) WITH(
-                       [InfoSiteMatchId] INT,
+                       FROM OPENXML(@idoc, '/Root/AssignmentResult', 1) WITH(
+                       [MatchId] INT,
                        [Bettype] INT,
                        [IsSaba] BIT,
 					   [IsFutsal] BIT,
@@ -99,6 +106,7 @@ Revisions:
                        );
                 EXEC sp_xml_removedocument 
                      @idoc;
+                  
         END;
         SET @ErrCode = 0;
     END;

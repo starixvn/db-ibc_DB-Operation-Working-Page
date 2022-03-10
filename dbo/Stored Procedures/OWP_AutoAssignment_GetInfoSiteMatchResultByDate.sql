@@ -8,6 +8,8 @@ SET ANSI_NULLS ON;
 GO
 SET QUOTED_IDENTIFIER ON;
 GO
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetInfoSiteMatchResultByDate] @EventDate DATE
 AS
 
