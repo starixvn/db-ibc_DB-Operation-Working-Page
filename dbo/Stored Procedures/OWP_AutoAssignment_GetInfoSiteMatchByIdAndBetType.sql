@@ -20,6 +20,7 @@ DB: bodb_OWP
   
 Revisions:  
  20211213@Johnny.Thai : Get InfoSiteMatch By Ids and Bettype - [Redmine: #166031]
+ 20220310@Carlos.nguyen: get request new - [Redmine: #163362]
 */
 
     BEGIN
@@ -38,7 +39,7 @@ Revisions:
         )
         SELECT [InfoSiteMatchId], 
                 [BetType]
-        FROM OPENXML(@idoc, '/Root/Row', 1) WITH([InfoSiteMatchId] INT, [BetType] INT);
+        FROM OPENXML(@idoc, '/Root/MatchQueryInfo', 1) WITH([InfoSiteMatchId] INT, [BetType] INT);
         EXEC sp_xml_removedocument 
              @idoc;
              
