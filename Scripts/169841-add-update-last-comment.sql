@@ -11,17 +11,17 @@ Revisions:
 
 -- add LastComment
 ALTER TABLE dbo.TicketIssue
-ADD LastComment DATETIME NULL;
+ADD LastCommentDate DATETIME NULL;
 GO
 
 -- update LastComment table TicketIssue
 CREATE TABLE #tblLastComment
 (TicketId    INT, 
- LastComment DATETIME
+ LastCommentDate DATETIME
 );
 INSERT INTO #tblLastComment
 (TicketId, 
- LastComment
+ LastCommentDate
 )
        SELECT TicketId, 
               MAX(CreatedDate) AS LastComment
@@ -29,6 +29,6 @@ INSERT INTO #tblLastComment
        GROUP BY TicketId;
 UPDATE TicketIssue
   SET 
-      LastComment = lc.LastComment
+      LastCommentDate = lc.LastCommentDate
 FROM TicketIssue AS ti
      INNER JOIN #tblLastComment AS lc ON ti.TicketId = lc.TicketId;
