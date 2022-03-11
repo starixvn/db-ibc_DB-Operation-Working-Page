@@ -31,7 +31,7 @@ AS
         SET NOCOUNT ON;
         UPDATE TicketIssue
           SET 
-              LastComment = DATEADD(HOUR, 12, GETDATE())
+              LastCommentDate = DATEADD(HOUR, 12, GETDATE())
         FROM TicketIssue AS a
         WHERE a.TicketId = @TicketId;
         INSERT INTO TicketMessage

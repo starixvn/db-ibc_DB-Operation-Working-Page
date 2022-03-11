@@ -29,6 +29,7 @@ AS
 	20211130@Mira: Add ticket status column - [Redmine: #165017]
 	20211130@Tyler: Get pinned prop - [Redmine: #165017]
 	20220302@Liam: Get ticket by subtype - [Redmine: #168624]
+	20220311@Johnny.Thai: Hide Ticket - [Redmine: #169841]
 */
 
     BEGIN
@@ -104,6 +105,9 @@ AS
              AND (tis.SubtypeId = temp.SubTypeId
                   OR (tis.SubtypeId IS NULL
                       AND temp.SubTypeId IS NULL))
+             AND (tis.TicketStatus = 'Closed'
+                  AND DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) < 90)
+             OR (tis.TicketStatus <> 'Closed')
              AND tis.TicketStatus IN
         (
             SELECT TicketStatus
