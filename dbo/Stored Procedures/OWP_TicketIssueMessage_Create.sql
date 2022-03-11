@@ -1,17 +1,22 @@
-USE [bodb_OWP]
+USE [bodb_OWP];
 GO
+
 /****** Object:  StoredProcedure [dbo].[OWP_TicketIssueMessage_Create]    Script Date: 09/23/2021 11:18:03 ******/
-SET ANSI_NULLS ON
+
+SET ANSI_NULLS ON;
 GO
-SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON;
 GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE [dbo].[OWP_TicketIssueMessage_Create] @TicketId INT,
-	@Message NVARCHAR(2000),
-	@UserId INT,
-	@IsSaved BIT,
-	@FileId INT = NULL
+
+ALTER PROCEDURE [dbo].[OWP_TicketIssueMessage_Create] @TicketId INT, 
+                                                      @Message  NVARCHAR(2000), 
+                                                      @UserId   INT, 
+                                                      @IsSaved  BIT, 
+                                                      @FileId   INT            = NULL
 AS
+
 /*      
  Created: 20210917@Carlos.Nguyen
  Task : New ticket issue message
@@ -19,41 +24,46 @@ AS
       
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
+	20220311@Johnny.Thai: Update LastComment - [Redmine: #169841]
 */
-BEGIN
-	SET NOCOUNT ON
-	INSERT INTO TicketMessage(
-		TicketId,
-		CreatedDate,
-		[Message],
-		UserId,
-		IsSaved,
-		FileId
-	 )
-	VALUES (
-		@TicketId,
-		DATEADD(HOUR, 12, GETDATE()),
-		@Message,
-		@UserId,
-		0,
-		@FileId
-	)
-	
-	DECLARE @id INT
-	
-	SELECT @id=MAX(tm.Id)
-	FROM TicketMessage AS tm
-	
-	SELECT u.UserId,
-		tm.CreatedDate,
-		tm.[Message],
-		tm.Id AS MessageId,
-		tm.FileId,
-		CASE WHEN u.Nickname IS NULL
-		THEN u.Username
-		ELSE u.Nickname
-	 END AS Username
-	FROM TicketMessage AS tm
-	INNER JOIN [User] AS u ON tm.UserId=u.UserId
-	WHERE tm.Id=@id
-END
+
+    BEGIN
+        SET NOCOUNT ON;
+        UPDATE TicketIssue
+          SET 
+              LastComment = DATEADD(HOUR, 12, GETDATE())
+        FROM TicketIssue AS a
+        WHERE a.TicketId = @TicketId;
+        INSERT INTO TicketMessage
+        (TicketId, 
+         CreatedDate, 
+         [Message], 
+         UserId, 
+         IsSaved, 
+         FileId
+        )
+        VALUES
+        (@TicketId, 
+         DATEADD(HOUR, 12, GETDATE()), 
+         @Message, 
+         @UserId, 
+         0, 
+         @FileId
+        );
+        DECLARE @id INT;
+        SELECT @id = MAX(tm.Id)
+        FROM TicketMessage AS tm;
+        SELECT u.UserId, 
+               tm.CreatedDate, 
+               tm.[Message], 
+               tm.Id AS MessageId, 
+               tm.FileId,
+               CASE
+                   WHEN u.Nickname IS NULL
+                   THEN u.Username
+                   ELSE u.Nickname
+               END AS Username
+        FROM TicketMessage AS tm
+             INNER JOIN [User] AS u ON tm.UserId = u.UserId
+        WHERE tm.Id = @id;
+    END;

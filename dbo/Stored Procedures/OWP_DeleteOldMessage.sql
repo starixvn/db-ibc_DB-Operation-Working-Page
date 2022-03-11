@@ -34,4 +34,5 @@ AS
         FROM dbo.TicketMessage tm
         WHERE DATEDIFF(DAY, tm.CreatedDate, @Date) > 30
               AND tm.IsSaved = 0;
+		DROP TABLE #tblFiledId;
     END;
