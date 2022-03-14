@@ -105,9 +105,9 @@ AS
              AND (tis.SubtypeId = temp.SubTypeId
                   OR (tis.SubtypeId IS NULL
                       AND temp.SubTypeId IS NULL))
-             AND (tis.TicketStatus = 'Closed'
+             AND ((tis.TicketStatus = 'Closed'
                   AND DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) < 90)
-             OR (tis.TicketStatus <> 'Closed')
+             OR (tis.TicketStatus <> 'Closed'))
              AND tis.TicketStatus IN
         (
             SELECT TicketStatus
