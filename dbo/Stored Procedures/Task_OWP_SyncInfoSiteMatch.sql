@@ -39,6 +39,7 @@ AS
 	20210113@carlos.nguyen: Sync AdminSiteID on Interval Process- [Redmine: #148606]
 	20210128@carlos.nguyen: Display Match Code - [Redmine: #149347]
 	20210427@carlos.nguyen: Match-code is not displayed - [Redmine: #154164]
+	20220314@carlos.nguyen: Fail to update AdminSiteId - [Redmine: #169899]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -326,7 +327,7 @@ BEGIN
 	 om.OWPHomeId <> tm.OWPHomeId OR
 	 om.OWPAwayId <> tm.OWPAwayId OR
 	 om.IsNeutral <> tm.IsNeutral OR
-	 om.MatchId <> tm.MatchId OR
+	 ISNULL(om.MatchId, 0) <> ISNULL(tm.MatchId, 0) OR
 	 ISNULL(om.MatchCode, '') <> ISNULL(tm.MatchCode, '')
 
 	-- sync TVIds
