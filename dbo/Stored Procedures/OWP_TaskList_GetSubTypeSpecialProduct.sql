@@ -13,6 +13,7 @@ AS
 	20220309@Luca: Initial SP - [Redmine: #169335]
 	
 */
+	-- GET get SubType for OWP task list
     BEGIN
         SET NOCOUNT ON;
         SELECT mr.SubType
