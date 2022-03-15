@@ -31,4 +31,4 @@ UPDATE TicketIssue
   SET 
       LastCommentDate = lc.LastCommentDate
 FROM TicketIssue AS ti
-     INNER JOIN #tblLastComment AS lc ON ti.TicketId = lc.TicketId;
+     INNER JOIN #tblLastComment AS lc WITH(NOLOCK) ON ti.TicketId = lc.TicketId;
