@@ -31,6 +31,7 @@ AS
 	20211130@Tyler: Get pinned prop - [Redmine: #165017]
 	20220302@Liam: Get ticket by subtype - [Redmine: #168624]
 	20220311@Johnny.Thai: Hide Ticket - [Redmine: #169841]
+	20220311@Liam: Performance tuning - [Redmine: #169841]
 */
 
     BEGIN
@@ -76,28 +77,17 @@ AS
              @ActorId = @ActorId;
         SELECT DISTINCT 
                tbltk.TicketId, 
-               owpl.OWPLeagueId, 
-               owpl.OWPLeagueName, 
+               ifm.OWPLeagueId, 
+               ifm.LeagueName 'OWPLeagueName', 
                tl.OwpHomeId, 
                tl.OwpAwayId, 
                ifm.HomeName, 
                ifm.AwayName, 
                tis.TicketType, 
                tis.TicketStatus, 
+               tis.LastCommentDate, 
                ty.TypeName, 
-               tis.SubtypeId AS TicketSubTypeId, 
-               tst.SubtypeName AS TicketSubTypeName, 
-               tm.UserId, 
-               tm.CreatedDate, 
-               tm.[Message], 
                ifm.EventDateTime AS KOTime, 
-               tm.FileId, 
-               tm.Id AS MessageId,
-               CASE
-                   WHEN u.Nickname IS NULL
-                   THEN u.Username
-                   ELSE u.Nickname
-               END AS Username, 
                reader.IsRead, 
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
@@ -105,20 +95,15 @@ AS
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
-             LEFT JOIN TicketSubtype AS tst WITH(NOLOCK) ON tis.TicketId = tst.TypeId
-                                                            AND tis.SubtypeId = tst.SubtypeId
              INNER JOIN TicketIssueEvent AS tl WITH(NOLOCK) ON tis.TicketId = tl.TicketId
              INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId = tl.InfoSiteMatchId
-             INNER JOIN TicketMessage AS tm WITH(NOLOCK) ON tis.TicketId = tm.TicketId
-             INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON owpl.OWPLeagueId = tl.OwpLeagueId
-             INNER JOIN [User] AS u WITH(NOLOCK) ON tm.UserId = u.UserId
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE(@Keyword IS NULL
               OR @Keyword = ''
-              OR owpl.OWPLeagueName LIKE '%' + @Keyword + '%'
+              OR ifm.LeagueName LIKE '%' + @Keyword + '%'
               OR ifm.HomeName LIKE '%' + @Keyword + '%'
               OR ifm.AwayName LIKE '%' + @Keyword + '%')
              AND (@TicketId IS NULL

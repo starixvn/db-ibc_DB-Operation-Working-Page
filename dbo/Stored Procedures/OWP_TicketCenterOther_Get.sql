@@ -30,6 +30,7 @@ AS
 	20211130@Tyler: Get pinned prop - [Redmine: #165017]
 	20220302@Liam: Get ticket by subtype - [Redmine: #168624]
 	20220311@Johnny.Thai: Hide Ticket - [Redmine: #169841]
+	20220311@Liam: Performance tuning - [Redmine: #169841]
 */
 
     BEGIN
@@ -64,17 +65,8 @@ AS
                tl.[Subject], 
                tis.TicketType, 
                tis.TicketStatus, 
+               tis.LastCommentDate, 
                ty.TypeName, 
-               tm.UserId, 
-               tm.Id AS MessageId, 
-               tm.FileId,
-               CASE
-                   WHEN u.Nickname IS NULL
-                   THEN u.Username
-                   ELSE u.Nickname
-               END AS Username, 
-               tm.CreatedDate, 
-               tm.[Message], 
                reader.IsRead, 
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
@@ -83,8 +75,6 @@ AS
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
              INNER JOIN TicketIssueOther AS tl WITH(NOLOCK) ON tis.TicketId = tl.TicketId
-             INNER JOIN TicketMessage AS tm WITH(NOLOCK) ON tis.TicketId = tm.TicketId
-             INNER JOIN [User] AS u WITH(NOLOCK) ON tm.UserId = u.UserId
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
