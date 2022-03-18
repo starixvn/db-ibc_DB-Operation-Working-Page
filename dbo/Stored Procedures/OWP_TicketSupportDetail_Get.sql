@@ -39,8 +39,8 @@ AS
         FROM TicketIssue AS ti
              INNER JOIN TicketIssueSupport AS til WITH(NOLOCK) ON ti.TicketId = til.TicketId
              INNER JOIN TicketType AS tt WITH(NOLOCK) ON tt.TypeId = ti.TicketType
-             INNER JOIN TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = ti.TicketId
-             INNER JOIN [User] AS u WITH(NOLOCK) ON u.UserId = tm.UserId
+             LEFT JOIN TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = ti.TicketId
+             LEFT JOIN [User] AS u WITH(NOLOCK) ON u.UserId = tm.UserId
              LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId
                                                AND ti.SubtypeId = tst.SubtypeId
         WHERE ti.TicketId = @TicketId;
