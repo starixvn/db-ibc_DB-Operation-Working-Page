@@ -17,7 +17,8 @@ AS
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211018@Liam.Pham: Update ticket match detail - [Redmine: #158037]
 	20211130@Mira: Get ticket status - [Redmine: #165017]
-	20220222@Luca: Get TicketSubType - [Redmine: #168624]	
+	20220222@Luca: Get TicketSubType - [Redmine: #168624]
+	20220310@Liam: Save message  - [Redmine: #163767]		
 */
 BEGIN
 	SET NOCOUNT ON
@@ -38,6 +39,7 @@ BEGIN
 		tm.UserId,
 		tm.FileId,
 		ifm.EventDateTime AS KOTime,
+		tm.IsSaved,
 		CASE WHEN u.Nickname IS NULL
 			THEN u.Username
 			ELSE u.Nickname
@@ -48,8 +50,8 @@ BEGIN
 	INNER JOIN TicketIssueEvent AS til ON ti.TicketId=til.TicketId
 	INNER JOIN OWPLeague AS owpl ON owpl.OWPLeagueId=til.OwpLeagueId
 	INNER JOIN TicketType AS tt ON tt.TypeId=ti.TicketType
-	INNER JOIN TicketMessage AS tm ON tm.TicketId=ti.TicketId
-	INNER JOIN [User] AS u ON u.UserId=tm.UserId
+	LEFT JOIN TicketMessage AS tm ON tm.TicketId=ti.TicketId
+	LEFT JOIN [User] AS u ON u.UserId=tm.UserId
 	INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId=til.InfoSiteMatchId
 	LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId AND ti.SubtypeId = tst.SubtypeId
 	WHERE ti.TicketId=@TicketId
