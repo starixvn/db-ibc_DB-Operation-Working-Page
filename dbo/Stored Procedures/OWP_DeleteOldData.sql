@@ -14,6 +14,7 @@ AS
 	20200830@Jacob: Delete Old data of EmployeeWorkingShiftNote] - [Redmine: #137757]	
 	20200918@Carlos.Nguyen: Auto reassign/ Remove script delete old data AutoAssignmentSuspenderHistory - [Redmine: #126964]
 	20201201@Tyler: delete file upload  - [Redmine: #145591]
+	20220329@Carlos.nguyen : Delete script unuse - [Redmine: #166030]
 */
 
     BEGIN
@@ -68,13 +69,7 @@ AS
         DELETE FROM dbo.ReadyTradeStatus
         WHERE ReadyDateTime BETWEEN @FromDateTime AND @ToDateTime;
 
-        -- DELETE AutoAssignmentSuspenderHistory
-        DELETE FROM dbo.AutoAssignmentSuspenderHistory
-        WHERE InTime BETWEEN @FromDateTime AND @ToDateTime;
-
-        -- DELETE AutoAssignmentMatchHistory
-        DELETE FROM dbo.AutoAssignmentMatchHistory
-        WHERE KOTime BETWEEN @FromDateTime AND @ToDateTime;
+        
 
         -- DELETE InfoSiteSyncLog
         DELETE m
