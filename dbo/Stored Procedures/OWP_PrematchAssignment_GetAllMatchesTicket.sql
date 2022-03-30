@@ -12,6 +12,7 @@ AS
       
  Revisions:        
 	20211222@Mira: Integrate my ticket - [Redmine: #163766]
+	20220321@Mira: Get subtype - [Redmine: #170097]
 */
 
     BEGIN
@@ -33,22 +34,27 @@ AS
                END AS LatestUsername, 
                tm.CreatedDate AS LatestCreatedDate, 
                tm.[Message] AS LatestMessage, 
-               reader.IsRead
+               reader.IsRead, 
+               ts.SubtypeId, 
+               ts.SubtypeName
         FROM
         (
             SELECT im.InfoSiteMatchId, 
                    te.TicketId, 
-                   MAX(tm.CreatedDate) MaxDateTime
+                   MAX(tm.CreatedDate) MaxDateTime, 
+                   ti.SubtypeId
             FROM @InfoSiteMatchId AS im
                  INNER JOIN dbo.TicketIssueEvent AS te WITH(NOLOCK) ON im.InfoSiteMatchId = te.InfoSiteMatchId
                  INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = te.TicketId
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
             GROUP BY im.InfoSiteMatchId, 
-                     te.TicketId
+                     te.TicketId, 
+                     ti.SubtypeId
         ) AS x
         LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId
         INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON tm.UserId = u.UserId
         INNER JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
+        LEFT JOIN dbo.TicketSubtype AS ts WITH(NOLOCK) ON ts.SubtypeId = x.SubtypeId
         WHERE tm.CreatedDate = x.MaxDateTime;
     END;

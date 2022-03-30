@@ -21,7 +21,8 @@ Revisions:
  20201110@Tyler: remove other assignment note - [Redmine: #144948]
  20210607@Mira: Link Match Status - [Redmine: #156336]
  20211222@Mira: Integrate my ticket - [Redmine: #163766]
-20220216@Johnny: get match parentId is null only - [Redmine: #168050]
+ 20220216@Johnny: get match parentId is null only - [Redmine: #168050]
+ 20220321@Mira: get AdminsiteId - [Redmine: #170097]
 */
 
     BEGIN
@@ -334,6 +335,7 @@ Revisions:
 
         -- Query InfoSiteMatches --
         SELECT m.InfoSiteMatchId, 
+               m.AdminSiteMatchId, 
                m.LeagueName, 
                m.HomeName, 
                m.AwayName, 
