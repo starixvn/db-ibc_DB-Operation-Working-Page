@@ -1,15 +1,15 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_AutoAssignment_GetInfoSiteMatchResultByRequestLatestId] @LatestedRequestId NVARCHAR(200)
+ALTER PROCEDURE [dbo].[OWP_AutoAssignment_GetInfoSiteMatchResultByRequestId] @RequestId NVARCHAR(200)
 AS
 
 /*  
 Created: 20220329@Johnny.Thai  
-Task : Get Match Info By Latested RequestID
+Task : Get Match Info By RequestID
 DB: bodb_OWP  
   
 Revisions:  
- 20220329@Johnny.Thai : Get Match Info By Latested RequestID - [Redmine: #166030]
+ 20220329@Johnny.Thai : Get Match Info By RequestID - [Redmine: #166030]
 */
 
     BEGIN
@@ -29,5 +29,5 @@ Revisions:
                i.UserId_FTOU, 
                i.UserId_LA
         FROM InfoSiteAutoAssignmentResult AS i
-        WHERE i.RequestId = @LatestedRequestId;
+        WHERE i.RequestId = @RequestId;
     END;
