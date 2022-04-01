@@ -1,8 +1,10 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryAssignedLeagueNames] @ActorId INT, 
-                                                                        @Date    DATETIME
+ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryAssignedLeagueNames] @ActorId    INT, 
+                                                                        @BettypeId  INT, 
+                                                                        @IsTakeOver BIT, 
+                                                                        @Date       DATE
 AS
 
 /*
@@ -24,5 +26,7 @@ Revisions:
              INNER JOIN dbo.PreMatchLeague l WITH(NOLOCK) ON l.PreMatchLeagueId = a.PreMatchLeagueId
              INNER JOIN dbo.OWPLeague ol WITH(NOLOCK) ON ol.OWPLeagueId = l.OWPLeagueId
         WHERE a.UserId = @ActorId
-              AND l.EventDate = @Date;
+              AND l.EventDate = @Date
+              AND a.Bettype = @BettypeId
+              AND a.IsTakeOver = @IsTakeOver;
     END;
