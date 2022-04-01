@@ -4,7 +4,8 @@
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryAssignedLeagueNames] @ActorId    INT, 
                                                                         @BettypeId  INT, 
                                                                         @IsTakeOver BIT, 
-                                                                        @Date       DATE
+                                                                        @Date       DATE, 
+                                                                        @IsDay      BIT
 AS
 
 /*
@@ -28,5 +29,6 @@ Revisions:
         WHERE a.UserId = @ActorId
               AND l.EventDate = @Date
               AND a.Bettype = @BettypeId
-              AND a.IsTakeOver = @IsTakeOver;
+              AND a.IsTakeOver = @IsTakeOver
+              AND l.IsDay = @IsDay;
     END;
