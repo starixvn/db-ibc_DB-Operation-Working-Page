@@ -4,6 +4,7 @@
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryAssignedLeagueNames] @ActorId           INT, 
                                                                         @BettypeId         INT, 
                                                                         @IsTakeOver        BIT, 
+                                                                        @IsDay             BIT, 
                                                                         @PrematchLeagueIds NVARCHAR(MAX)
 AS
 
@@ -33,5 +34,6 @@ Revisions:
              INNER JOIN @tempPrematchLeagueId t ON t.PrematchLeagueId = l.PreMatchLeagueId
         WHERE a.UserId = @ActorId
               AND a.Bettype = @BettypeId
+              AND l.IsDay = @IsDay
               AND a.IsTakeOver = @IsTakeOver;
     END;
