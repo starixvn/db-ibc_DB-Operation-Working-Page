@@ -255,7 +255,7 @@ AS
 	SELECT r.BetType,
 		r.IsSaba
 	FROM @bettype AS r 
-		LEFT JOIN @matchCount AS mc
+		LEFT JOIN @result AS mc
 	ON mc.BetType=r.BetType
 	WHERE mc.BetType IS NULL  
 	
