@@ -104,6 +104,7 @@ AS
 	
 	INSERT INTO @matchCount(
 		[BetType],
+		[IsSaba],
 		[Mj],
 		[M1],
 		[M2],
@@ -119,6 +120,7 @@ AS
 		[Unknown])
 	SELECT
 		ml.BetType,
+		ml.IsSaba,
 		CASE WHEN ml.LeagueCategory='MJ' THEN SUM(ml.MatchCount) ELSE 0 END,
 		CASE WHEN ml.LeagueCategory='M1' THEN SUM(ml.MatchCount) ELSE 0 END,
 		CASE WHEN ml.LeagueCategory='M2' THEN SUM(ml.MatchCount) ELSE 0 END,
@@ -136,11 +138,12 @@ AS
 		INNER JOIN MatchLiveReport AS ml
 	ON b.BetType=ml.BetType
 	WHERE ml.EventDate BETWEEN @FromDate AND @ToDate
-	GROUP BY ml.BetType, ml.LeagueCategory
+	GROUP BY ml.BetType, ml.LeagueCategory, ml.IsSaba
 	
 	--Count number league category each bettype--
 	INSERT INTO @result(
 		[BetType],
+		[IsSaba],
 		[Mj],
 		[M1],
 		[M2],
@@ -155,6 +158,7 @@ AS
 		[Others6],
 		[Unknown])
 	SELECT r.BetType,
+		r.IsSaba,
 		SUM(r.Mj),
 		SUM(r.M1),
 		SUM(r.M2),
@@ -169,7 +173,7 @@ AS
 		SUM(r.[Others6]),
 		SUM(r.[Unknown])
 	FROM @matchCount AS r
-	GROUP BY r.BetType
+	GROUP BY r.BetType, r.IsSaba
 	
 	--Update total each bettype--
 	UPDATE r
