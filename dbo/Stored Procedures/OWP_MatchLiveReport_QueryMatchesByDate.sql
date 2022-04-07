@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_MatchLiveReport_QueryMatchesByDate] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_MatchLiveReport_QueryMatchesByDate] @EventDate DATE
 AS
 
 /*
@@ -18,7 +18,8 @@ Revisions:
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '12:00:00');
         SELECT m.OWPMatchId, 
                mm.MinorBettypeId, 
-               l.OWPLeagueName,
+               l.OWPLeagueName, 
+               m.EventDateTime,
                CASE
                    WHEN l.CategoryId IS NOT NULL
                    THEN rr.[Value]
@@ -33,8 +34,9 @@ Revisions:
              LEFT JOIN dbo.MinorMatch mm ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.RefResource rr ON rr.ResourceId = l.CategoryId
+                                             AND rr.RefName = 'LeagueCategory'
              INNER JOIN dbo.Assignment a ON a.OWPMatchId = m.OWPMatchId
-             INNER JOIN dbo.MatchInfo mi ON mi.MatchStatus = 'Live'
-        WHERE rr.RefName = 'LeagueCategory'
+             INNER JOIN dbo.MatchInfo mi ON mi.OWPMatchId = m.OWPMatchId
+        WHERE mi.MatchStatus = 'Live'
               AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
     END;
