@@ -179,10 +179,11 @@ AS
 	UPDATE r
 	SET r.Total=Mj+M1+M2+M3+M4+Others+Others1+Others2+Others3+Others4+Others5+Others6+Unknown
 	FROM @result AS r
-	
+
 	--SUM real--
 	INSERT INTO @result(
 		BetType, 
+		IsSaba,
 		Total,
 		Mj,
 		M1,
@@ -199,6 +200,7 @@ AS
 		Unknown)
 	SELECT
 		'Real Soccer',
+		0,
 		SUM(r.Mj)+ SUM(r.M1)+ SUM(r.M2)+SUM(r.M3)+ SUM(r.M4)+ SUM(r.Others)+ SUM(r.Others1)+SUM(r.Others2)+SUM(r.Others3)+SUM(r.Others4)+SUM(r.Others5)+SUM(r.Others6)+SUM(r.Unknown),
 		SUM(r.Mj),
 		SUM(r.M1),
@@ -219,6 +221,7 @@ AS
 	--Sum SABA--
 	INSERT INTO @result(
 		BetType, 
+		IsSaba,
 		Total,
 		Mj,
 		M1,
@@ -235,6 +238,7 @@ AS
 		Unknown)
 	SELECT
 		'SABA',
+		1,
 		SUM(r.Mj)+ SUM(r.M1)+ SUM(r.M2)+SUM(r.M3)+ SUM(r.M4)+ SUM(r.Others)+ SUM(r.Others1)+SUM(r.Others2)+SUM(r.Others3)+SUM(r.Others4)+SUM(r.Others5)+SUM(r.Others6)+SUM(r.Unknown),
 		SUM(r.Mj),
 		SUM(r.M1),
@@ -265,7 +269,6 @@ AS
 	
 	UPDATE r
 	SET r.[No]= b.[No],
-		r.IsSaba=b.IsSaba,
 		r.[Order]=b.[Order]
 	FROM @result AS r
 		INNER JOIN @bettype AS b
