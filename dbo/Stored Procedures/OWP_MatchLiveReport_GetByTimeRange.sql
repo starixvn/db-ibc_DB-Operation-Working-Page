@@ -90,7 +90,7 @@ AS
 	(23,'Last Throw In', 0),
 	(24,'Last Goal kick', 0),
 	(25,'Next Goal kick', 0),
-	(26,'Home/Away (2 events)', 0),
+	(26,'Penalty shoot out Home/Away (2 events)', 0),
 	(27,'Which team to kick off (ET)', 0),
 	(28,'Which team to take the first penalty', 0),
 	(NULL,'SABA', 1),
