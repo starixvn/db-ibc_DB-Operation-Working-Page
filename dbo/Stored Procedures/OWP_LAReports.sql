@@ -14,6 +14,7 @@ AS
 	20200817@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 	20210113@Esther: Adding SABA 6mins match to LA Report - [Redmine: #148267]
 	20210907@Liam: Adding SABA 16mins match to LA Report - [Redmine: #160544]
+	20220408@Luca: Adding 5ML to LA Report - [Redmine:#171212]
 */
 
      SET NOCOUNT ON;
@@ -37,6 +38,7 @@ AS
             SUM(a.GoalKick) GoalKick, 
             SUM(a.OtherProducts) OtherProducts, 
             SUM(a.FTCorner) FTCorner, 
+			SUM(a.FiveMajorLeague) FiveML,
             SUM(a.ESoccer5Mins) ESoccer5Mins, 
             SUM(a.ESoccer6Mins) ESoccer6Mins, 
             SUM(a.ESoccer15Mins) ESoccer15Mins,
