@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_MatchLiveReport_QueryMatchesByDate] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_MatchLiveReport_QueryOldMatchesByDate] @EventDate DATE
 AS
 
 /*
@@ -30,13 +30,13 @@ Revisions:
                    THEN 1
                    ELSE 0
                END AS IsSaba
-        FROM dbo.OWPMatch m
-             LEFT JOIN dbo.MinorMatch mm ON m.OWPMatchId = mm.MinorMatchId
+        FROM dbo.OWPMatch_Old m
+             LEFT JOIN dbo.MinorMatch_Old mm ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.RefResource rr ON rr.ResourceId = l.CategoryId
                                              AND rr.RefName = 'LeagueCategory'
-             INNER JOIN dbo.Assignment a ON a.OWPMatchId = m.OWPMatchId
-             INNER JOIN dbo.MatchInfo mi ON mi.OWPMatchId = m.OWPMatchId
+             INNER JOIN dbo.Assignment_Old a ON a.OWPMatchId = m.OWPMatchId
+             INNER JOIN dbo.MatchInfo_Old mi ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
               AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
     END;
