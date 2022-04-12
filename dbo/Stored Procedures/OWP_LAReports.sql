@@ -38,11 +38,11 @@ AS
             SUM(a.GoalKick) GoalKick, 
             SUM(a.OtherProducts) OtherProducts, 
             SUM(a.FTCorner) FTCorner, 
-			SUM(a.FiveMajorLeague) FiveML,
+            SUM(a.FiveMajorLeague) FiveML, 
             SUM(a.ESoccer5Mins) ESoccer5Mins, 
             SUM(a.ESoccer6Mins) ESoccer6Mins, 
-            SUM(a.ESoccer15Mins) ESoccer15Mins,
-			SUM(a.ESoccer16Mins) ESoccer16Mins,
+            SUM(a.ESoccer15Mins) ESoccer15Mins, 
+            SUM(a.ESoccer16Mins) ESoccer16Mins, 
             SUM(a.ESoccer20Mins) ESoccer20Mins, 
             SUM(a.Others) Others
      FROM dbo.LAReport a
