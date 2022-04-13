@@ -1,0 +1,63 @@
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
+ALTER PROCEDURE [dbo].[OWP_MatchLiveReport_QueryOldMatchesByDate] @EventDate DATE
+AS
+
+/*
+Created: 20220401@Tyler
+Task : Match live report
+DB: bodb_OWP	
+
+Revisions:
+	20220401@Tyler: Init SP - [Redmine: #170737]
+*/
+
+    BEGIN
+        SET NOCOUNT ON;
+        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '12:00:00');
+        DECLARE @FM INT= -88, @AIO INT= -89;
+        SELECT DISTINCT 
+               m.OWPMatchId, 
+               mm.MinorBettypeId, 
+               mm.ParentMatchId, 
+               l.OWPLeagueName, 
+               m.EventDateTime,
+               CASE
+                   WHEN l.CategoryId IS NOT NULL
+                   THEN rr.[Value]
+                   ELSE 'Unknown'
+               END AS LeagueCategory,
+               CASE
+                   WHEN CHARINDEX('SABA', l.OWPLeagueName) > 0
+                   THEN 1
+                   ELSE 0
+               END AS IsSaba
+        FROM dbo.OWPMatch_Old m
+             LEFT JOIN dbo.MinorMatch_Old mm ON m.OWPMatchId = mm.MinorMatchId
+             INNER JOIN dbo.OWPLeague l ON m.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN dbo.RefResource rr ON rr.ResourceId = l.CategoryId
+                                             AND rr.RefName = 'LeagueCategory'
+             INNER JOIN dbo.Assignment_Old a ON a.OWPMatchId = m.OWPMatchId
+             INNER JOIN dbo.MatchInfo_Old mi ON mi.OWPMatchId = m.OWPMatchId
+        WHERE mi.MatchStatus = 'Live'
+              AND (mm.MinorBettypeId NOT IN(@FM, @AIO)
+        OR mm.MinorBettypeId IS NULL)
+             AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
+        SELECT DISTINCT 
+               m.OWPMatchId,
+               CASE
+                   WHEN l.CategoryId IS NOT NULL
+                   THEN rr.[Value]
+                   ELSE 'Unknown'
+               END AS LeagueCategory
+        FROM dbo.OWPMatch_Old m
+             LEFT JOIN dbo.MinorMatch_Old mm ON m.OWPMatchId = mm.MinorMatchId
+             INNER JOIN dbo.OWPLeague l ON m.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN dbo.RefResource rr ON rr.ResourceId = l.CategoryId
+                                             AND rr.RefName = 'LeagueCategory'
+             INNER JOIN dbo.MatchInfo_Old mi ON mi.OWPMatchId = m.OWPMatchId
+        WHERE mi.MatchStatus = 'Live'
+              AND mm.MinorBettypeId IS NULL
+              AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
+    END;
