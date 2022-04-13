@@ -16,8 +16,11 @@ Revisions:
     BEGIN
         SET NOCOUNT ON;
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '12:00:00');
-        SELECT m.OWPMatchId, 
+        DECLARE @FM INT= -88, @AIO INT= -89;
+        SELECT DISTINCT 
+               m.OWPMatchId, 
                mm.MinorBettypeId, 
+               mm.ParentMatchId, 
                l.OWPLeagueName, 
                m.EventDateTime,
                CASE
@@ -38,5 +41,23 @@ Revisions:
              INNER JOIN dbo.Assignment a ON a.OWPMatchId = m.OWPMatchId
              INNER JOIN dbo.MatchInfo mi ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
+              AND (mm.MinorBettypeId NOT IN(@FM, @AIO)
+        OR mm.MinorBettypeId IS NULL)
+             AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
+        SELECT DISTINCT 
+               m.OWPMatchId,
+               CASE
+                   WHEN l.CategoryId IS NOT NULL
+                   THEN rr.[Value]
+                   ELSE 'Unknown'
+               END AS LeagueCategory
+        FROM dbo.OWPMatch m
+             LEFT JOIN dbo.MinorMatch mm ON m.OWPMatchId = mm.MinorMatchId
+             INNER JOIN dbo.OWPLeague l ON m.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN dbo.RefResource rr ON rr.ResourceId = l.CategoryId
+                                             AND rr.RefName = 'LeagueCategory'
+             INNER JOIN dbo.MatchInfo mi ON mi.OWPMatchId = m.OWPMatchId
+        WHERE mi.MatchStatus = 'Live'
+              AND mm.MinorBettypeId IS NULL
               AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
     END;
