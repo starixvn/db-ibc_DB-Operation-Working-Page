@@ -17,6 +17,7 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '12:00:00');
         DECLARE @FM INT= -88, @AIO INT= -89;
+        DECLARE @HDP INT= 1, @LA INT= -1002;
         SELECT DISTINCT 
                m.OWPMatchId, 
                mm.MinorBettypeId, 
@@ -43,7 +44,8 @@ Revisions:
         WHERE mi.MatchStatus = 'Live'
               AND (mm.MinorBettypeId NOT IN(@FM, @AIO)
         OR mm.MinorBettypeId IS NULL)
-             AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
+             AND m.EventDateTime BETWEEN @FromDate AND @ToDate
+             AND a.Bettype IN(@HDP, @LA);
         SELECT DISTINCT 
                m.OWPMatchId,
                CASE
