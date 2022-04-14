@@ -21,10 +21,14 @@ GO
 
 CREATE TABLE [dbo].[MatchLiveReport](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
-	[EventDate] DATE NOT NULL,
+	[EventDate] [date] NOT NULL,
 	[LeagueCategory] [nvarchar](20) NOT NULL,
 	[BetType] [nvarchar](100) NOT NULL,
-	[IsSaba] [BIT] NOT NULL,
+	[IsSaba] [bit] NOT NULL,
 	[MatchCount] [int] NOT NULL
 ) ON [OWP_Data]
+GO
+
+CREATE CLUSTERED INDEX IX_MatchLiveReport_EventDate   
+    ON dbo.MatchLiveReport (EventDate);
 GO
