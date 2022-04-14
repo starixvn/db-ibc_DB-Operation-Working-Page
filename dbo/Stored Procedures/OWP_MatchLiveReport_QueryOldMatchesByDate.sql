@@ -49,7 +49,7 @@ Revisions:
         SELECT DISTINCT 
                m.OWPMatchId,
                CASE
-                   WHEN l.CategoryId IS NOT NULL
+                   WHEN l.CategoryId IS NOT NULL AND l.CategoryId > 0
                    THEN rr.[Value]
                    ELSE 'Unknown'
                END AS LeagueCategory
