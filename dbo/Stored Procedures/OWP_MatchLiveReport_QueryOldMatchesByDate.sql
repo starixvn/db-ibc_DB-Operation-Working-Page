@@ -25,7 +25,8 @@ Revisions:
                l.OWPLeagueName, 
                m.EventDateTime,
                CASE
-                   WHEN l.CategoryId IS NOT NULL AND l.CategoryId > 0
+                   WHEN l.CategoryId IS NOT NULL
+                        AND l.CategoryId > 0
                    THEN rr.[Value]
                    ELSE 'Unknown'
                END AS LeagueCategory,
@@ -34,13 +35,13 @@ Revisions:
                    THEN 1
                    ELSE 0
                END AS IsSaba
-        FROM dbo.OWPMatch_Old m
-             LEFT JOIN dbo.MinorMatch_Old mm ON m.OWPMatchId = mm.MinorMatchId
-             INNER JOIN dbo.OWPLeague l ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.RefResource rr ON rr.ResourceId = l.CategoryId
-                                             AND rr.RefName = 'LeagueCategory'
-             INNER JOIN dbo.Assignment_Old a ON a.OWPMatchId = m.OWPMatchId
-             INNER JOIN dbo.MatchInfo_Old mi ON mi.OWPMatchId = m.OWPMatchId
+        FROM dbo.OWPMatch_Old m WITH(NOLOCK)
+             LEFT JOIN dbo.MinorMatch_Old mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+             INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON rr.ResourceId = l.CategoryId
+                                                          AND rr.RefName = 'LeagueCategory'
+             INNER JOIN dbo.Assignment_Old a WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
+             INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
               AND (mm.MinorBettypeId NOT IN(@FM, @AIO)
         OR mm.MinorBettypeId IS NULL)
@@ -49,16 +50,17 @@ Revisions:
         SELECT DISTINCT 
                m.OWPMatchId,
                CASE
-                   WHEN l.CategoryId IS NOT NULL AND l.CategoryId > 0
+                   WHEN l.CategoryId IS NOT NULL
+                        AND l.CategoryId > 0
                    THEN rr.[Value]
                    ELSE 'Unknown'
                END AS LeagueCategory
-        FROM dbo.OWPMatch_Old m
-             LEFT JOIN dbo.MinorMatch_Old mm ON m.OWPMatchId = mm.MinorMatchId
-             INNER JOIN dbo.OWPLeague l ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.RefResource rr ON rr.ResourceId = l.CategoryId
-                                             AND rr.RefName = 'LeagueCategory'
-             INNER JOIN dbo.MatchInfo_Old mi ON mi.OWPMatchId = m.OWPMatchId
+        FROM dbo.OWPMatch_Old m WITH(NOLOCK)
+             LEFT JOIN dbo.MinorMatch_Old mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
+             INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON rr.ResourceId = l.CategoryId
+                                                          AND rr.RefName = 'LeagueCategory'
+             INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
               AND mm.MinorBettypeId IS NULL
               AND m.EventDateTime BETWEEN @FromDate AND @ToDate;
