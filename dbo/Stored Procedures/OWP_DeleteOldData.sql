@@ -15,6 +15,7 @@ AS
 	20200918@Carlos.Nguyen: Auto reassign/ Remove script delete old data AutoAssignmentSuspenderHistory - [Redmine: #126964]
 	20201201@Tyler: delete file upload  - [Redmine: #145591]
 	20220329@Carlos.nguyen : Delete script unuse - [Redmine: #166030]
+	20220415@Luca.Duong: change table AutoAssignmentResult to InfoSiteAutoAssignmentResult [Redmine: #171297]
 */
 
     BEGIN
@@ -50,9 +51,9 @@ AS
         DELETE FROM dbo.UserLog
         WHERE LoggedDate BETWEEN @FromDateTime AND @ToDateTime;
 
-        -- DELETE AutoAssignmentResult            
+        -- DELETE InfoSiteAutoAssignmentResult            
         DELETE m
-        FROM dbo.AutoAssignmentResult m
+        FROM dbo.InfoSiteAutoAssignmentResult m
              INNER JOIN dbo.AutoAssignmentRequest t ON m.RequestId = t.RequestId
         WHERE EventDate BETWEEN @FromDateTime AND @ToDateTime;
 
