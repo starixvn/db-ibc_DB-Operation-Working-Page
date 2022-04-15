@@ -55,7 +55,7 @@ AS
         DELETE m
         FROM dbo.InfoSiteAutoAssignmentResult m
              INNER JOIN dbo.AutoAssignmentRequest t ON m.RequestId = t.RequestId
-        WHERE EventDate BETWEEN @FromDateTime AND @ToDateTime;
+        WHERE t.RequestDate = @Date;
 
         -- DELETE AutoAssignmentRequest
         DELETE m
