@@ -55,12 +55,12 @@ AS
         DELETE m
         FROM dbo.InfoSiteAutoAssignmentResult m
              INNER JOIN dbo.AutoAssignmentRequest t ON m.RequestId = t.RequestId
-        WHERE t.RequestDate = @Date;
+        WHERE CAST(t.RequestDate AS DATE)  = @Date;
 
         -- DELETE AutoAssignmentRequest
         DELETE m
         FROM dbo.AutoAssignmentRequest m
-        WHERE RequestDate = @Date;
+        WHERE CAST(RequestDate AS DATE) = @Date;
 
         -- DELETE AssignmentUploadHistory
         DELETE FROM dbo.AssignmentUploadHistory
