@@ -15,6 +15,7 @@ AS
 	20210113@Esther: Adding SABA 6mins match to LA Report - [Redmine: #148267]
 	20210907@Liam: Adding SABA 16mins match to LA Report - [Redmine: #160544]
 	20220408@Luca: Adding 5ML to LA Report - [Redmine:#171212]
+	20220418@Liam: Adding FTCorner5ML to LA Report - [Redmine:#171212]
 */
 
      SET NOCOUNT ON;
@@ -38,6 +39,7 @@ AS
             SUM(a.GoalKick) GoalKick, 
             SUM(a.OtherProducts) OtherProducts, 
             SUM(a.FTCorner) FTCorner, 
+            SUM(a.FTCorner5ML) FTCorner5ML, 
             SUM(a.FiveMajorLeague) FiveML, 
             SUM(a.ESoccer5Mins) ESoccer5Mins, 
             SUM(a.ESoccer6Mins) ESoccer6Mins, 
