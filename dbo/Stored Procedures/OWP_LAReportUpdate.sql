@@ -15,6 +15,7 @@ Revisions:
 	20210113@Esther: Adding SABA 6mins match to LA Report - [Redmine: #148267]
 	20210907@Liam: Adding SABA 16mins match to LA Report - [Redmine: #160544]
 	20220408@Johnny: Adding 5ML match to LA Report - [Redmine: #171212]
+	20220418@Johnny: Adding FT_Corner_5ML match to LA Report - [Redmine: #171212]
 */
 
      SET NOCOUNT ON;
@@ -54,6 +55,7 @@ Revisions:
       [ESoccer20Mins], 
       [Others], 
       [FiveMajorLeague], 
+      [FTCorner5ML], 
       [CreatedDate]
      )
             SELECT @EventDate, 
@@ -80,8 +82,9 @@ Revisions:
                    [ESoccer16Mins], 
                    [ESoccer20Mins], 
                    [Others], 
-				   [FiveMajorLeague], 
+                   [FiveMajorLeague], 
+                   [FTCorner5ML], 
                    GETDATE()
-            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] [INT], [Username] [VARCHAR](50), [TotalMatches] [INT], [LinkLowerThan3] INT, [LinkX3] INT, [LinkX6] INT, [LinkX9Plus] INT, [ProviderTv] INT, [Provider] INT, [TV] INT, [Reporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT, [FiveMajorLeague] INT);
+            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] [INT], [Username] [VARCHAR](50), [TotalMatches] [INT], [LinkLowerThan3] INT, [LinkX3] INT, [LinkX6] INT, [LinkX9Plus] INT, [ProviderTv] INT, [Provider] INT, [TV] INT, [Reporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT, [FiveMajorLeague] INT, [FTCorner5ML] INT);
      EXEC sp_xml_removedocument 
           @idoc;
