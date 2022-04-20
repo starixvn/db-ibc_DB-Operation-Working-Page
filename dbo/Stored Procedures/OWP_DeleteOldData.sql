@@ -15,6 +15,7 @@ AS
 	20200918@Carlos.Nguyen: Auto reassign/ Remove script delete old data AutoAssignmentSuspenderHistory - [Redmine: #126964]
 	20201201@Tyler: delete file upload  - [Redmine: #145591]
 	20220329@Carlos.nguyen : Delete script unuse - [Redmine: #166030]
+	20220415@Luca.Duong: Archive new plan [Redmine: #171297]
 */
 
     BEGIN
@@ -23,7 +24,7 @@ AS
         IF DATEDIFF(DAY, @Date, GETDATE()) < 30
             BEGIN
                 RETURN;
-            END;
+        END;
         DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
         DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date) + 1, '11:59:59');
 
@@ -50,16 +51,16 @@ AS
         DELETE FROM dbo.UserLog
         WHERE LoggedDate BETWEEN @FromDateTime AND @ToDateTime;
 
-        -- DELETE AutoAssignmentResult            
+        -- DELETE InfoSiteAutoAssignmentResult            
         DELETE m
-        FROM dbo.AutoAssignmentResult m
+        FROM dbo.InfoSiteAutoAssignmentResult m
              INNER JOIN dbo.AutoAssignmentRequest t ON m.RequestId = t.RequestId
-        WHERE EventDate BETWEEN @FromDateTime AND @ToDateTime;
+        WHERE CAST(t.RequestDate AS DATE)  = @Date;
 
         -- DELETE AutoAssignmentRequest
         DELETE m
         FROM dbo.AutoAssignmentRequest m
-        WHERE EventDate = @Date;
+        WHERE CAST(RequestDate AS DATE) = @Date;
 
         -- DELETE AssignmentUploadHistory
         DELETE FROM dbo.AssignmentUploadHistory
@@ -68,8 +69,6 @@ AS
         -- DELETE ReadyTradeStatus
         DELETE FROM dbo.ReadyTradeStatus
         WHERE ReadyDateTime BETWEEN @FromDateTime AND @ToDateTime;
-
-        
 
         -- DELETE InfoSiteSyncLog
         DELETE m
@@ -99,11 +98,6 @@ AS
         -- DELETE MatchInfo
         DELETE m
         FROM dbo.MatchInfo m
-             INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
-
-        -- DELETE MatchMarket
-        DELETE m
-        FROM dbo.MatchMarket m
              INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
 
         -- DELETE MatchNote
