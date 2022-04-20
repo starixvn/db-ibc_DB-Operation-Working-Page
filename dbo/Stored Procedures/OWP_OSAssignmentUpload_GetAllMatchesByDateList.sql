@@ -1,10 +1,3 @@
-USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_OSAssignmentUpload_GetAllMatchesByDateList]    Script Date: 07/22/2021 16:40:09 ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
@@ -22,6 +15,7 @@ Revisions:
 	20210713@Carlos.nguyen: Get spread - [Redmine: #158285]
 	20220113@Mira: Change MatchStatus name [Redmine: #167315]
 	20220516@Luca: Get IsNeutral of match  [Redmine: #172762]
+	20220420@Mira: Get AdminSiteMatchId  [Redmine: #171515]
 
 */
 
@@ -52,8 +46,9 @@ Revisions:
                m.[IPTV], 
                m.[WB], 
                m.[Remark], 
-               u.Username,
-			   m.MatchNo
+               u.Username, 
+               m.MatchNo, 
+               m.AdminSiteMatchId AS 'AdminsiteMatchId'
         FROM dbo.OSMatch m WITH(NOLOCK)
              INNER JOIN @tempMatch t ON m.EventDate = t.EventDate
              LEFT JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
@@ -64,18 +59,18 @@ Revisions:
                a.[AssignmentType], 
                a.[BettypeName], 
                a.[UserId], 
-               a.[AssignmentNote],
-			   u.[Username],
-			   u.[Nickname]
+               a.[AssignmentNote], 
+               u.[Username], 
+               u.[Nickname]
         FROM dbo.OSAssignment a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
              INNER JOIN @tempMatch t ON t.EventDate = m.EventDate
-			 INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId;
+             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId;
 
         --- Select OSMaxbet
         SELECT a.[OSMatchId], 
                a.[BettypeName], 
-               a.[MaxBet],
+               a.[MaxBet], 
                a.[Spread]
         FROM dbo.OSMaxBet a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
