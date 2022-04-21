@@ -26,7 +26,7 @@ AS
             ma.OWPMatchId, 
             mn.ParentMatchId, 
             ma.EventDateTime
-     FROM dbo.Assignment a WITH(NOLOCK)
+     FROM dbo.Assignment_Old a WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = a.OWPMatchId
           INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
