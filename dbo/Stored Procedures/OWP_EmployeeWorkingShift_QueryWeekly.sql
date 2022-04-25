@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @SiteId INT
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @SiteId INT
 	,@FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
@@ -35,6 +35,7 @@ AS
 	 20191011@Tyler.Dang: Alter Note to Remark [Redmine: #121878]
 	 20191028@Leo.Vo: Get Modified By [Redmine: #122604]
 	 20200714@Tyler.Dang: Add department filter [Redmine: #137416]
+	 20220421@Carlos.nguyen: Include EmployeeId [Redmine: #171771]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -166,6 +167,7 @@ BEGIN
 
 			
 	SELECT u.UserId
+		,u.EmployeeId
 		,u.Nickname
 		,u.Username
 		,u.[Address]
