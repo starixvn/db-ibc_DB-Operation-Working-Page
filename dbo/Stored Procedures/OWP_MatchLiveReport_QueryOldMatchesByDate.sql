@@ -11,11 +11,12 @@ DB: bodb_OWP
 
 Revisions:
 	20220401@Tyler: Init SP - [Redmine: #170737]
+	20220422@Tyler: Fix ToDate - [Redmine: #171867]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '12:00:00');
+        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:00');
         DECLARE @FM INT= -88, @AIO INT= -89;
         DECLARE @HDP INT= 1, @LA INT= -1002;
         SELECT DISTINCT 
