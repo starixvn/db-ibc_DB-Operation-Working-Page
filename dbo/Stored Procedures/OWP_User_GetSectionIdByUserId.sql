@@ -6,12 +6,16 @@ DB: bodb_OWP
 Revisions:
 	20220428@Johnny: Init SP - [Redmine: #171934]  	 
 */
-CREATE PROCEDURE [dbo].[OWP_User_GetSectionIdByUserId] @UserId int
-	 
-AS	
-BEGIN
-	SET NOCOUNT ON
-	SELECT u.SectionId	 
-	FROM dbo.[User] as u
-	WHERE u.UserId = @UserId
-END
+
+ALTER PROCEDURE [dbo].[OWP_User_GetSectionIdByUserId] @UserId INT
+AS
+    BEGIN
+        SET NOCOUNT ON;
+        SELECT CASE
+                   WHEN u.SectionId IS NULL
+                   THEN 0
+                   ELSE u.SectionId
+               END
+        FROM dbo.[User] AS u
+        WHERE u.UserId = @UserId;
+    END;
