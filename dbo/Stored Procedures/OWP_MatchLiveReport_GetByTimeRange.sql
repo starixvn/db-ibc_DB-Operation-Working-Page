@@ -10,6 +10,7 @@ ALTER PROCEDURE [dbo].[OWP_MatchLiveReport_GetByTimeRange] @FromDate DATE, @ToDa
       
 Revisions:  
 	20220401@carlos.nguyen: Initial SP - [Redmine: #170737]  
+	20220505@Luca.Duong: add new league group - [Redmine: #172331]  
 	
 */
 
@@ -32,6 +33,14 @@ AS
 		[Others4] INT,
 		[Others5] INT,
 		[Others6] INT,
+		[MJT1] INT,
+		[MJT2] INT,
+		[CLMJQ] INT,
+		[CLMNQ] INT,
+		[INTMJ] INT,
+		[INTMN] INT,
+		[WorldCup] INT,
+		[EURO] INT,
 		[Unknown] INT
 	)
 	
@@ -53,6 +62,14 @@ AS
 		[Others4] INT,
 		[Others5] INT,
 		[Others6] INT,
+		[MJT1] INT,
+		[MJT2] INT,
+		[CLMJQ] INT,
+		[CLMNQ] INT,
+		[INTMJ] INT,
+		[INTMN] INT,
+		[WorldCup] INT,
+		[EURO] INT,
 		[Unknown] INT
 	)
 	
@@ -117,6 +134,14 @@ AS
 		[Others4],
 		[Others5],
 		[Others6],
+		[MJT1] ,
+		[MJT2] ,
+		[CLMJQ] ,
+		[CLMNQ] ,
+		[INTMJ] ,
+		[INTMN] ,
+		[WorldCup],
+		[EURO] ,
 		[Unknown])
 	SELECT
 		ml.BetType,
@@ -133,6 +158,14 @@ AS
 		CASE WHEN ml.LeagueCategory='Others 4' THEN SUM(ml.MatchCount) ELSE 0 END,
 		CASE WHEN ml.LeagueCategory='Others 5' THEN SUM(ml.MatchCount) ELSE 0 END,
 		CASE WHEN ml.LeagueCategory='Others 6' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='MJ.T1' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='MJ.T2' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='CL.MJ.Q' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='CL.MN.Q' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='INT.MJ' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='INT.MN' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='World Cup' THEN SUM(ml.MatchCount) ELSE 0 END,
+		CASE WHEN ml.LeagueCategory='EURO' THEN SUM(ml.MatchCount) ELSE 0 END,
 		CASE WHEN ml.LeagueCategory='Unknown' THEN SUM(ml.MatchCount) ELSE 0 END
 	FROM @bettype AS b
 		INNER JOIN MatchLiveReport AS ml
@@ -156,6 +189,14 @@ AS
 		[Others4],
 		[Others5],
 		[Others6],
+		[MJT1] ,
+		[MJT2] ,
+		[CLMJQ] ,
+		[CLMNQ] ,
+		[INTMJ] ,
+		[INTMN] ,
+		[WorldCup],
+		[EURO],
 		[Unknown])
 	SELECT r.BetType,
 		r.IsSaba,
@@ -171,6 +212,14 @@ AS
 		SUM(r.[Others4]),
 		SUM(r.[Others5]),
 		SUM(r.[Others6]),
+		SUM(r.[MJT1]) ,
+		SUM(r.[MJT2]) ,
+		SUM(r.[CLMJQ]) ,
+		SUM(r.[CLMNQ]) ,
+		SUM(r.[INTMJ]) ,
+		SUM(r.[INTMN]) ,
+		SUM(r.[WorldCup]),
+		SUM(r.[EURO]),
 		SUM(r.[Unknown])
 	FROM @matchCount AS r
 	GROUP BY r.BetType, r.IsSaba
@@ -197,11 +246,19 @@ AS
 		Others4,
 		Others5,
 		Others6,
+		[MJT1] ,
+		[MJT2] ,
+		[CLMJQ] ,
+		[CLMNQ] ,
+		[INTMJ] ,
+		[INTMN] ,
+		[WorldCup],
+		[EURO] ,
 		Unknown)
 	SELECT
 		'Real Soccer',
 		0,
-		SUM(r.Mj)+ SUM(r.M1)+ SUM(r.M2)+SUM(r.M3)+ SUM(r.M4)+ SUM(r.Others)+ SUM(r.Others1)+SUM(r.Others2)+SUM(r.Others3)+SUM(r.Others4)+SUM(r.Others5)+SUM(r.Others6)+SUM(r.Unknown),
+		SUM(r.Mj)+ SUM(r.M1)+ SUM(r.M2)+SUM(r.M3)+ SUM(r.M4)+ SUM(r.Others)+ SUM(r.Others1)+SUM(r.Others2)+SUM(r.Others3)+SUM(r.Others4)+SUM(r.Others5)+SUM(r.Others6)+SUM(r.[MJT1])+SUM(r.[MJT2])++SUM(r.[CLMJQ])+SUM(r.[CLMNQ])+SUM(r.[INTMJ])+SUM(r.[INTMN])+SUM(r.[WorldCup])+SUM(r.[EURO])+SUM(r.Unknown),
 		SUM(r.Mj),
 		SUM(r.M1),
 		SUM(r.M2),
@@ -214,6 +271,14 @@ AS
 		SUM(r.Others4),
 		SUM(r.Others5),
 		SUM(r.Others6),
+		SUM(r.[MJT1]) ,
+		SUM(r.[MJT2]) ,
+		SUM(r.[CLMJQ]) ,
+		SUM(r.[CLMNQ]) ,
+		SUM(r.[INTMJ]) ,
+		SUM(r.[INTMN]) ,
+		SUM(r.[WorldCup]),
+		SUM(r.[EURO]) ,
 		SUM(r.Unknown)
 	FROM @result AS r
 	WHERE r.IsSaba=0 OR r.IsSaba IS NULL
@@ -235,11 +300,19 @@ AS
 		Others4,
 		Others5,
 		Others6,
+		[MJT1] ,
+		[MJT2] ,
+		[CLMJQ] ,
+		[CLMNQ] ,
+		[INTMJ] ,
+		[INTMN] ,
+		[WorldCup],
+		[EURO] ,
 		Unknown)
 	SELECT
 		'SABA',
 		1,
-		SUM(r.Mj)+ SUM(r.M1)+ SUM(r.M2)+SUM(r.M3)+ SUM(r.M4)+ SUM(r.Others)+ SUM(r.Others1)+SUM(r.Others2)+SUM(r.Others3)+SUM(r.Others4)+SUM(r.Others5)+SUM(r.Others6)+SUM(r.Unknown),
+		SUM(r.Mj)+ SUM(r.M1)+ SUM(r.M2)+SUM(r.M3)+ SUM(r.M4)+ SUM(r.Others)+ SUM(r.Others1)+SUM(r.Others2)+SUM(r.Others3)+SUM(r.Others4)+SUM(r.Others5)+SUM(r.Others6)+SUM(r.[MJT1])+SUM(r.[MJT2])++SUM(r.[CLMJQ])+SUM(r.[CLMNQ])+SUM(r.[INTMJ])+SUM(r.[INTMN])+SUM(r.[WorldCup])+SUM(r.[EURO])+SUM(r.Unknown),
 		SUM(r.Mj),
 		SUM(r.M1),
 		SUM(r.M2),
@@ -252,6 +325,14 @@ AS
 		SUM(r.Others4),
 		SUM(r.Others5),
 		SUM(r.Others6),
+		SUM(r.[MJT1]) ,
+		SUM(r.[MJT2]) ,
+		SUM(r.[CLMJQ]) ,
+		SUM(r.[CLMNQ]) ,
+		SUM(r.[INTMJ]) ,
+		SUM(r.[INTMN]) ,
+		SUM(r.[WorldCup]),
+		SUM(r.[EURO]) ,
 		SUM(r.Unknown)
 	FROM @result AS r
 	WHERE r.IsSaba=1
@@ -289,6 +370,14 @@ AS
 		CASE WHEN r.Others4= 0 THEN NULL ELSE r.Others4 END AS Others4,
 		CASE WHEN r.Others5= 0 THEN NULL ELSE r.Others5 END AS Others5,
 		CASE WHEN r.Others6= 0 THEN NULL ELSE r.Others6 END AS Others6,
+		CASE WHEN r.[MJT1]= 0 THEN NULL ELSE  r.[MJT1] END AS MJT1,
+		CASE WHEN r.[MJT2]= 0 THEN NULL ELSE r.[MJT2] END AS MJT2,
+		CASE WHEN r.[CLMJQ]= 0 THEN NULL ELSE r.[CLMJQ] END AS CLMJQ,
+		CASE WHEN r.[CLMNQ]= 0 THEN NULL ELSE r.[CLMNQ] END AS CLMNQ,
+		CASE WHEN r.[INTMJ]= 0 THEN NULL ELSE r.[INTMJ] END AS INTMJ,
+		CASE WHEN r.[INTMN]= 0 THEN NULL ELSE r.[INTMN] END AS INTMN,
+		CASE WHEN r.[WorldCup]= 0 THEN NULL ELSE r.[WorldCup]  END AS WorldCup,
+		CASE WHEN r.[EURO]= 0 THEN NULL ELSE r.[EURO] END AS Euro,
 		CASE WHEN r.Unknown= 0 THEN NULL ELSE r.Unknown END AS Unknown,
 		r.IsSaba
 	FROM @result AS r
