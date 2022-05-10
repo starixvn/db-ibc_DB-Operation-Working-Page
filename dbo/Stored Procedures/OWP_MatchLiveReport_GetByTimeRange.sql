@@ -226,7 +226,7 @@ AS
 	
 	--Update total each bettype--
 	UPDATE r
-	SET r.Total=Mj+M1+M2+M3+M4+Others+Others1+Others2+Others3+Others4+Others5+Others6+Unknown
+	SET r.Total=Mj+M1+M2+M3+M4+Others+Others1+Others2+Others3+Others4+Others5+Others6+[MJT1]+[MJT2]+[CLMJQ]+[CLMNQ]+[INTMJ]+[INTMN]+[WorldCup]+[EURO]+Unknown
 	FROM @result AS r
 
 	--SUM real--
