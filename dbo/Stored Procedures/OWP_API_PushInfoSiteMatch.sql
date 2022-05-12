@@ -1,11 +1,4 @@
-﻿USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_API_PushInfoSiteMatch]    Script Date: 12/14/2021 11:21:23 AM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
-
+﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
@@ -35,6 +28,7 @@ AS
 	20211119@CarlosNguyen: Enhance-auto-assignment - [Redmine: #163362]
 	20211214@Liam.Pham: Sync ProviderTV - [Redmine: #163362]
 	20220224@tyler: upgrade XML package - [Redmine: #168050]   
+	20220510@Mira: Update IsDeleted for re-created events - [Redmine: #172559]   
 */
 BEGIN
 	SET NOCOUNT ON
@@ -186,12 +180,6 @@ BEGIN
 
 	CREATE CLUSTERED INDEX IX_tbl#tblInfoSiteMatch_InfoSiteMatchId
 	ON #tblInfoSiteMatch(InfoSiteMatchId ASC)
-	
-	-- not process on records deleted or not updated
-	DELETE tism
-	FROM #tblInfoSiteMatch AS tism
-	INNER JOIN dbo.InfoSiteMatch AS dism WITH (NOLOCK) ON tism.InfoSiteMatchId = dism.InfoSiteMatchId
-	WHERE dism.IsDeleted = 1 
 
 	-- insert new league
 	INSERT INTO dbo.OWPLeague (OWPLeagueName)
@@ -375,7 +363,7 @@ BEGIN
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
-	WHEN MATCHED AND t.[IsDeleted] = 0
+	WHEN MATCHED
 		THEN
 			UPDATE
 			SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
