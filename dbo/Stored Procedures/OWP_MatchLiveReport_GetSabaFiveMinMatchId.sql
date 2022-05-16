@@ -31,13 +31,13 @@ Revisions:
                SELECT COUNT(m.OWPHomeId) AS CountMatch, 
                       MIN(m.OWPMatchId) AS OWPMatchId
                FROM OWPMatch AS m
-                    INNER JOIN @tempOWPMatch AS temp ON m.OWPMatchId = temp.OWPMatchId
+                    inner join OWPLeague l on m.OWPLeagueId = l.OWPLeagueId where l.OWPLeagueName = 'SABA ELITE FRIENDLY Virtual PES 21 - 5 Mins Play'
                GROUP BY m.OWPLeagueId, 
                         m.OWPHomeId, 
                         m.OWPAwayId, 
                         m.EventDate, 
                         DATEPART(HOUR, m.EventDateTime);
         SELECT m.OWPMatchId
-        FROM @tempOWPMatch AS m
-        WHERE m.CountMatch = 4;
+        FROM @tempOWPMatch AS m, @tempMatchId AS temp
+        WHERE m.CountMatch = 4 and m.OWPMatchId=temp.OWPMatchId;
     END;
