@@ -13,6 +13,7 @@ DB: bodb_OWP
 Revisions:
 	20201223@Mira: Init SP [Redmine: #146962]
 	20220113@Mira: Change MatchStatus name [Redmine: #167315]
+	20220516@luca: add [IsNeutral] [Redmine: #172762]
 */
 
     BEGIN
@@ -28,6 +29,7 @@ Revisions:
          LeagueId      INT, 
          League        NVARCHAR(500), 
          Home          NVARCHAR(200), 
+         IsNeutral     BIT, 
          Away          NVARCHAR(200), 
          Category      VARCHAR(100), 
          NoHDP         VARCHAR(20), 
@@ -55,6 +57,7 @@ Revisions:
                       0, 
                       League, 
                       Home, 
+                      IsNeutral, 
                       Away, 
                       Category, 
                       NoHDP, 
@@ -66,7 +69,7 @@ Revisions:
                       [Provider], 
                       OtherProvider, 
                       MatchOffer
-               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchNo DOUBLE PRECISION, Reporter VARCHAR(2000), MatchStatus VARCHAR(15), [DateTime] DATETIME, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000))
+               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchNo DOUBLE PRECISION, Reporter VARCHAR(2000), MatchStatus VARCHAR(15), [DateTime] DATETIME, League NVARCHAR(500), Home NVARCHAR(200), IsNeutral BIT, Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000))
                ORDER BY [DateTime] ASC;
         EXEC sp_xml_removedocument 
              @idoc;
@@ -93,6 +96,7 @@ Revisions:
            AND m.Home = om.HomeName
            AND m.Away = om.AwayName
            AND m.EventDateTime = om.EventDateTime
+           AND m.IsNeutral = om.IsNeutral
             WHEN MATCHED
             THEN UPDATE SET 
                             om.[MatchNo] = m.[MatchNo], 
@@ -114,6 +118,7 @@ Revisions:
             THEN
               INSERT([LeagueId], 
                      [HomeName], 
+                     [IsNeutral], 
                      [AwayName], 
                      [MatchNo], 
                      [Reporter], 
@@ -135,6 +140,7 @@ Revisions:
               VALUES
         (m.[LeagueId], 
          m.[Home], 
+         m.[IsNeutral], 
          m.[Away], 
          m.[MatchNo], 
          m.[Reporter], 
@@ -163,6 +169,7 @@ Revisions:
              INNER JOIN dbo.OSMatch om WITH(NOLOCK) ON m.LeagueId = om.LeagueId
                                                        AND m.Home = om.HomeName
                                                        AND m.Away = om.AwayName
+                                                       AND m.IsNeutral = om.IsNeutral
                                                        AND m.[EventDateTime] = om.[EventDateTime];
 
         -- SELECT the result
