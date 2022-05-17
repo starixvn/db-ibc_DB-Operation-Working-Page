@@ -15,29 +15,40 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @tempMatchId TABLE(Id INT);
-        INSERT INTO @tempMatchId(Id)
+        DECLARE @tempMatchId TABLE(OWPMatchId INT);
+        INSERT INTO @tempMatchId(OWPMatchId)
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@Id, ',') u OPTION(MAXRECURSION 0);
         DECLARE @tempOWPMatch TABLE
-        (OWPMatchId INT, 
-         CountMatch INT
+        (OWPMatchId    INT, 
+         OWPLeagueId   INT, 
+         OWPHomeId     INT, 
+         OWPAwayId     INT, 
+         EventDate     DATETIME, 
+         EventDateTime DATETIME
         );
         INSERT INTO @tempOWPMatch
         (OWPMatchId, 
-         CountMatch
+         OWPLeagueId, 
+         OWPHomeId, 
+         OWPAwayId, 
+         EventDate, 
+         EventDateTime
         )
-               SELECT COUNT(m.OWPHomeId) AS CountMatch, 
-                      MIN(m.OWPMatchId) AS OWPMatchId
+               SELECT m.OWPMatchId, 
+                      m.OWPLeagueId, 
+                      m.OWPHomeId, 
+                      m.OWPAwayId, 
+                      m.EventDate, 
+                      m.EventDateTime
                FROM OWPMatch AS m
-                    inner join OWPLeague l on m.OWPLeagueId = l.OWPLeagueId where l.OWPLeagueName = 'SABA ELITE FRIENDLY Virtual PES 21 - 5 Mins Play'
-               GROUP BY m.OWPLeagueId, 
-                        m.OWPHomeId, 
-                        m.OWPAwayId, 
-                        m.EventDate, 
-                        DATEPART(HOUR, m.EventDateTime);
-        SELECT m.OWPMatchId
-        FROM @tempOWPMatch AS m, @tempMatchId AS temp
-        WHERE m.CountMatch = 4 and m.OWPMatchId=temp.OWPMatchId;
+                    INNER JOIN @tempMatchId AS temp ON m.OWPMatchId = temp.OWPMatchId;
+        SELECT MIN(tm.OWPMatchId) AS OWPMatchId
+        FROM @tempOWPMatch AS tm
+        GROUP BY tm.OWPLeagueId, 
+                 tm.OWPHomeId, 
+                 tm.OWPAwayId, 
+                 tm.EventDate, 
+                 DATEPART(HOUR, tm.EventDateTime);
     END;
