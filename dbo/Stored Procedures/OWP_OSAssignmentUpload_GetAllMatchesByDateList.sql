@@ -21,6 +21,8 @@ Revisions:
 	202010506@Tyler: Get more props [Redmine: #153499]
 	20210713@Carlos.nguyen: Get spread - [Redmine: #158285]
 	20220113@Mira: Change MatchStatus name [Redmine: #167315]
+	20220516@Luca: Get IsNeutral of match  [Redmine: #172762]
+
 */
 
     BEGIN
@@ -34,7 +36,8 @@ Revisions:
         -- Select OSMatch
         SELECT m.[OSMatchId], 
                l.[LeagueName] AS 'League', 
-               m.[HomeName] AS 'Home', 
+               m.[HomeName] AS 'Home',
+			   m.IsNeutral,
                m.[AwayName] AS 'Away', 
                m.[OfferLiveStatus] AS 'OfferLive', 
                m.[EventDateTime] AS 'DateTime', 
