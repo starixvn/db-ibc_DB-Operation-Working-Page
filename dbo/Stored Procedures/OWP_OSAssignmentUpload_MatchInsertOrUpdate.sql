@@ -96,7 +96,6 @@ Revisions:
            AND m.Home = om.HomeName
            AND m.Away = om.AwayName
            AND m.EventDateTime = om.EventDateTime
-           AND m.IsNeutral = om.IsNeutral
             WHEN MATCHED
             THEN UPDATE SET 
                             om.[MatchNo] = m.[MatchNo], 
@@ -169,7 +168,7 @@ Revisions:
              INNER JOIN dbo.OSMatch om WITH(NOLOCK) ON m.LeagueId = om.LeagueId
                                                        AND m.Home = om.HomeName
                                                        AND m.Away = om.AwayName
-                                                       AND m.IsNeutral = om.IsNeutral
+
                                                        AND m.[EventDateTime] = om.[EventDateTime];
 
         -- SELECT the result
