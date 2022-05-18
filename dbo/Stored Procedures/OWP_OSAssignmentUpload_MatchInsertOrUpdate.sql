@@ -112,7 +112,8 @@ Revisions:
                             om.[IPTV] = m.[IPTV], 
                             om.[WB] = m.[WB], 
                             om.[Remark] = m.[Remark], 
-                            om.[UploadedBy] = @UserId
+                            om.[UploadedBy] = @UserId,
+							om.[IsNeutral] = m.[IsNeutral]
             WHEN NOT MATCHED BY TARGET
             THEN
               INSERT([LeagueId], 
