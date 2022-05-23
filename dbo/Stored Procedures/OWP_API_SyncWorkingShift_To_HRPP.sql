@@ -15,7 +15,7 @@ Revisions:
 AS
     BEGIN
         SET NOCOUNT ON;
-        SELECT ew.EmployeeId AS EmployeeID, 
+        SELECT u.EmployeeId AS EmployeeID, 
                ew.ShiftDate AS ScheduleDate, 
                ew.ShiftStartTime, 
                ew.ShiftEndTime, 
@@ -34,5 +34,6 @@ AS
         WHERE u.LocationCode = N'CTI'
               AND ewp.IsPublished = 1
               AND CONVERT(DATE, ew.ShiftDate) BETWEEN @FromDate AND @ToDate
+              AND u.EmployeeId IS NOT NULL
         ORDER BY ew.ShiftStartTime;
     END;
