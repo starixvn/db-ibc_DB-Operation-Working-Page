@@ -19,6 +19,7 @@ Revisions:
  20210328@Carlos.Nguyen: Enhance OS Live Assignment - Phase 2 [Redmine: #155608]
  20210713@Carlos.nguyen: Get spread - [Redmine: #158285]
  20220113@Carlos.Nguyen: Link to AdminSite matches and filter by status [Redmine: #167315]
+ 20220517@Liam.Pham : Add IsNeutral [Redmine: #172762]
  
 */
 
@@ -48,7 +49,8 @@ Revisions:
          [IPTV]             VARCHAR(100), 
          [WB]               VARCHAR(100), 
          [Remark]           VARCHAR(2000), 
-         [LinkMode]         VARCHAR(20)
+         [LinkMode]         VARCHAR(20), 
+         [IsNeutral]        BIT
         );
         INSERT INTO @tblLinkedMatches(mode)
                SELECT t.val
@@ -80,7 +82,8 @@ Revisions:
          [IPTV], 
          [WB], 
          [Remark], 
-         [LinkMode]
+         [LinkMode], 
+         [IsNeutral]
         )
                -- Select OSMatch  
                SELECT m.[OSMatchId], 
@@ -108,7 +111,8 @@ Revisions:
                                OR m.[AdminsiteMatchId] = 0
                           THEN 'UnLinked Match'
                           ELSE 'Linked Match'
-                      END
+                      END, 
+                      m.[IsNeutral]
                FROM dbo.OSMatch m
                     INNER JOIN @tblSports AS tbls ON tbls.sport = m.Sport
                     INNER JOIN @tblOfferLives AS tblol ON tblol.offerLive = m.OfferLiveStatus
@@ -136,7 +140,8 @@ Revisions:
                m.[Service], 
                m.[IPTV], 
                m.[WB], 
-               m.[Remark]
+               m.[Remark], 
+               m.[IsNeutral]
         FROM @tblOsMatch m
              INNER JOIN @tblLinkedMatches AS lm ON LOWER(m.LinkMode) = LOWER(lm.mode)
         ORDER BY m.[DateTime] ASC;
@@ -157,7 +162,7 @@ Revisions:
         --- Select OSMaxbet  
         SELECT a.[OSMatchId], 
                a.[BettypeName], 
-               a.[MaxBet],
+               a.[MaxBet], 
                a.[Spread]
         FROM dbo.OSMaxBet a
              INNER JOIN @tblOsMatch m ON m.OSMatchId = a.OSMatchId
