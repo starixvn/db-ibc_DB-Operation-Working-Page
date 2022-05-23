@@ -18,8 +18,8 @@ Revisions:
         DECLARE @tempMatchId TABLE(OWPMatchId INT);
         INSERT INTO @tempMatchId(OWPMatchId)
                SELECT DISTINCT 
-                      val
-               FROM fnc_SplitStrings(@Id, ',') u OPTION(MAXRECURSION 0);
+                      value
+               FROM STRING_SPLIT(@Id, ',');
         DECLARE @tempOWPMatch TABLE
         (OWPMatchId    INT, 
          OWPLeagueId   INT, 
