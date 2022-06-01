@@ -27,6 +27,7 @@ Revisions:
 	20190719@Tyler.Dang: Reorder User Management by Username - [Redmine: #117125]
 	20191011@Kane.Le: Get User Group - [Redmine: #121765]
 	20191206@Carlos.Nguyen:  Update language - [Redmine: #124940]
+	20220531@Liam.Pham: Hide section [Redmine: #173255]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -92,6 +93,8 @@ BEGIN
 			@LocationCode IS NULL
 			OR @LocationCode = ISNULL(u.LocationCode, 'None')
 			)
+		AND ( u.SectionId NOT IN (17,23,28)
+		   OR u.SectionId IS NULL )
 
 	IF @PageIndex IS NOT NULL
 		AND @PageSize IS NOT NULL
