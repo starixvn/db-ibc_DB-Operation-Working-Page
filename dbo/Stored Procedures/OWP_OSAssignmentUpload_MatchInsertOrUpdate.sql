@@ -14,6 +14,7 @@ Revisions:
 	20201223@Mira: Init SP [Redmine: #146962]
 	20220113@Mira: Change MatchStatus name [Redmine: #167315]
 	20220516@luca: add [IsNeutral] [Redmine: #172762]
+	20220610@Liam: add Sport condition [Redmine: #173765]
 */
 
     BEGIN
@@ -95,6 +96,7 @@ Revisions:
         ON m.LeagueId = om.LeagueId
            AND m.Home = om.HomeName
            AND m.Away = om.AwayName
+           AND m.Sport = om.Sport
            AND m.EventDateTime = om.EventDateTime
             WHEN MATCHED
             THEN UPDATE SET 
@@ -112,8 +114,8 @@ Revisions:
                             om.[IPTV] = m.[IPTV], 
                             om.[WB] = m.[WB], 
                             om.[Remark] = m.[Remark], 
-                            om.[UploadedBy] = @UserId,
-							om.[IsNeutral] = m.[IsNeutral]
+                            om.[UploadedBy] = @UserId, 
+                            om.[IsNeutral] = m.[IsNeutral]
             WHEN NOT MATCHED BY TARGET
             THEN
               INSERT([LeagueId], 
@@ -169,7 +171,7 @@ Revisions:
              INNER JOIN dbo.OSMatch om WITH(NOLOCK) ON m.LeagueId = om.LeagueId
                                                        AND m.Home = om.HomeName
                                                        AND m.Away = om.AwayName
-
+                                                       AND m.Sport = om.Sport
                                                        AND m.[EventDateTime] = om.[EventDateTime];
 
         -- SELECT the result
