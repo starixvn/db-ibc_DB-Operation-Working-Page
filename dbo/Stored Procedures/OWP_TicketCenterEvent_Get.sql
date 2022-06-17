@@ -108,7 +108,6 @@ AS
              AND (tis.SubtypeId = temp.SubTypeId
                   OR (tis.SubtypeId IS NULL
                       AND temp.SubTypeId IS NULL))
-             AND DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) <= 30
              AND tis.TicketStatus IN
         (
             SELECT TicketStatus
