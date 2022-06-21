@@ -1,13 +1,3 @@
-USE [bodb_OWP];
-GO
-
-/****** Object:  StoredProcedure [dbo].[OWP_TicketCenterEvent_Get]    Script Date: 3/2/2022 9:41:25 AM ******/
-
-SET ANSI_NULLS ON;
-GO
-SET QUOTED_IDENTIFIER ON;
-GO
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenterEvent_Get] @ActorId        INT, 
@@ -32,6 +22,7 @@ AS
 	20220302@Liam: Get ticket by subtype - [Redmine: #168624]
 	20220311@Johnny.Thai: Hide Ticket - [Redmine: #169841]
 	20220311@Liam: Performance tuning - [Redmine: #169841]
+	20220613@Johnny.Thai: Hide ticket without any comment in 30 days  - [Redmine: #173994]
 */
 
     BEGIN
@@ -117,7 +108,6 @@ AS
              AND (tis.SubtypeId = temp.SubTypeId
                   OR (tis.SubtypeId IS NULL
                       AND temp.SubTypeId IS NULL))
-             AND DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) < 90
              AND tis.TicketStatus IN
         (
             SELECT TicketStatus
