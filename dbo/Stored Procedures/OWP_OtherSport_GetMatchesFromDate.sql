@@ -11,7 +11,7 @@ AS
     
  Revisions:
 	20220112@Tyler: Initial SP - [Redmine: #167315]
-	
+	20220419@Mira: Get offerLive - [Redmine: #171515]
 */
 
     BEGIN
@@ -22,7 +22,12 @@ AS
                m.HomeName, 
                m.AwayName, 
                m.Sport, 
-               m.EventDate
+               m.EventDate,
+               CASE m.OfferLiveStatus
+                   WHEN 'live'
+                   THEN 1
+                   ELSE 0
+               END AS OfferLive
         FROM dbo.OSMatch m WITH(NOLOCK)
              INNER JOIN OSLeague l WITH(NOLOCK) ON m.LeagueId = l.OSLeagueId
         WHERE m.EventDateTime >= @EventDate;
