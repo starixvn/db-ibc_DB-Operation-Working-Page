@@ -1,7 +1,7 @@
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_OSAssignmentUpload_GetAllMatchesByDateList] @EventDates NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_OSAssignmentUpload_GetAllMatchesByDateList] @FromDate DATE, 
+                                                                       @ToDate   DATE
 AS
 
 /*
@@ -16,22 +16,19 @@ Revisions:
 	20220113@Mira: Change MatchStatus name [Redmine: #167315]
 	20220516@Luca: Get IsNeutral of match  [Redmine: #172762]
 	20220420@Mira: Get AdminSiteMatchId  [Redmine: #171515]
-
+	20220701@Johnny: Update condition get OS info [Redmine: #174437]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @tempMatch TABLE(EventDate DATE);
-        INSERT INTO @tempMatch
-               SELECT DISTINCT 
-                      val
-               FROM fnc_SplitStrings(@EventDates, ',') u OPTION(MAXRECURSION 0);
+        SET @FromDate = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
+        SET @ToDate = DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
 
         -- Select OSMatch
         SELECT m.[OSMatchId], 
                l.[LeagueName] AS 'League', 
-               m.[HomeName] AS 'Home',
-			   m.IsNeutral,
+               m.[HomeName] AS 'Home', 
+               m.IsNeutral, 
                m.[AwayName] AS 'Away', 
                m.[OfferLiveStatus] AS 'OfferLive', 
                m.[EventDateTime] AS 'DateTime', 
@@ -50,9 +47,9 @@ Revisions:
                m.MatchNo, 
                m.AdminSiteMatchId AS 'AdminsiteMatchId'
         FROM dbo.OSMatch m WITH(NOLOCK)
-             INNER JOIN @tempMatch t ON m.EventDate = t.EventDate
              LEFT JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
-             LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = m.UploadedBy;
+             LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = m.UploadedBy
+        WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;
 
         -- Select OSAssignment
         SELECT a.[OSMatchId], 
@@ -64,8 +61,8 @@ Revisions:
                u.[Nickname]
         FROM dbo.OSAssignment a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
-             INNER JOIN @tempMatch t ON t.EventDate = m.EventDate
-             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId;
+             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId
+       WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;
 
         --- Select OSMaxbet
         SELECT a.[OSMatchId], 
@@ -74,5 +71,5 @@ Revisions:
                a.[Spread]
         FROM dbo.OSMaxBet a WITH(NOLOCK)
              INNER JOIN dbo.OSMatch m WITH(NOLOCK) ON m.OSMatchId = a.OSMatchId
-             INNER JOIN @tempMatch t ON t.EventDate = m.EventDate;
+        WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;
     END;
