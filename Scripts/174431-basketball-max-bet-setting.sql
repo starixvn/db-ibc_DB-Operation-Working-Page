@@ -45,6 +45,11 @@ CREATE TABLE OSWeekMatchOption(
 	[label] VARCHAR(100)
 )
 
+CREATE TABLE OSStatusOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	[label] VARCHAR(100)
+)
+
 CREATE TABLE OSOfferLineOption(
 	Id INT IDENTITY(1,1) PRIMARY KEY,
 	[label] VARCHAR(100)
@@ -131,3 +136,29 @@ VALUES ('MNL'),
 ('2&4 HDP'),
 ('2&4 OU'),
 ('2&4 OE')
+
+INSERT INTO OSStatusOption([label])
+VALUES ('Active'),
+('Inactive')
+
+INSERT INTO OSRoundOption([label])
+VALUES ('Pre Season'),
+('Regular Season'),
+('Consolation'),
+('PlayOffs'),
+('Semifinal'),
+('Final'),
+('All Star Game'),
+('Qualification'),
+('Group Phase'),
+('Quater Final'),
+('1st Round'),
+('2nd Round'),
+('3rd Place')
+
+INSERT INTO OSCategoryOption([label])
+VALUES ('Major'),
+('Minor 1'),
+('Minor 2'),
+('Minor 3'),
+('Minor 4')
