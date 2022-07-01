@@ -20,11 +20,14 @@ Revisions:
  20210713@Carlos.nguyen: Get spread - [Redmine: #158285]
  20220113@Carlos.Nguyen: Link to AdminSite matches and filter by status [Redmine: #167315]
  20220517@Liam.Pham : Add IsNeutral [Redmine: #172762]
+ 20220629@Liam.Pham : Modify OS Event Upload [Redmine: #174437]
  
 */
 
     BEGIN
         SET NOCOUNT ON;
+        SET @FromDate = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
+        SET @ToDate = DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
         DECLARE @tblLinkedMatches TABLE(mode VARCHAR(50));
         DECLARE @tblSports TABLE(sport VARCHAR(50));
         DECLARE @tblOfferLives TABLE(offerLive VARCHAR(15));
@@ -117,7 +120,7 @@ Revisions:
                     INNER JOIN @tblSports AS tbls ON tbls.sport = m.Sport
                     INNER JOIN @tblOfferLives AS tblol ON tblol.offerLive = m.OfferLiveStatus
                     INNER JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
-               WHERE m.EventDate BETWEEN @FromDate AND @ToDate;
+               WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;
 
         -- select OSMatch
         SELECT m.[OSMatchId], 
