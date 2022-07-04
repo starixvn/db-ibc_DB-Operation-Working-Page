@@ -1,4 +1,4 @@
-﻿DROP TABLE OSBasketballInfo
+﻿/*DROP TABLE OSBasketballInfo
 DROP TABLE OSBasketballRegionOption
 DROP TABLE OSBasketballCategoryOption
 DROP TABLE OSBasketballRoundOption
@@ -6,7 +6,7 @@ DROP TABLE OSBasketballWeekMatchOption
 DROP TABLE OSBasketballOfferLineOption
 DROP TABLE OSBasketballBetDelayOption
 DROP TABLE OSBasketballProviderOption
-DROP TABLE OSBasketballBettypeOption
+DROP TABLE OSBasketballBettypeOption*/
 CREATE TABLE OSLeagueSetting(
  Id INT IDENTITY(1,1) PRIMARY KEY,
  LeagueId INT NOT NULL,
@@ -15,12 +15,15 @@ CREATE TABLE OSLeagueSetting(
  CategoryId INT,
  WeekMatchId INT,
  BetDelayId INT,
- FromDate TIME,
- ToDate TIME,
+ KOFromTime TIME,
+ KOToTime TIME,
  Remark VARCHAR(2000),
  ManualUpdateScore BIT,
  IptvOnly BIT
  )
+
+ CREATE INDEX idx_league_id
+ON OSLeagueSetting (LeagueId);
 
  CREATE INDEX idx_league_id
 ON OSLeagueSetting (LeagueId);
