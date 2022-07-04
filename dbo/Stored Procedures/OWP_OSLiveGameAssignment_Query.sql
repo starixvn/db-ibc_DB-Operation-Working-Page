@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_OSLiveGameAssignment_Query] @FromDate      DATE, 
-                                                       @ToDate        DATE, 
+ALTER PROCEDURE [dbo].[OWP_OSLiveGameAssignment_Query] @FromDate      DATETIME, 
+                                                       @ToDate        DATETIME, 
                                                        @Sports        VARCHAR(500), 
                                                        @OfferLives    VARCHAR(500), 
                                                        @LinkedMatches VARCHAR(500)

@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_OSAssignmentUpload_GetMatchIdsByDateList] @FromDate DATE, 
-                                                                     @ToDate   DATE
+ALTER PROCEDURE [dbo].[OWP_OSAssignmentUpload_GetMatchIdsByDateList] @FromDate DATETIME, 
+                                                                     @ToDate   DATETIME
 AS
 
 /*
