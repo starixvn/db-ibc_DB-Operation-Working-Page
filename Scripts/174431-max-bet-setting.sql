@@ -1,118 +1,39 @@
-﻿/*DROP TABLE OSBasketballInfo
-DROP TABLE OSBasketballRegionOption
-DROP TABLE OSBasketballCategoryOption
-DROP TABLE OSBasketballRoundOption
-DROP TABLE OSBasketballWeekMatchOption
-DROP TABLE OSBasketballOfferLineOption
-DROP TABLE OSBasketballBetDelayOption
-DROP TABLE OSBasketballProviderOption
-DROP TABLE OSBasketballBettypeOption*/
+﻿/*
+Created: 20220701@Carlos
+Task : Get OS league category option
+DB: bodb_OWP
+
+Revisions:
+	20220701@Carlos: Initial - [Redmine: #174431]	
+*/
+
+/*
+DROP TABLE OSLeagueSetting
+DROP TABLE OSBasketballInfo
+DROP TABLE OSRegionOption
+DROP TABLE OSCategoryOption
+DROP TABLE OSRoundOption
+DROP TABLE OSWeekMatchOption
+DROP TABLE OSOfferLineOption
+DROP TABLE OSBetDelayOption
+DROP TABLE OSProviderOption
+DROP TABLE OSStatusOption
+DROP TABLE OSBettypeOption
+*/
+
 CREATE TABLE OSLeagueSetting(
- Id INT IDENTITY(1,1) PRIMARY KEY,
- LeagueId INT NOT NULL,
- Active BIT,
- RegionId INT,
- CategoryId INT,
- WeekMatchId INT,
- BetDelayId INT,
- KOFromTime TIME,
- KOToTime TIME,
- Remark VARCHAR(2000),
- ManualUpdateScore BIT,
- IptvOnly BIT
- )
-
- CREATE INDEX idx_league_id
-ON OSLeagueSetting (LeagueId);
-
- CREATE INDEX idx_league_id
-ON OSLeagueSetting (LeagueId);
-
- CREATE TABLE OSRegionOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSCategoryOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSRoundOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSWeekMatchOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSStatusOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSOfferLineOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSBetDelayOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSProviderOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSBettypeOption(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	[label] VARCHAR(100)
-)
-
-CREATE TABLE OSLeagueRound(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	LeagueSettingId INT NOT NULL,
-	RoundId INT
-)
-
-CREATE INDEX idx_league_id
-ON OSLeagueRound (LeagueSettingId);
-
-CREATE TABLE OSLeagueOfferLine(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	LeagueSettingId INT NOT NULL,
-	OfferLineId INT
-)
-
-CREATE INDEX idx_league_id
-ON OSLeagueOfferLine (LeagueSettingId);
-
-CREATE TABLE OSLeagueProvider(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	LeagueSettingId INT NOT NULL,
-	ProviderId INT
-)
-
-CREATE INDEX idx_league_id
-ON OSLeagueProvider (LeagueSettingId);
-
-
-CREATE TABLE OSBettype(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	LeagueSettingId INT NOT NULL,
-	BettypeId INT
-)
-
-CREATE INDEX idx_league_id
-ON OSBettype (LeagueSettingId);
-
-CREATE TABLE OSLeagueMaxbet(
-	Id INT IDENTITY(1,1) PRIMARY KEY,
-	LeagueSettingId INT NOT NULL,
+	LeagueSettingId INT IDENTITY(1,1) PRIMARY KEY,
+	OSLeagueId INT NOT NULL,
+	IsActive BIT,
+	RegionId INT,
+	CategoryId INT,
+	WeekMatchId INT,
+	BetDelayId INT,
+	KOFromTime TIME,
+	KOToTime TIME,
+	Remark VARCHAR(2000),
+	IsManualUpdateScore BIT,
+	IsIptvOnly BIT,
 	MaxbetHDP MONEY,
 	MaxbetOU MONEY,
 	SpreadHDP MONEY,
@@ -120,9 +41,91 @@ CREATE TABLE OSLeagueMaxbet(
 )
 
 CREATE INDEX idx_league_id
-ON OSLeagueMaxbet (LeagueSettingId);
+ON OSLeagueSetting (LeagueSettingId);
 
-INSERT INTO OSBettypeOption([label])
+CREATE TABLE OSRegionOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSCategoryOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSRoundOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSWeekMatchOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSStatusOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSOfferLineOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSBetDelayOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSProviderOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSBettypeOption(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	Label VARCHAR(100)
+)
+
+CREATE TABLE OSSettingRound(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	LeagueSettingId INT NOT NULL,
+	RoundId INT
+)
+
+CREATE INDEX idx_league_id
+ON OSSettingRound (LeagueSettingId);
+
+CREATE TABLE OSSettingOfferLine(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	LeagueSettingId INT NOT NULL,
+	OfferLineId INT
+)
+
+CREATE INDEX idx_league_id
+ON OSSettingOfferLine (LeagueSettingId);
+
+CREATE TABLE OSSettingProvider(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	LeagueSettingId INT NOT NULL,
+	ProviderId INT
+)
+
+CREATE INDEX idx_league_id
+ON OSSettingProvider (LeagueSettingId);
+
+
+CREATE TABLE OSSettingBettype(
+	Id INT IDENTITY(1,1) PRIMARY KEY,
+	LeagueSettingId INT NOT NULL,
+	BettypeId INT
+)
+
+CREATE INDEX idx_league_id
+ON OSSettingBettype (LeagueSettingId);
+
+INSERT INTO OSBettypeOption(Label)
 VALUES ('MNL'),
 ('HDP'),
 ('OU'),
@@ -140,11 +143,11 @@ VALUES ('MNL'),
 ('2&4 OU'),
 ('2&4 OE')
 
-INSERT INTO OSStatusOption([label])
+INSERT INTO OSStatusOption(Label)
 VALUES ('Active'),
 ('Inactive')
 
-INSERT INTO OSRoundOption([label])
+INSERT INTO OSRoundOption(Label)
 VALUES ('Pre Season'),
 ('Regular Season'),
 ('Consolation'),
@@ -159,9 +162,76 @@ VALUES ('Pre Season'),
 ('2nd Round'),
 ('3rd Place')
 
-INSERT INTO OSCategoryOption([label])
+INSERT INTO OSCategoryOption(Label)
 VALUES ('Major'),
 ('Minor 1'),
 ('Minor 2'),
 ('Minor 3'),
 ('Minor 4')
+
+INSERT INTO OSRegionOption(Label)
+VALUES
+('3x3 Challenge'),
+('3x3 Europe'),
+('3x3 World'),
+('America'),
+('Africa'),
+('Asia'),
+('Europe'),
+('USA'),
+('Others')
+
+INSERT INTO OSWeekMatchOption(Label)
+VALUES
+('2nd'),
+('3rd'),
+('4th'),
+('5th'),
+('6th'),
+('7th'),
+('8th'),
+('9th'),
+('10th'),
+('11th'),
+('12th'),
+('13th'),
+('14th'),
+('15th'),
+('16th'),
+('17th'),
+('18th'),
+('19th'),
+('20th'),
+('21th'),
+('22th'),
+('23th'),
+('24th'),
+('25th'),
+('26th'),
+('27th'),
+('28th')
+
+INSERT INTO OSOfferLineOption(Label)
+VALUES
+('Offer 2 Lines'),
+('Offer 3 Lines'),
+('Offer 6 Lines'),
+('HDP: Offer 2 Lines'),
+('HDP: Offer 3 Lines'),
+('HDP: Offer 6 Lines'),
+('OU: Offer 2 Lines'),
+('OU: Offer 3 Lines'),
+('OU: Offer 6 Lines')
+
+INSERT INTO OSBetDelayOption(Label)
+VALUES
+('Bet Delay 4s'),
+('Bet Delay 6s'),
+('Bet Delay 10s'),
+('Bet Delay 15s')
+
+INSERT INTO OSProviderOption(Label)
+VALUES
+('CMT'),
+('Venue Feed'),
+('TV Feed')
