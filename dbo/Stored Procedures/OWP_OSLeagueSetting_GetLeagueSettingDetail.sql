@@ -15,11 +15,51 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
+        DECLARE @Rounds NVARCHAR(MAX);
+        DECLARE @OfferLines NVARCHAR(MAX);
+        DECLARE @Providers NVARCHAR(MAX);
+        DECLARE @BetTypes NVARCHAR(MAX);
 
-        -- Select League Setting
+        -- Round
+        SELECT @Rounds =
+        (
+            SELECT STRING_AGG(ro.Label, ',')
+            FROM dbo.OSSettingRound lr
+                 INNER JOIN dbo.OSRoundOption ro WITH(NOLOCK) ON ro.Id = lr.RoundId
+            WHERE lr.LeagueSettingId = @LeagueSettingId
+        );
+
+        -- OfferLines
+        SELECT @OfferLines =
+        (
+            SELECT STRING_AGG(ofo.Label, ',')
+            FROM dbo.OSSettingOfferLine so
+                 INNER JOIN dbo.OSOfferLineOption ofo WITH(NOLOCK) ON ofo.Id = so.OfferLineId
+            WHERE so.LeagueSettingId = @LeagueSettingId
+        );
+
+        -- Provider
+        SELECT @Providers =
+        (
+            SELECT STRING_AGG(po.Label, ',')
+            FROM dbo.OSSettingProvider lp
+                 INNER JOIN dbo.OSProviderOption po WITH(NOLOCK) ON po.Id = lp.ProviderId
+            WHERE lp.LeagueSettingId = @LeagueSettingId
+        );
+
+        -- Bettype
+        SELECT @BetTypes =
+        (
+            SELECT STRING_AGG(bo.Label, ',')
+            FROM dbo.OSSettingBettype sb
+                 INNER JOIN dbo.OSBettypeOption bo WITH(NOLOCK) ON bo.Id = sb.BettypeId
+            WHERE sb.LeagueSettingId = @LeagueSettingId
+        );
+
+        -- Select League Setting detail
         SELECT ls.LeagueSettingId, 
                ol.LeagueName, 
-               ls.IsActive, 
+               ol.IsActive, 
                ro.Label AS Region, 
                co.Label AS Category, 
                wm.Label AS WeekMatch, 
@@ -32,7 +72,11 @@ Revisions:
                ls.SpreadHDP, 
                ls.SpreadOU, 
                ls.MaxbetHDP, 
-               ls.MaxbetOU
+               ls.MaxbetOU, 
+               @Rounds AS Rounds, 
+               @OfferLines AS OfferLines, 
+               @Providers AS Providers, 
+               @BetTypes AS BetTypes
         FROM dbo.OSLeagueSetting ls
              INNER JOIN dbo.OSLeague ol WITH(NOLOCK) ON ol.OSLeagueId = ls.OSLeagueId
              INNER JOIN dbo.OSRegionOption ro WITH(NOLOCK) ON ro.Id = ls.RegionId
@@ -40,32 +84,4 @@ Revisions:
              INNER JOIN dbo.OSWeekMatchOption wm WITH(NOLOCK) ON wm.Id = ls.WeekMatchId
              INNER JOIN dbo.OSBetDelayOption bd WITH(NOLOCK) ON bd.Id = ls.BetDelayId
         WHERE ls.LeagueSettingId = @LeagueSettingId;
-
-        -- select Round
-        SELECT lr.LeagueSettingId, 
-               ro.Label AS Round
-        FROM dbo.OSSettingRound lr
-             INNER JOIN dbo.OSRoundOption ro WITH(NOLOCK) ON ro.Id = lr.RoundId
-        WHERE lr.LeagueSettingId = @LeagueSettingId;
-
-        -- select OfferLines
-        SELECT ol.LeagueSettingId, 
-               ro.Label AS OfferLine
-        FROM dbo.OSSettingOfferLine ol
-             INNER JOIN dbo.OSRoundOption ro WITH(NOLOCK) ON ro.Id = ol.OfferLineId
-        WHERE ol.LeagueSettingId = @LeagueSettingId;
-
-        -- select Provider
-        SELECT lp.LeagueSettingId, 
-               po.Label AS Provider
-        FROM dbo.OSSettingProvider lp
-             INNER JOIN dbo.OSProviderOption po WITH(NOLOCK) ON po.Id = lp.ProviderId
-        WHERE lp.LeagueSettingId = @LeagueSettingId;
-
-		-- select Bettype
-        SELECT lb.LeagueSettingId, 
-               po.Label AS Provider
-        FROM dbo.OSSettingBettype lb
-             INNER JOIN dbo.OSProviderOption po WITH(NOLOCK) ON po.Id = lb.BettypeId
-        WHERE lb.LeagueSettingId = @LeagueSettingId;
     END;
