@@ -24,7 +24,6 @@ DROP TABLE OSBettypeOption
 CREATE TABLE OSLeagueSetting(
 	LeagueSettingId INT IDENTITY(1,1) PRIMARY KEY,
 	OSLeagueId INT NOT NULL,
-	IsActive BIT,
 	RegionId INT,
 	CategoryId INT,
 	WeekMatchId INT,
@@ -39,6 +38,9 @@ CREATE TABLE OSLeagueSetting(
 	SpreadHDP MONEY,
 	SpreadOU MONEY
 )
+
+ALTER TABLE OSLeague
+   ADD  IsActive BIT NOT NULL DEFAULT(0)
 
 CREATE INDEX idx_league_id
 ON OSLeagueSetting (LeagueSettingId);
