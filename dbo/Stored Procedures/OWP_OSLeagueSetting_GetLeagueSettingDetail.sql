@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [OWP_OSLeagueSetting_GetLeagueSettingDetail] @LeagueSettingId INT
+ALTER PROCEDURE [dbo].[OWP_OSLeagueSetting_GetLeagueSettingDetail] @LeagueSettingId INT
 AS
 
 /*
@@ -79,9 +79,9 @@ Revisions:
                @BetTypes AS BetTypes
         FROM dbo.OSLeagueSetting ls
              INNER JOIN dbo.OSLeague ol WITH(NOLOCK) ON ol.OSLeagueId = ls.OSLeagueId
-             INNER JOIN dbo.OSRegionOption ro WITH(NOLOCK) ON ro.Id = ls.RegionId
-             INNER JOIN dbo.OSCategoryOption co WITH(NOLOCK) ON co.Id = ls.CategoryId
-             INNER JOIN dbo.OSWeekMatchOption wm WITH(NOLOCK) ON wm.Id = ls.WeekMatchId
-             INNER JOIN dbo.OSBetDelayOption bd WITH(NOLOCK) ON bd.Id = ls.BetDelayId
+             LEFT JOIN dbo.OSRegionOption ro WITH(NOLOCK) ON ro.Id = ol.RegionId
+             LEFT JOIN dbo.OSCategoryOption co WITH(NOLOCK) ON co.Id = ol.CategoryId
+             LEFT JOIN dbo.OSWeekMatchOption wm WITH(NOLOCK) ON wm.Id = ls.WeekMatchId
+             LEFT JOIN dbo.OSBetDelayOption bd WITH(NOLOCK) ON bd.Id = ls.BetDelayId
         WHERE ls.LeagueSettingId = @LeagueSettingId;
     END;
