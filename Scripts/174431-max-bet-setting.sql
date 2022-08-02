@@ -1,4 +1,6 @@
-﻿/*
+﻿
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*
 Created: 20220701@Carlos
 Task : Get OS league category option
 DB: bodb_OWP
