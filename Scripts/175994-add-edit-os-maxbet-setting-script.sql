@@ -122,8 +122,24 @@ ALTER TABLE OSLeagueSetting
 DROP COLUMN BetDelayId;
 
 UPDATE OSLeagueSetting 
-SET KOToTime ='16:01:00'
-WHERE LeagueSettingId =11
+SET KOFromTime =DATEADD(MINUTE, 1, KOFromTime)
+WHERE KOFromTime is not null and KOToTime is null 
 
+UPDATE OSRegionOption
+SET [Label]= '3x3 Challenge'
+WHERE [Label]= '3x3 Challenger'
+
+UPDATE OSWeekMatchOption
+SET [Label]= '21st'
+WHERE [Label]= '21th'
+
+UPDATE OSWeekMatchOption
+SET [Label]= '22nd'
+WHERE [Label]= '22th'
+
+UPDATE OSWeekMatchOption
+SET [Label]= '23rd'
+WHERE [Label]= '23th'
+ 
 DROP TABLE OSStatusOption
 DROP PROCEDURE OWP_OSLeagueSetting_GetStatusOption
