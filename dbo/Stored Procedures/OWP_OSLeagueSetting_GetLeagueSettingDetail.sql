@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20220705@Mira: Initial - [Redmine: #174431]	
+	20220809@Liam: correct betdelay - [Redmine: #175994]
 */
 
     BEGIN
@@ -19,11 +20,12 @@ Revisions:
         DECLARE @OfferLines NVARCHAR(MAX);
         DECLARE @Providers NVARCHAR(MAX);
         DECLARE @BetTypes NVARCHAR(MAX);
+        DECLARE @BetDelay NVARCHAR(MAX);
 
         -- Round
         SELECT @Rounds =
         (
-            SELECT STRING_AGG(ro.Label, ',')
+            SELECT STRING_AGG(ro.Id, ',')
             FROM dbo.OSSettingRound lr
                  INNER JOIN dbo.OSRoundOption ro WITH(NOLOCK) ON ro.Id = lr.RoundId
             WHERE lr.LeagueSettingId = @LeagueSettingId
@@ -32,7 +34,7 @@ Revisions:
         -- OfferLines
         SELECT @OfferLines =
         (
-            SELECT STRING_AGG(ofo.Label, ',')
+            SELECT STRING_AGG(ofo.Id, ',')
             FROM dbo.OSSettingOfferLine so
                  INNER JOIN dbo.OSOfferLineOption ofo WITH(NOLOCK) ON ofo.Id = so.OfferLineId
             WHERE so.LeagueSettingId = @LeagueSettingId
@@ -41,7 +43,7 @@ Revisions:
         -- Provider
         SELECT @Providers =
         (
-            SELECT STRING_AGG(po.Label, ',')
+            SELECT STRING_AGG(po.Id, ',')
             FROM dbo.OSSettingProvider lp
                  INNER JOIN dbo.OSProviderOption po WITH(NOLOCK) ON po.Id = lp.ProviderId
             WHERE lp.LeagueSettingId = @LeagueSettingId
@@ -50,9 +52,18 @@ Revisions:
         -- Bettype
         SELECT @BetTypes =
         (
-            SELECT STRING_AGG(bo.Label, ',')
+            SELECT STRING_AGG(bo.Id, ',')
             FROM dbo.OSSettingBettype sb
                  INNER JOIN dbo.OSBettypeOption bo WITH(NOLOCK) ON bo.Id = sb.BettypeId
+            WHERE sb.LeagueSettingId = @LeagueSettingId
+        );
+
+        --Betdelay 
+        SELECT @BetDelay =
+        (
+            SELECT STRING_AGG(bo.Id, ',')
+            FROM dbo.OSSettingBetDelay sb
+                 INNER JOIN dbo.OSBetDelayOption bo WITH(NOLOCK) ON bo.Id = sb.BetDelayId
             WHERE sb.LeagueSettingId = @LeagueSettingId
         );
 
@@ -63,7 +74,6 @@ Revisions:
                ro.Label AS Region, 
                co.Label AS Category, 
                wm.Label AS WeekMatch, 
-               bd.Label AS BetDelay, 
                ls.KOFromTime, 
                ls.KOToTime, 
                ls.Remark, 
@@ -76,12 +86,12 @@ Revisions:
                @Rounds AS Rounds, 
                @OfferLines AS OfferLines, 
                @Providers AS Providers, 
-               @BetTypes AS BetTypes
+               @BetTypes AS BetTypes, 
+               @BetDelay AS BetDelay
         FROM dbo.OSLeagueSetting ls
              INNER JOIN dbo.OSLeague ol WITH(NOLOCK) ON ol.OSLeagueId = ls.OSLeagueId
              LEFT JOIN dbo.OSRegionOption ro WITH(NOLOCK) ON ro.Id = ol.RegionId
              LEFT JOIN dbo.OSCategoryOption co WITH(NOLOCK) ON co.Id = ol.CategoryId
              LEFT JOIN dbo.OSWeekMatchOption wm WITH(NOLOCK) ON wm.Id = ls.WeekMatchId
-             LEFT JOIN dbo.OSBetDelayOption bd WITH(NOLOCK) ON bd.Id = ls.BetDelayId
         WHERE ls.LeagueSettingId = @LeagueSettingId;
     END;
