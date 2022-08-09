@@ -8,7 +8,7 @@ ALTER PROCEDURE OWP_OSLeagueSetting_Add @UserId      INT,
                                         @RoundId     VARCHAR(100), 
                                         @WeekMatchId INT, 
                                         @OfferLineId VARCHAR(100), 
-                                        @BetDelayId  VARCHAR(100),
+                                        @BetDelayId  VARCHAR(100), 
                                         @ProviderId  VARCHAR(100), 
                                         @FromTime    TIME, 
                                         @ToTime      TIME, 
@@ -40,9 +40,10 @@ Revisions:
         DECLARE @tblOfferLine TABLE(Id INT);
         DECLARE @tblProvider TABLE(Id INT);
         DECLARE @tblBettype TABLE(Id INT);
-		DECLARE @tblBetDelay TABLE(Id INT);
+        DECLARE @tblBetDelay TABLE(Id INT);
         DECLARE @OSLeagueId INT;
         DECLARE @OSSettingId INT;
+        DECLARE @IsActive NVARCHAR(MAX);
         DECLARE @RoundInfo NVARCHAR(MAX);
         DECLARE @RegionInfo NVARCHAR(MAX);
         DECLARE @CategoryInfo NVARCHAR(MAX);
@@ -65,9 +66,9 @@ Revisions:
         INSERT INTO @tblBettype(Id)
                SELECT NULLIF(value, '')
                FROM STRING_SPLIT(@Bettype, ',');
-		INSERT INTO @tblBetDelay(Id)
-				SELECT NULLIF(value, '')
-               FROM STRING_SPLIT(@BetDelayId, ','); 
+        INSERT INTO @tblBetDelay(Id)
+               SELECT NULLIF(value, '')
+               FROM STRING_SPLIT(@BetDelayId, ',');
         IF EXISTS
         (
             SELECT 1
@@ -105,7 +106,6 @@ Revisions:
         INSERT INTO OSLeagueSetting
         (OSLeagueId, 
          WeekMatchId, 
-         BetDelayId, 
          KOFromTime, 
          KOToTime, 
          Remark, 
@@ -119,7 +119,6 @@ Revisions:
         VALUES
         (@OSLeagueId, 
          @WeekMatchId, 
-         @BetDelayId, 
          @FromTime, 
          @ToTime, 
          @Remark, 
@@ -159,7 +158,7 @@ Revisions:
         )
                SELECT @OSSettingId, 
                       r.Id
-               FROM @tblBettype AS r;
+               FROM @tblProvider AS r;
 
         --Bettype--
         INSERT INTO OSSettingBettype
@@ -168,67 +167,96 @@ Revisions:
         )
                SELECT @OSSettingId, 
                       r.Id
-               FROM @tblProvider AS r;
+               FROM @tblBettype AS r;
+        --BetDelay--
+        INSERT INTO OSSettingBetDelay
+        (LeagueSettingId, 
+         BetDelayId
+        )
+               SELECT @OSSettingId, 
+                      r.Id
+               FROM @tblBetDelay AS r;
         -- Write Log
+        --Region
         SELECT @RegionInfo = STRING_AGG(o.Label, ',')
         FROM OSRegionOption o
         WHERE o.Id = @RegionId;
+        --Category
         SELECT @CategoryInfo = oc.Label
         FROM OSCategoryOption oc
         WHERE oc.Id = @CategoryId;
+        --Round
         SELECT @RoundInfo = STRING_AGG(o.Label, ',')
         FROM OSRoundOption o, 
              @tblRound r
         WHERE o.Id = r.Id;
+        --Weekmatch
         SELECT @WeekMatchInfo = ow.Label
         FROM OSWeekMatchOption ow
         WHERE ow.Id = @WeekMatchId;
+        --OfferLines
         SELECT @OfferLinesInfo = STRING_AGG(ofl.Label, ',')
         FROM OSOfferLineOption ofl, 
              @tblOfferLine tfl
         WHERE ofl.Id = tfl.Id;
-        SELECT @BetDelayInfo = ob.Label
-        FROM OSBetDelayOption ob, @tblBetDelay bd
-        WHERE ob.Id = bd.Id;
-        SELECT @ProviderInfo = op.Label
-        FROM OSProviderOption op
-        WHERE op.Id = @ProviderId;
+        --BetDelay
+        SELECT @BetDelayInfo = STRING_AGG(ob.Label, ',')
+        FROM OSBetDelayOption ob, 
+             @tblBetDelay tbd
+        WHERE ob.Id = tbd.Id;
+        --Provider
+        SELECT @ProviderInfo = STRING_AGG(op.Label, ',')
+        FROM OSProviderOption op, @tblProvider tp
+        WHERE op.Id = tp.Id;
+        --UpdateScore
         SELECT @IsManualUpdateScoreInfo = CASE @UpdateScore
-                                              WHEN 'True'
+                                              WHEN 1
                                               THEN 'true'
                                               ELSE 'false'
                                           END;
+        --Iptv
         SELECT @IsIpTvOnlyInfo = CASE @IpTv
-                                     WHEN 'True'
+                                     WHEN 1
                                      THEN 'true'
                                      ELSE 'false'
                                  END;
+        --Bettype
         SELECT @BettypeInfo = STRING_AGG(obo.Label, ',')
         FROM OSBettypeOption obo, 
              @tblBettype bt
         WHERE obo.Id = bt.Id;
+        --IsActive
+        SELECT @IsActive = CASE ol.IsActive
+                               WHEN 1
+                               THEN 'true'
+                               ELSE 'false'
+                           END
+        FROM OSLeague ol
+        WHERE ol.OSLeagueId = @OSLeagueId;
         SET @Xml =
         (
             SELECT ol.LeagueName '@osLeagueName', 
-                   ISNULL(@RegionInfo, '') 'osRegion', 
-                   ISNULL(@CategoryInfo, '') 'osCategory', 
-                   ISNULL(@RoundInfo, '') 'osRound', 
-                   ISNULL(@WeekMatchInfo, '') 'osWeekMatch', 
-                   @OfferLinesInfo 'osOfferLines', 
-                   @BetDelayInfo 'osBetDelay', 
-                   ISNULL(@ProviderInfo, '') 'osProvider', 
-                   ISNULL(@FromTime, '') 'osKOFromTime', 
-                   ISNULL(@ToTime, '') 'osKOToTime', 
-                   ISNULL(@SpreadHDP, '') 'osSpreadHDP', 
-                   ISNULL(@SpreadOU, '') 'osSpreadOU', 
-                   @MaxbetHDP 'osMaxBetHDP', 
-                   @MaxbetOU 'osMaxBetOU', 
-                   ISNULL(@Remark, '') 'osRemark', 
-                   @IsManualUpdateScoreInfo 'osIsManualUpdateScore', 
-                   @IsIpTvOnlyInfo 'osIsIpTvOnly', 
-                   @BettypeInfo 'osBetType'
+                   @IsActive '@osIsActive', 
+                   ISNULL(@RegionInfo, '') '@osRegion', 
+                   ISNULL(@CategoryInfo, '') '@osCategory', 
+                   ISNULL(@RoundInfo, '') '@osRound', 
+                   ISNULL(@WeekMatchInfo, '') '@osWeekMatch', 
+                   @OfferLinesInfo '@osOfferLines', 
+                   @BetDelayInfo '@osBetDelay', 
+                   ISNULL(@ProviderInfo, '') '@osProvider', 
+                   ISNULL(@FromTime, '') '@osKOFromTime', 
+                   ISNULL(@ToTime, '') '@osKOToTime', 
+                   ISNULL(@SpreadHDP, '') '@osSpreadHDP', 
+                   ISNULL(@SpreadOU, '') '@osSpreadOU', 
+                   @MaxbetHDP '@osMaxBetHDP', 
+                   @MaxbetOU '@osMaxBetOU', 
+                   ISNULL(@Remark, '') '@osRemark', 
+                   @IsManualUpdateScoreInfo '@osIsManualUpdateScore', 
+                   @IsIpTvOnlyInfo '@osIsIpTvOnly', 
+                   @BettypeInfo '@osBetType'
             FROM OSLeagueSetting ols
-                 INNER JOIN OSLeague ol ON ols.OSLeagueId = ol.OSLeagueId FOR XML PATH('z'), ROOT('r')
+                 INNER JOIN OSLeague ol ON ols.OSLeagueId = ol.OSLeagueId
+            WHERE ols.LeagueSettingId = @OSSettingId FOR XML PATH('z'), ROOT('r')
         );
         SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"');
         SET @LogDataOld = NULL;
