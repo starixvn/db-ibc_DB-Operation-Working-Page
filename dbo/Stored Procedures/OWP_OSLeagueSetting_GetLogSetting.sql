@@ -13,7 +13,11 @@ AS
 */
 BEGIN
 	SET NOCOUNT ON;
-
+	DECLARE @tblOSSettingLogAction TABLE (
+		ActionId INT PRIMARY KEY
+	)
+	INSERT INTO @tblOSSettingLogAction (ActionId)
+	VALUES (123), (124)
 	SELECT
 		ul.LoggedDate AS ModifiedDate
 		,u.Username  AS ModifiedBy
@@ -21,6 +25,7 @@ BEGIN
 		,ul.DataOld
 		,ul.Data
 	FROM dbo.UserLog AS ul WITH (NOLOCK)
+	INNER JOIN @tblOSSettingLogAction AS sp ON ul.ActionId = sp.ActionId
 	LEFT JOIN dbo.[User] AS u WITH (NOLOCK) ON ul.CreatorId = u.UserId
 	WHERE ul.ObjectId = @LeagueSettingId
 END;
