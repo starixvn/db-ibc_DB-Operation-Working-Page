@@ -23,49 +23,36 @@ Revisions:
         DECLARE @BetDelay NVARCHAR(MAX);
 
         -- Round
-        SELECT @Rounds =
-        (
-            SELECT STRING_AGG(ro.Id, ',')
-            FROM dbo.OSSettingRound lr
-                 INNER JOIN dbo.OSRoundOption ro WITH(NOLOCK) ON ro.Id = lr.RoundId
-            WHERE lr.LeagueSettingId = @LeagueSettingId
-        );
+        SELECT ro.Id AS [Rounds]
+        FROM dbo.OSSettingRound lr
+              INNER JOIN dbo.OSRoundOption ro WITH(NOLOCK) ON ro.Id = lr.RoundId
+        WHERE lr.LeagueSettingId = @LeagueSettingId
 
         -- OfferLines
-        SELECT @OfferLines =
-        (
-            SELECT STRING_AGG(ofo.Id, ',')
+         SELECT ofo.Id AS OfferLines
             FROM dbo.OSSettingOfferLine so
                  INNER JOIN dbo.OSOfferLineOption ofo WITH(NOLOCK) ON ofo.Id = so.OfferLineId
             WHERE so.LeagueSettingId = @LeagueSettingId
-        );
 
         -- Provider
-        SELECT @Providers =
-        (
-            SELECT STRING_AGG(po.Id, ',')
+       SELECT po.Id AS [Providers]
             FROM dbo.OSSettingProvider lp
                  INNER JOIN dbo.OSProviderOption po WITH(NOLOCK) ON po.Id = lp.ProviderId
             WHERE lp.LeagueSettingId = @LeagueSettingId
-        );
 
         -- Bettype
-        SELECT @BetTypes =
-        (
-            SELECT STRING_AGG(bo.Id, ',')
+     
+            SELECT bo.Id AS BetTypes
             FROM dbo.OSSettingBettype sb
                  INNER JOIN dbo.OSBettypeOption bo WITH(NOLOCK) ON bo.Id = sb.BettypeId
             WHERE sb.LeagueSettingId = @LeagueSettingId
-        );
+        
 
         --Betdelay 
-        SELECT @BetDelay =
-        (
-            SELECT STRING_AGG(bo.Id, ',')
+            SELECT bo.Id AS BetDelay
             FROM dbo.OSSettingBetDelay sb
                  INNER JOIN dbo.OSBetDelayOption bo WITH(NOLOCK) ON bo.Id = sb.BetDelayId
             WHERE sb.LeagueSettingId = @LeagueSettingId
-        );
 
         -- Select League Setting detail
         SELECT ls.LeagueSettingId, 
