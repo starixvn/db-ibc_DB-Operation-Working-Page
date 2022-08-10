@@ -17,6 +17,7 @@ Revisions:
 	20220516@Luca: Get IsNeutral of match  [Redmine: #172762]
 	20220420@Mira: Get AdminSiteMatchId  [Redmine: #171515]
 	20220701@Johnny: Update condition get OS info [Redmine: #174437]
+    20220808@Luca: query repoter OS info [Redmine: #174638]
 */
 
     BEGIN
@@ -45,7 +46,8 @@ Revisions:
                m.[Remark], 
                u.Username, 
                m.MatchNo, 
-               m.AdminSiteMatchId AS 'AdminsiteMatchId'
+               m.AdminSiteMatchId AS 'AdminsiteMatchId',
+               m.Reporter
         FROM dbo.OSMatch m WITH(NOLOCK)
              LEFT JOIN dbo.OSLeague l WITH(NOLOCK) ON l.OSLeagueId = m.LeagueId
              LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = m.UploadedBy
