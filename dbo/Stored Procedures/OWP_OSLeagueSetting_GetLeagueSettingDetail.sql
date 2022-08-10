@@ -25,7 +25,7 @@ Revisions:
         -- Round
         SELECT @Rounds =
         (
-            SELECT STRING_AGG(ro.Id, ',')
+             SELECT ISNULL(STRING_AGG(ro.Id, ','), '') 
             FROM dbo.OSSettingRound lr
                  INNER JOIN dbo.OSRoundOption ro WITH(NOLOCK) ON ro.Id = lr.RoundId
             WHERE lr.LeagueSettingId = @LeagueSettingId
@@ -34,7 +34,7 @@ Revisions:
         -- OfferLines
         SELECT @OfferLines =
         (
-            SELECT STRING_AGG(ofo.Id, ',')
+            SELECT ISNULL(STRING_AGG(ofo.Id, ','), '') 
             FROM dbo.OSSettingOfferLine so
                  INNER JOIN dbo.OSOfferLineOption ofo WITH(NOLOCK) ON ofo.Id = so.OfferLineId
             WHERE so.LeagueSettingId = @LeagueSettingId
@@ -43,7 +43,7 @@ Revisions:
         -- Provider
         SELECT @Providers =
         (
-            SELECT STRING_AGG(po.Id, ',')
+             SELECT ISNULL(STRING_AGG(po.Id, ','), '') 
             FROM dbo.OSSettingProvider lp
                  INNER JOIN dbo.OSProviderOption po WITH(NOLOCK) ON po.Id = lp.ProviderId
             WHERE lp.LeagueSettingId = @LeagueSettingId
@@ -52,7 +52,7 @@ Revisions:
         -- Bettype
         SELECT @BetTypes =
         (
-            SELECT STRING_AGG(bo.Id, ',')
+            SELECT ISNULL(STRING_AGG(bo.Id, ','), '') 
             FROM dbo.OSSettingBettype sb
                  INNER JOIN dbo.OSBettypeOption bo WITH(NOLOCK) ON bo.Id = sb.BettypeId
             WHERE sb.LeagueSettingId = @LeagueSettingId
@@ -61,7 +61,7 @@ Revisions:
         --Betdelay 
         SELECT @BetDelay =
         (
-            SELECT STRING_AGG(bo.Id, ',')
+            SELECT ISNULL(STRING_AGG(bo.Id, ','), '') 
             FROM dbo.OSSettingBetDelay sb
                  INNER JOIN dbo.OSBetDelayOption bo WITH(NOLOCK) ON bo.Id = sb.BetDelayId
             WHERE sb.LeagueSettingId = @LeagueSettingId
@@ -71,9 +71,9 @@ Revisions:
         SELECT ls.LeagueSettingId AS leagueSettingId, 
                ol.LeagueName AS leagueName, 
                ol.IsActive AS isActive, 
-               ro.Label AS region, 
-               co.Label AS category, 
-               wm.Label AS weekMatch, 
+               ro.Id AS region, 
+               co.Id AS category, 
+               wm.Id AS weekMatch, 
                ls.KOFromTime AS koFromTime, 
                ls.KOToTime AS koToTime, 
                ls.Remark AS remark, 
