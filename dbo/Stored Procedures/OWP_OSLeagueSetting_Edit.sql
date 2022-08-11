@@ -4,23 +4,23 @@
 ALTER PROCEDURE OWP_OSLeagueSetting_Edit @UserId          INT, 
                                          @LeagueSettingId INT, 
                                          @IsActive        BIT, 
-                                         @RegionId        INT, 
-                                         @CategoryId      INT, 
-                                         @RoundId         VARCHAR(100), 
-                                         @WeekMatchId     INT, 
-                                         @OfferLineId     VARCHAR(100), 
-                                         @BetDelayId      VARCHAR(100), 
-                                         @ProviderId      VARCHAR(100), 
-                                         @FromTime        TIME, 
-                                         @ToTime          TIME, 
-                                         @SpreadHDP       MONEY, 
-                                         @SpreadOU        MONEY, 
-                                         @MaxbetOU        MONEY, 
-                                         @MaxbetHDP       MONEY, 
+                                         @Region        INT, 
+                                         @Category      INT, 
+                                         @Rounds         VARCHAR(100), 
+                                         @WeekMatch     INT, 
+                                         @OfferLines     VARCHAR(100), 
+                                         @BetDelay     VARCHAR(100), 
+                                         @Providers      VARCHAR(100), 
+                                         @KOFromTime        DATETIME = NULL, 
+                                         @KOToTime          DATETIME = NULL, 
+                                         @SpreadHDP       MONEY = NULL, 
+                                         @SpreadOU        MONEY = NULL, 
+                                         @MaxbetOU        MONEY = NULL, 
+                                         @MaxbetHDP       MONEY = NULL, 
                                          @Remark          VARCHAR(2000), 
-                                         @UpdateScore     BIT, 
-                                         @IpTv            BIT, 
-                                         @Bettype         VARCHAR(100)
+                                         @IsManualUpdateScore     BIT, 
+                                         @IsIptvOnly            BIT, 
+                                         @BetTypes         VARCHAR(100)
 AS
 
 /*
@@ -40,21 +40,27 @@ Revisions:
         DECLARE @tblBettype TABLE(Id INT);
         DECLARE @tblBetDelay TABLE(Id INT);
         DECLARE @OSLeagueId INT;
+
         INSERT INTO @tblRound(Id)
-               SELECT NULLIF(value, '')
-               FROM STRING_SPLIT(@RoundId, ',');
+        SELECT DISTINCT value
+        FROM STRING_SPLIT(@Rounds, ',');
+
         INSERT INTO @tblOfferLine(Id)
-               SELECT NULLIF(value, '')
-               FROM STRING_SPLIT(@OfferLineId, ',');
+        SELECT DISTINCT value
+        FROM STRING_SPLIT(@OfferLines, ',');
+
         INSERT INTO @tblProvider(Id)
-               SELECT NULLIF(value, '')
-               FROM STRING_SPLIT(@ProviderId, ',');
+        SELECT DISTINCT value
+        FROM STRING_SPLIT(@Providers, ',');
+
         INSERT INTO @tblBettype(Id)
-               SELECT NULLIF(value, '')
-               FROM STRING_SPLIT(@Bettype, ',');
+        SELECT DISTINCT value
+        FROM STRING_SPLIT(@BetTypes, ',');
+
         INSERT INTO @tblBetDelay(Id)
-               SELECT NULLIF(value, '')
-               FROM STRING_SPLIT(@BetDelayId, ',');
+        SELECT DISTINCT value
+        FROM STRING_SPLIT(@BetDelay, ',');
+
         SELECT @OSLeagueId = OSLeagueId
         FROM OSLeagueSetting
         WHERE LeagueSettingId = @LeagueSettingId;
@@ -177,21 +183,21 @@ Revisions:
 
         --League--
         UPDATE OSLeague
-          SET 
+        SET 
               IsActive = @IsActive, 
-              RegionId = @RegionId, 
-              CategoryId = @CategoryId
+              RegionId = @Region, 
+              CategoryId = @Category
         WHERE OSLeagueId = @OSLeagueId;
 
         --Setting--
         UPDATE OSLeagueSetting
           SET 
-              WeekMatchId = @WeekMatchId, 
-              KOFromTime = @FromTime, 
-              KOToTime = @ToTime, 
+              WeekMatchId = @WeekMatch, 
+              KOFromTime = @KOFromTime, 
+              KOToTime = @KOToTime, 
               Remark = @Remark, 
-              IsManualUpdateScore = @UpdateScore, 
-              IsIptvOnly = @IpTv, 
+              IsManualUpdateScore = @IsManualUpdateScore, 
+              IsIptvOnly = @IsIptvOnly, 
               MaxbetHDP = @MaxbetHDP, 
               MaxbetOU = @MaxbetOU, 
               SpreadHDP = @SpreadHDP, 
@@ -201,13 +207,14 @@ Revisions:
         --Round--
         DELETE FROM OSSettingRound
         WHERE LeagueSettingId = @LeagueSettingId;
+
         INSERT INTO OSSettingRound
         (LeagueSettingId, 
          RoundId
         )
-               SELECT @LeagueSettingId, 
-                      r.Id
-               FROM @tblRound AS r;
+         SELECT @LeagueSettingId, 
+                r.Id
+         FROM @tblRound AS r;
 
         --Offerline--
         DELETE FROM OSSettingOfferLine
@@ -216,9 +223,9 @@ Revisions:
         (LeagueSettingId, 
          OfferLineId
         )
-               SELECT @LeagueSettingId, 
+         SELECT @LeagueSettingId, 
                       r.Id
-               FROM @tblOfferLine AS r;
+         FROM @tblOfferLine AS r;
 
         --Provider--
         DELETE FROM OSSettingProvider
@@ -255,11 +262,11 @@ Revisions:
         --Region
         SELECT @RegionInfoNew = STRING_AGG(o.Label, ',')
         FROM OSRegionOption o
-        WHERE o.Id = @RegionId;
+        WHERE o.Id = @Region;
         --Category
         SELECT @CategoryInfoNew = oc.Label
         FROM OSCategoryOption oc
-        WHERE oc.Id = @CategoryId;
+        WHERE oc.Id = @Category;
         --Round
         SELECT @RoundInfoNew = STRING_AGG(o.Label, ',')
         FROM OSRoundOption o, 
@@ -268,7 +275,7 @@ Revisions:
         --Weekmatch
         SELECT @WeekMatchInfoNew = ow.Label
         FROM OSWeekMatchOption ow
-        WHERE ow.Id = @WeekMatchId;
+        WHERE ow.Id = @WeekMatch;
         --OfferLines
         SELECT @OfferLinesInfoNew = STRING_AGG(ofl.Label, ',')
         FROM OSOfferLineOption ofl, 
@@ -285,13 +292,13 @@ Revisions:
              @tblProvider tp
         WHERE op.Id = tp.Id;
         --UpdateScore
-        SELECT @IsManualUpdateScoreInfoNew = CASE @UpdateScore
+        SELECT @IsManualUpdateScoreInfoNew = CASE @IsManualUpdateScore
                                                  WHEN 1
                                                  THEN 'true'
                                                  ELSE 'false'
                                              END;
         --Iptv
-        SELECT @IsIpTvOnlyInfoNew = CASE @IpTv
+        SELECT @IsIpTvOnlyInfoNew = CASE @IsIptvOnly
                                         WHEN 1
                                         THEN 'true'
                                         ELSE 'false'
@@ -318,8 +325,8 @@ Revisions:
                    @OfferLinesInfoNew '@osOfferLines', 
                    @BetDelayInfoNew '@osBetDelay', 
                    ISNULL(@ProviderInfoNew, '') '@osProvider', 
-                   ISNULL(@FromTime, '') '@osKOFromTime', 
-                   ISNULL(@ToTime, '') '@osKOToTime', 
+                   ISNULL(@KOFromTime, '') '@osKOFromTime', 
+                   ISNULL(@KOToTime, '') '@osKOToTime', 
                    ISNULL(@SpreadHDP, '') '@osSpreadHDP', 
                    ISNULL(@SpreadOU, '') '@osSpreadOU', 
                    @MaxbetHDP '@osMaxBetHDP', 
