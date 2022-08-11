@@ -114,7 +114,7 @@ Revisions:
         -- Round
         SELECT @RoundInfoOld = STRING_AGG(oso.Label, ',')
         FROM OSSettingRound osr
-             INNER JOIN OSStatusOption oso ON osr.RoundId = oso.Id
+             INNER JOIN OSRoundOption oso ON osr.RoundId = oso.Id
         WHERE osr.LeagueSettingId = @LeagueSettingId;
         -- OfferLines
         SELECT @OfferLinesInfoOld = STRING_AGG(oso.Label, ',')
@@ -137,7 +137,7 @@ Revisions:
              INNER JOIN OSBetDelayOption oso ON ob.BetDelayId = oso.Id
         WHERE ob.LeagueSettingId = @LeagueSettingId;
         -- WeekMatch
-        SELECT @WeekMatchInfoOld
+        SELECT @WeekMatchInfoOld = omo.Label
         FROM OSLeagueSetting os
              INNER JOIN OSWeekMatchOption omo ON os.WeekMatchId = omo.Id
         WHERE os.LeagueSettingId = @LeagueSettingId;
