@@ -3,10 +3,10 @@
 
 ALTER PROCEDURE OWP_OSLeagueSetting_Add @UserId          INT, 
                                         @LeagueName  NVARCHAR(2000), 
-                                         @Region        INT, 
-                                         @Category      INT, 
+                                         @Region        INT=NULL, 
+                                         @Category      INT=NULL, 
                                          @Rounds         VARCHAR(100), 
-                                         @WeekMatch     INT, 
+                                         @WeekMatch     INT=NULL, 
                                          @OfferLines     VARCHAR(100), 
                                          @BetDelay     VARCHAR(100), 
                                          @Providers      VARCHAR(100), 
