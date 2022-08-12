@@ -124,3 +124,6 @@ DROP COLUMN BetDelayId;
 UPDATE OSLeagueSetting 
 SET KOToTime ='16:01:00'
 WHERE LeagueSettingId =11
+
+DROP TABLE OSStatusOption
+DROP PROCEDURE OWP_OSLeagueSetting_GetStatusOption
