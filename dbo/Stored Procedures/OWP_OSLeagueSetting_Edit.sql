@@ -42,23 +42,23 @@ Revisions:
         DECLARE @OSLeagueId INT;
 
         INSERT INTO @tblRound(Id)
-        SELECT DISTINCT value
+        SELECT  NULLIF(value, '')
         FROM STRING_SPLIT(@Rounds, ',');
 
         INSERT INTO @tblOfferLine(Id)
-        SELECT DISTINCT value
+        SELECT NULLIF(value, '')
         FROM STRING_SPLIT(@OfferLines, ',');
 
         INSERT INTO @tblProvider(Id)
-        SELECT DISTINCT value
+        SELECT NULLIF(value, '')
         FROM STRING_SPLIT(@Providers, ',');
 
         INSERT INTO @tblBettype(Id)
-        SELECT DISTINCT value
+        SELECT NULLIF(value, '')
         FROM STRING_SPLIT(@BetTypes, ',');
 
         INSERT INTO @tblBetDelay(Id)
-        SELECT DISTINCT value
+        SELECT NULLIF(value, '')
         FROM STRING_SPLIT(@BetDelay, ',');
 
         SELECT @OSLeagueId = OSLeagueId
