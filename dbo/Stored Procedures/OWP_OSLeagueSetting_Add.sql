@@ -180,7 +180,7 @@ Revisions:
         --Region
         SELECT @RegionInfo = STRING_AGG(o.Label, ',')
         FROM OSRegionOption o
-        WHERE o.Id = @Region;
+        WHERE o.Id = '';
         --Category
         SELECT @CategoryInfo = oc.Label
         FROM OSCategoryOption oc
@@ -237,20 +237,20 @@ Revisions:
         (
             SELECT ol.LeagueName '@osLeagueName', 
                    @IsActive '@osIsActive', 
-                   ISNULL(@RegionInfo, '') '@osRegion', 
-                   ISNULL(@CategoryInfo, '') '@osCategory', 
-                   ISNULL(@RoundInfo, '') '@osRound', 
-                   ISNULL(@WeekMatchInfo, '') '@osWeekMatch', 
+                   @RegionInfo '@osRegion', 
+                   @CategoryInfo '@osCategory', 
+                   @RoundInfo '@osRound', 
+                   @WeekMatchInfo '@osWeekMatch', 
                    @OfferLinesInfo '@osOfferLines', 
                    @BetDelayInfo '@osBetDelay', 
-                   ISNULL(@ProviderInfo, '') '@osProvider', 
-                   ISNULL(@KOFromTime, '') '@osKOFromTime', 
-                   ISNULL(@KOToTime, '') '@osKOToTime', 
-                   ISNULL(@SpreadHDP, '') '@osSpreadHDP', 
-                   ISNULL(@SpreadOU, '') '@osSpreadOU', 
+                   @ProviderInfo '@osProvider', 
+                   cast(@KOFromTime as time) '@osKOFromTime', 
+                   cast(@KOToTime as time) '@osKOToTime', 
+                   @SpreadHDP '@osSpreadHDP', 
+                   @SpreadOU '@osSpreadOU', 
                    @MaxbetHDP '@osMaxBetHDP', 
                    @MaxbetOU '@osMaxBetOU', 
-                   ISNULL(@Remark, '') '@osRemark', 
+                   @Remark '@osRemark', 
                    @IsManualUpdateScoreInfo '@osIsManualUpdateScore', 
                    @IsIpTvOnlyInfo '@osIsIpTvOnly', 
                    @BettypeInfo '@osBetType'
