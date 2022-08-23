@@ -1,9 +1,10 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_MaxbetSetting_Update] @FT_HDP VARCHAR(MAX), 
-                                                 @Column VARCHAR(200), 
-                                                 @Value  VARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_MaxbetSetting_Update] @FT_HDP  VARCHAR(MAX), 
+                                                 @Column  VARCHAR(200), 
+                                                 @Value   VARCHAR(MAX), 
+                                                 @ActorId INT
 AS
 
 /*    
@@ -17,9 +18,46 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @sqlCommand VARCHAR(1000);
+        DECLARE @sqlCommand NVARCHAR(MAX), @OldValue NVARCHAR(MAX);
+        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @NewXml XML, @OldXml XML;
+
+        -- For write old log
+        SET @StartRun = GETDATE();
+        SET @sqlCommand = N'SELECT ' + '@oldValue = ' + @Column + ' FROM dbo.MaxbetSetting WHERE FT_HDP = ' + @FT_HDP;
+        EXEC sp_executesql 
+             @sqlCommand, 
+             N'@oldValue MONEY OUTPUT', 
+             @oldValue = @OldValue OUTPUT;
+        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + @OldValue + ' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
+        EXEC sp_executesql 
+             @sqlCommand, 
+             N'@xml xml OUTPUT', 
+             @xml = @OldXml OUTPUT;
 
         -- Update
-        SET @sqlCommand = 'UPDATE dbo.MaxbetSetting SET ' + @Column + ' = ' + @Value + 'WHERE FT_HDP = ' + @FT_HDP;
+        SET @sqlCommand = 'UPDATE dbo.MaxbetSetting SET ' + @Column + ' = ' + CONVERT(NVARCHAR(MAX), @Value) + 'WHERE FT_HDP = ' + @FT_HDP;
         EXEC (@sqlCommand);
+
+        -- Write new log
+        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + CONVERT(NVARCHAR(MAX), @Value) + ' AS "' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
+        EXEC sp_executesql 
+             @sqlCommand, 
+             N'@xml xml OUTPUT', 
+             @xml = @NewXml OUTPUT;
+        SET @EndRun = GETDATE();
+        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+
+        -- convert xml to nvarchar
+        DECLARE @LogOldData NVARCHAR(MAX)= REPLACE(CONVERT(NVARCHAR(MAX), @OldXml), '" />', '"/"');
+        DECLARE @LogNewData NVARCHAR(MAX)= REPLACE(CONVERT(NVARCHAR(MAX), @NewXml), '" />', '"/"');
+
+        -- exec write log
+        EXEC dbo.OWP_WriteLog 
+             @CreatorId = @ActorId, 
+             @SPName = 'OWP_MaxbetSetting_Update', 
+             @LoggedDate = @StartRun, 
+             @Duration = @Duration, 
+             @ObjectId = @FT_HDP, 
+             @Data = @LogNewData, 
+             @DataOld = @LogOldData;
     END;
