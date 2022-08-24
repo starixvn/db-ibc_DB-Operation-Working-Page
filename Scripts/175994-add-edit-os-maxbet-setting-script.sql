@@ -1,4 +1,4 @@
-
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 /*
 	Created: Johnny.Thai
 	Date: 20220804
@@ -27,6 +27,7 @@ VALUES
  'OsLeagueSetting', 
  14
 );
+
 INSERT INTO dbo.LogAction
 (ActionId, 
  ModuleId, 
@@ -43,7 +44,7 @@ VALUES
  1, 
  'OWP_OSLeagueSetting_Add', 
  'OWP_OSLeagueSetting_Add', 
- '<root><xml path="r/z" /><row item="LeagueName" alias="osLeagueName" /><row item="IsActive" alias="osIsActive" /><row item="Region" alias="osRegion" /><row item="Category" alias="osCategory" /><row item="Round" alias="osRound" /><row item="WeekMatch" alias="osWeekMatch" /><row item="OfferLines" alias="osOfferLines" /><row item="BetDelay" alias="osBetDelay" /><row item="Provider" alias="osProvider" /><row item="KOFromTime" alias="osKOFromTime" /><row item="KOToTime" alias="osKOToTime" /><row item="SpreadHDP" alias="osSpreadHDP" /><row item="SpreadOU" alias="osSpreadOU" /><row item="MaxBetHDP" alias="osMaxBetHDP" /><row item="MaxBetOU" alias="osMaxBetOU" /><row item="Remark" alias="osRemark" /><row item="IsManualUpdateScore" alias="osIsManualUpdateScore" /><row item="IsIpTvOnly" alias="osIsIpTvOnly" /><row item="BetType" alias="osBetType" /></root>'
+ '<root><xml path="r/z" /><row item="Round" alias="osRound" /><row item="WeekMatch" alias="osWeekMatch" /><row item="OfferLines" alias="osOfferLines" /><row item="BetDelay" alias="osBetDelay" /><row item="Provider" alias="osProvider" /><row item="KOFromTime" alias="osKOFromTime" /><row item="KOToTime" alias="osKOToTime" /><row item="SpreadHDP" alias="osSpreadHDP" /><row item="SpreadOU" alias="osSpreadOU" /><row item="MaxBetHDP" alias="osMaxBetHDP" /><row item="MaxBetOU" alias="osMaxBetOU" /><row item="Remark" alias="osRemark" /><row item="IsManualUpdateScore" alias="osIsManualUpdateScore" /><row item="IsIpTvOnly" alias="osIsIpTvOnly" /><row item="BetType" alias="osBetType" /></root>'
 );
 
 INSERT INTO dbo.LogAction
@@ -62,7 +63,51 @@ VALUES
  2, 
  'OWP_OSLeagueSetting_Edit', 
  'OWP_OSLeagueSetting_Edit', 
- '<root><xml path="r/z" /><row item="LeagueName" alias="osLeagueName" /><row item="IsActive" alias="osIsActive" /><row item="Region" alias="osRegion" /><row item="Category" alias="osCategory" /><row item="Round" alias="osRound" /><row item="WeekMatch" alias="osWeekMatch" /><row item="OfferLines" alias="osOfferLines" /><row item="BetDelay" alias="osBetDelay" /><row item="Provider" alias="osProvider" /><row item="KOFromTime" alias="osKOFromTime" /><row item="KOToTime" alias="osKOToTime" /><row item="SpreadHDP" alias="osSpreadHDP" /><row item="SpreadOU" alias="osSpreadOU" /><row item="MaxBetHDP" alias="osMaxBetHDP" /><row item="MaxBetOU" alias="osMaxBetOU" /><row item="Remark" alias="osRemark" /><row item="IsManualUpdateScore" alias="osIsManualUpdateScore" /><row item="IsIpTvOnly" alias="osIsIpTvOnly" /><row item="BetType" alias="osBetType" /></root>'
+ '<root><xml path="r/z" /><row item="Round" alias="osRound" /><row item="WeekMatch" alias="osWeekMatch" /><row item="OfferLines" alias="osOfferLines" /><row item="BetDelay" alias="osBetDelay" /><row item="Provider" alias="osProvider" /><row item="KOFromTime" alias="osKOFromTime" /><row item="KOToTime" alias="osKOToTime" /><row item="SpreadHDP" alias="osSpreadHDP" /><row item="SpreadOU" alias="osSpreadOU" /><row item="MaxBetHDP" alias="osMaxBetHDP" /><row item="MaxBetOU" alias="osMaxBetOU" /><row item="Remark" alias="osRemark" /><row item="IsManualUpdateScore" alias="osIsManualUpdateScore" /><row item="IsIpTvOnly" alias="osIsIpTvOnly" /><row item="BetType" alias="osBetType" /></root>'
+);
+GO
+
+
+INSERT INTO dbo.LogAction
+(ActionId, 
+ ModuleId, 
+ [ModuleObjectId], 
+ [ActionTypeId], 
+ [ActionName], 
+ [SPName], 
+ [LogItems]
+)
+
+VALUES
+(125, 
+ 14, 
+ 42, 
+ 2, 
+ 'OWP_OSLeagueInfo_Add', 
+ 'OWP_OSLeagueInfo_Add', 
+ '<root><xml path="r/z" /><row item="LeagueName" alias="osLeagueName" /><row item="IsActive" alias="osIsActive" /><row item="Region" alias="osRegion" /><row item="Category" alias="osCategory" /></root>'
+);
+GO
+
+
+
+INSERT INTO dbo.LogAction
+(ActionId, 
+ ModuleId, 
+ [ModuleObjectId], 
+ [ActionTypeId], 
+ [ActionName], 
+ [SPName], 
+ [LogItems]
+)
+VALUES
+(126, 
+ 14, 
+ 42, 
+ 2, 
+ 'OWP_OSLeagueInfo_Edit', 
+ 'OWP_OSLeagueInfo_Edit', 
+ '<root><xml path="r/z" /><row item="LeagueName" alias="osLeagueName" /><row item="IsActive" alias="osIsActive" /><row item="Region" alias="osRegion" /><row item="Category" alias="osCategory" /></root>'
 );
 GO
 
@@ -143,3 +188,4 @@ WHERE [Label]= '23th'
  
 DROP TABLE OSStatusOption
 DROP PROCEDURE OWP_OSLeagueSetting_GetStatusOption
+
