@@ -13,8 +13,9 @@ Revisions:
 	20220804@Carlos: Initial - [Redmine: #175994]
 */
 
-   BEGIN
+    BEGIN
         SET NOCOUNT ON;
-       SELECT Id AS [value],
-	   [label] FROM OSBetDelayOption
+        SELECT Id AS [value], 
+               [label]
+        FROM OSBetDelayOption;
     END;
