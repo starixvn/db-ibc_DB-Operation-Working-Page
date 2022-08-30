@@ -39,7 +39,7 @@ Revisions:
         EXEC (@sqlCommand);
 
         -- Write new log
-        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + CONVERT(NVARCHAR(MAX), @Value) + ' AS "' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
+        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + CONVERT(NVARCHAR(MAX), @Value) + ' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
         EXEC sp_executesql 
              @sqlCommand, 
              N'@xml xml OUTPUT', 

@@ -18,16 +18,33 @@ Revisions:
 
         -- Select maxbet all or by FT_HDP
         SELECT FT_HDP, 
+               FT_OU, 
                FirstHalf_HDP, 
                FirstHalf_OU, 
                NoOfCorner_FT_HDP, 
                NoOfCorner_FT_OU, 
                NoOfCorner_1H_HDP, 
                NoOfCorner_1H_OU, 
-               TotalBooking_FT_HDP_OU, 
-               TotalBooking_1H_HDP_OU
-        FROM dbo.MaxbetSetting
-        WHERE @FT_HDP = 0
-              OR FT_HDP = @FT_HDP
+               NextCorner_FT_HDP, 
+               TotalBooking_FT_HDP, 
+               TotalBooking_FT_OU, 
+               TotalBooking_1H_HDP, 
+               TotalBooking_1H_OU, 
+               NextBooking_FT_HDP, 
+               SecondAccept_Main, 
+               SecondAccept_Corner, 
+               SecondAccept_TotalBooking, 
+               SecondAccept_Fantasy
+        FROM dbo.MaxbetSetting ms
+             LEFT JOIN dbo.RefResource AS rrm WITH(NOLOCK) ON ms.SecondAccept_Main = rrm.ResourceId
+             LEFT JOIN dbo.RefResource AS rrc WITH(NOLOCK) ON ms.SecondAccept_Corner = rrc.ResourceId
+             LEFT JOIN dbo.RefResource AS rrt WITH(NOLOCK) ON ms.SecondAccept_TotalBooking = rrt.ResourceId
+             LEFT JOIN dbo.RefResource AS rrf WITH(NOLOCK) ON ms.SecondAccept_Fantasy = rrf.ResourceId
+        WHERE rrm.RefName = 'MatchOffer'
+              AND rrc.RefName = 'MatchOffer'
+              AND rrt.RefName = 'MatchOffer'
+              AND rrf.RefName = 'MatchOffer'
+              AND (@FT_HDP = 0
+                   OR FT_HDP = @FT_HDP)
         ORDER BY FT_HDP DESC;
     END;
