@@ -5,6 +5,7 @@ ALTER PROCEDURE [dbo].[OWP_MaxbetSetting_Update] @FT_HDP  VARCHAR(MAX),
                                                  @Column  VARCHAR(200), 
                                                  @Value   VARCHAR(MAX), 
                                                  @ActorId INT
+WITH EXECUTE AS OWNER
 AS
 
 /*    
