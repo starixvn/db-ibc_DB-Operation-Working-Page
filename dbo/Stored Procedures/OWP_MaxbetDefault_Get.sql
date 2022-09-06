@@ -34,7 +34,8 @@ Revisions:
                rrm.Value 'SecondAccept_Main', 
                rrc.Value 'SecondAccept_Corner', 
                rrt.Value 'SecondAccept_TotalBooking', 
-               rrf.Value 'SecondAccept_Fantasy'
+               rrf.Value 'SecondAccept_Fantasy', 
+               lg.Username 'LastUpdatedBy'
         FROM dbo.MaxbetSetting ms
              LEFT JOIN dbo.RefResource AS rrm WITH(NOLOCK) ON ms.SecondAccept_Main = rrm.ResourceId
                                                               AND rrm.RefName = 'MatchOffer'
@@ -44,6 +45,14 @@ Revisions:
                                                               AND rrt.RefName = 'MatchOffer'
              LEFT JOIN dbo.RefResource AS rrf WITH(NOLOCK) ON ms.SecondAccept_Fantasy = rrf.ResourceId
                                                               AND rrf.RefName = 'MatchOffer'
+             OUTER APPLY
+        (
+            SELECT TOP 1 *
+            FROM dbo.UserLog ul
+                 LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ul.CreatorId
+            WHERE ul.ObjectId = ms.FT_HDP
+            ORDER BY ul.LoggedDate DESC
+        ) AS lg
         WHERE(@FT_HDP = 0
               OR FT_HDP = @FT_HDP)
         ORDER BY FT_HDP DESC;
