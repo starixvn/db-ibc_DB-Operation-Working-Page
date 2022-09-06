@@ -21,13 +21,14 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @sqlCommand NVARCHAR(MAX), @OldValue NVARCHAR(MAX);
         DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @NewXml XML, @OldXml XML;
+        DECLARE @CharValue NVARCHAR(MAX)= ISNULL(CONVERT(NVARCHAR(MAX), @Value), 'Null');
 
         -- For write old log
         SET @StartRun = GETDATE();
         SET @sqlCommand = N'SELECT ' + '@oldValue = ' + @Column + ' FROM dbo.MaxbetSetting WHERE FT_HDP = ' + @FT_HDP;
         EXEC sp_executesql 
              @sqlCommand, 
-             N'@oldValue MONEY OUTPUT', 
+             N'@oldValue VARCHAR(MAX) OUTPUT', 
              @oldValue = @OldValue OUTPUT;
         SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + @OldValue + ' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
         EXEC sp_executesql 
@@ -36,11 +37,11 @@ Revisions:
              @xml = @OldXml OUTPUT;
 
         -- Update
-        SET @sqlCommand = 'UPDATE dbo.MaxbetSetting SET ' + @Column + ' = ' + CONVERT(NVARCHAR(MAX), @Value) + 'WHERE FT_HDP = ' + @FT_HDP;
+        SET @sqlCommand = 'UPDATE dbo.MaxbetSetting SET ' + @Column + ' = ' + @CharValue + ' WHERE FT_HDP = ' + @FT_HDP;
         EXEC (@sqlCommand);
 
         -- Write new log
-        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + CONVERT(NVARCHAR(MAX), @Value) + ' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
+        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + @CharValue + ' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
         EXEC sp_executesql 
              @sqlCommand, 
              N'@xml xml OUTPUT', 
