@@ -30,7 +30,7 @@ Revisions:
              @sqlCommand, 
              N'@oldValue VARCHAR(MAX) OUTPUT', 
              @oldValue = @OldValue OUTPUT;
-        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + @OldValue + ' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
+        SET @sqlCommand = N'SET ' + '@xml = (SELECT ''' + ISNULL(CONVERT(NVARCHAR(MAX), @OldValue), 'Null') + ''' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
         EXEC sp_executesql 
              @sqlCommand, 
              N'@xml xml OUTPUT', 
@@ -41,7 +41,7 @@ Revisions:
         EXEC (@sqlCommand);
 
         -- Write new log
-        SET @sqlCommand = N'SET ' + '@xml = (SELECT ' + @CharValue + ' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
+        SET @sqlCommand = N'SET ' + '@xml = (SELECT ''' + @CharValue + ''' AS "@' + @Column + '" FOR XML PATH(''z''),ROOT(''r''))';
         EXEC sp_executesql 
              @sqlCommand, 
              N'@xml xml OUTPUT', 
