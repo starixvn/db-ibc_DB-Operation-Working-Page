@@ -1,9 +1,8 @@
 
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_API_SyncMaxbet_GetSecondAcceptValueDefault] @OWPMatchId INT, 
-                                                     @MaxbetHDP  DECIMAL = -1000 
+                                                                       @MaxbetHDP  DECIMAL = NULL
 AS
 
 /*
@@ -16,20 +15,28 @@ Revisions:
 
 */
 
-    BEGIN  
+    BEGIN
+        DECLARE @maxbetHDPdefault INT= -1000;
+        IF(NOT EXISTS
+        (
+            SELECT 1
+            FROM MaxbetSetting mb
+            WHERE mb.FT_HDP = @MaxbetHDP
+        ))
+            BEGIN
+                SET @MaxbetHDP = @maxbetHDPdefault;
+        END;
+
         SET NOCOUNT ON;
         SELECT ms.SecondAccept_Main 'Main', 
                ms.SecondAccept_Corner 'Corner', 
                ms.SecondAccept_TotalBooking 'TotalBooking', 
                ms.SecondAccept_Fantasy 'Fantasy'
         FROM MaxbetSetting ms
-		Where ms.FT_HDP = @MaxbetHDP ;
+        WHERE ms.FT_HDP = @MaxbetHDP;
 
         SELECT l.OWPLeagueName
         FROM OWPMatch o
              INNER JOIN OWPLeague l ON o.OWPLeagueId = l.OWPLeagueId
         WHERE o.OWPMatchId = @OWPMatchId;
     END;
-
-
-
