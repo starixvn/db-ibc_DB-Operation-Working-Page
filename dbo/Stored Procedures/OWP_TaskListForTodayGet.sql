@@ -35,6 +35,7 @@ AS
 	20210128@Esther.Nguyen: Hide Completed Match on Task List - [Redmine: #148228]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 	20211117@Tyler: Filter by EventDate - [Redmine: #164493]
+	20220909@Carlos: Copy function - [Redmine: #177317]
 */
 
     BEGIN
@@ -372,6 +373,7 @@ AS
                inf.WB AS WatchBet, 
                inf.Channel, 
                om.MatchCode, 
+			   inf.IPTV,
                STUFF(
         (
             SELECT ', ' + rs.OtherProviderName
