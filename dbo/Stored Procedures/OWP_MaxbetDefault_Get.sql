@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20220822@Mira: SP get maxbet default value - [Redmine: #176781]
+	20220915@Mira: add condition het last update - [Redmine: #176781]
 */
 
     BEGIN
@@ -51,6 +52,7 @@ Revisions:
             FROM dbo.UserLog ul
                  LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ul.CreatorId
             WHERE ul.ObjectId = ms.FT_HDP
+                  AND ul.ActionId IN(128)
             ORDER BY ul.LoggedDate DESC
         ) AS lg
         WHERE(@FT_HDP = 0
