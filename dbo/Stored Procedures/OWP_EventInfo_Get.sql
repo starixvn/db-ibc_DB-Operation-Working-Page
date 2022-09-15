@@ -52,6 +52,7 @@ Revisions:
 	20200713@Carlos.Nguyen: Build HomeName in live game list - [Redmine: #137417]
 	20210128@CarlosNguyen: Query MatchCode - [Redmine: #149347]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20220909@Carlos: Copy function - [Redmine: #177317]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -135,6 +136,7 @@ BEGIN
 		,Phone NVARCHAR(200)
 		,WatchBet NVARCHAR(100)
 		,Channel NVARCHAR(100)
+		,IPTV NVARCHAR(200)
 		,MatchStatus NVARCHAR(15)
 		,NoOfHDP NVARCHAR(20)
 		,NoOfHDPId INT
@@ -550,6 +552,7 @@ BEGIN
 		,tm.Phone = mi.Phone
 		,tm.WatchBet = mi.WB
 		,tm.Channel = mi.Channel
+		,tm.IPTV=mi.IPTV
 		,tm.IsOneHourToKickOffTime = (CASE 
 			WHEN om.EventDateTime <= DATEADD(MINUTE, 60, @CurrentDateTime) THEN 1
 			ELSE 0 END
@@ -944,6 +947,7 @@ BEGIN
 		,tm.WatchBet
 		,tm.Channel
 		,tm.MatchCode
+		,tm.IPTV
 		,STUFF((
 				SELECT ', ' + rs.OtherProviderName
 				FROM dbo.[OtherProvider] AS rs WITH (NOLOCK)
