@@ -59,6 +59,7 @@ Revisions:
       [ESoccer16Mins], 
       [ESoccer20Mins], 
       [Others], 
+      [OthersProductOWPMatchIds], 
       [CreatedDate]
      )
             SELECT @EventDate, 
@@ -89,7 +90,8 @@ Revisions:
                    [ESoccer16Mins], 
                    [ESoccer20Mins], 
                    [Others], 
+                   [OtherProductMatchIds], 
                    GETDATE()
-            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] INT, [TotalMatches] INT, [Link2] INT, [Link3] INT, [Link4] INT, [Link5] INT, [Link6] INT, [Link7] INT, [Link8Plus] INT, [OnlyProvider] INT, [OnlyTV] INT, [OnlyReporter] INT, [MixedProviderTVReporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [FTCorner5ML] INT, [FiveMajorLeague] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT);
+            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] INT, [TotalMatches] INT, [Link2] INT, [Link3] INT, [Link4] INT, [Link5] INT, [Link6] INT, [Link7] INT, [Link8Plus] INT, [OnlyProvider] INT, [OnlyTV] INT, [OnlyReporter] INT, [MixedProviderTVReporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [FTCorner5ML] INT, [FiveMajorLeague] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT, [OtherProductMatchIds] VARCHAR(MAX));
      EXEC sp_xml_removedocument 
           @idoc;
