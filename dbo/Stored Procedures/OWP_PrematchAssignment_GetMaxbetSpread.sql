@@ -18,8 +18,8 @@ BEGIN
  
     INSERT INTO @tempMatch
            SELECT DISTINCT 
-                   val
-            FROM fnc_SplitStrings(@AdminSiteMatchId, ',') u OPTION(MAXRECURSION 0);
+                   value
+            FROM STRING_SPLIT(@AdminSiteMatchId, ',');
 
 	SELECT odd.matchid AS AdminSiteMatchId,
 		odd.bettype AS Bettype,
