@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_LiveDetail_MatchSetting_Create] @SessionId VARCHAR(50)
 	,@UserId INT
-	,@MinorBettypeId INT
+	,@MinorBettypeId INT = NULL
 	,@MatchId INT
 	,@BettypeId INT
 	,@Bettype VARCHAR(50)
@@ -22,6 +22,7 @@ Revisions:
 	20191021@Leo.Vo: Fix error to compare NULL - [Feature: #120415]
 	20191125@Kane.Le: Cast Maxbet to Float - [Feature: #123167]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20220920@Johnny.Thai: Move to net core - [Feature: #177863]
 */
 BEGIN
 	DECLARE @minorMatchId INT
