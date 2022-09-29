@@ -16,23 +16,26 @@ AS
 	20210907@Liam: Adding SABA 16mins match to LA Report - [Redmine: #160544]
 	20220408@Luca: Adding 5ML to LA Report - [Redmine:#171212]
 	20220418@Liam: Adding FTCorner5ML to LA Report - [Redmine:#171212]
+	20220920@Johnny: Change query LA Report - [Redmine:#177768]
 */
 
      SET NOCOUNT ON;
      SELECT a.UserId, 
-            a.Username, 
+            u.Username, 
             r.Value Section, 
             SUM(a.TotalMatches) TotalMatches, 
-            SUM(a.LinkLowerThan3) LinkLowerThan3, 
-            SUM(a.LinkX3) LinkX3, 
-            SUM(a.LinkX6) LinkX6, 
-            SUM(a.LinkX9Plus) LinkX9Plus, 
-            SUM(a.ProviderTv) ProviderTv, 
-            SUM(a.Provider) Provider, 
-            SUM(a.TV) TV, 
-            SUM(a.Reporter) Reporter, 
+            SUM(a.Link2) Link2, 
+            SUM(a.Link3) Link3, 
+            SUM(a.Link4) Link4,
+			SUM(a.Link5) Link5, 
+			SUM(a.Link6) Link6,
+			SUM(a.Link7) Link7, 
+			SUM(a.Link8Plus) Link8Plus, 
+            SUM(a.OnlyProvider) OnlyProvider, 
+            SUM(a.OnlyReporter) OnlyReporter, 
+            SUM(a.OnlyTV) OnlyTV, 
+            SUM(a.MixedProviderTVReporter) MixedProviderTVReporter, 
             SUM(a.CornerPlus) CornerPlus, 
-            SUM(a.Reporter) Reporter, 
             SUM(a.CornerPlus) CornerPlus, 
             SUM(a.TBookingPlus) TBookingPlus, 
             SUM(a.Fantasy) Fantasy, 
@@ -53,7 +56,7 @@ AS
                                          AND u.SectionId = r.ResourceId
      WHERE a.ReportDate BETWEEN @FromDate AND @ToDate
      GROUP BY a.UserId, 
-              a.Username, 
+              u.Username, 
               r.Value
      ORDER BY r.Value ASC, 
-              a.Username ASC;
+              u.Username ASC;
