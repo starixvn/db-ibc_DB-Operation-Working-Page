@@ -33,7 +33,7 @@ AS
         FROM
         (
             SELECT te.TicketId, 
-                   MAX(tm.CreatedDate) MaxDateTime, 
+                   MAX(tm.Id) MaxId, 
                    ti.SubtypeId
             FROM dbo.TicketIssueLiveIncident AS te WITH(NOLOCK)
                  INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = te.TicketId AND te.OwpMatchId=@OWPMatchId
@@ -46,6 +46,6 @@ AS
         INNER JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         LEFT JOIN dbo.TicketSubtype AS ts WITH(NOLOCK) ON ts.SubtypeId = x.SubtypeId
-        WHERE tm.CreatedDate = x.MaxDateTime;
+        WHERE tm.Id = x.MaxId;
 
     END;
