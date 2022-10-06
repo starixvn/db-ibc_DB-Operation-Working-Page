@@ -40,7 +40,7 @@ AS
             GROUP BY te.TicketId, owpm.OWPMatchId
         ) AS x
         LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId
-        INNER JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
+        LEFT JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE tm.Id = x.MaxId;
     END;

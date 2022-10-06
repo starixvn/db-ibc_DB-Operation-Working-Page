@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TicketEvent_GetTicketByOwpMatchId] @OWPMatchId INT,
+ALTER PROCEDURE [dbo].[OWP_TicketEvent_GetTicketByOwpMatchId] @OWPMatchIds VARCHAR(MAX),
 																@ActorId INT
 AS
 
@@ -16,6 +16,12 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
+		DECLARE @OWPMatchId TABLE(OWPMatchId INT);
+
+        INSERT INTO @OWPMatchId
+        SELECT DISTINCT 
+                      val
+        FROM fnc_SplitStrings(@OWPMatchIds, ',') u OPTION(MAXRECURSION 0);
 
 		-- select Latest comment ticket
         SELECT DISTINCT 
@@ -36,14 +42,15 @@ AS
                    MAX(tm.Id) MaxId, 
                    ti.SubtypeId
             FROM dbo.TicketIssueLiveIncident AS te WITH(NOLOCK)
-                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = te.TicketId AND te.OwpMatchId=@OWPMatchId
+				INNER JOIN @OWPMatchId AS owpm ON owpm.OWPMatchId=te.OwpMatchId
+                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = te.TicketId
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
             GROUP BY te.TicketId, 
                      ti.SubtypeId
         ) AS x
         LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId
         INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON tm.UserId = u.UserId
-        INNER JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
+        LEFT JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         LEFT JOIN dbo.TicketSubtype AS ts WITH(NOLOCK) ON ts.SubtypeId = x.SubtypeId
         WHERE tm.Id = x.MaxId;
