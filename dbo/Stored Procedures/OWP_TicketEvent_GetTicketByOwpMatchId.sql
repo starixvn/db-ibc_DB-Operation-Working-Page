@@ -25,6 +25,7 @@ AS
 
 		-- select Latest comment ticket
         SELECT DISTINCT 
+			
                x.TicketId,
                CASE
                    WHEN u.Nickname IS NULL
@@ -35,18 +36,21 @@ AS
                tm.[Message] AS LatestMessage, 
                reader.IsRead, 
                ts.SubtypeId, 
-               ts.SubtypeName
+               ts.SubtypeName,
+			   x.OWPMatchId
         FROM
         (
             SELECT te.TicketId, 
                    MAX(tm.Id) MaxId, 
-                   ti.SubtypeId
+                   ti.SubtypeId,
+				   owpm.OWPMatchId
             FROM dbo.TicketIssueLiveIncident AS te WITH(NOLOCK)
 				INNER JOIN @OWPMatchId AS owpm ON owpm.OWPMatchId=te.OwpMatchId
                  INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = te.TicketId
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
             GROUP BY te.TicketId, 
-                     ti.SubtypeId
+                     ti.SubtypeId,
+					 owpm.OWPMatchId
         ) AS x
         LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId
         INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON tm.UserId = u.UserId
