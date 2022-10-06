@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TicketIssueLga_Create] @TicketId   INT, 
-                                                   @OwpMatchId INT = NULL
+ALTER PROCEDURE [dbo].[OWP_TicketIssueLiveIncident_Create] @TicketId   INT, 
+                                                            @OwpMatchId INT = NULL
 AS
 
 /*      
