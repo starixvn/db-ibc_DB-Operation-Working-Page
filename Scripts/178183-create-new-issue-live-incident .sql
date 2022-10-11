@@ -22,7 +22,5 @@ ON [OWP_Data];
 GO
 
 INSERT INTO [dbo].[TicketType](TypeId,TypeName)
-VALUES(4,'Ticket Live Incident');
-
-select * from TicketIssueLiveIncident
+VALUES(4,'Live Incident');
 
