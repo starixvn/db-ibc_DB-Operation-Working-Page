@@ -56,7 +56,8 @@ AS
          NickName          NVARCHAR(255), 
          RecipientId       INT, 
          IsLeague          BIT, 
-         HasAssignee       BIT
+         HasAssignee       BIT,
+		 MinorBettype INT
         );
         INSERT INTO @tblEventOption
         (OwpLeagueId, 
@@ -71,7 +72,8 @@ AS
          NickName, 
          RecipientId, 
          EventDateTimeGmt8, 
-         HasAssignee
+         HasAssignee,
+		 MinorBettype
         )
                SELECT m.OWPLeagueId, 
                       hn.HomeName, 
@@ -89,17 +91,19 @@ AS
                           WHEN a.UserId IS NULL
                           THEN 0
                           ELSE 1
-                      END
+                      END,
+					  mm.MinorBettypeId
                FROM OWPMatch AS m WITH(NOLOCK)
                     INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
                     INNER JOIN @tblOWPMatchHomeName AS hn ON hn.OWPMatchId = m.OWPMatchId
                     INNER JOIN @tblOWPMatchAwayName AS an ON an.OWPMatchId = m.OWPMatchId
+                    LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId 
                     LEFT JOIN Assignment AS a WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
                     LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
                WHERE m.EventDateTime > @startDate
                      AND (hn.HomeName LIKE '%' + @Keyword + '%'
                           OR an.AwayName LIKE '%' + @Keyword + '%'
-                          OR l.OWPLeagueName LIKE '%' + @Keyword + '%');
+                          OR l.OWPLeagueName LIKE '%' + @Keyword + '%') 
         SELECT DISTINCT 
                ep.OwpMatchId, 
                ep.OwpLeagueId, 
@@ -114,5 +118,6 @@ AS
                ep.NickName, 
                ep.EventDateTimeGmt8, 
                ep.HasAssignee
-        FROM @tblEventOption AS ep;
+        FROM @tblEventOption AS ep
+		WHERE ep.MinorBettype NOT IN(-1, -2, -88, -89, -5, -6) or ep.MinorBettype is null;
     END;
