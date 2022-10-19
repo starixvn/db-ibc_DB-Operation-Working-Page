@@ -57,6 +57,6 @@ AS
         INNER JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         LEFT JOIN dbo.TicketSubtype AS ts WITH(NOLOCK) ON ts.SubtypeId = x.SubtypeId
-        WHERE tm.Id = x.MaxId;
-
+        WHERE tm.Id = x.MaxId
+		ORDER BY tm.CreatedDate DESC
     END;
