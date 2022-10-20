@@ -52,13 +52,10 @@ AS
          HomeId            INT, 
          AwayId            INT, 
          EventDateTimeGmt8 DATETIME, 
-         UserName          NVARCHAR(255), 
-         NickName          NVARCHAR(255), 
-         RecipientId       INT, 
-         IsLeague          BIT, 
-         HasAssignee       BIT,
+         IsLeague          BIT,
 		 MinorBettype INT
         );
+
         INSERT INTO @tblEventOption
         (OwpLeagueId, 
          HomeName, 
@@ -68,11 +65,7 @@ AS
          OwpMatchId, 
          LeagueName, 
          IsLeague, 
-         UserName, 
-         NickName, 
-         RecipientId, 
-         EventDateTimeGmt8, 
-         HasAssignee,
+         EventDateTimeGmt8,
 		 MinorBettype
         )
                SELECT m.OWPLeagueId, 
@@ -83,27 +76,19 @@ AS
                       m.OWPMatchId, 
                       l.OWPLeagueName, 
                       0, 
-                      u.Username, 
-                      u.Nickname, 
-                      a.UserId AS RecipientId, 
                       m.EventDateTime,
-                      CASE
-                          WHEN a.UserId IS NULL
-                          THEN 0
-                          ELSE 1
-                      END,
 					  mm.MinorBettypeId
                FROM OWPMatch AS m WITH(NOLOCK)
                     INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
                     INNER JOIN @tblOWPMatchHomeName AS hn ON hn.OWPMatchId = m.OWPMatchId
                     INNER JOIN @tblOWPMatchAwayName AS an ON an.OWPMatchId = m.OWPMatchId
-                    LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId 
-                    LEFT JOIN Assignment AS a WITH(NOLOCK) ON m.OWPMatchId = a.OWPMatchId
-                    LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
+                    LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
                WHERE m.EventDateTime > @startDate
                      AND (hn.HomeName LIKE '%' + @Keyword + '%'
                           OR an.AwayName LIKE '%' + @Keyword + '%'
-                          OR l.OWPLeagueName LIKE '%' + @Keyword + '%') 
+                          OR l.OWPLeagueName LIKE '%' + @Keyword + '%');
+		
+		
         SELECT DISTINCT 
                ep.OwpMatchId, 
                ep.OwpLeagueId, 
@@ -113,11 +98,8 @@ AS
                ep.HomeName, 
                ep.AwayName, 
                ep.IsLeague, 
-               ep.RecipientId, 
-               ep.UserName, 
-               ep.NickName, 
-               ep.EventDateTimeGmt8, 
-               ep.HasAssignee
+               ep.EventDateTimeGmt8
         FROM @tblEventOption AS ep
-		WHERE ep.MinorBettype NOT IN(-1, -2, -88, -89, -5, -6) or ep.MinorBettype is null;
+        WHERE ep.MinorBettype NOT IN(-1, -2, -88, -89, -5, -8)
+        OR ep.MinorBettype IS NULL;
     END;
