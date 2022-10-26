@@ -15,6 +15,7 @@ Revisions:
 	20220113@Mira: Change MatchStatus name [Redmine: #167315]
 	20220516@luca: add [IsNeutral] [Redmine: #172762]
 	20220610@Liam: add Sport condition [Redmine: #173765]
+	20221026@Carlos.nguyen: add adminSiteId [Redmine: #179306]
 */
 
     BEGIN
@@ -26,7 +27,7 @@ Revisions:
          MatchNo       DOUBLE PRECISION, 
          Reporter      VARCHAR(2000), 
          MatchStatus   VARCHAR(15), 
-         EventDateTime DATETIME, 
+         EventDateTime DATETIME,
          LeagueId      INT, 
          League        NVARCHAR(500), 
          Home          NVARCHAR(200), 
@@ -41,7 +42,8 @@ Revisions:
          Remark        VARCHAR(2000), 
          [Provider]    VARCHAR(900), 
          OtherProvider VARCHAR(900), 
-         MatchOffer    VARCHAR(2000)
+         MatchOffer    VARCHAR(2000),
+		 AdminSiteId   INT,
         );
         DECLARE @idoc INT;
         EXEC sp_xml_preparedocument 
@@ -69,8 +71,9 @@ Revisions:
                       Remark, 
                       [Provider], 
                       OtherProvider, 
-                      MatchOffer
-               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchNo DOUBLE PRECISION, Reporter VARCHAR(2000), MatchStatus VARCHAR(15), [DateTime] DATETIME, League NVARCHAR(500), Home NVARCHAR(200), IsNeutral BIT, Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000))
+                      MatchOffer,
+					  AdminSiteId
+               FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), Sport VARCHAR(50), MatchNo DOUBLE PRECISION, Reporter VARCHAR(2000), MatchStatus VARCHAR(15), [DateTime] DATETIME, League NVARCHAR(500), Home NVARCHAR(200), IsNeutral BIT, Away NVARCHAR(200), Category VARCHAR(100), NoHDP VARCHAR(20), AutoLink VARCHAR(100), [Service] VARCHAR(7), IPTV VARCHAR(100), WB VARCHAR(100), Remark VARCHAR(2000), [Provider] VARCHAR(900), OtherProvider VARCHAR(900), MatchOffer VARCHAR(2000), AdminSiteId INT)
                ORDER BY [DateTime] ASC;
         EXEC sp_xml_removedocument 
              @idoc;
@@ -101,6 +104,7 @@ Revisions:
             WHEN MATCHED
             THEN UPDATE SET 
                             om.[MatchNo] = m.[MatchNo], 
+							om.[AdminSiteMatchId]= m.[AdminSiteId],
                             om.[Reporter] = m.[Reporter], 
                             om.[OfferLiveStatus] = m.[MatchStatus], 
                             om.[Sport] = m.[Sport], 
@@ -138,7 +142,8 @@ Revisions:
                      [IPTV], 
                      [WB], 
                      [Remark], 
-                     [UploadedBy])
+                     [UploadedBy],
+					 [AdminSiteMatchId])
               VALUES
         (m.[LeagueId], 
          m.[Home], 
@@ -160,7 +165,8 @@ Revisions:
          m.[IPTV], 
          m.[WB], 
          m.[Remark], 
-         @UserId
+         @UserId,
+		 m.[AdminSiteId]
         );
 
         -- UPDATE MatchId to temp table
