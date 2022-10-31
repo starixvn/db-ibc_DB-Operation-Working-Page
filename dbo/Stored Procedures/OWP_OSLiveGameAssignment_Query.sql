@@ -124,7 +124,10 @@ Revisions:
 
         -- select OSMatch
         SELECT m.[OSMatchId], 
-               m.[AdminsiteMatchId], 
+			   m.[AdminsiteMatchId],
+               CASE WHEN bdo2m.matchid IS NOT NULL
+				THEN CAST('TRUE' AS BIT)
+				ELSE CAST('FALSE' AS BIT) END IsLinked, 
                m.Sport, 
                m.[League], 
                m.[Home], 
@@ -147,6 +150,10 @@ Revisions:
                m.[IsNeutral]
         FROM @tblOsMatch m
              INNER JOIN @tblLinkedMatches AS lm ON LOWER(m.LinkMode) = LOWER(lm.mode)
+			 LEFT JOIN bodb02.dbo.[match] AS bdo2m WITH(NOLOCK) ON 
+				 bdo2m.matchid=m.AdminsiteMatchId
+				 AND bdo2m.IsDeleted = 0
+				 AND bdo2m.sporttype <> 1
         ORDER BY m.[DateTime] ASC;
 
         -- Select OSAssignment  
