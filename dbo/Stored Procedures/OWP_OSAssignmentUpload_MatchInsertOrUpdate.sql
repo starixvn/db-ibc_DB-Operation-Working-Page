@@ -104,7 +104,7 @@ Revisions:
             WHEN MATCHED
             THEN UPDATE SET 
                             om.[MatchNo] = m.[MatchNo], 
-							om.[AdminSiteMatchId]= m.[AdminSiteId],
+							om.[AdminSiteMatchId]= CASE WHEN m.[AdminSiteId]=0 THEN NULL ELSE m.[AdminSiteId] END,
                             om.[Reporter] = m.[Reporter], 
                             om.[OfferLiveStatus] = m.[MatchStatus], 
                             om.[Sport] = m.[Sport], 
@@ -166,7 +166,7 @@ Revisions:
          m.[WB], 
          m.[Remark], 
          @UserId,
-		 m.[AdminSiteId]
+		CASE WHEN m.[AdminSiteId]=0 THEN NULL ELSE m.[AdminSiteId] END
         );
 
         -- UPDATE MatchId to temp table
