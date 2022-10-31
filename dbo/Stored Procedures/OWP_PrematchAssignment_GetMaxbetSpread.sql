@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201203@Carlos.Nguyen: Get maxbet spread - [Redmine: #159110]
+	20221031@Carlos.Nguyen: Fix deadlock- [Redmine:179779]
 */
 
     BEGIN
@@ -26,7 +27,7 @@ Revisions:
                odd.bettype AS Bettype, 
                odd.maxbet AS Maxbet, 
                odd.oddsspreada AS Spread
-        FROM bodb02.dbo.odds AS odd
+        FROM bodb02.dbo.odds AS odd WITH (NOLOCK)
              INNER JOIN @tempMatch AS tplm ON odd.matchid = tplm.MatchId
         WHERE odd.liveindicator = 0
               AND odd.bettype IN(@hdp, @ou)
