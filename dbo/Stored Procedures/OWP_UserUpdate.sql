@@ -20,6 +20,7 @@ Revisions:
 	20191014@Leo.Vo: Support unicode - [Redmine: #123637]
 	20191125@Carlos.Nguyen:  Update user log - [Redmine: #124371]
 	20191206@Carlos.Nguyen:  Update language - [Redmine: #124940]
+	20221027@Liam.Pham: add recipient by section - [Redmine: #179305]
 	
 */
 BEGIN
@@ -49,6 +50,9 @@ BEGIN
 		,@LogDataOld NVARCHAR(MAX)
 		,@LogData NVARCHAR(MAX)
 		,@Xml XML
+		,@SectionIdOld SMALLINT 
+	
+	DECLARE @tempTicket TABLE(TicketId INT);
 
 	CREATE TABLE #tblLogData (
 		[RowType] VARCHAR(20)
@@ -267,6 +271,41 @@ BEGIN
 
 	IF @ColumnName = 'SectionId'
 	BEGIN
+		SET @SectionIdOld =
+		(
+			SELECT u.SectionId
+			FROM [User] u WITH(NOLOCK)
+			WHERE u.UserId = @UserId
+		);
+		IF @SectionIdOld IS NOT NULL
+			BEGIN
+				DELETE FROM TicketMessageReader
+				WHERE RecipientType = 3
+					  AND GroupId = @SectionIdOld
+					  AND RecipientId = @UserId;
+		END;
+		IF @Value != ''
+			BEGIN
+				INSERT INTO @tempTicket
+					   SELECT tr.TicketId
+					   FROM TicketRecipient AS tr WITH(NOLOCK)
+					   WHERE tr.RecipientType = 3
+							 AND tr.RecipientId = @Value;
+				INSERT INTO TicketMessageReader
+				(TicketId, 
+				 RecipientId, 
+				 IsRead, 
+				 RecipientType, 
+				 GroupId
+				)
+					   SELECT tm.TicketId, 
+							  @UserId, 
+							  1, 
+							  3, 
+							  @Value
+					   FROM @tempTicket AS tm;
+		END;
+
 		UPDATE dbo.[User]
 		WITH (
 				UPDLOCK
