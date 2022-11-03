@@ -104,8 +104,7 @@ AS
          OWPHomeId, 
          OWPAwayId, 
          EventDateTime, 
-         UpdatedTime, 
-         isBlackList
+         UpdatedTime
         )
                SELECT [ParentInfoSiteMatchId], 
                       [AdminSiteMatchId], 
@@ -115,8 +114,7 @@ AS
                       [OWPHomeId], 
                       [OWPAwayId], 
                       [EventDateTime], 
-                      [UpdatedTime], 
-                      0
+                      [UpdatedTime]
                FROM @Temp t
                WHERE NOT EXISTS
                (
