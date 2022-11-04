@@ -37,11 +37,12 @@ AS
 			UnSelected
         FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, AdminSiteMatchId INT, UnSelected BIT);
 
+		
 		-- Delete match offer
 		DELETE u
 		FROM UnselectedMatch u
 		INNER JOIN @Temp AS t ON u.InfoSiteMatchId=t.InfoSiteMatchId
-		WHERE t.UnSelected=0
+		WHERE t.UnSelected=0 AND t.InfoSiteMatchId= u.InfoSiteMatchId AND ISNULL(u.AdminSiteMatchId, -1)=ISNULL(t.AdminSiteMatchId, -1)
 
 		-- Insert new match un offer
 		
