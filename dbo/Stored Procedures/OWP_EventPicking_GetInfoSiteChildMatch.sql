@@ -1,8 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_EventPicking_GetInfoSiteChildMatch] @Date       DATE, 
-                                                               @SelectGame NVARCHAR(10) = ''
+ALTER PROCEDURE [dbo].[OWP_EventPicking_GetInfoSiteChildMatch] @Date DATE
 AS
 
 /*      
@@ -26,10 +25,17 @@ AS
                h.OWPTeamName 'HomeName', 
                a.OWPTeamName 'AwayName', 
                m.MinorBettypeId, 
-               EventDateTime
+               EventDateTime,
+               CASE
+                   WHEN us.Id IS NULL
+                   THEN 0
+                   ELSE 1
+               END AS 'IsUnselected'
         FROM InfoSiteChildMatch m WITH(NOLOCK)
              INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN dbo.UnselectedMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = m.ParentInfoSiteMatchId
+                                                                 AND us.AdminSiteMatchId = m.AdminSiteMatchId
         WHERE m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
     END;

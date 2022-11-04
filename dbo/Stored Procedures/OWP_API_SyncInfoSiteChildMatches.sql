@@ -119,27 +119,22 @@ AS
                WHERE NOT EXISTS
                (
                    SELECT 1
-                   FROM dbo.InfoSiteChildMatch
+                   FROM dbo.InfoSiteChildMatch WITH(NOLOCK)
                    WHERE AdminSiteMatchId = t.AdminSiteMatchId
                );
 
         -- Update table InfoSiteChildMatch
-        UPDATE dbo.InfoSiteChildMatch
+        UPDATE im
           SET 
-              AdminSiteMatchId = t.AdminSiteMatchId, 
               MinorBettypeId = t.MinorBettypeId, 
+              ParentInfoSiteMatchId = t.ParentInfoSiteMatchId, 
               SubType = t.SubType, 
               EventDateTime = t.EventDateTime, 
               OWPLeagueId = t.OWPLeagueId, 
               OWPHomeId = t.OWPHomeId, 
               OWPAwayId = t.OWPAwayId, 
               UpdatedTime = t.UpdatedTime
-        FROM @Temp t
-        WHERE EXISTS
-        (
-            SELECT 1
-            FROM dbo.InfoSiteChildMatch
-            WHERE AdminSiteMatchId = t.AdminSiteMatchId
-                  AND UpdatedTime <> t.UpdatedTime
-        );
+        FROM dbo.InfoSiteChildMatch im
+             INNER JOIN @Temp t ON im.AdminSiteMatchId = t.AdminSiteMatchId
+        WHERE im.UpdatedTime <> t.UpdatedTime;
     END;
