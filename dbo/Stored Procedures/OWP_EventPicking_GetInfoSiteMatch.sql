@@ -47,6 +47,6 @@ AS
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.UnselectedMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
-                                                                 AND us.AdminSiteMatchId = im.AdminSiteMatchId
+                                                                 AND ISNULL(us.AdminSiteMatchId, 0) = ISNULL(im.AdminSiteMatchId, 0)
         WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
     END;
