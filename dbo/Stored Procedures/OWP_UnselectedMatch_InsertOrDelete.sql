@@ -42,7 +42,7 @@ AS
 		DELETE u
 		FROM UnselectedMatch u
 		INNER JOIN @Temp AS t ON u.InfoSiteMatchId=t.InfoSiteMatchId
-		WHERE t.UnSelected=0 AND t.InfoSiteMatchId= u.InfoSiteMatchId AND ISNULL(u.AdminSiteMatchId, -1)=ISNULL(t.AdminSiteMatchId, -1)
+		WHERE t.UnSelected=0 AND t.InfoSiteMatchId= u.InfoSiteMatchId AND ISNULL(u.AdminSiteMatchId, 0)=ISNULL(t.AdminSiteMatchId, 0)
 
 		-- Insert new match un offer
 		
@@ -50,7 +50,7 @@ AS
 		SELECT t.InfoSiteMatchId,
 			CASE WHEN t.AdminSiteMatchId=0 THEN NULL ELSE t.AdminSiteMatchId END
 		FROM @Temp AS t LEFT JOIN UnselectedMatch AS um WITH (NOLOCK) ON
-			t.InfoSiteMatchId= um.InfoSiteMatchId AND ISNULL(um.AdminSiteMatchId, -1)=ISNULL(t.AdminSiteMatchId, -1)
+			t.InfoSiteMatchId= um.InfoSiteMatchId AND ISNULL(um.AdminSiteMatchId, 0)=ISNULL(t.AdminSiteMatchId, 0)
 		WHERE t.UnSelected=1 AND um.InfoSiteMatchId IS NULL
         
     END;
