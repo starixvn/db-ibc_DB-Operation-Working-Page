@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE dbo.[OWP_UnselectedMatch_InsertOrDelete] @MatchInfoJson NVARCHAR(MAX)
+ALTER PROCEDURE dbo.[OWP_EventPicking_InsertOrDeleteNoOfferMatch] @MatchInfoJson NVARCHAR(MAX)
 
 /*
 Created: 20221027@Carlos.nguyen
@@ -19,7 +19,7 @@ AS
         DECLARE @Temp TABLE
         (InfoSiteMatchId	 INT NOT NULL, 
          AdminSiteMatchId      INT,
-		 UnSelected			 BIT
+		 IsNoOffer			 BIT
         );
 
 		DECLARE @NewMatch TABLE
@@ -30,27 +30,27 @@ AS
         INSERT INTO @Temp
         (InfoSiteMatchId, 
          AdminSiteMatchId,
-		 UnSelected
+		 IsNoOffer
         )
         SELECT InfoSiteMatchId,
 			AdminSiteMatchId,
-			UnSelected
-        FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, AdminSiteMatchId INT, UnSelected BIT);
+			IsNoOffer
+        FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, AdminSiteMatchId INT, IsNoOffer BIT);
 
 		
 		-- Delete match offer
 		DELETE u
-		FROM UnselectedMatch u
+		FROM [EventPickingNoOfferMatch] u
 		INNER JOIN @Temp AS t ON u.InfoSiteMatchId=t.InfoSiteMatchId
-		WHERE t.UnSelected=0 AND t.InfoSiteMatchId= u.InfoSiteMatchId AND ISNULL(u.AdminSiteMatchId, 0)=ISNULL(t.AdminSiteMatchId, 0)
+		WHERE t.IsNoOffer=0 AND t.InfoSiteMatchId= u.InfoSiteMatchId AND ISNULL(u.AdminSiteMatchId, 0)=ISNULL(t.AdminSiteMatchId, 0)
 
 		-- Insert new match un offer
 		
-        INSERT INTO UnselectedMatch ([InfoSiteMatchId],[AdminSiteMatchId])
+        INSERT INTO [EventPickingNoOfferMatch] ([InfoSiteMatchId],[AdminSiteMatchId])
 		SELECT t.InfoSiteMatchId,
 			CASE WHEN t.AdminSiteMatchId=0 THEN NULL ELSE t.AdminSiteMatchId END
-		FROM @Temp AS t LEFT JOIN UnselectedMatch AS um WITH (NOLOCK) ON
+		FROM @Temp AS t LEFT JOIN [EventPickingNoOfferMatch] AS um WITH (NOLOCK) ON
 			t.InfoSiteMatchId= um.InfoSiteMatchId AND ISNULL(um.AdminSiteMatchId, 0)=ISNULL(t.AdminSiteMatchId, 0)
-		WHERE t.UnSelected=1 AND um.InfoSiteMatchId IS NULL
+		WHERE t.IsNoOffer=1 AND um.InfoSiteMatchId IS NULL
         
     END;
