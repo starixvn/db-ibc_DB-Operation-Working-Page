@@ -21,7 +21,8 @@ Revisions:
  20220113@Carlos.Nguyen: Link to AdminSite matches and filter by status [Redmine: #167315]
  20220517@Liam.Pham : Add IsNeutral [Redmine: #172762]
  20220629@Liam.Pham : Modify OS Event Upload [Redmine: #174437]
- 
+ 20221026@carlos.nguyen: add adminSiteId [Redmine: #179306]
+
 */
 
     BEGIN
