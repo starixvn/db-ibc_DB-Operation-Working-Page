@@ -39,6 +39,14 @@ AS
                im.Division, 
                im.ETPK, 
                im.Remark,
+			   im.HomeRemark,
+			   im.AwayRemark,
+			   im.Remark2,
+			   im.TotalRound,
+			   im.Website1,
+			   im.Website2,
+			   im.Website3,
+			   im.Website4,
                CASE
                    WHEN us.Id IS NULL
                    THEN 0
