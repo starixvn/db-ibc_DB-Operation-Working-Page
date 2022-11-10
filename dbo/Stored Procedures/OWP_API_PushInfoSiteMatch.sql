@@ -29,6 +29,7 @@ AS
 	20211214@Liam.Pham: Sync ProviderTV - [Redmine: #163362]
 	20220224@tyler: upgrade XML package - [Redmine: #168050]   
 	20220510@Mira: Update IsDeleted for re-created events - [Redmine: #172559]   
+	20221110@Liam.Pham: Sync more info - [Redmine: #179302]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -85,6 +86,11 @@ BEGIN
 		,[Remark] NVARCHAR(2000)
 		,[ProviderUsed] NVARCHAR(2000)
 		,[ProviderTV] NVARCHAR(200)
+		,[IsTest] BIT 
+		,[Remark2] NVARCHAR(2000)
+		,[HomeRemark] NVARCHAR(2000)
+		,[AwayRemark] NVARCHAR(2000)
+		,[TotalRound] NVARCHAR(2000)
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -116,6 +122,11 @@ BEGIN
 		,[Remark]
 		,[ProviderUsed]
 		,[ProviderTV]
+		,[IsTest]
+		,[Remark2] 
+		,[HomeRemark]
+		,[AwayRemark] 
+		,[TotalRound]
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -145,6 +156,12 @@ BEGIN
 		,[Remark]
 		,[ProviderUsed]
 		,[ProviderTV]
+		,[IsTest]
+		,[Remark2] 
+		,[HomeRemark]
+		,[AwayRemark] 
+		,[TotalRound]
+
 	FROM OPENXML(@idoc, '/Root/Event', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
@@ -174,6 +191,11 @@ BEGIN
 			,[Remark] NVARCHAR(2000)
 			,[ProviderUsed][nvarchar](2000)
 			,[ProviderTV][nvarchar](200)
+		    ,[IsTest] BIT
+		    ,[Remark2] [nvarchar](2000)
+		    ,[HomeRemark] [nvarchar](2000)
+		    ,[AwayRemark] [nvarchar](2000)
+			,[TotalRound] [nvarchar](2000)
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -360,6 +382,11 @@ BEGIN
 			,[Remark]
 			,[ProviderUsed]
 			,[ProviderTV]
+		    ,[IsTest] 
+		    ,[Remark2] 
+		    ,[HomeRemark] 
+		    ,[AwayRemark] 
+			,[TotalRound]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -400,6 +427,11 @@ BEGIN
 				,t.[Remark]=s.[Remark]
 				,t.[ProviderUsed] = s.[ProviderUsed]
 				,t.[ProviderTV]=s.[ProviderTV]
+				,t.[IsTest] = s.[IsTest]
+				,t.[Remark2] = s.[Remark2]
+				,t.[HomeRemark] = s.[HomeRemark]
+			    ,t.[AwayRemark] = s.[AwayRemark]
+				,t.[TotalRound] = s.[TotalRound]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -437,6 +469,11 @@ BEGIN
 				,[Remark]
 				,[ProviderUsed]
 				,[ProviderTV]
+				,[IsTest] 
+				,[Remark2] 
+				,[HomeRemark] 
+				,[AwayRemark] 
+				,[TotalRound]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -473,6 +510,11 @@ BEGIN
 				,s.[Remark]
 				,s.[ProviderUsed]
 				,s.[ProviderTV]
+				,s.[IsTest] 
+				,s.[Remark2] 
+				,s.[HomeRemark] 
+				,s.[AwayRemark] 
+				,s.[TotalRound]
 				);
 
 	
