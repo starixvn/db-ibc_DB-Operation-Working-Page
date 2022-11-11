@@ -127,6 +127,7 @@ AS
         -- Update table InfoSiteChildMatch
         UPDATE im
           SET 
+              AdminSiteMatchId = t.AdminSiteMatchId, 
               MinorBettypeId = t.MinorBettypeId, 
               ParentInfoSiteMatchId = t.ParentInfoSiteMatchId, 
               SubType = t.SubType, 
