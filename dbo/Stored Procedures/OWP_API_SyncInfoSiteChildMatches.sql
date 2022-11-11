@@ -120,7 +120,8 @@ AS
                (
                    SELECT 1
                    FROM dbo.InfoSiteChildMatch WITH(NOLOCK)
-                   WHERE AdminSiteMatchId = t.AdminSiteMatchId
+                   WHERE ParentInfoSiteMatchId = t.ParentInfoSiteMatchId
+                         AND SubType = t.SubType
                );
 
         -- Update table InfoSiteChildMatch
@@ -135,6 +136,7 @@ AS
               OWPAwayId = t.OWPAwayId, 
               UpdatedTime = t.UpdatedTime
         FROM dbo.InfoSiteChildMatch im
-             INNER JOIN @Temp t ON im.AdminSiteMatchId = t.AdminSiteMatchId
+             INNER JOIN @Temp t ON im.ParentInfoSiteMatchId = t.ParentInfoSiteMatchId
+                                   AND im.SubType = t.SubType
         WHERE im.UpdatedTime <> t.UpdatedTime;
     END;
