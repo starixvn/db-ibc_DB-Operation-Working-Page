@@ -18,39 +18,39 @@ AS
 
         DECLARE @Temp TABLE
         (InfoSiteMatchId	 INT NOT NULL, 
-         AdminSiteMatchId      INT,
+         MinorBettypeId      INT,
 		 IsNoOffer			 BIT
         );
 
 		DECLARE @NewMatch TABLE
 		(InfoSiteMatchId	 INT NOT NULL, 
-         AdminSiteMatchId      INT
+         MinorBettypeId      INT
 		 )
 
         INSERT INTO @Temp
         (InfoSiteMatchId, 
-         AdminSiteMatchId,
+         MinorBettypeId,
 		 IsNoOffer
         )
         SELECT InfoSiteMatchId,
-			AdminSiteMatchId,
+			MinorBettypeId,
 			IsNoOffer
-        FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, AdminSiteMatchId INT, IsNoOffer BIT);
+        FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, MinorBettypeId INT, IsNoOffer BIT);
 
 		
 		-- Delete match offer
 		DELETE u
 		FROM [EventPickingNoOfferMatch] u
 		INNER JOIN @Temp AS t ON u.InfoSiteMatchId=t.InfoSiteMatchId
-		WHERE t.IsNoOffer=0 AND t.InfoSiteMatchId= u.InfoSiteMatchId AND ISNULL(u.AdminSiteMatchId, 0)=ISNULL(t.AdminSiteMatchId, 0)
+		WHERE t.IsNoOffer=0 AND t.InfoSiteMatchId= u.InfoSiteMatchId AND ISNULL(u.MinorBettypeId, 0)=ISNULL(t.MinorBettypeId, 0)
 
 		-- Insert new match un offer
 		
-        INSERT INTO [EventPickingNoOfferMatch] ([InfoSiteMatchId],[AdminSiteMatchId])
+        INSERT INTO [EventPickingNoOfferMatch] ([InfoSiteMatchId],[MinorBettypeId])
 		SELECT t.InfoSiteMatchId,
-			CASE WHEN t.AdminSiteMatchId=0 THEN NULL ELSE t.AdminSiteMatchId END
+			CASE WHEN t.MinorBettypeId=0 THEN NULL ELSE t.MinorBettypeId END
 		FROM @Temp AS t LEFT JOIN [EventPickingNoOfferMatch] AS um WITH (NOLOCK) ON
-			t.InfoSiteMatchId= um.InfoSiteMatchId AND ISNULL(um.AdminSiteMatchId, 0)=ISNULL(t.AdminSiteMatchId, 0)
+			t.InfoSiteMatchId= um.InfoSiteMatchId AND ISNULL(um.MinorBettypeId, 0)=ISNULL(t.MinorBettypeId, 0)
 		WHERE t.IsNoOffer=1 AND um.InfoSiteMatchId IS NULL
         
     END;
