@@ -36,6 +36,6 @@ AS
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = m.ParentInfoSiteMatchId
-                                                                 AND us.AdminSiteMatchId = m.AdminSiteMatchId
+                                                                          AND us.MinorBettypeId = m.MinorBettypeId
         WHERE m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
     END;

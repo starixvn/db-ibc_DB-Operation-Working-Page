@@ -38,15 +38,15 @@ AS
                im.Round, 
                im.Division, 
                im.ETPK, 
-               im.Remark,
-			   im.HomeRemark,
-			   im.AwayRemark,
-			   im.Remark2,
-			   im.TotalRound,
-			   im.Website1,
-			   im.Website2,
-			   im.Website3,
-			   im.Website4,
+               im.Remark, 
+               im.HomeRemark, 
+               im.AwayRemark, 
+               im.Remark2, 
+               im.TotalRound, 
+               im.Website1, 
+               im.Website2, 
+               im.Website3, 
+               im.Website4,
                CASE
                    WHEN us.Id IS NULL
                    THEN 0
@@ -55,6 +55,6 @@ AS
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
-                                                                 AND ISNULL(us.AdminSiteMatchId, 0) = ISNULL(im.AdminSiteMatchId, 0)
+                                                                          AND us.MinorBettypeId IS NULL
         WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
     END;
