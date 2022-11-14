@@ -31,7 +31,6 @@ AS
                im.IPTV, 
                im.Channel, 
                im.WB, 
-               im.Provider, 
                im.OtherProvider, 
                im.Agent, 
                im.Venue, 
@@ -51,7 +50,8 @@ AS
                    WHEN us.Id IS NULL
                    THEN 0
                    ELSE 1
-               END AS 'IsNoOffer'
+               END AS 'IsNoOffer',
+			   im.IsTest as IsTestMatch
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
