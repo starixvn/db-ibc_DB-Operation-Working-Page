@@ -50,11 +50,11 @@ AS
                    WHEN us.Id IS NULL
                    THEN 0
                    ELSE 1
-               END AS 'IsNoOffer',
-			   im.IsTest as IsTestMatch
+               END AS 'IsNoOffer', 
+               im.IsTest AS IsTestMatch
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
-                                                                          AND us.MinorBettypeId IS NULL
+                                                                          AND us.SubType IS NULL
         WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
     END;

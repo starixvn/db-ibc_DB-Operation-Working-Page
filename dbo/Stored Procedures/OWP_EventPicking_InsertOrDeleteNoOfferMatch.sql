@@ -17,22 +17,22 @@ AS
         SET NOCOUNT ON;
         DECLARE @Temp TABLE
         (InfoSiteMatchId INT NOT NULL, 
-         MinorBettypeId  INT, 
+         SubType         INT, 
          IsNoOffer       BIT
         );
         DECLARE @NewMatch TABLE
         (InfoSiteMatchId INT NOT NULL, 
-         MinorBettypeId  INT
+         SubType         INT
         );
         INSERT INTO @Temp
         (InfoSiteMatchId, 
-         MinorBettypeId, 
+         SubType, 
          IsNoOffer
         )
                SELECT InfoSiteMatchId, 
-                      MinorBettypeId, 
+                      SubType, 
                       IsNoOffer
-               FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, MinorBettypeId INT, IsNoOffer BIT);
+               FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, SubType INT, IsNoOffer BIT);
 
         -- Delete match offer
         DELETE u
@@ -40,23 +40,23 @@ AS
              INNER JOIN @Temp AS t ON u.InfoSiteMatchId = t.InfoSiteMatchId
         WHERE t.IsNoOffer = 0
               AND t.InfoSiteMatchId = u.InfoSiteMatchId
-              AND ISNULL(u.MinorBettypeId, 0) = ISNULL(t.MinorBettypeId, 0);
+              AND ISNULL(u.SubType, 0) = ISNULL(t.SubType, 0);
 
         -- Insert new match un offer
 
         INSERT INTO [EventPickingNoOfferMatch]
         ([InfoSiteMatchId], 
-         [MinorBettypeId]
+         SubType
         )
                SELECT t.InfoSiteMatchId,
                       CASE
-                          WHEN t.MinorBettypeId = 0
+                          WHEN t.SubType = 0
                           THEN NULL
-                          ELSE t.MinorBettypeId
+                          ELSE t.SubType
                       END
                FROM @Temp AS t
                     LEFT JOIN [EventPickingNoOfferMatch] AS um WITH(NOLOCK) ON t.InfoSiteMatchId = um.InfoSiteMatchId
-                                                                               AND ISNULL(um.MinorBettypeId, 0) = ISNULL(t.MinorBettypeId, 0)
+                                                                               AND ISNULL(um.SubType, 0) = ISNULL(t.SubType, 0)
                WHERE t.IsNoOffer = 1
                      AND um.InfoSiteMatchId IS NULL;
     END;

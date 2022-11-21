@@ -20,11 +20,11 @@ AS
 
         -- Select InfoSiteMatch
         SELECT m.ParentInfoSiteMatchId 'InfoSiteMatchId', 
-               m.AdminSiteMatchId, 
+               m.AdminSiteMatchId,
                l.OWPLeagueName 'LeagueName', 
                h.OWPTeamName 'HomeName', 
                a.OWPTeamName 'AwayName', 
-               m.MinorBettypeId, 
+               m.SubType, 
                EventDateTime,
                CASE
                    WHEN us.Id IS NULL
@@ -36,6 +36,6 @@ AS
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = m.ParentInfoSiteMatchId
-                                                                          AND us.MinorBettypeId = m.MinorBettypeId
+                                                                          AND us.SubType = m.SubType
         WHERE m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
     END;
