@@ -18,13 +18,13 @@ AS
         SET NOCOUNT ON;
         DECLARE @Temp TABLE
         (InfoSiteMatchId INT NOT NULL, 
-         SubType         INT, 
+         ChildMatchId    INT, 
          IsNoOffer       BIT
         );
         DECLARE @Log TABLE
         (id              INT IDENTITY(1, 1) PRIMARY KEY, 
          InfoSiteMatchId INT NOT NULL, 
-         SubType         INT, 
+         ChildMatchId         INT, 
          IsNoOfferOld    BIT, 
          IsNoOfferNew    BIT
         );
@@ -32,45 +32,45 @@ AS
         SET @StartRun = GETDATE();
         INSERT INTO @Temp
         (InfoSiteMatchId, 
-         SubType, 
+         ChildMatchId, 
          IsNoOffer
         )
                SELECT InfoSiteMatchId, 
-                      SubType, 
+                      ChildMatchId, 
                       IsNoOffer
-               FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, SubType INT, IsNoOffer BIT);
+               FROM OPENJSON(@MatchInfoJson) WITH(InfoSiteMatchId INT, ChildMatchId INT, IsNoOffer BIT);
 
         -- Build log table
         INSERT INTO @Log
         (InfoSiteMatchId, 
-         SubType, 
+         ChildMatchId, 
          IsNoOfferOld, 
          IsNoOfferNew
         )
                SELECT DISTINCT 
                       u.InfoSiteMatchId, 
-                      u.SubType, 
+                      u.ChildMatchId, 
                       1, 
                       0
                FROM [EventPickingNoOfferMatch] AS u WITH(NOLOCK)
                     INNER JOIN @Temp AS t ON u.InfoSiteMatchId = t.InfoSiteMatchId
                WHERE t.IsNoOffer = 0
                      AND t.InfoSiteMatchId = u.InfoSiteMatchId
-                     AND ISNULL(u.SubType, 0) = ISNULL(t.SubType, 0);
+                     AND ISNULL(u.ChildMatchId, 0) = ISNULL(t.ChildMatchId, 0);
         INSERT INTO @Log
         (InfoSiteMatchId, 
-         SubType, 
+         ChildMatchId, 
          IsNoOfferOld, 
          IsNoOfferNew
         )
                SELECT DISTINCT 
                       t.InfoSiteMatchId, 
-                      t.SubType, 
+                      t.ChildMatchId, 
                       0, 
                       1
                FROM @Temp AS t
                     LEFT JOIN [EventPickingNoOfferMatch] AS um WITH(NOLOCK) ON t.InfoSiteMatchId = um.InfoSiteMatchId
-                                                                               AND ISNULL(um.SubType, 0) = ISNULL(t.SubType, 0)
+                                                                               AND ISNULL(um.ChildMatchId, 0) = ISNULL(t.ChildMatchId, 0)
                WHERE t.IsNoOffer = 1
                      AND um.InfoSiteMatchId IS NULL;
 
@@ -80,22 +80,22 @@ AS
              INNER JOIN @Temp AS t ON u.InfoSiteMatchId = t.InfoSiteMatchId
         WHERE t.IsNoOffer = 0
               AND t.InfoSiteMatchId = u.InfoSiteMatchId
-              AND ISNULL(u.SubType, 0) = ISNULL(t.SubType, 0);
+              AND ISNULL(u.ChildMatchId, 0) = ISNULL(t.ChildMatchId, 0);
 
         -- Insert new match is no offer
         INSERT INTO [EventPickingNoOfferMatch]
         ([InfoSiteMatchId], 
-         SubType
+         ChildMatchId
         )
                SELECT t.InfoSiteMatchId,
                       CASE
-                          WHEN t.SubType = 0
+                          WHEN t.ChildMatchId = 0
                           THEN NULL
-                          ELSE t.SubType
+                          ELSE t.ChildMatchId
                       END
                FROM @Temp AS t
                     LEFT JOIN [EventPickingNoOfferMatch] AS um WITH(NOLOCK) ON t.InfoSiteMatchId = um.InfoSiteMatchId
-                                                                               AND ISNULL(um.SubType, 0) = ISNULL(t.SubType, 0)
+                                                                               AND ISNULL(um.ChildMatchId, 0) = ISNULL(t.ChildMatchId, 0)
                WHERE t.IsNoOffer = 1
                      AND um.InfoSiteMatchId IS NULL;
 
@@ -113,28 +113,24 @@ AS
                 SET @XmlLogOld =
                 (
                     SELECT slm.InfoSiteMatchId '@imid', 
-                           slm.SubType '@st', 
+                           slm.ChildMatchId '@st', 
                            slm.IsNoOfferOld '@iof'
                     FROM @Log AS slm
                     WHERE slm.id = @i FOR XML PATH('z'), ROOT('r')
                 );
-
                 SET @XmlLogNew =
                 (
                     SELECT slm.InfoSiteMatchId '@imid', 
-                           slm.SubType '@st', 
+                           slm.ChildMatchId '@cmid',
                            slm.IsNoOfferNew '@iof'
                     FROM @Log AS slm
                     WHERE slm.id = @i FOR XML PATH('z'), ROOT('r')
                 );
-
                 SELECT TOP 1 @objectid = slm.InfoSiteMatchId
                 FROM @Log AS slm
                 WHERE slm.id = @i;
-
                 SET @LogNew = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogNew), '" />', '"/"');
                 SET @LogOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogOld), '" />', '"/"');
-
                 EXEC dbo.OWP_WriteLog 
                      @CreatorId = @ActorId, 
                      @SPName = 'OWP_EventPicking_InsertOrDeleteNoOfferMatch', 
