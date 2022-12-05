@@ -91,5 +91,5 @@ IF NOT EXISTS
      2, 
      N'OWP_EventPicking_InsertOrDeleteNoOfferMatch', 
      N'OWP_EventPicking_InsertOrDeleteNoOfferMatch', 
-     N'<root><xml path="r/z" /><row item="InfoSiteMatchId" alias="imid" /><row item="SubType" alias="st" /><row item="IsNoOffer" alias="iof" /></root>'
+     N'<root><xml path="r/z"/><row item="InfoSiteMatchId" alias="imid"/><row item="ChildMatchId" alias="cmid"/><row item="IsNoOffer" alias="iof"/></root>'
     );
