@@ -19,7 +19,7 @@ AS
         DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @Date), '11:59:59');
 
         -- Select InfoSiteMatch
-        SELECT m.ParentInfoSiteMatchId 'InfoSiteMatchId', 
+        SELECT DISTINCT m.ParentInfoSiteMatchId 'InfoSiteMatchId', 
                m.AdminSiteMatchId, 
                l.OWPLeagueName 'LeagueName', 
                h.OWPTeamName 'HomeName', 
@@ -31,7 +31,7 @@ AS
                    THEN 0
                    ELSE 1
                END AS 'IsNoOffer', 
-               us.ChildMatchId
+               m.ChildMatchId
         FROM InfoSiteChildMatch m WITH(NOLOCK)
              INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId

@@ -19,7 +19,7 @@ AS
         DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @Date), '11:59:59');
 
         -- Select InfoSiteMatch
-        SELECT im.InfoSiteMatchId, 
+        SELECT DISTINCT im.InfoSiteMatchId, 
                im.AdminSiteMatchId, 
                im.EventDateTime, 
                im.OWPLeagueId, 
