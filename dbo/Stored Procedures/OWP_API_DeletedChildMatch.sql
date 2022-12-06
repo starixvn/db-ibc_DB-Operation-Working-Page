@@ -16,20 +16,24 @@ AS
     BEGIN
         SET NOCOUNT ON;
         DECLARE @Temp TABLE
-        (InfoSiteMatchId INT NOT NULL, 
-         SubType         INT NOT NULL
+        (InfoSiteMatchId  INT NOT NULL, 
+         SubType          INT NOT NULL, 
+         AdminSiteMatchId INT
         );
         INSERT INTO @Temp
         (InfoSiteMatchId, 
-         SubType
+         SubType, 
+         AdminSiteMatchId
         )
                SELECT InfoSiteMatchId, 
-                      SubType
-               FROM OPENJSON(@ChildMatchesJson) WITH(InfoSiteMatchId INT, SubType INT);
+                      SubType, 
+                      AdminSiteMatchId
+               FROM OPENJSON(@ChildMatchesJson) WITH(InfoSiteMatchId INT, SubType INT, AdminSiteMatchId INT);
 
         --- Remove child match is deleted
         DELETE u
         FROM dbo.InfoSiteChildMatch AS u WITH(NOLOCK)
              INNER JOIN @Temp AS t ON u.ParentInfoSiteMatchId = t.InfoSiteMatchId
-                                      AND u.SubType = t.SubType;
+                                      AND u.SubType = t.SubType
+                                      AND u.AdminSiteMatchId = t.AdminSiteMatchId;
     END;
