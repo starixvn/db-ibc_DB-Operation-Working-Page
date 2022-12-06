@@ -85,14 +85,16 @@ AS
         -- Insert new match is no offer
         INSERT INTO [EventPickingNoOfferMatch]
         ([InfoSiteMatchId], 
-         ChildMatchId
+         ChildMatchId,
+		 CreatedDate
         )
                SELECT t.InfoSiteMatchId,
                       CASE
                           WHEN t.ChildMatchId = 0
                           THEN NULL
                           ELSE t.ChildMatchId
-                      END
+                      END,
+					  GETDATE()
                FROM @Temp AS t
                     LEFT JOIN [EventPickingNoOfferMatch] AS um WITH(NOLOCK) ON t.InfoSiteMatchId = um.InfoSiteMatchId
                                                                                AND ISNULL(um.ChildMatchId, 0) = ISNULL(t.ChildMatchId, 0)
