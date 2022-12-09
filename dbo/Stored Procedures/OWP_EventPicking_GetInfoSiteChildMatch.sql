@@ -19,12 +19,14 @@ AS
         DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @Date), '11:59:59');
 
         -- Select InfoSiteMatch
-        SELECT DISTINCT m.ParentInfoSiteMatchId 'InfoSiteMatchId', 
+        SELECT DISTINCT 
+               m.ParentInfoSiteMatchId 'InfoSiteMatchId', 
                m.AdminSiteMatchId, 
                l.OWPLeagueName 'LeagueName', 
                h.OWPTeamName 'HomeName', 
                a.OWPTeamName 'AwayName', 
                m.SubType, 
+               m.MinorBettypeId, 
                EventDateTime,
                CASE
                    WHEN us.Id IS NULL
