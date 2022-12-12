@@ -62,5 +62,6 @@ AS
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
                                                                           AND us.ChildMatchId IS NULL
-        WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
+        WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
+              AND im.IsDeleted = 0;
     END;
