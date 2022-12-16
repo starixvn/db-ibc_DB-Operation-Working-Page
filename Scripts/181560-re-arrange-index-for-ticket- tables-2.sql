@@ -10,13 +10,13 @@ Revisions:
 */
 
 CREATE NONCLUSTERED INDEX IX_TicketIssue ON [dbo].TicketIssue
-(TicketId, TicketType, SubtypeId
-) INCLUDE(TicketStatus, LastCommentDate);
+(TicketType, SubtypeId, TicketStatus
+) INCLUDE(LastCommentDate);
 
-CREATE NONCLUSTERED INDEX IX_TicketIssueEvent ON [dbo].TicketIssueEvent(TicketId, InfoSiteMatchId) INCLUDE(OwpHomeId, OwpAwayId);
+CREATE NONCLUSTERED INDEX idx_pname ON [dbo].TicketIssueEvent(TicketId, InfoSiteMatchId) INCLUDE(OwpHomeId, OwpAwayId) WITH(DROP_EXISTING = ON);
 
-CREATE NONCLUSTERED INDEX IX_TicketIssueLeague ON [dbo].TicketIssueLeague(TicketId, OwpLeagueId);
+CREATE NONCLUSTERED INDEX idx_pname ON [dbo].TicketIssueLeague(TicketId, OwpLeagueId) WITH(DROP_EXISTING = ON);
+
+CREATE NONCLUSTERED INDEX idx_pname ON [dbo].TicketIssueOther(TicketId) INCLUDE([Subject]) WITH(DROP_EXISTING = ON);
 
 CREATE NONCLUSTERED INDEX IX_TicketCenterLiveIncident ON [dbo].TicketIssueLiveIncident(TicketId, OwpMatchId);
-
-CREATE NONCLUSTERED INDEX IX_TicketIssueOther ON [dbo].TicketIssueOther(TicketId) INCLUDE([Subject]);
