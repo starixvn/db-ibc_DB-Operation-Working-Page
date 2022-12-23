@@ -16,6 +16,7 @@ Revisions:
 	20220516@luca: add [IsNeutral] [Redmine: #172762]
 	20220610@Liam: add Sport condition [Redmine: #173765]
 	20221026@Carlos.nguyen: add adminSiteId [Redmine: #179306]
+	20221213@Johnny.Thai: change IsActive to true when it's a new league [Redmine: #181435]
 */
 
     BEGIN
@@ -79,9 +80,10 @@ Revisions:
              @idoc;
 
         -- Insert League
-        INSERT INTO dbo.OSLeague(LeagueName)
+        INSERT INTO dbo.OSLeague(LeagueName, IsActive)
                SELECT DISTINCT 
-                      m.League
+                      m.League,
+					  1
                FROM #tmpTable AS m
                     LEFT JOIN dbo.OSLeague AS l WITH(NOLOCK) ON m.League = l.LeagueName
                WHERE l.OSLeagueId IS NULL;
