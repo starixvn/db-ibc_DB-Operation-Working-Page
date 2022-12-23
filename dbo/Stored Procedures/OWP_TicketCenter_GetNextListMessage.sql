@@ -1,9 +1,10 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_TicketCenter_GetNextListMessage] @MsgOfPage INT = 20, 
-                                                             @TicketId  INT, 
-                                                             @LastMsgId INT
+ALTER PROCEDURE [dbo].[OWP_TicketCenter_GetNextListMessage] @MsgOfPage  INT = 20, 
+                                                            @TicketId   INT, 
+                                                            @FirstMsgId INT, 
+                                                            @FirstMsgId INT = NULL
 AS
 
 /*      
@@ -31,6 +32,7 @@ AS
         FROM TicketMessage AS tm
              LEFT JOIN [User] AS u ON u.UserId = tm.UserId
         WHERE tm.TicketId = @TicketId
-              AND tm.Id > @LastMsgId
-        ORDER BY CreatedDate;
+              AND (@FirstMsgId IS NULL
+                   OR tm.Id < @FirstMsgId)
+        ORDER BY CreatedDate DESC;
     END;
