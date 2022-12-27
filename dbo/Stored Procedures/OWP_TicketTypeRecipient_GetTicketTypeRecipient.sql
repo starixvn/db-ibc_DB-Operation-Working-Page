@@ -12,11 +12,13 @@ DB: bodb_OWP
 Revisions:    
   20210914@Tyler: Initial SP - [Redmine: #160545]  
   20220222@Mira: Save subtypes - [Redmine: #168468]
+  20221027@Liam.Pham: add recipient by section - [Redmine: #179305]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @GroupType INT= 2;
+        DECLARE @SectionType INT= 3;
 
         -- select ticket type
         SELECT t.TypeId, 
@@ -31,11 +33,15 @@ Revisions:
                CASE
                    WHEN r.RecipientType = @GroupType
                    THEN g.GroupName
+                   WHEN r.RecipientType = @SectionType
+                   THEN rr.[Value]
                    ELSE u.Username
                END 'RecipientName'
         FROM dbo.TicketTypeRecipient r WITH(NOLOCK)
              LEFT JOIN dbo.TicketGroup g WITH(NOLOCK) ON r.RecipientId = g.GroupId
-             LEFT JOIN dbo.[User] u WITH(NOLOCK) ON r.RecipientId = u.UserId;
+             LEFT JOIN dbo.[User] u WITH(NOLOCK) ON r.RecipientId = u.UserId
+             LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON r.RecipientId = rr.ResourceId
+                                                          AND RR.RefName = 'Section';
 
         -- select subtypes
         SELECT t.SubtypeId, 
