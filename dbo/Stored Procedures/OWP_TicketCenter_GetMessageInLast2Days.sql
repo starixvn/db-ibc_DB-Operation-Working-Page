@@ -16,7 +16,7 @@ AS
 
     BEGIN
         DECLARE @GMT8Time DATETIME= DATEADD(HOUR, 8, CONVERT(DATETIME, GETUTCDATE()));
-        DECLARE @FromDateTime DATETIME= DATEDIFF(DAY, 2, @GMT8Time);
+        DECLARE @FromDateTime DATETIME= DATEDIFF(DAY, 1, @GMT8Time);
         SET NOCOUNT ON;
         DECLARE @MinMessageId INT;
         DECLARE @MinCurrentMessageId INT;
