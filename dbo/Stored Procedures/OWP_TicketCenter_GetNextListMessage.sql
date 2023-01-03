@@ -54,7 +54,7 @@ AS
                WHERE tm.TicketId = @TicketId
                      AND (@FirstMsgId IS NULL
                           OR tm.Id < @FirstMsgId)
-               ORDER BY CreatedDate DESC;
+               ORDER BY CreatedDate ASC;
 
         -- select ticket detail
         SELECT tm.CreatedDate, 
