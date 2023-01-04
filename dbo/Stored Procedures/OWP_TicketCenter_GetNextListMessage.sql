@@ -8,12 +8,12 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenter_GetNextListMessage] @MsgOfPage          
 AS
 
 /*      
- Created: 20221222@Liam.Pham
+ Created: 20221222@liam.pham
  Task : get list message 
  DB: bodb_OWP      
       
  Revisions:          
-	20221222@Liam.Pham: get next list message - [Redmine: #181438]
+	20221222@liam.pham: get next list message - [Redmine: #181438]
 */
 
     BEGIN
@@ -54,7 +54,7 @@ AS
                WHERE tm.TicketId = @TicketId
                      AND (@FirstMsgId IS NULL
                           OR tm.Id < @FirstMsgId)
-               ORDER BY CreatedDate ASC;
+               ORDER BY tm.Id DESC;
 
         -- select ticket detail
         SELECT tm.CreatedDate, 
@@ -64,7 +64,8 @@ AS
                tm.FileId, 
                tm.IsSaved, 
                tm.Username
-        FROM #tblMessageDetail AS tm;
+        FROM #tblMessageDetail AS tm
+        ORDER BY tm.MessageId ASC;
 
         -- Can show more message
         SELECT @MinMessageId = MIN(tm.Id)
