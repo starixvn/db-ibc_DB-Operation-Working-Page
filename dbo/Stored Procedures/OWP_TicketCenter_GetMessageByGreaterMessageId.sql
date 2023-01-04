@@ -2,8 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenter_GetMessageByGreaterMessageId] @TicketId           INT, 
-                                                                       @MessageId          INT, 
-                                                                       @CanShowMoreMessage BIT = 0 OUTPUT
+                                                                      @MessageId          INT, 
+                                                                      @CanShowMoreMessage BIT = 0 OUTPUT
 AS
 
 /*      
@@ -16,11 +16,8 @@ AS
 */
 
     BEGIN
-        DECLARE @GMT8Time DATETIME= DATEADD(HOUR, 8, CONVERT(DATETIME, GETUTCDATE()));
-        DECLARE @FromDateTime DATETIME= DATEDIFF(DAY, 2, @GMT8Time);
         SET NOCOUNT ON;
         DECLARE @MinMessageId INT;
-    
         CREATE TABLE #tblMessageDetail
         (CreatedDate DATETIME NOT NULL, 
          MessageId   INT NOT NULL, 
@@ -54,7 +51,7 @@ AS
                FROM TicketMessage AS tm
                     LEFT JOIN [User] AS u ON u.UserId = tm.UserId
                WHERE tm.TicketId = @TicketId
-                     AND tm.Id>=@MessageId
+                     AND tm.Id >= @MessageId;
 
         -- select ticket detail
         SELECT tm.CreatedDate, 
@@ -70,7 +67,6 @@ AS
         SELECT @MinMessageId = MIN(tm.Id)
         FROM TicketMessage AS tm
         WHERE tm.TicketId = @TicketId;
-       
         SELECT @CanShowMoreMessage = CASE
                                          WHEN @MessageId = @MinMessageId
                                          THEN 0
