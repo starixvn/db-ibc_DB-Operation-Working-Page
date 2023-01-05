@@ -18,6 +18,7 @@ AS
     BEGIN
         SET NOCOUNT ON;
         DECLARE @MinMessageId INT;
+        DECLARE @MinCurrentMessageId INT= @MessageId;
         CREATE TABLE #tblMessageDetail
         (CreatedDate DATETIME NOT NULL, 
          MessageId   INT NOT NULL, 
@@ -67,8 +68,16 @@ AS
         SELECT @MinMessageId = MIN(tm.Id)
         FROM TicketMessage AS tm
         WHERE tm.TicketId = @TicketId;
+        IF @MinMessageId IS NULL
+            BEGIN
+                SET @MinMessageId = -1;
+        END;
+        IF @MinCurrentMessageId IS NULL
+            BEGIN
+                SET @MinCurrentMessageId = -1;
+        END;
         SELECT @CanShowMoreMessage = CASE
-                                         WHEN @MessageId = @MinMessageId
+                                         WHEN @MinMessageId = @MinCurrentMessageId
                                          THEN 0
                                          ELSE 1
                                      END;

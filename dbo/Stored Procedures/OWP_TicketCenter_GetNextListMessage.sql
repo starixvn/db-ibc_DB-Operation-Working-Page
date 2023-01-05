@@ -73,6 +73,14 @@ AS
         WHERE tm.TicketId = @TicketId;
         SELECT @MinCurrentMessageId = MIN(tm.MessageId)
         FROM #tblMessageDetail AS tm;
+        IF @MinMessageId IS NULL
+            BEGIN
+                SET @MinMessageId = -1;
+        END;
+        IF @MinCurrentMessageId IS NULL
+            BEGIN
+                SET @MinCurrentMessageId = -1;
+        END;
         SELECT @CanShowMoreMessage = CASE
                                          WHEN @MinCurrentMessageId = @MinMessageId
                                          THEN 0
