@@ -36,7 +36,6 @@ AS
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 	20211117@Tyler: Filter by EventDate - [Redmine: #164493]
 	20220909@Carlos: Copy function - [Redmine: #177317]
-	20221216@Johnny: Get Ticket List - [Redmine: #181432]
 */
 
     BEGIN
@@ -632,43 +631,6 @@ AS
              INNER JOIN #tblTodayMatch AS m WITH(NOLOCK) ON m.ParentMatchId = om.OWPMatchId
 			 LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON om.InfoSiteMatchId = im.InfoSiteMatchId
              LEFT JOIN bodb02.dbo.match AS maindb WITH(NOLOCK) ON maindb.matchid = im.AdminSiteMatchId;
-		
-		--return TicketInfo 
-
-        SELECT DISTINCT 
-               x.TicketId,
-               CASE
-                   WHEN u.Nickname IS NULL
-                   THEN u.Username
-                   ELSE u.Nickname
-               END AS LatestUsername, 
-               tm.CreatedDate AS LatestCreatedDate, 
-               tm.[Message] AS LatestMessage, 
-               reader.IsRead, 
-               ts.SubtypeId, 
-               ts.SubtypeName, 
-               x.OWPMatchId
-        FROM
-        (
-            SELECT te.TicketId, 
-                   MAX(tm.Id) MaxId, 
-                   ti.SubtypeId, 
-                   tbl.OWPMatchId
-            FROM dbo.TicketIssueLiveIncident AS te WITH(NOLOCK)
-                 INNER JOIN #tblTodayMatch AS tbl ON tbl.OWPMatchId = te.OwpMatchId
-                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = te.TicketId
-                 LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
-            GROUP BY te.TicketId, 
-                     ti.SubtypeId, 
-                     tbl.OWPMatchId
-        ) AS x
-        LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId
-        INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON tm.UserId = u.UserId
-        INNER JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
-                                                                     AND reader.RecipientId = @UserId
-        LEFT JOIN dbo.TicketSubtype AS ts WITH(NOLOCK) ON ts.SubtypeId = x.SubtypeId
-        WHERE tm.Id = x.MaxId
-        ORDER BY tm.CreatedDate DESC;
 
         DROP TABLE #tblTodayMatch;
         DROP TABLE #tblMatchSetting;
