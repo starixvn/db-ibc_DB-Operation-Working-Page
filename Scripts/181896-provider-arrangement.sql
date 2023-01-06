@@ -66,9 +66,8 @@ IF NOT EXISTS
      2, 
      N'OWP_ProviderArrangement_UpdateOderProvider', 
      N'OWP_ProviderArrangement_UpdateOderProvider', 
-     N'<root><xml path="r/z"/><row item="Id" alias="id"/><row item="Value" alias="vl"/><row item="Order" alias="od"/></root>'
+     N'<root><xml path="r/z"/><row item="Provider" alias="lProvider"/></root>'
     );
-
 
 INSERT INTO ProviderArrangement
 ([Order], [Value])
