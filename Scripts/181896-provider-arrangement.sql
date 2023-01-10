@@ -69,6 +69,18 @@ IF NOT EXISTS
      N'<root><xml path="r/z"/><row item="Provider" alias="lProvider"/></root>'
     );
 
+DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT;
+        SET @StartRun = GETDATE();
+		SET @EndRun = GETDATE();
+        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+EXEC dbo.OWP_WriteLog 
+             @CreatorId = 0, 
+             @SPName = 'OWP_ProviderArrangement_UpdateOderProvider', 
+             @LoggedDate = @StartRun, 
+             @Duration = @Duration, 
+             @Data = '<r><z lProvider="RB2,BG,SM,RTS,BET,FC" lActionName="Initialize"/></r>', 
+             @DataOld = null;
+
 INSERT INTO ProviderArrangement
 ([Order], [Value])
 VALUES(1, 'RB2'),
