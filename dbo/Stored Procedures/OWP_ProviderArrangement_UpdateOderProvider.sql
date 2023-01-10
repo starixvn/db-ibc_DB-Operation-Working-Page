@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_ProviderArrangement_UpdateOderProvider] @Providers NVARCHAR(MAX), 
-                                                                    @ActorId   INT
+ALTER PROCEDURE [dbo].[OWP_ProviderArrangement_UpdateOderProvider] @Providers NVARCHAR(MAX), 
+                                                                   @ActorId   INT
 AS
 
 /*
@@ -21,6 +21,14 @@ Revisions:
          [Value] NVARCHAR(MAX), 
          [Order] INT
         );
+        DECLARE @OldData TABLE
+        (RowNumber INT, 
+         [Value]   NVARCHAR(MAX)
+        );
+        DECLARE @NewData TABLE
+        (RowNumber INT, 
+         [Value]   NVARCHAR(MAX)
+        );
         INSERT INTO @Temp
         (Id, 
          [Value], 
@@ -30,31 +38,37 @@ Revisions:
                       [Value], 
                       [Order]
                FROM OPENJSON(@Providers) WITH(Id INT, [Value] NVARCHAR(MAX), [Order] INT);
-
-        --Write log
-        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX);
-        DECLARE @Log TABLE
-        (OldValue NVARCHAR(MAX), 
-         NewValue NVARCHAR(MAX)
-        );
-        SET @StartRun = GETDATE();
-        INSERT INTO @Log
-        (OldValue, 
-         NewValue
+        INSERT INTO @OldData
+        (RowNumber, 
+         [Value]
         )
-               SELECT STRING_AGG(CONVERT(NVARCHAR(MAX), ISNULL(p.[Value], 'N/A')), ','), 
-                      STRING_AGG(CONVERT(NVARCHAR(MAX), ISNULL(t.[Value], 'N/A')), ',')
-               FROM dbo.ProviderArrangement p, 
-                    @Temp t;
+               SELECT ROW_NUMBER() OVER(
+                      ORDER BY p.[Order]) AS RowNumber, 
+                      p.[Value]
+               FROM dbo.ProviderArrangement p;
+        INSERT INTO @NewData
+        (RowNumber, 
+         [Value]
+        )
+               SELECT ROW_NUMBER() OVER(
+                      ORDER BY t.[Order]) AS RowNumber, 
+                      t.[Value]
+               FROM @Temp t;
+        --Write log
+        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX), @ActionName NVARCHAR(MAX);
+        SET @StartRun = GETDATE();
+        SET @ActionName = 'Update the provider order table';
         SET @XmlLogOld =
         (
-            SELECT OldValue
-            FROM @Log FOR XML PATH('z'), ROOT('r')
+            SELECT STRING_AGG(oldLog.[Value], ',') '@lProvider', 
+                   @ActionName '@lActionName'
+            FROM @OldData AS oldLog FOR XML PATH('z'), ROOT('r')
         );
         SET @XmlLogNew =
         (
-            SELECT NewValue
-            FROM @Log FOR XML PATH('z'), ROOT('r')
+            SELECT STRING_AGG(newLog.[Value], ',') '@lProvider', 
+                   @ActionName '@lActionName'
+            FROM @NewData AS newLog FOR XML PATH('z'), ROOT('r')
         );
         SET @LogNew = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogNew), '" />', '"/"');
         SET @LogOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogOld), '" />', '"/"');
@@ -65,7 +79,6 @@ Revisions:
               p.[Order] = t.[Order]
         FROM dbo.ProviderArrangement p, @Temp t
         WHERE p.Id = t.Id;
-
         SET @EndRun = GETDATE();
         SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
         EXEC dbo.OWP_WriteLog 
