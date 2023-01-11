@@ -24,4 +24,5 @@ AS
         FROM dbo.UserLog AS ul WITH(NOLOCK)
              LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON ul.CreatorId = u.UserId
         WHERE ul.ActionId = 130
+        ORDER BY ul.LoggedDate ASC;
     END;
