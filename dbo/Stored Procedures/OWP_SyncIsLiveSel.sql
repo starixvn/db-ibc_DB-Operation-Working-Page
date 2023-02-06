@@ -17,6 +17,7 @@ Revisions:
 	20201004@Jacob: Sync Live Status to InfoSite - Fix bug FromDate - [Redmine: #134336]
 	20201105@Jacob: Only sync today match - [Redmine: #144570]
 	20210810@Tyler: Sync special products - [Redmine: #153498]
+	20230117@Mira: Include SABA match - [Redmine: #134336]
 */
 
     BEGIN
@@ -50,8 +51,7 @@ Revisions:
                     LEFT JOIN dbo.InfoSiteMatch im WITH(NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
                WHERE m.EventDateTime BETWEEN @FromTime AND @ToTime
                      AND m.InfoSiteMatchId IS NOT NULL
-                     AND im.AdminSiteMatchId > 0
-                     AND l.OWPLeagueName NOT LIKE '%SABA %';
+                     AND im.AdminSiteMatchId > 0;
 
         -- Result
         SELECT m.InfoSiteMatchId, 
