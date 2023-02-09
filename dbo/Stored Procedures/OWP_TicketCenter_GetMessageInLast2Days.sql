@@ -12,6 +12,7 @@ AS
       
  Revisions: 
 	20221222@Mira: Refactor flow get detail - [Redmine: #181438]
+	20230209@Johnny: Edit data type for message - [Redmine: #183655]
 */
 
     BEGIN
@@ -23,11 +24,11 @@ AS
         CREATE TABLE #tblMessageDetail
         (CreatedDate DATETIME NOT NULL, 
          MessageId   INT NOT NULL, 
-         [Message]   VARCHAR(2000) NOT NULL, 
+         [Message]   NVARCHAR(2000) NOT NULL, 
          UserId      INT NOT NULL, 
          FileId      INT, 
          IsSaved     BIT, 
-         Username    VARCHAR(100)
+         Username    NVARCHAR(100)
         );
         INSERT INTO #tblMessageDetail
         (CreatedDate, 
