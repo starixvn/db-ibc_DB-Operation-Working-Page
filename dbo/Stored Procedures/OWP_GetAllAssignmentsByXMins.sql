@@ -1,7 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-
-ALTER PROCEDURE dbo.[OWP_GetAllAssignmentsByXMins] @LastTimeInCache VARCHAR(MAX)
+﻿ALTER PROCEDURE [dbo].[OWP_GetAllAssignmentsByXMins] @LastTimeInCache VARCHAR(MAX)
 AS
 
 /*
@@ -14,10 +11,11 @@ Revisions:
 	20200810@Mira.Nguyen: edit xMins - [Redmine: #137751]
 	20200928@Mira.Nguyen: fix bug get special minor bettype - [Redmine: #137751]
 	20211020@Mira.Nguyen: hot fix duplicate message - [Redmine: #163466]
+	20230207@Johnny: Disturbance of alert message - [Redmine: #183245]
 */
 
      SET NOCOUNT ON;
-     DECLARE @XMins INT= 15;
+     DECLARE @XMins INT= 5;
      DECLARE @OWPNow DATETIME= DATEADD(hh, 12, GETDATE());
      DECLARE @LastTimeNotification DATETIME= DATEADD(mi, @XMins, @OWPNow);
      DECLARE @FromTime DATETIME;
