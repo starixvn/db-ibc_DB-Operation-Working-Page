@@ -502,3 +502,9 @@ VALUES
 
 
 DROP PROCEDURE [dbo].[OWP_ProductAssignment_GetUserBy_User_Role_Section]
+
+CREATE TABLE UserBetTypePreferences
+([Id]        [INT] IDENTITY(1, 1) NOT NULL, 
+ UserId      INT NOT NULL, 
+ [BettypeId] INT NOT NULL
+);
