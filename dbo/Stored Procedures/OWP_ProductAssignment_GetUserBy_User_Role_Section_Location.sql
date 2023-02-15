@@ -45,6 +45,7 @@ Revisions:
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@RoleId, ',') u OPTION(MAXRECURSION 0);
+        --SELECT * FROM @tempRole
         SELECT DISTINCT 
                u.Username, 
                u.UserId, 
@@ -58,10 +59,9 @@ Revisions:
              INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
              INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
                                                                                      AND us.SiteId = @SiteId
-             LEFT JOIN @tempSection AS t ON u.SectionId = t.SectionId
-             LEFT JOIN @tempLocation AS tl ON tl.LocationId = u.LocationCode
+             INNER JOIN @tempSection AS t ON u.SectionId = t.SectionId
+             INNER JOIN @tempLocation AS tl ON tl.LocationId = u.LocationCode
              LEFT JOIN [UserRole] AS ur ON ur.UserId = u.UserId
-             LEFT JOIN @tempRole AS tr ON ur.RoleId = tr.RoleId
              LEFT JOIN @tempBettype AS tb ON u.UserId = tb.UserId
         WHERE(ci.closed = 0
               AND ci.reject = 0
@@ -70,7 +70,9 @@ Revisions:
              AND u.IsSecondAccount = 0
              AND (ISNULL(u.Username, '') LIKE '%' + ISNULL(@UserName, '') + '%'
                   OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@UserName, '') + '%')
-             AND u.SectionId = t.SectionId
-             AND u.LocationCode = tl.LocationId
-             AND ISNULL(ur.RoleId, 0) = ISNULL(tr.RoleId, 0);
+             AND ur.RoleId IN
+        (
+            SELECT RoleId
+            FROM @tempRole
+        );
     END;
