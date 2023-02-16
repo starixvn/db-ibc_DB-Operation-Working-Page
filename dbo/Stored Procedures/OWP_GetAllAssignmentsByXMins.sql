@@ -1,4 +1,5 @@
-﻿ALTER PROCEDURE [dbo].[OWP_GetAllAssignmentsByXMins] @LastTimeInCache VARCHAR(MAX)
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+ALTER PROCEDURE [dbo].[OWP_GetAllAssignmentsByXMins] @LastTimeInCache VARCHAR(MAX)
 AS
 
 /*
@@ -12,6 +13,7 @@ Revisions:
 	20200928@Mira.Nguyen: fix bug get special minor bettype - [Redmine: #137751]
 	20211020@Mira.Nguyen: hot fix duplicate message - [Redmine: #163466]
 	20230207@Johnny: Disturbance of alert message - [Redmine: #183245]
+	20230216@Johnny: Open back ready for saba - [Redmine: #183870]
 */
 
      SET NOCOUNT ON;
