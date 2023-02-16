@@ -9,6 +9,7 @@ DB: bodb_OWP
 Revisions:
 	20200723@Esther.Nguyen: Staff's readiness notification - [Redmine: #137751]
 	20230207@Johnny: Disturbance of alert message - [Redmine: #183245]
+	20230216@Johnny: Open back ready for saba - [Redmine: #183870]
 */
 
     BEGIN
@@ -39,6 +40,5 @@ Revisions:
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
              INNER JOIN @allMatchIds t ON t.MatchId = m.OWPMatchId
-        WHERE i.IsSelected = 1
-              AND l.OWPLeagueName NOT LIKE '%SABA%';
+        WHERE i.IsSelected = 1;
     END;
