@@ -1,12 +1,3 @@
-USE [bodb_OWP];
-GO
-
-/****** Object:  StoredProcedure [dbo].[OWP_ProductAssignment_GetUserBy_User_Role_Section]    Script Date: 05/13/2021 11:30:08 ******/
-
-SET ANSI_NULLS ON;
-GO
-SET QUOTED_IDENTIFIER ON;
-GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
@@ -30,6 +21,15 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @UserName VARCHAR(30);
         SELECT @UserName = RTRIM(LTRIM(@User));
+        DECLARE @tempBettype TABLE
+        (UserId               INT, 
+         BetTypePreferencesId NVARCHAR(100)
+        );
+        INSERT INTO @tempBettype
+               SELECT ub.UserId, 
+                      STRING_AGG(ub.BetTypeId, ',') AS 'BetTypePreferencesId'
+               FROM UserBetTypePreferences AS ub
+               GROUP BY ub.UserId;
         DECLARE @tempSection TABLE(SectionId SMALLINT);
         DECLARE @tempLocation TABLE(LocationId VARCHAR(5));
         DECLARE @tempRole TABLE(RoleId SMALLINT);
@@ -45,13 +45,12 @@ Revisions:
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@RoleId, ',') u OPTION(MAXRECURSION 0);
-
         SELECT DISTINCT 
                u.Username, 
                u.UserId, 
                u.[Level] AS [LevelId], 
                ur.RoleId, 
-               u.BetTypePreferencesId, 
+               tb.BetTypePreferencesId, 
                u.MultipleGamesId, 
                u.AssignmentRemark, 
                u.SectionId
@@ -63,6 +62,7 @@ Revisions:
              LEFT JOIN @tempLocation AS tl ON tl.LocationId = u.LocationCode
              LEFT JOIN [UserRole] AS ur ON ur.UserId = u.UserId
              LEFT JOIN @tempRole AS tr ON ur.RoleId = tr.RoleId
+             LEFT JOIN @tempBettype AS tb ON u.UserId = tb.UserId
         WHERE(ci.closed = 0
               AND ci.reject = 0
               AND ci.[Enabled] = 1
