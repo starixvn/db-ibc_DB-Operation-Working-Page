@@ -9,6 +9,9 @@ Revisions:
 	20230209@Carlos.nguyen: Add refresource - [Redmine: #183243]
 */
 
+DELETE RefResource
+WHERE RefName = 'MultipleGames';
+
 INSERT INTO RefResource
 (RefName, 
  ResourceId, 
@@ -161,31 +164,12 @@ VALUES
  'TB', 
  27
 ),
-('MultipleGames', 
- 3, 
- '2G', 
- 3
-),
-('MultipleGames', 
- 4, 
- '3G', 
- 4
-),
-('MultipleGames', 
- 5, 
- '1G-no LA', 
- 5
-),
-('MultipleGames', 
- 6, 
- '2G-1LA', 
- 6
-),
-('MultipleGames', 
- 7, 
- '3G-2LAs', 
- 7
-);
+('MultipleGames', 1, '1G', 1),
+('MultipleGames', 2, '2G', 2),
+('MultipleGames', 3, '3G', 3),
+('MultipleGames', 4, '1G-no LA', 4),
+('MultipleGames', 5, '2G-1LA', 5),
+('MultipleGames', 6, '3G-2LAs', 6);
 
 --EXECUTE
 
