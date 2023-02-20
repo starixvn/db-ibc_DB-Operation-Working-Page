@@ -173,17 +173,17 @@ VALUES
 ),
 ('MultipleGames', 
  5, 
- '1G - not link LA', 
+ '1G-no LA', 
  5
 ),
 ('MultipleGames', 
  6, 
- '2G - link 1 LA', 
+ '2G-1LA', 
  6
 ),
 ('MultipleGames', 
  7, 
- '3G - link 2 LAs', 
+ '3G-2LAs', 
  7
 );
 
@@ -508,3 +508,6 @@ CREATE TABLE UserBetTypePreferences
  UserId      INT NOT NULL, 
  [BettypeId] INT NOT NULL
 );
+
+ALTER TABLE [User]
+DROP COLUMN BetTypePreferencesId;
