@@ -306,6 +306,9 @@ VALUES
 (6, 
  6
 );
+IF OBJECT_ID('dbo.SectionBetTypePreferences', 'U') IS NOT NULL
+    DROP TABLE dbo.[SectionBetTypePreferences]; 
+GO
 CREATE TABLE SectionBetTypePreferences
 (SectionId   INT NOT NULL, 
  [BettypeId] INT NOT NULL, 
@@ -377,7 +380,7 @@ VALUES
 ),
 (2, 
  25, 
- 5
+ 15
 ),
 (2, 
  26, 
@@ -415,15 +418,15 @@ VALUES
  11, 
  7
 ),
-(2, 
+(30, 
  12, 
  1
 ),
-(2, 
+(30, 
  13, 
  2
 ),
-(2, 
+(30, 
  14, 
  3
 ),
@@ -473,7 +476,7 @@ VALUES
 ),
 (30, 
  25, 
- 5
+ 15
 ),
 (30, 
  26, 
