@@ -45,34 +45,63 @@ Revisions:
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@RoleId, ',') u OPTION(MAXRECURSION 0);
-        --SELECT * FROM @tempRole
-        SELECT DISTINCT 
-               u.Username, 
-               u.UserId, 
-               u.[Level] AS [LevelId], 
-               ur.RoleId, 
-               tb.BetTypePreferencesId, 
-               u.MultipleGamesId, 
-               u.AssignmentRemark, 
-               u.SectionId
-        FROM [User] AS u WITH(NOLOCK)
-             INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
-             INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
-                                                                                     AND us.SiteId = @SiteId
-             INNER JOIN @tempSection AS t ON u.SectionId = t.SectionId
-             INNER JOIN @tempLocation AS tl ON tl.LocationId = u.LocationCode
-             LEFT JOIN [UserRole] AS ur ON ur.UserId = u.UserId
-             LEFT JOIN @tempBettype AS tb ON u.UserId = tb.UserId
-        WHERE(ci.closed = 0
-              AND ci.reject = 0
-              AND ci.[Enabled] = 1
-              AND us.IsActive = 1)
-             AND u.IsSecondAccount = 0
-             AND (ISNULL(u.Username, '') LIKE '%' + ISNULL(@UserName, '') + '%'
-                  OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@UserName, '') + '%')
-             AND ur.RoleId IN
-        (
-            SELECT RoleId
-            FROM @tempRole
+        --temp table
+        DECLARE @tblUserAllRole TABLE
+        (Username             NVARCHAR(MAX), 
+         UserId               INT, 
+         LevelId              INT, 
+         RoleId               INT, 
+         BetTypePreferencesId NVARCHAR(MAX), 
+         MultipleGamesId      INT, 
+         AssignmentRemark     NVARCHAR(MAX), 
+         SectionId            INT
         );
+        INSERT INTO @tblUserAllRole
+        (Username, 
+         UserId, 
+         LevelId, 
+         RoleId, 
+         BetTypePreferencesId, 
+         MultipleGamesId, 
+         AssignmentRemark, 
+         SectionId
+        )
+               SELECT DISTINCT 
+                      u.Username, 
+                      u.UserId, 
+                      u.[Level] AS [LevelId],
+                      CASE
+                          WHEN ISNULL(ur.RoleId, 0) = 0
+                          THEN 0
+                          ELSE ur.RoleId
+                      END, 
+                      tb.BetTypePreferencesId, 
+                      u.MultipleGamesId, 
+                      u.AssignmentRemark, 
+                      u.SectionId
+               FROM [User] AS u WITH(NOLOCK)
+                    INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
+                    INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
+                                                                                            AND us.SiteId = @SiteId
+                    INNER JOIN @tempSection AS t ON u.SectionId = t.SectionId
+                    INNER JOIN @tempLocation AS tl ON tl.LocationId = u.LocationCode
+                    LEFT JOIN [UserRole] AS ur ON ur.UserId = u.UserId
+                    LEFT JOIN @tempBettype AS tb ON u.UserId = tb.UserId
+               WHERE(ci.closed = 0
+                     AND ci.reject = 0
+                     AND ci.[Enabled] = 1
+                     AND us.IsActive = 1)
+                    AND u.IsSecondAccount = 0
+                    AND (ISNULL(u.Username, '') LIKE '%' + ISNULL(@UserName, '') + '%'
+                         OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@UserName, '') + '%');
+        SELECT tu.Username, 
+         tu.UserId, 
+         tu.LevelId, 
+         tu.RoleId, 
+         tu.BetTypePreferencesId, 
+         tu.MultipleGamesId, 
+         tu.AssignmentRemark, 
+         tu.SectionId
+        FROM @tblUserAllRole AS tu
+             INNER JOIN @tempRole AS tr ON tu.RoleId = tr.RoleId;
     END;

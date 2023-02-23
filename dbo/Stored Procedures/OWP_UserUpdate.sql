@@ -277,8 +277,14 @@ Revisions:
                                       THEN NULL
                                       ELSE @Value
                                   END, 
-                      [Level] = NULL
+                      [Level] = NULL,
+					  [MultipleGamesId] = NULL
                 WHERE UserId = @UserId;
+
+				DELETE 
+				FROM dbo.UserBetTypePreferences
+				WHERE UserId = @UserId;
+
                 UPDATE #tblLogData
                   SET 
                       SectionId = @Value, 
