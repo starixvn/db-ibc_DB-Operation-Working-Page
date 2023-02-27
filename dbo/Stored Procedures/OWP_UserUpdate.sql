@@ -23,7 +23,7 @@ Revisions:
 	20191125@Carlos.Nguyen:  Update user log - [Redmine: #124371]
 	20191206@Carlos.Nguyen:  Update language - [Redmine: #124940]
 	20221027@Liam.Pham: add recipient by section - [Redmine: #179305]
-	
+	20230223@Johnny: Update Level, MainBettype, MultipleGameId is null when change section - [Redmine: #183243]
 */
 
     BEGIN
