@@ -22,9 +22,10 @@ IF OBJECT_ID('dbo.SectionLevel', 'U') IS NOT NULL
     DROP TABLE dbo.[SectionLevel]; 
 GO
 CREATE TABLE SectionLevel
-(SectionId INT PRIMARY KEY, 
+(SectionId INT NOT NULL, 
  [LevelId] INT NOT NULL, 
- [Order]   INT
+ [Order]   INT,
+ CONSTRAINT PK_PersonSectionLevel PRIMARY KEY (SectionId,[LevelId])
 );
 
 --create table SectionBetTypePreferencesDefault
@@ -42,9 +43,11 @@ IF OBJECT_ID('dbo.SectionBetTypePreferences', 'U') IS NOT NULL
     DROP TABLE dbo.[SectionBetTypePreferences]; 
 GO
 CREATE TABLE SectionBetTypePreferences
-(SectionId   INT PRIMARY KEY, 
+(SectionId   INT NOT NULL, 
  [BettypeId] INT NOT NULL, 
- [Order]     INT
+ [Order]     INT,
+ CONSTRAINT PK_SectionBetTypePreferences PRIMARY KEY (SectionId,[BettypeId])
+
 );
 
 --create table UserBetTypePreferences
