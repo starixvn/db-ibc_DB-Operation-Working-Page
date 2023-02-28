@@ -11,6 +11,7 @@ DB: bodb_OWP
 Revisions:
 	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
 	20220217@Tyler: Update condition for PENALTY SHOOT-OUT - [Redmine: #168465]	
+	20230228@Los: Exclude SABA match - [Redmine: #184170]	
 */
  
 	SET NOCOUNT ON;
@@ -99,6 +100,7 @@ Revisions:
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
 		AND mi.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
+		AND UPPER(la.OWPLeagueName) NOT LIKE '%SABA %'
 
 	INSERT INTO #tblTempAssignmentReportMinorMatch (
 		UserId
@@ -136,6 +138,7 @@ Revisions:
 		AND ma.EventDateTime <= @ToDate
 		AND ass.Bettype <> @LA_Bettype
 		AND mi.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
+		AND UPPER(la.OWPLeagueName) NOT LIKE '%SABA %'
 	-- DELETE IF NOT EXISTS
 	DELETE b
 	FROM TraderReport b

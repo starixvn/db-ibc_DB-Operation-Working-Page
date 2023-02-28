@@ -27,12 +27,14 @@ AS
         FROM dbo.Assignment ass WITH(NOLOCK)
              INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
              INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
+             INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
         WHERE mn.MinorMatchId IS NULL
               AND ass.AssignmentType = 1
               AND ass.Bettype IN(1, 3)
              AND mi.MatchStatus = 'Live'
              AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
+             AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
 
         -- Union old data
         UNION
@@ -43,12 +45,14 @@ AS
         FROM dbo.Assignment_Old ass WITH(NOLOCK)
              INNER JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
              INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
+             INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.MinorMatch_Old mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
         WHERE mn.MinorMatchId IS NULL
               AND ass.AssignmentType = 1
               AND ass.Bettype IN(1, 3)
              AND mi.MatchStatus = 'Live'
              AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
+             AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
         ORDER BY ma.EventDateTime ASC, 
                  UserId ASC;
     END;

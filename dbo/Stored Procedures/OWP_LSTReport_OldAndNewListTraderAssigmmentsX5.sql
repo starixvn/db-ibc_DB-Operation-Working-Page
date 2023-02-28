@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LSTReport_OldAndNewListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
+ALTER PROCEDURE [dbo].[OWP_LSTReport_OldAndNewListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
                                                                         @ToDate   DATETIME = '2020-01-05'
 AS
 
@@ -42,6 +42,7 @@ AS
               AND mi.MatchStatus = 'Live'
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> -1002
+              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
 
         -- Union old data
         UNION
@@ -67,6 +68,7 @@ AS
               AND mi.MatchStatus = 'Live'
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> -1002
+              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
         ORDER BY ma.EventDateTime ASC, 
                  UserId ASC;
     END;

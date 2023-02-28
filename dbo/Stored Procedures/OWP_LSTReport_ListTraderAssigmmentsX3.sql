@@ -1,8 +1,8 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LSTReport_ListTraderAssigmmentsX3] @FromDate DATETIME = '2020-01-03', 
-                                                               @ToDate   DATETIME = '2020-01-05'
+ALTER PROCEDURE [dbo].[OWP_LSTReport_ListTraderAssigmmentsX3] @FromDate DATETIME = '2020-01-03', 
+                                                              @ToDate   DATETIME = '2020-01-05'
 AS
 
 /*    
@@ -25,11 +25,13 @@ AS
      FROM dbo.Assignment ass WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
           INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
+          INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
           LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
      WHERE mn.MinorMatchId IS NULL
            AND ass.AssignmentType = 1
            AND ass.Bettype IN(1, 3)
           AND mi.MatchStatus = 'Live'
-     AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
+          AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
+          AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
      ORDER BY ma.EventDateTime ASC, 
               UserId ASC;
