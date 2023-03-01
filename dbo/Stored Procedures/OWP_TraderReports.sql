@@ -13,6 +13,7 @@ AS
  Revisions:
 	20200817@Mira: Archive plan for OWP tables - [Redmine: #137757]	
 	20220120@Liam.Pham: Add esoccer trader report - [Redmine: #167636]
+	20230301@Los: Calculate FT_Other - [Redmine: #184170]
 */
 
      SET NOCOUNT ON;
@@ -55,7 +56,8 @@ AS
             SUM([ESoccer_6Mins]) AS [ESoccer_6Mins], 
             SUM([ESoccer_15Mins]) AS [ESoccer_15Mins], 
             SUM([ESoccer_16Mins]) AS [ESoccer_16Mins], 
-            SUM([ESoccer_20Mins]) AS [ESoccer_20Mins]
+            SUM([ESoccer_20Mins]) AS [ESoccer_20Mins], 
+            SUM([Type4_FT_Other]) AS [Type4_FT_Other]
      FROM dbo.TraderReport AS rp WITH(NOLOCK)
           INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON rp.UserId = u.UserId
           INNER JOIN dbo.[RefResource] AS rs WITH(NOLOCK) ON u.SectionId = rs.ResourceId

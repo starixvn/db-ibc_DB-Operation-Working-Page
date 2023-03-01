@@ -11,7 +11,8 @@ AS
  DB: bodb_OWP    
     
  Revisions:
-	20220811@Mira: Get old and new data - [Redmine: #176575]	
+	20220811@Mira: Get old and new data - [Redmine: #176575]
+	20230228@Los: Exclude SABA match - [Redmine: #184170]
 */
 
     BEGIN
