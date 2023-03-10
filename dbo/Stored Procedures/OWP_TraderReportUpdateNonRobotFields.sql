@@ -216,10 +216,9 @@ Revisions:
 			SELECT DISTINCT UserId
 				,Username
 				,OWPMatchId
-				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE Bettype IN (
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
 					)
@@ -343,7 +342,7 @@ Revisions:
 			 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -458,7 +457,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueName LIKE '%AUSTRALIA A-LEAGUE%'
 				AND MinorBettypeId = @MinorBettype_NextCorner
 				AND Bettype IN (
 					@HandicapHDP
@@ -574,7 +573,7 @@ Revisions:
 				,EventDate
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 1%'
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 1%'
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -689,7 +688,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 2%'
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueName LIKE '%JAPAN J-LEAGUE DIVISION 2%'
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -804,7 +803,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE IsSoloMatch = 1
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND IsSoloMatch = 1
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -919,7 +918,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueCategoryId = @LeagueCategoryId_MJ
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MJ
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -1034,7 +1033,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MIN_1
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -1149,7 +1148,7 @@ Revisions:
 				,EventDate
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MIN_2
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -1264,7 +1263,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MIN_3
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -1379,7 +1378,7 @@ Revisions:
 				,EventDate
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE LeagueCategoryId = 1
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = 1
 				AND Bettype IN (
 					@1H_HandicapHDP
 					,@1H_OverUnder
@@ -1493,7 +1492,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch
-			WHERE ISNULL(LeagueCategoryId, 0) <> 1
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND ISNULL(LeagueCategoryId, 0) <> 1
 				AND Bettype IN (
 					@1H_HandicapHDP
 					,@1H_OverUnder
@@ -1641,7 +1640,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE MinorBettypeId = @MinorBettype_NextCorner
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND MinorBettypeId = @MinorBettype_NextCorner
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -1752,7 +1751,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE MinorBettypeId = @MinorBettype_15Mins
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND MinorBettypeId = @MinorBettype_15Mins
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -1867,7 +1866,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE MinorBettypeId = @MinorBettype_10Mins
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND MinorBettypeId = @MinorBettype_10Mins
 				AND Bettype IN (
 					@HandicapHDP
 					,@OverUnderOU
@@ -1943,7 +1942,7 @@ Revisions:
 			 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE MinorBettypeId = @MinorBettype_NextBooking
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND MinorBettypeId = @MinorBettype_NextBooking
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -2015,7 +2014,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE LeagueName LIKE '%- PENALTY SHOOT-OUT%'
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueName LIKE '%- PENALTY SHOOT-OUT%'
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -2087,7 +2086,7 @@ Revisions:
 			 
 				,Bettype
 			FROM #tblTempAssignmentReportMinorMatch
-			WHERE LeagueName LIKE '%- WINNER'
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueName LIKE '%- WINNER'
 			) AS tmp
 		GROUP BY tmp.UserId
 			,tmp.UserName
@@ -2167,7 +2166,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
-			WHERE LeagueCategoryId = @LeagueCategoryId_MJ
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MJ
 				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
@@ -2248,7 +2247,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
-			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_1
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MIN_1
 				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
@@ -2329,7 +2328,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
-			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_2
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MIN_2
 				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
@@ -2410,7 +2409,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
-			WHERE LeagueCategoryId = @LeagueCategoryId_MIN_3
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND LeagueCategoryId = @LeagueCategoryId_MIN_3
 				AND Bettype IN (@1X2)
 			) AS tmp
 		GROUP BY tmp.UserId
@@ -2491,7 +2490,7 @@ Revisions:
 				 
 				,Bettype
 			FROM #tblTempAssignmentReportMainMatch AS tmp
-			WHERE ISNULL(LeagueCategoryId, 0) NOT IN (
+			WHERE LeagueName NOT LIKE '%FANTASY MATCH%' AND ISNULL(LeagueCategoryId, 0) NOT IN (
 					@LeagueCategoryId_MJ
 					,@LeagueCategoryId_MIN_1
 					,@LeagueCategoryId_MIN_2
