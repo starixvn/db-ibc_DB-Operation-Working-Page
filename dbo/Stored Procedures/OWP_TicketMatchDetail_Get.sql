@@ -16,6 +16,7 @@ AS
 	20220222@Luca: Get TicketSubType - [Redmine: #168624]
 	20220310@Liam: Save message  - [Redmine: #163767]	
 	20221222@Mira: Refactor flow get detail - [Redmine: #181438]
+	2023031@Johnny: Add KOTime - [Redmine: #184166]
 */
 
     BEGIN
@@ -30,7 +31,8 @@ AS
                ti.TicketId, 
                ti.TicketStatus, 
                ti.TicketType, 
-               tt.TypeName, 
+               tt.TypeName,
+			   ifm.EventDateTime AS KOTime,
                tst.SubtypeId AS TicketSubTypeId, 
                tst.SubtypeName AS TicketSubTypeName
         FROM TicketIssue AS ti
