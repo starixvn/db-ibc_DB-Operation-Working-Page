@@ -13,7 +13,7 @@ AS
  Revisions:
 	20200226@Kane.Le: Initial SP - [Redmine: #124448]	
 	20200715@Jacob: Initial SP - [Redmine: #137210]	
-	20230228@Los: Exclude SABA match - [Redmine: #184170]
+	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
 */
 
      SET NOCOUNT ON;
@@ -33,6 +33,7 @@ AS
            AND ass.Bettype IN(1, 3)
           AND mi.MatchStatus = 'Live'
           AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
+          AND l.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
           AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
      ORDER BY ma.EventDateTime ASC, 
               UserId ASC;

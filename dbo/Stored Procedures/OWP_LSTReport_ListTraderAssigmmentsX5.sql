@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_LSTReport_ListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
-                                                               @ToDate   DATETIME = '2020-01-05'
+                                                              @ToDate   DATETIME = '2020-01-05'
 AS
 
 /*    
@@ -14,7 +14,7 @@ AS
 	20200226@Kane.Le: Initial SP - [Redmine: #124448]	
 	20200326@Jacob: 2x35 mins match - [Redmine: #125461]
 	20200715@Jacob: Initial SP - [Redmine: #137210]	
-	20230228@Los: Exclude SABA match - [Redmine: #184170]
+	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
 */
 
      SET NOCOUNT ON;
@@ -40,8 +40,7 @@ AS
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
      WHERE ass.AssignmentType = 1
            AND mi.MatchStatus = 'Live'
-          AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
-          AND ass.Bettype <> -1002
-		  AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
+           AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
+           AND ass.Bettype <> -1002
      ORDER BY ma.EventDateTime ASC, 
               UserId ASC;

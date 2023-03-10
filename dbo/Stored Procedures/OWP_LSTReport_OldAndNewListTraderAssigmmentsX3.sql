@@ -12,7 +12,7 @@ AS
     
  Revisions:
 	20220811@Mira: Get old and new data - [Redmine: #176575]	
-	20230228@Los: Exclude SABA match - [Redmine: #184170]
+	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
 */
 
     BEGIN
@@ -36,7 +36,7 @@ AS
              AND mi.MatchStatus = 'Live'
              AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
-
+             AND l.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
         -- Union old data
         UNION
         SELECT DISTINCT 
@@ -54,6 +54,7 @@ AS
              AND mi.MatchStatus = 'Live'
              AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
+             AND l.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
         ORDER BY ma.EventDateTime ASC, 
                  UserId ASC;
     END;

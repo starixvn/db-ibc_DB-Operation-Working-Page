@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_LSTReport_OldAndNewListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
-                                                                        @ToDate   DATETIME = '2020-01-05'
+                                                                       @ToDate   DATETIME = '2020-01-05'
 AS
 
 /*    
@@ -12,7 +12,7 @@ AS
     
  Revisions:
 	20220811@Mira: Get old and new data - [Redmine: #176575]
-	20230228@Los: Exclude SABA match - [Redmine: #184170]
+	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
 */
 
     BEGIN
@@ -43,7 +43,6 @@ AS
               AND mi.MatchStatus = 'Live'
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> -1002
-              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
 
         -- Union old data
         UNION
@@ -69,7 +68,6 @@ AS
               AND mi.MatchStatus = 'Live'
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> -1002
-              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
         ORDER BY ma.EventDateTime ASC, 
                  UserId ASC;
     END;

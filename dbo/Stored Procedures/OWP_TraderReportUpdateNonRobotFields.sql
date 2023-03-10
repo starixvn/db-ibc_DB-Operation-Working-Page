@@ -12,7 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
 	20220217@Tyler: Update condition for PENALTY SHOOT-OUT - [Redmine: #168465]	
-	20230228@Los: Exclude SABA match - [Redmine: #184170]	
+	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]	
 */
 
      SET NOCOUNT ON;
