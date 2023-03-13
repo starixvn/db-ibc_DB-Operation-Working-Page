@@ -21,7 +21,8 @@ AS
      SET @FromDate = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
      SET @ToDate = DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
      SELECT DISTINCT 
-            UserId, 
+            u.UserId, 
+            u.Username, 
             ma.OWPMatchId, 
             ma.EventDateTime,
             CASE
@@ -35,6 +36,7 @@ AS
                 ELSE 0
             END Is35MinuteMatch
      FROM dbo.Assignment ass WITH(NOLOCK)
+          INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ass.UserId
           INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
           INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId

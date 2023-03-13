@@ -22,7 +22,8 @@ AS
 
         -- Select new data
         SELECT DISTINCT 
-               UserId, 
+               u.UserId, 
+               u.UserName, 
                ma.OWPMatchId, 
                ma.EventDateTime,
                CASE
@@ -36,6 +37,7 @@ AS
                    ELSE 0
                END Is35MinuteMatch
         FROM dbo.Assignment ass WITH(NOLOCK)
+             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ass.UserId
              INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
              INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
@@ -47,7 +49,8 @@ AS
         -- Union old data
         UNION
         SELECT DISTINCT 
-               UserId, 
+               u.UserId, 
+               u.Username, 
                ma.OWPMatchId, 
                ma.EventDateTime,
                CASE
@@ -60,7 +63,8 @@ AS
                    THEN 1
                    ELSE 0
                END Is35MinuteMatch
-        FROM dbo.Assignment_Old ass WITH(NOLOCK)
+        FROM dbo.Assignment ass WITH(NOLOCK)
+             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ass.UserId
              INNER JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
              INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
