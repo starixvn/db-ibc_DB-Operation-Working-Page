@@ -1,12 +1,15 @@
 ﻿USE [bodb_OWP];
 GO
 
-/****** Object:  StoredProcedure [dbo].[OWP_TraderReportUpdateRobotFields]    Script Date: 3/13/2023 1:48:50 PM ******/
+/****** Object:  StoredProcedure [dbo].[OWP_TraderReportUpdateRobotFields]    Script Date: 3/13/2023 3:01:54 PM ******/
 
 SET ANSI_NULLS ON;
 GO
 SET QUOTED_IDENTIFIER ON;
 GO
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 ALTER PROCEDURE [dbo].[OWP_TraderReportUpdateRobotFields] @EventDate DATETIME, 
                                                           @Xml       NVARCHAR(MAX)
 AS
@@ -26,12 +29,11 @@ Revisions:
 
      -- Parameters
      CREATE TABLE #tmpTable
-     (UserId   INT, 
-      X2       INT, 
-      X3       INT, 
-      X3Plus   INT, 
-      X5       INT, 
-      Username VARCHAR(255)
+     (UserId INT, 
+      X2     INT, 
+      X3     INT, 
+      X3Plus INT, 
+      X5     INT
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -42,14 +44,8 @@ Revisions:
                    X2, 
                    X3, 
                    X3Plus, 
-                   X5, 
-                   Username
-            FROM OPENXML(@idoc, '/Root/RobotByByUser', 1) WITH(UserId INT, X2 INT, X3 INT, X3Plus INT, X5 INT, Username VARCHAR(255));
-     UPDATE t
-       SET 
-           t.Username = u.Username
-     FROM #tmpTable t
-          INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = t.UserId;
+                   X5
+            FROM OPENXML(@idoc, '/Root/RobotByByUser', 1) WITH(UserId INT, X2 INT, X3 INT, X3Plus INT, X5 INT);
      EXEC sp_xml_removedocument 
           @idoc;
      MERGE dbo.TraderReport AS TARGET
@@ -76,12 +72,19 @@ Revisions:
            VALUES
      (@EventDate, 
       SOURCE.UserId, 
-      SOURCE.UserName, 
+      NULL, 
+      SOURCE.X2, 
       SOURCE.X3, 
       SOURCE.X3Plus, 
       SOURCE.X5, 
       GETDATE()
      );
+     UPDATE t
+       SET 
+           t.Username = u.Username
+     FROM TraderReport t
+          INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = t.UserId
+     WHERE t.Username IS NULL;
      DROP TABLE #tmpTable;
 
      /* End */
