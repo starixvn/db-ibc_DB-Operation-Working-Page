@@ -44,7 +44,8 @@ Revisions:
       LeagueCategoryId, 
       MinorBettypeId
      )
-            SELECT u.UserId, 
+            SELECT DISTINCT 
+                   u.UserId, 
                    u.Username, 
                    ma.OWPMatchId, 
                    ass.Bettype, 
@@ -68,8 +69,36 @@ Revisions:
                   AND mi.MatchStatus NOT IN('Cancel', 'Postponed', 'Suspended')
                  AND UPPER(la.OWPLeagueName) NOT LIKE '%SABA %'
                  AND la.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
-                 AND (la.CategoryId IS NULL OR la.CategoryId NOT IN(@LeagueCategoryId_MJ, @LeagueCategoryId_MIN_1, @LeagueCategoryId_MIN_2, @LeagueCategoryId_MIN_3));
-   
+                 AND (la.CategoryId IS NULL
+                      OR la.CategoryId NOT IN(@LeagueCategoryId_MJ, @LeagueCategoryId_MIN_1, @LeagueCategoryId_MIN_2, @LeagueCategoryId_MIN_3))
+            UNION
+            SELECT DISTINCT 
+                   u.UserId, 
+                   u.Username, 
+                   ma.OWPMatchId, 
+                   ass.Bettype, 
+                   ma.EventDateTime, 
+                   mi.IsSoloMatch, 
+                   ma.OWPLeagueId, 
+                   la.OWPLeagueName, 
+                   la.CategoryId, 
+                   mn.MinorBettypeId
+            FROM dbo.[User] u WITH(NOLOCK)
+                 LEFT JOIN dbo.Assignment_Old ass WITH(NOLOCK) ON u.UserId = ass.UserId
+                 LEFT JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
+                 INNER JOIN dbo.OWPLeague la WITH(NOLOCK) ON la.OWPLeagueId = ma.OWPLeagueId
+                 LEFT JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
+                 LEFT OUTER JOIN dbo.MinorMatch_Old mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
+            WHERE mn.MinorMatchId IS NULL
+                  AND ass.AssignmentType = 1
+                  AND ma.EventDateTime >= @FromDate
+                  AND ma.EventDateTime <= @ToDate
+                  AND ass.Bettype <> @LA_Bettype
+                  AND mi.MatchStatus NOT IN('Cancel', 'Postponed', 'Suspended')
+                 AND UPPER(la.OWPLeagueName) NOT LIKE '%SABA %'
+                 AND la.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
+                 AND (la.CategoryId IS NULL
+                      OR la.CategoryId NOT IN(@LeagueCategoryId_MJ, @LeagueCategoryId_MIN_1, @LeagueCategoryId_MIN_2, @LeagueCategoryId_MIN_3));
      CREATE TABLE #tblReportTypeGeneral
      (Id        INT IDENTITY, 
       UserId    INT, 
