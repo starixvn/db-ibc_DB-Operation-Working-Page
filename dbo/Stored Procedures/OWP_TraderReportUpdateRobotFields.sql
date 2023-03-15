@@ -1,8 +1,17 @@
-﻿
+﻿USE [bodb_OWP];
+GO
+
+/****** Object:  StoredProcedure [dbo].[OWP_TraderReportUpdateRobotFields]    Script Date: 3/13/2023 3:01:54 PM ******/
+
+SET ANSI_NULLS ON;
+GO
+SET QUOTED_IDENTIFIER ON;
+GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TraderReportUpdateRobotFields] @EventDate DATETIME, 
-                                                       @Xml       NVARCHAR(MAX)
+                                                          @Xml       NVARCHAR(MAX)
 AS
 
 /*
@@ -11,11 +20,13 @@ Task : Archive plan for OWP tables
 DB: bodb_OWP
 
 Revisions:
-	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
+	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]
+	20230228@Los: Insert if not exists - [Redmine: #184170]
 	
 */
 
      SET NOCOUNT ON;
+
      -- Parameters
      CREATE TABLE #tmpTable
      (UserId INT, 
@@ -37,15 +48,43 @@ Revisions:
             FROM OPENXML(@idoc, '/Root/RobotByByUser', 1) WITH(UserId INT, X2 INT, X3 INT, X3Plus INT, X5 INT);
      EXEC sp_xml_removedocument 
           @idoc;
-
-     -- Update Data
-     UPDATE r
+     MERGE dbo.TraderReport AS TARGET
+     USING #tmpTable AS SOURCE
+     ON(TARGET.UserId = SOURCE.UserId
+        AND CAST(TARGET.ReportDate AS DATE) = @EventDate)
+         WHEN MATCHED AND TARGET.UserId = SOURCE.UserId
+                          AND CAST(TARGET.ReportDate AS DATE) = @EventDate
+         THEN UPDATE SET 
+                         TARGET.Robot3_X2 = SOURCE.X2, 
+                         TARGET.Robot3_X3 = SOURCE.X3, 
+                         TARGET.Robot3_X3_plus = SOURCE.X3Plus, 
+                         TARGET.Robot5_X5 = SOURCE.X5
+         WHEN NOT MATCHED BY TARGET
+         THEN
+           INSERT(ReportDate, 
+                  UserId, 
+                  Username, 
+                  Robot3_X2, 
+                  Robot3_X3, 
+                  Robot3_X3_plus, 
+                  Robot5_X5, 
+                  CreatedDate)
+           VALUES
+     (@EventDate, 
+      SOURCE.UserId, 
+      NULL, 
+      SOURCE.X2, 
+      SOURCE.X3, 
+      SOURCE.X3Plus, 
+      SOURCE.X5, 
+      GETDATE()
+     );
+     UPDATE t
        SET 
-           r.Robot3_X2 = t.X2, 
-           r.Robot3_X3 = t.X3, 
-           r.Robot3_X3_plus = t.X3Plus, 
-           r.Robot5_X5 = t.X5
-     FROM dbo.TraderReport AS r
-          INNER JOIN #tmpTable t ON r.UserId = t.UserId
-                                    AND r.ReportDate = @EventDate;
+           t.Username = u.Username
+     FROM TraderReport t
+          INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = t.UserId
+     WHERE t.Username IS NULL;
      DROP TABLE #tmpTable;
+
+     /* End */

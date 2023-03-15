@@ -1,8 +1,8 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LSTReport_ListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
-                                                               @ToDate   DATETIME = '2020-01-05'
+ALTER PROCEDURE [dbo].[OWP_LSTReport_ListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
+                                                              @ToDate   DATETIME = '2020-01-05'
 AS
 
 /*    
@@ -14,13 +14,15 @@ AS
 	20200226@Kane.Le: Initial SP - [Redmine: #124448]	
 	20200326@Jacob: 2x35 mins match - [Redmine: #125461]
 	20200715@Jacob: Initial SP - [Redmine: #137210]	
+	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
 */
 
      SET NOCOUNT ON;
      SET @FromDate = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
      SET @ToDate = DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
      SELECT DISTINCT 
-            UserId, 
+            u.UserId, 
+            u.Username, 
             ma.OWPMatchId, 
             ma.EventDateTime,
             CASE
@@ -34,12 +36,13 @@ AS
                 ELSE 0
             END Is35MinuteMatch
      FROM dbo.Assignment ass WITH(NOLOCK)
+          INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ass.UserId
           INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
           INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
      WHERE ass.AssignmentType = 1
            AND mi.MatchStatus = 'Live'
-          AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
-          AND ass.Bettype <> -1002
+           AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
+           AND ass.Bettype <> -1002
      ORDER BY ma.EventDateTime ASC, 
               UserId ASC;

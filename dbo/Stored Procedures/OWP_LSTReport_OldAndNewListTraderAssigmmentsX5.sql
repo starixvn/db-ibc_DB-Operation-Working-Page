@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LSTReport_OldAndNewListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
-                                                                        @ToDate   DATETIME = '2020-01-05'
+ALTER PROCEDURE [dbo].[OWP_LSTReport_OldAndNewListTraderAssigmmentsX5] @FromDate DATETIME = '2020-01-03', 
+                                                                       @ToDate   DATETIME = '2020-01-05'
 AS
 
 /*    
@@ -11,7 +11,8 @@ AS
  DB: bodb_OWP    
     
  Revisions:
-	20220811@Mira: Get old and new data - [Redmine: #176575]	
+	20220811@Mira: Get old and new data - [Redmine: #176575]
+	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
 */
 
     BEGIN
@@ -21,7 +22,8 @@ AS
 
         -- Select new data
         SELECT DISTINCT 
-               UserId, 
+               u.UserId, 
+               u.UserName, 
                ma.OWPMatchId, 
                ma.EventDateTime,
                CASE
@@ -35,6 +37,7 @@ AS
                    ELSE 0
                END Is35MinuteMatch
         FROM dbo.Assignment ass WITH(NOLOCK)
+             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ass.UserId
              INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
              INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
@@ -46,7 +49,8 @@ AS
         -- Union old data
         UNION
         SELECT DISTINCT 
-               UserId, 
+               u.UserId, 
+               u.Username, 
                ma.OWPMatchId, 
                ma.EventDateTime,
                CASE
@@ -60,6 +64,7 @@ AS
                    ELSE 0
                END Is35MinuteMatch
         FROM dbo.Assignment_Old ass WITH(NOLOCK)
+             INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ass.UserId
              INNER JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
              INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
