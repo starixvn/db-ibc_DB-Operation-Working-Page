@@ -63,7 +63,7 @@ AS
                    THEN 1
                    ELSE 0
                END Is35MinuteMatch
-        FROM dbo.Assignment ass WITH(NOLOCK)
+        FROM dbo.Assignment_Old ass WITH(NOLOCK)
              INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ass.UserId
              INNER JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = ass.OWPMatchId
              INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
