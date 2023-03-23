@@ -18,6 +18,8 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 1, '2023-03-23'), 'AM');
         DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, '2023-03-23'), '2PM');
+		DECLARE @Specific15Mins INT= -1, @Specific15MinsNoOfCorners INT= -5,@Specific15MinsTotalBooking INT= -8;
+       
         DECLARE @tempAssignment TABLE
         (OWPMatchId     INT NOT NULL, 
          IsMajorLeague  BIT NOT NULL, 
@@ -28,7 +30,9 @@ Revisions:
          LeagueName     VARCHAR(2000), 
          UserId         INT NOT NULL, 
          IsMainMatch    BIT NOT NULL, 
-         IsFantasyMatch BIT NOT NULL
+         IsFantasyMatch BIT NOT NULL, 
+         IsCornerMatch  BIT NOT NULL, 
+         Is15Mins       BIT NOT NULL
         );
         INSERT INTO @tempAssignment
         (OWPMatchId, 
@@ -40,7 +44,9 @@ Revisions:
          Remark, 
          LeagueName, 
          IsMainMatch, 
-         IsFantasyMatch
+         IsFantasyMatch, 
+         IsCornerMatch, 
+         Is15Mins
         )
                SELECT DISTINCT 
                       a.OWPMatchId,
@@ -64,11 +70,27 @@ Revisions:
                           WHEN l.OWPLeagueName LIKE '%FANTASY MATCH%'
                           THEN 1
                           ELSE 0
+                      END,
+                      CASE
+                          WHEN(l.OWPLeagueName LIKE '%CORNERS%'
+                               AND l.OWPLeagueName NOT LIKE '%SPECIFIC 15 MINS NUMBER OF CORNERS%'
+                               AND h.OWPTeamName LIKE '%No.of Corners%'
+                               AND h.OWPTeamName NOT LIKE '% Over%')
+                              OR (l.OWPLeagueName LIKE '%CORNERS%'
+                                  AND h.OWPTeamName LIKE '%Next Corner%')
+                          THEN 1
+                          ELSE 0
+                      END,
+                      CASE
+                          WHEN mm.MinorBettypeId IN(@Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
+                          THEN 1
+                          ELSE 0
                       END
                FROM Assignment AS a WITH(NOLOCK)
                     INNER JOIN OWPMatch AS m WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
                     INNER JOIN MatchInfo AS mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
                     INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.CategoryId
+                    INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
                     LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
                WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;
         SELECT DISTINCT 
