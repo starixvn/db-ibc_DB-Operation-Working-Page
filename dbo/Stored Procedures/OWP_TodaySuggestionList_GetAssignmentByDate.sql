@@ -18,8 +18,7 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 1, '2023-03-23'), 'AM');
         DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, '2023-03-23'), '2PM');
-		DECLARE @Specific15Mins INT= -1, @Specific15MinsNoOfCorners INT= -5,@Specific15MinsTotalBooking INT= -8;
-       
+        DECLARE @Specific15Mins INT= -1, @Specific15MinsNoOfCorners INT= -5, @Specific15MinsTotalBooking INT= -8, @Handicap INT= 1, @OverUnder INT= 3, @FirstHalfHandicap INT= 7, @FirstHalfOverUnder INT= 8;
         DECLARE @tempAssignment TABLE
         (OWPMatchId     INT NOT NULL, 
          IsMajorLeague  BIT NOT NULL, 
@@ -32,7 +31,8 @@ Revisions:
          IsMainMatch    BIT NOT NULL, 
          IsFantasyMatch BIT NOT NULL, 
          IsCornerMatch  BIT NOT NULL, 
-         Is15Mins       BIT NOT NULL
+         Is15Mins       BIT NOT NULL, 
+         ParentMatchId  INT
         );
         INSERT INTO @tempAssignment
         (OWPMatchId, 
@@ -46,7 +46,8 @@ Revisions:
          IsMainMatch, 
          IsFantasyMatch, 
          IsCornerMatch, 
-         Is15Mins
+         Is15Mins, 
+         ParentMatchId
         )
                SELECT DISTINCT 
                       a.OWPMatchId,
@@ -85,14 +86,16 @@ Revisions:
                           WHEN mm.MinorBettypeId IN(@Specific15Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking)
                           THEN 1
                           ELSE 0
-                      END
+                      END, 
+                      mm.ParentMatchId
                FROM Assignment AS a WITH(NOLOCK)
                     INNER JOIN OWPMatch AS m WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
                     INNER JOIN MatchInfo AS mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
                     INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.CategoryId
                     INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
                     LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
-               WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;
+               WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
+                     AND a.Bettype IN(@Handicap, @OverUnder, @FirstHalfHandicap, @FirstHalfOverUnder);
         SELECT DISTINCT 
                m.OWPMatchId, 
                m.Maxbet, 
