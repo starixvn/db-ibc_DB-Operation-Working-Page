@@ -32,7 +32,9 @@ Revisions:
          IsFantasyMatch BIT NOT NULL, 
          IsCornerMatch  BIT NOT NULL, 
          Is15Mins       BIT NOT NULL, 
-         ParentMatchId  INT
+         ParentMatchId  INT, 
+         HomeName       VARCHAR(200), 
+         AwayName       VARCHAR(200)
         );
         INSERT INTO @tempAssignment
         (OWPMatchId, 
@@ -47,7 +49,9 @@ Revisions:
          IsFantasyMatch, 
          IsCornerMatch, 
          Is15Mins, 
-         ParentMatchId
+         ParentMatchId, 
+         HomeName, 
+         AwayName
         )
                SELECT DISTINCT 
                       a.OWPMatchId,
@@ -87,12 +91,15 @@ Revisions:
                           THEN 1
                           ELSE 0
                       END, 
-                      mm.ParentMatchId
+                      mm.ParentMatchId, 
+                      h.OWPTeamName, 
+                      aw.OWPTeamName
                FROM Assignment AS a WITH(NOLOCK)
                     INNER JOIN OWPMatch AS m WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
                     INNER JOIN MatchInfo AS mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
                     INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.CategoryId
                     INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
+                    INNER JOIN dbo.OWPTeam aw WITH(NOLOCK) ON m.OWPAwayId = aw.OWPTeamId
                     LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
                WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
                      AND a.Bettype IN(@Handicap, @OverUnder, @FirstHalfHandicap, @FirstHalfOverUnder);
@@ -108,6 +115,8 @@ Revisions:
                BettypeId, 
                EventDateTime, 
                Remark, 
-               LeagueName
+               LeagueName, 
+               HomeName, 
+               AwayName
         FROM @tempAssignment;
     END;
