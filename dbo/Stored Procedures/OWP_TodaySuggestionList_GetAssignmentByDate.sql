@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TodaySuggestionList_GetAssignmentByDate] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AssigneeSuggestionList_GetAssignmentByDate] @EventDate DATE
 AS
 
 /*
@@ -17,7 +17,7 @@ Revisions:
     BEGIN
         SET NOCOUNT ON;
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '2AM');
-        DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '4AM');
+        DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '4PM');
         SELECT @FromDate, 
                @ToDate;
         DECLARE @MainAssignmentType INT= 1;
@@ -61,7 +61,8 @@ Revisions:
                    THEN msm.Maxbet
                    ELSE ms.Maxbet
                END 'MaxbetHDP', 
-               mm.MinorBettypeId
+               mm.MinorBettypeId, 
+               mm.ParentMatchId
         FROM Assignment AS a WITH(NOLOCK)
              INNER JOIN OWPMatch AS m WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
              INNER JOIN MatchInfo AS mi WITH(NOLOCK) ON m.OWPMatchId = mi.OWPMatchId
