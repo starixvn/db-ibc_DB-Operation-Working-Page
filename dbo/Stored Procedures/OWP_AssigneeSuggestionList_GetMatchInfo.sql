@@ -38,7 +38,7 @@ Revisions:
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
-             INNER JOIN dbo.MatchSetting ms WITH(NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
-        WHERE m.OWPMatchId = @OwpMatchId
-              AND ms.Bettype = @HDP;
+             LEFT JOIN dbo.MatchSetting ms WITH(NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
+                                                           AND ms.Bettype = @HDP
+        WHERE m.OWPMatchId = @OwpMatchId;
     END;

@@ -18,8 +18,6 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '2AM');
         DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '4PM');
-        SELECT @FromDate, 
-               @ToDate;
         DECLARE @MainAssignmentType INT= 1;
         DECLARE @MJ INT= 1;
         DECLARE @HDP INT= 1, @OU INT= 3, @1H_HDP INT= 7, @1H_OU INT= 8;
