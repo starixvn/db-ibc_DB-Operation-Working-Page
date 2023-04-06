@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-alter PROCEDURE [dbo].[OWP_AssigneeSuggestionList_GetTraderByDate] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_AssigneeSuggestionList_GetTraderByDate] @EventDate DATE
 AS
 
 /*
@@ -16,15 +16,15 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'),
-		@ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '16:00:00');
+        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '16:00:00');
         CREATE TABLE #tblUser
-        (UserId       INT, 
-         Username     NVARCHAR(30), 
-         [Level]      INT, 
-         [LevelLabel] NVARCHAR(50), 
-         [Group]      NVARCHAR(50), 
-         [Role]       NVARCHAR(50)
+        (UserId             INT, 
+         Username           NVARCHAR(30), 
+         [Level]            INT, 
+         [LevelLabel]       NVARCHAR(50), 
+         [Group]            NVARCHAR(50), 
+         [Role]             NVARCHAR(50), 
+         [MaxMultipleGames] NVARCHAR(50),
         );
         INSERT INTO #tblUser
         (UserId, 
@@ -32,14 +32,16 @@ Revisions:
          [Level], 
          LevelLabel, 
          [Group], 
-         [Role]
+         [Role], 
+         [MaxMultipleGames]
         )
                SELECT ou.UserId, 
                       ou.Username, 
                       ou.[Level], 
                       rl.[Value], 
                       rg.[Value], 
-                      rr.[Value]
+                      rr.[Value], 
+                      mg.[value]
                FROM dbo.[User] AS ou WITH(NOLOCK)
                     LEFT JOIN dbo.UserRole AS ur WITH(NOLOCK) ON ur.UserId = ou.UserId
                     LEFT JOIN dbo.[RefResource] rr ON rr.ResourceId = ur.RoleId
@@ -48,6 +50,8 @@ Revisions:
                                                       AND rg.RefName = 'UserGroup'
                     LEFT JOIN dbo.[RefResource] rl ON rl.ResourceId = ou.[Level]
                                                       AND rl.RefName = 'UserLevel'
+                    LEFT JOIN dbo.[RefResource] mg ON mg.ResourceId = ou.MultipleGamesId
+                                                      AND mg.RefName = 'MultipleGames'
                WHERE SectionId IN(3, 28);
         SELECT DISTINCT 
                u.UserId, 
@@ -58,12 +62,13 @@ Revisions:
                u.[Level], 
                u.LevelLabel, 
                u.[Group], 
+               u.MaxMultipleGames, 
                STUFF(
         (
             SELECT ',' + rb.Value
             FROM [UserBetTypePreferences] up
                  INNER JOIN dbo.[RefResource] rb ON rb.RefName = 'BetTypePreferences'
-                                                   AND rb.ResourceId = up.BettypeId
+                                                    AND rb.ResourceId = up.BettypeId
             WHERE up.UserId = u.UserId FOR XML PATH('')
         ), 1, 1, '') 'MainBetType'
         FROM dbo.EmployeeWorkingShift AS ws WITH(NOLOCK)
@@ -74,6 +79,5 @@ Revisions:
               AND ws.ShiftStartTime <= @ToDate)
              OR (ws.ShiftEndTime > DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '02:00:00')
                  AND ws.ShiftEndTime <= @ToDate);
-
         DROP TABLE #tblUser;
     END;
