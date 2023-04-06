@@ -16,7 +16,7 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 1, @EventDate), '2AM');
+        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '2AM');
         DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '4PM');
         DECLARE @MainAssignmentType INT= 1;
         DECLARE @MJ INT= 1;
