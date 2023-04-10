@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TodaySuggestionList_GetParentMatchInfo] @OwpMatchId VARCHAR(500)
+CREATE PROCEDURE [dbo].[OWP_AssigneeSuggestionList_GetParentMatchInfo] @OwpMatchId VARCHAR(500)
 AS
 
 /*
@@ -21,7 +21,8 @@ Revisions:
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@OwpMatchId, ',') u OPTION(MAXRECURSION 0);
-        SELECT mi.Remark, 
+        SELECT DISTINCT 
+               mi.Remark, 
                owpm.KickOffTime AS 'KOTime', 
                mm.ParentMatchId AS 'OwpMatchId'
         FROM MinorMatch AS mm WITH(NOLOCK)
