@@ -55,7 +55,7 @@ Revisions:
                h.OWPTeamName 'HomeName', 
                aw.OWPTeamName 'AwayName',
                CASE
-                   WHEN mm.MinorBettypeId = @Specific15Mins
+                   WHEN mm.MinorBettypeId IN(@Specific15Mins, @NoOfCorner, @NextCorner)
                    THEN msm.Maxbet
                    ELSE ms.Maxbet
                END 'MaxbetHDP', 
