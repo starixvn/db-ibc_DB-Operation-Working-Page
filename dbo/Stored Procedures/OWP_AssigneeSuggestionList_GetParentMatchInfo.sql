@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_AssigneeSuggestionList_GetParentMatchInfo] @OwpMatchId VARCHAR(500)
+ALTER PROCEDURE [dbo].[OWP_AssigneeSuggestionList_GetParentMatchInfo] @OwpMatchId VARCHAR(MAX)
 AS
 
 /*
