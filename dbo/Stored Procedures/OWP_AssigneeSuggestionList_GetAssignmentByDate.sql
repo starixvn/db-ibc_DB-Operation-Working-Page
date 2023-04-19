@@ -11,7 +11,7 @@ DB: bodb_OWP
  
 Revisions:
 	202303238@Los: Initial SP - [Redmine: #185365]
-
+	20230419@Mira: Get remark of the parent match - [Redmine: #186740]
 */
 
     BEGIN
@@ -30,8 +30,12 @@ Revisions:
                a.OWPMatchId, 
                m.KickOffTime 'KOTime', 
                m.EventDateTime, 
-               l.OWPLeagueName 'LeagueName', 
-               mi.Remark,
+               l.OWPLeagueName 'LeagueName',
+               CASE
+                   WHEN mm.MinorBettypeId IS NOT NULL
+                   THEN mip.Remark
+                   ELSE mi.Remark
+               END 'Remark',
                CASE
                    WHEN l.CategoryId = 1
                    THEN 1
@@ -55,7 +59,7 @@ Revisions:
                h.OWPTeamName 'HomeName', 
                aw.OWPTeamName 'AwayName',
                CASE
-                   WHEN mm.MinorBettypeId IN(@Specific15Mins, @NoOfCorner, @NextCorner)
+                   WHEN mm.MinorBettypeId IS NOT NULL
                    THEN msm.Maxbet
                    ELSE ms.Maxbet
                END 'MaxbetHDP', 
@@ -68,6 +72,7 @@ Revisions:
              INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
              INNER JOIN dbo.OWPTeam aw WITH(NOLOCK) ON m.OWPAwayId = aw.OWPTeamId
              LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
+             LEFT JOIN MatchInfo AS mip WITH(NOLOCK) ON mm.ParentMatchId = mip.OWPMatchId
              LEFT JOIN MatchSetting AS ms WITH(NOLOCK) ON ms.OWPMatchId = m.OWPMatchId
                                                           AND ms.Bettype = @HDP
              LEFT JOIN MatchSetting AS msm WITH(NOLOCK) ON msm.OWPMatchId = mm.ParentMatchId
