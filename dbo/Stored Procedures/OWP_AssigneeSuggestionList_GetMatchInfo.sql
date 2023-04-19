@@ -30,7 +30,12 @@ Revisions:
                m.EventDateTime 'KOTime', 
                m.MatchNo, 
                mm.MinorBettypeId, 
-               ms.Maxbet 'MaxbetHDP'
+               ms.Maxbet 'MaxbetHDP',
+               CASE
+                   WHEN mm.MinorBettypeId IS NOT NULL
+                   THEN mip.Remark
+                   ELSE i.Remark
+               END 'Remark'
         FROM dbo.OWPMatch m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              LEFT JOIN dbo.MinorBettype mb WITH(NOLOCK) ON mm.MinorBettypeId = mb.MinorBettypeId
@@ -38,6 +43,7 @@ Revisions:
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
+             LEFT JOIN dbo.MatchInfo AS mip WITH(NOLOCK) ON mm.ParentMatchId = mip.OWPMatchId
              LEFT JOIN dbo.MatchSetting ms WITH(NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
                                                            AND ms.Bettype = @HDP
         WHERE m.OWPMatchId = @OwpMatchId;
