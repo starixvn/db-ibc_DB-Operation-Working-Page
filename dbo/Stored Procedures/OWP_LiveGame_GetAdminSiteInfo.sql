@@ -1,7 +1,7 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBACC-bodb02" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_LiveGame_GetAdminSiteInfo] @ParentMatchIds NVARCHAR(MAX) = NULL
+CREATE PROCEDURE [dbo].[OWP_LiveGame_GetAdminSiteInfo]
 AS
 
 /*
@@ -15,28 +15,14 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @MatchId TABLE(ParentMatchId INT);
         DECLARE @dateNow DATETIME;
         SET @dateNow = DATEADD(hour, 12, GETDATE());
-        INSERT INTO @MatchId(ParentMatchId)
-               SELECT DISTINCT 
-                      value
-               FROM STRING_SPLIT(@ParentMatchIds, ',');
         SELECT DISTINCT 
-               m.ParentMatchId,
-               CASE
-                   WHEN od.oddsstatus != 'running'
-                        AND od.oddsstatus IS NOT NULL
-                        AND @dateNow >= ma.GlobalShowTime
-                        AND ma.GlobalShowTime IS NOT NULL
-                        AND od.bettype = 1
-                        AND od.liveindicator = 1
-                   THEN 1
-                   ELSE 0
-               END AS IsShowAbsenceIcon
-        FROM @MatchId AS m
-             INNER JOIN OWPMatch AS om WITH(NOLOCK) ON m.ParentMatchId = om.OWPMatchId
-             LEFT JOIN bodb02.dbo.odds AS od WITH(NOLOCK) ON om.MatchId = od.matchid
-             LEFT JOIN bodb02.dbo.[match] AS ma WITH(NOLOCK) ON om.MatchId = ma.matchid
-        WHERE od.bettype = 1;
+               od.matchid AS AdminSiteMatchId
+        FROM dbo.[match] AS m WITH(NOLOCK)
+             INNER JOIN dbo.odds AS od WITH(NOLOCK) ON m.matchid = od.matchid
+        WHERE od.oddsstatus != 'running'
+              AND @dateNow >= m.GlobalShowTime
+              AND od.bettype = 1
+              AND od.liveindicator = 1;
     END;
