@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBACC-bodb02" executers="bodbAdminNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LiveGame_GetAdminSiteInfo]
+ALTER PROCEDURE [dbo].[OWP_LiveGame_GetAdminSiteInfo]
 AS
 
 /*
@@ -16,7 +16,7 @@ Revisions:
     BEGIN
         SET NOCOUNT ON;
         DECLARE @dateNow DATETIME;
-        SET @dateNow = DATEADD(hour, 12, GETDATE());
+        SET @dateNow = GETDATE();
         SELECT DISTINCT 
                od.matchid AS AdminSiteMatchId
         FROM dbo.[match] AS m WITH(NOLOCK)
