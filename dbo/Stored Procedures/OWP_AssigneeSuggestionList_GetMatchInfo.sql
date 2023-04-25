@@ -30,6 +30,7 @@ Revisions:
                m.EventDateTime 'KOTime', 
                m.MatchNo, 
                mm.MinorBettypeId, 
+               ms.Spread 'SpreadHDP', 
                ms.Maxbet 'MaxbetHDP',
                CASE
                    WHEN mm.MinorBettypeId IS NOT NULL

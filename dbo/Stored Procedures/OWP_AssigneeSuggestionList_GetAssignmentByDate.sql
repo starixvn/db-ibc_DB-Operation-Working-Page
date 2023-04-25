@@ -63,6 +63,11 @@ Revisions:
                    THEN msm.Maxbet
                    ELSE ms.Maxbet
                END 'MaxbetHDP', 
+			   CASE
+                   WHEN mm.MinorBettypeId IS NOT NULL
+                   THEN msm.Spread
+                   ELSE ms.Spread
+               END 'SpreadHDP', 
                mm.MinorBettypeId, 
                mm.ParentMatchId
         FROM Assignment AS a WITH(NOLOCK)
