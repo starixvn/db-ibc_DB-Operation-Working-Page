@@ -63,6 +63,7 @@ Revisions:
                u.LevelLabel, 
                u.[Group], 
                u.MaxMultipleGames, 
+               c.Extension, 
                STUFF(
         (
             SELECT ',' + rb.Value
