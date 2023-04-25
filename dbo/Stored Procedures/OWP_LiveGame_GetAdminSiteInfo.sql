@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBACC-bodb02" executers="bodbAdminNet" isFunction="0"></info>*/
 
 CREATE PROCEDURE [dbo].[OWP_LiveGame_GetAdminSiteInfo]
 AS
