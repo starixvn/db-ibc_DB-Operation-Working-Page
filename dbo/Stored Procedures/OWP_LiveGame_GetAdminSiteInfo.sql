@@ -17,11 +17,11 @@ Revisions:
         SET NOCOUNT ON;
         DECLARE @dateNow DATETIME;
         SET @dateNow = GETDATE();
-        SELECT DISTINCT 
-               od.matchid AS AdminSiteMatchId
+        SELECT od.matchid AS AdminSiteMatchId, 
+               od.oddsstatus AS OddsStatus
         FROM dbo.[match] AS m WITH(NOLOCK)
              INNER JOIN dbo.odds AS od WITH(NOLOCK) ON m.matchid = od.matchid
-        WHERE od.oddsstatus != 'running'
+        WHERE m.eventstatus = 'running'
               AND @dateNow >= m.GlobalShowTime
               AND od.bettype = 1
               AND od.liveindicator = 1;
