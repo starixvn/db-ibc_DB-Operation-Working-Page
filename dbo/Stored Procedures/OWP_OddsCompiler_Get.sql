@@ -23,6 +23,7 @@ AS
 	20200609@Tyler.Dang: Get match television - [Redmine: #135526]
 	20200713@Carlos.Nguyen: Build HomeName - [Redmine: #137417]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20230420@Johnny: Get ParentMatchId - [Feature: #185886]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -176,6 +177,7 @@ BEGIN
 		,m.OtherTime
 		,m1.MatchStatus
 		,m.InfoSiteMatchId AS 'InfoSiteID'
+		,m1.ParentMatchId
 		,(CASE WHEN m.InfoSiteMatchId IS NULL THEN NULL ELSE CASE WHEN im.InfoSiteMatchId IS NULL THEN 0 ELSE 1 END END) AS IsInfoSiteLinked
 	FROM dbo.OWPMatch AS m
 	INNER JOIN #tblMatch AS m1 ON m.OWPMatchId = m1.OWPMatchId
