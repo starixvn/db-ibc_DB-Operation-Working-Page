@@ -11,7 +11,7 @@ DB: bodb_OWP
 
 Revisions:
    20230324@Liam.Pham: Initial - [Redmine: #185365]
-	
+   20230419@Liam.Pham: Get Extension - [Redmine: #186740]
 */
 
     BEGIN

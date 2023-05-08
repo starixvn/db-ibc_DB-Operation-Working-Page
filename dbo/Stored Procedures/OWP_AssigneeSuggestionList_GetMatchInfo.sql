@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
    20230324@Mira: Initial - [Redmine: #185365]	
+   20230419@Mira: Get Spread, remark of the parent match - [Redmine: #186740]
 */
 
     BEGIN
