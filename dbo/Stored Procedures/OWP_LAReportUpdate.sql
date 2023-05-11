@@ -17,6 +17,7 @@ Revisions:
 	20220408@Johnny: Adding 5ML match to LA Report - [Redmine: #171212]
 	20220418@Johnny: Adding FT_Corner_5ML match to LA Report - [Redmine: #171212]
 	20220920@Mira: LA Report enhancement - [Redmine: #177768]
+	20230511@Carlos.nguyen: Insert TotalMatchInGroupMultiple - [Redmine: #187937]
 */
 
      SET NOCOUNT ON;
@@ -41,6 +42,7 @@ Revisions:
       [Link6], 
       [Link7], 
       [Link8Plus], 
+	  [TotalMatchInGroupMultiple],
       [OnlyProvider], 
       [OnlyTV], 
       [OnlyReporter], 
@@ -72,6 +74,7 @@ Revisions:
                    [Link6], 
                    [Link7], 
                    [Link8Plus], 
+				   [TotalMatchInGroupMultiple],
                    [OnlyProvider], 
                    [OnlyTV], 
                    [OnlyReporter], 
@@ -92,6 +95,6 @@ Revisions:
                    [Others], 
                    [OtherProductMatchIds], 
                    GETDATE()
-            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] INT, [TotalMatches] INT, [Link2] INT, [Link3] INT, [Link4] INT, [Link5] INT, [Link6] INT, [Link7] INT, [Link8Plus] INT, [OnlyProvider] INT, [OnlyTV] INT, [OnlyReporter] INT, [MixedProviderTVReporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [FTCorner5ML] INT, [FiveMajorLeague] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT, [OtherProductMatchIds] VARCHAR(MAX));
+            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] INT, [TotalMatches] INT, [Link2] INT, [Link3] INT, [Link4] INT, [Link5] INT, [Link6] INT, [Link7] INT, [Link8Plus] INT,  [TotalMatchInGroupMultiple] INT,[OnlyProvider] INT, [OnlyTV] INT, [OnlyReporter] INT, [MixedProviderTVReporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [FTCorner5ML] INT, [FiveMajorLeague] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT, [OtherProductMatchIds] VARCHAR(MAX));
      EXEC sp_xml_removedocument 
           @idoc;
