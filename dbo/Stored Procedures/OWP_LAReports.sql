@@ -17,6 +17,7 @@ AS
 	20220408@Luca: Adding 5ML to LA Report - [Redmine:#171212]
 	20220418@Liam: Adding FTCorner5ML to LA Report - [Redmine:#171212]
 	20220920@Johnny: Change query LA Report - [Redmine:#177768]
+	20230511@Carlos.nguyen: new column - [Redmine: #187937]
 */
 
      SET NOCOUNT ON;
@@ -31,6 +32,7 @@ AS
 			SUM(a.Link6) Link6,
 			SUM(a.Link7) Link7, 
 			SUM(a.Link8Plus) Link8Plus, 
+			SUM(a.TotalMatchInGroupMultiple) TotalMultiMatches,
             SUM(a.OnlyProvider) OnlyProvider, 
             SUM(a.OnlyReporter) OnlyReporter, 
             SUM(a.OnlyTV) OnlyTV, 
