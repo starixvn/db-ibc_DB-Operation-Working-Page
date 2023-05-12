@@ -13,7 +13,8 @@ DB: bodb_OWP
     
 Revisions:    
   20210914@Tyler: Initial SP - [Redmine: #160545]  
-  20220222@Mira: Save subtypes - [Redmine: #168468]  
+  20220222@Mira: Save subtypes - [Redmine: #168468]
+  20230512@Johnny: Save recipient by subtypes - [Redmine: #186518]  
 */
 
     BEGIN
@@ -21,7 +22,8 @@ Revisions:
         DECLARE @tmpRecipient TABLE
         (TicketTypeRecipientId INT NULL, 
          RecipientId           INT NOT NULL, 
-         RecipientType         TINYINT NOT NULL
+         RecipientType         TINYINT NOT NULL, 
+         SubtypeName           NVARCHAR(100)
         );
         DECLARE @idoc INT;
         EXEC sp_xml_preparedocument 
@@ -31,8 +33,9 @@ Revisions:
                SELECT DISTINCT 
                       TicketTypeRecipientId, 
                       RecipientId, 
-                      RecipientType
-               FROM OPENXML(@idoc, '/Root/Recipient', 1) WITH(TicketTypeRecipientId INT, RecipientId INT, RecipientType TINYINT);
+                      RecipientType, 
+                      SubtypeName
+               FROM OPENXML(@idoc, '/Root/Recipient', 1) WITH(TicketTypeRecipientId INT, RecipientId INT, RecipientType TINYINT, SubtypeName NVARCHAR(100));
         EXEC sp_xml_removedocument 
              @idoc;
 
@@ -61,18 +64,6 @@ Revisions:
         WHERE t.RecipientId IS NULL
               AND r.TypeId = @TicketTypeId;
 
-        -- Insert recipient
-        INSERT INTO dbo.TicketTypeRecipient
-        (TypeId, 
-         RecipientType, 
-         RecipientId
-        )
-               SELECT @TicketTypeId, 
-                      r.RecipientType, 
-                      r.RecipientId
-               FROM @tmpRecipient r
-               WHERE r.TicketTypeRecipientId = 0;
-
         -- Update subtype
         UPDATE s
           SET 
@@ -82,7 +73,7 @@ Revisions:
         WHERE t.SubtypeName <> s.SubtypeName
               AND s.TypeId = @TicketTypeId;
 
-        -- Insert recipient
+        -- Insert subtype
         INSERT INTO dbo.TicketSubtype
         (SubtypeName, 
          TypeId
@@ -92,4 +83,19 @@ Revisions:
                FROM @tmpSubtype t
                WHERE t.SubtypeId = 0
                      OR t.SubtypeId IS NULL;
+
+        -- Insert recipient
+        INSERT INTO dbo.TicketTypeRecipient
+        (TypeId, 
+         RecipientType, 
+         RecipientId, 
+         SubtypeId
+        )
+               SELECT @TicketTypeId, 
+                      r.RecipientType, 
+                      r.RecipientId, 
+                      t.SubtypeId
+               FROM @tmpRecipient r
+                    LEFT JOIN TicketSubtype AS t ON r.SubtypeName = t.SubtypeName
+               WHERE r.TicketTypeRecipientId = 0;
     END;
