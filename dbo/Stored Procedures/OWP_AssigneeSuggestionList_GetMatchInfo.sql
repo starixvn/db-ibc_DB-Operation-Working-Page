@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
    20230324@Mira: Initial - [Redmine: #185365]	
    20230419@Mira: Get Spread, remark of the parent match - [Redmine: #186740]
+   20230512@Liamn: Get solo match info - [Redmine: #186740]
 */
 
     BEGIN
@@ -37,7 +38,8 @@ Revisions:
                    WHEN mm.MinorBettypeId IS NOT NULL
                    THEN mip.Remark
                    ELSE i.Remark
-               END 'Remark'
+               END 'Remark', 
+               i.IsSoloMatch
         FROM dbo.OWPMatch m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              LEFT JOIN dbo.MinorBettype mb WITH(NOLOCK) ON mm.MinorBettypeId = mb.MinorBettypeId
