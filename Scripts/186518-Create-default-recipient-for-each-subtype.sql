@@ -11,4 +11,4 @@ Revisions:
 
 DELETE FROM TicketTypeRecipient;
 ALTER TABLE TicketTypeRecipient
-ADD SubTypeId INT;
+ADD SubtypeId INT;
