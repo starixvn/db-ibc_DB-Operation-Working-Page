@@ -1,3 +1,4 @@
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenterEvent_Get] @ActorId        INT, 
@@ -23,6 +24,7 @@ AS
 	20220311@Johnny.Thai: Hide Ticket - [Redmine: #169841]
 	20220311@Liam: Performance tuning - [Redmine: #169841]
 	20220613@Johnny.Thai: Hide ticket without any comment in 30 days  - [Redmine: #173994]
+	20230517@Liam: Performance tuning - [Redmine: #169841]
 */
 
     BEGIN
@@ -112,5 +114,6 @@ AS
         (
             SELECT TicketStatus
             FROM @tblTicketStatus
-        );
+        )
+                AND	DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) <= 30
     END;

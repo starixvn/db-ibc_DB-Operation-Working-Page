@@ -16,6 +16,7 @@ AS
       
  Revisions:          
 	20221005@Mira: Get Ticket Live Incident - [Redmine: #178183]
+	20220311@Liam: Performance tuning - [Redmine: #169841]
 */
 
     BEGIN
@@ -108,5 +109,6 @@ AS
         (
             SELECT TicketStatus
             FROM @tblTicketStatus
-        );
+        )
+                AND	DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) <= 30
     END;
