@@ -11,6 +11,8 @@ AS
       
  Revisions:          
 	20220929@Johnny: Init sp - [Redmine: #178183]
+	20230522@Johnny: Edit date range to get event data - [Redmine: #188585]
+
 */
 
     BEGIN
@@ -18,7 +20,7 @@ AS
         DECLARE @date DATETIME;
         DECLARE @startDate DATETIME;
         SELECT @date = CAST(CAST(GETDATE() AS DATE) AS DATETIME);
-        SELECT @startDate = DATEADD(DAY, -30, CONVERT(DATETIME, @date));
+        SELECT @startDate = DATEADD(HOUR, 12, CONVERT(DATETIME, @date));
         DECLARE @tblOWPMatchHomeName TABLE
         (OWPMatchId INT, 
          HomeName   NVARCHAR(MAX)
