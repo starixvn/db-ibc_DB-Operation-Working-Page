@@ -20,7 +20,7 @@ AS
         DECLARE @date DATETIME;
         DECLARE @startDate DATETIME;
         SELECT @date = CAST(CAST(GETDATE() AS DATE) AS DATETIME);
-        SELECT @startDate = DATEADD(HOUR, 12, CONVERT(DATETIME, @date));
+        SELECT @startDate = DATEADD(DAY, -30, CONVERT(DATETIME, @date));
         DECLARE @tblOWPMatchHomeName TABLE
         (OWPMatchId INT, 
          HomeName   NVARCHAR(MAX)
@@ -54,10 +54,9 @@ AS
          HomeId            INT, 
          AwayId            INT, 
          EventDateTimeGmt8 DATETIME, 
-         IsLeague          BIT,
-		 MinorBettype INT
+         IsLeague          BIT, 
+         MinorBettype      INT
         );
-
         INSERT INTO @tblEventOption
         (OwpLeagueId, 
          HomeName, 
@@ -67,8 +66,8 @@ AS
          OwpMatchId, 
          LeagueName, 
          IsLeague, 
-         EventDateTimeGmt8,
-		 MinorBettype
+         EventDateTimeGmt8, 
+         MinorBettype
         )
                SELECT m.OWPLeagueId, 
                       hn.HomeName, 
@@ -78,8 +77,8 @@ AS
                       m.OWPMatchId, 
                       l.OWPLeagueName, 
                       0, 
-                      m.EventDateTime,
-					  mm.MinorBettypeId
+                      m.EventDateTime, 
+                      mm.MinorBettypeId
                FROM OWPMatch AS m WITH(NOLOCK)
                     INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
                     INNER JOIN @tblOWPMatchHomeName AS hn ON hn.OWPMatchId = m.OWPMatchId
@@ -89,18 +88,15 @@ AS
                      AND (hn.HomeName LIKE '%' + @Keyword + '%'
                           OR an.AwayName LIKE '%' + @Keyword + '%'
                           OR l.OWPLeagueName LIKE '%' + @Keyword + '%');
-		
-		
-        SELECT DISTINCT 
-               ep.OwpMatchId, 
-               ep.OwpLeagueId, 
-               ep.LeagueName, 
-               ep.HomeId, 
-               ep.AwayId, 
-               ep.HomeName, 
-               ep.AwayName, 
-               ep.IsLeague, 
-               ep.EventDateTimeGmt8
+        SELECT DISTINCT TOP 20 ep.OwpMatchId, 
+                               ep.OwpLeagueId, 
+                               ep.LeagueName, 
+                               ep.HomeId, 
+                               ep.AwayId, 
+                               ep.HomeName, 
+                               ep.AwayName, 
+                               ep.IsLeague, 
+                               ep.EventDateTimeGmt8
         FROM @tblEventOption AS ep
         WHERE ep.MinorBettype NOT IN(-1, -2, -88, -89, -5, -8)
         OR ep.MinorBettype IS NULL;
