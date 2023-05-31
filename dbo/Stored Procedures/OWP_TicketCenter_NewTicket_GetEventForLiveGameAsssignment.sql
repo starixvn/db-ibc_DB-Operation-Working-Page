@@ -11,95 +11,32 @@ AS
       
  Revisions:          
 	20220929@Johnny: Init sp - [Redmine: #178183]
+	20230522@Johnny: Edit date range to get event data (start from today - 1) - [Redmine: #188585]
+
 */
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @date DATETIME;
         DECLARE @startDate DATETIME;
-        SELECT @date = CAST(CAST(GETDATE() AS DATE) AS DATETIME);
-        SELECT @startDate = DATEADD(DAY, -30, CONVERT(DATETIME, @date));
-        DECLARE @tblOWPMatchHomeName TABLE
-        (OWPMatchId INT, 
-         HomeName   NVARCHAR(MAX)
-        );
-        INSERT INTO @tblOWPMatchHomeName
-        (OWPMatchId, 
-         HomeName
-        )
-               SELECT m.OWPMatchId, 
-                      t.OWPTeamName
-               FROM OWPMatch AS m
-                    INNER JOIN OWPTeam AS t WITH(NOLOCK) ON m.OWPHomeId = t.OWPTeamId;
-        DECLARE @tblOWPMatchAwayName TABLE
-        (OWPMatchId INT, 
-         AwayName   NVARCHAR(MAX)
-        );
-        INSERT INTO @tblOWPMatchAwayName
-        (OWPMatchId, 
-         AwayName
-        )
-               SELECT m.OWPMatchId, 
-                      t.OWPTeamName
-               FROM OWPMatch AS m
-                    INNER JOIN OWPTeam AS t WITH(NOLOCK) ON m.OWPAwayId = t.OWPTeamId;
-        DECLARE @tblEventOption TABLE
-        (OwpMatchId        INT, 
-         OwpLeagueId       INT, 
-         LeagueName        NVARCHAR(MAX), 
-         HomeName          NVARCHAR(MAX), 
-         AwayName          NVARCHAR(MAX), 
-         HomeId            INT, 
-         AwayId            INT, 
-         EventDateTimeGmt8 DATETIME, 
-         IsLeague          BIT,
-		 MinorBettype INT
-        );
-
-        INSERT INTO @tblEventOption
-        (OwpLeagueId, 
-         HomeName, 
-         AwayName, 
-         HomeId, 
-         AwayId, 
-         OwpMatchId, 
-         LeagueName, 
-         IsLeague, 
-         EventDateTimeGmt8,
-		 MinorBettype
-        )
-               SELECT m.OWPLeagueId, 
-                      hn.HomeName, 
-                      an.AwayName, 
-                      m.OWPHomeId, 
-                      m.OWPAwayId, 
-                      m.OWPMatchId, 
-                      l.OWPLeagueName, 
-                      0, 
-                      m.EventDateTime,
-					  mm.MinorBettypeId
-               FROM OWPMatch AS m WITH(NOLOCK)
-                    INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-                    INNER JOIN @tblOWPMatchHomeName AS hn ON hn.OWPMatchId = m.OWPMatchId
-                    INNER JOIN @tblOWPMatchAwayName AS an ON an.OWPMatchId = m.OWPMatchId
-                    LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
-               WHERE m.EventDateTime > @startDate
-                     AND (hn.HomeName LIKE '%' + @Keyword + '%'
-                          OR an.AwayName LIKE '%' + @Keyword + '%'
-                          OR l.OWPLeagueName LIKE '%' + @Keyword + '%');
-		
-		
-        SELECT DISTINCT 
-               ep.OwpMatchId, 
-               ep.OwpLeagueId, 
-               ep.LeagueName, 
-               ep.HomeId, 
-               ep.AwayId, 
-               ep.HomeName, 
-               ep.AwayName, 
-               ep.IsLeague, 
-               ep.EventDateTimeGmt8
-        FROM @tblEventOption AS ep
-        WHERE ep.MinorBettype NOT IN(-1, -2, -88, -89, -5, -8)
-        OR ep.MinorBettype IS NULL;
+        SELECT @startDate = DATEADD(DAY, DATEDIFF(DAY, 1, GETDATE()), '12:00:00');
+        SELECT DISTINCT TOP 20 m.OWPMatchId AS OwpMatchId, 
+                               m.OWPLeagueId AS OwpLeagueId, 
+                               l.OWPLeagueName AS LeagueName, 
+                               m.OWPHomeId AS HomeId, 
+                               m.OWPAwayId AS AwayId, 
+                               t.OWPTeamName AS HomeName, 
+                               te.OWPTeamName AS AwayName, 
+                               0 AS IsLeague, 
+                               m.EventDateTime AS EventDateTimeGmt8
+        FROM OWPMatch AS m WITH(NOLOCK)
+             INNER JOIN OWPLeague AS l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
+             LEFT JOIN OWPTeam AS t ON t.OWPTeamId = m.OWPHomeId
+             LEFT JOIN OWPTeam AS te ON te.OWPTeamId = m.OWPAwayId
+             LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
+        WHERE m.EventDateTime > @startDate
+              AND (t.OWPTeamName LIKE '%' + @Keyword + '%'
+                   OR te.OWPTeamName LIKE '%' + @Keyword + '%'
+                   OR l.OWPLeagueName LIKE '%' + @Keyword + '%')
+              AND (mm.MinorBettypeId NOT IN(-1, -2, -88, -89, -5, -8)
+        OR mm.MinorBettypeId IS NULL);
     END;
