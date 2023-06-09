@@ -58,14 +58,15 @@ AS
              @ActorId = @ActorId;
         SELECT DISTINCT 
                tbltk.TicketId, 
-               til.LeagueName, 
-               til.HomeName, 
-               til.AwayName, 
+			   til.[Subject],
+               im.LeagueName, 
+               im.HomeName, 
+               im.AwayName, 
                tis.TicketType, 
                tis.TicketStatus, 
                tis.LastCommentDate, 
                ty.TypeName, 
-               til.EventDateTime AS KOTime, 
+               im.EventDateTime AS KOTime, 
                reader.IsRead, 
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
@@ -75,22 +76,23 @@ AS
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
              INNER JOIN TicketIssueLogWork AS til WITH(NOLOCK) ON tis.TicketId = til.TicketId
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
+			 LEFT JOIN InfoSiteMatch As im ON til.AdminsiteId = im.AdminSiteMatchId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE(@Keyword IS NULL
               OR @Keyword = ''
-              OR til.LeagueName LIKE '%' + @Keyword + '%'
-              OR til.AwayName LIKE '%' + @Keyword + '%'
-              OR til.HomeName LIKE '%' + @Keyword + '%')
+              OR im.LeagueName LIKE '%' + @Keyword + '%'
+              OR im.AwayName LIKE '%' + @Keyword + '%'
+              OR im.HomeName LIKE '%' + @Keyword + '%')
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')
              AND (@MarketKey = @allMarketKey
                   OR (@MarketKey = @earlyMarketKey
-                      AND til.EventDateTime >= @fromDate)
+                      AND im.EventDateTime >= @fromDate)
                   OR (@MarketKey = @todayMarketKey
-                      AND til.EventDateTime BETWEEN @fromDate AND @toDate))
+                      AND im.EventDateTime BETWEEN @fromDate AND @toDate))
              AND (tis.SubtypeId = temp.SubTypeId
                   OR (tis.SubtypeId IS NULL
                       AND temp.SubTypeId IS NULL))
