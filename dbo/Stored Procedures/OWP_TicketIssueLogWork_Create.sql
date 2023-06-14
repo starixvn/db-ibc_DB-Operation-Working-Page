@@ -1,9 +1,10 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TicketIssueLogWork_Create] @TicketId      INT, 
-                                                       @AdminSiteId   INT            = NULL, 
-                                                       @Subject       NVARCHAR(2000) = NULL
+ALTER PROCEDURE [dbo].[OWP_TicketIssueLogWork_Create] @TicketId     INT, 
+                                                      @AdminSiteId  INT            = NULL, 
+                                                      @Subject      NVARCHAR(2000) = NULL, 
+                                                      @Status VARCHAR(10)
 AS
 
 /*      
@@ -20,11 +21,15 @@ AS
         INSERT INTO TicketIssueLogWork
         (TicketId, 
          AdminsiteId, 
-         [Subject] 
+         [Subject]
         )
         VALUES
         (@TicketId, 
          @AdminSiteId, 
          @Subject
         );
+        UPDATE TicketIssue
+          SET 
+              TicketStatus = @Status
+        WHERE TicketId = @TicketId;
     END;
