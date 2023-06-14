@@ -22,7 +22,7 @@ AS
                ifm.AwayName, 
                ifm.EventDateTime 'KOTime'
         FROM InfoSiteMatch ifm
-        WHERE ifm.EventDateTime > @startDate
+        WHERE ifm.EventDateTime >= @startDate
               AND ifm.AdminSiteMatchId = @AdminSiteId;
     END;
 
