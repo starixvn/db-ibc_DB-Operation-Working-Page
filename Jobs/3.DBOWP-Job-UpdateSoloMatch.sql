@@ -4,6 +4,7 @@
 	Server:		DBOWP
 	Revision:
 		- 20191108@Carlos.Nguyen: Update Solo match
+        - 20230523@Liam.Pham: reopen job - [Redmine: #186740]
 */
 
 SET NOCOUNT ON;
