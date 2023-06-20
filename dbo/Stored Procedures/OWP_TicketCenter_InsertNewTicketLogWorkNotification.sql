@@ -2,12 +2,12 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 CREATE PROCEDURE [dbo].[OWP_TicketCenter_InsertNewTicketLogWorkNotification] @ActorId             INT, 
-                                                                            @IsImportant         BIT, 
-                                                                            @IsWatcher           BIT, 
-                                                                            @NotificationType    INT, 
-                                                                            @SessionId           VARCHAR(100)  = NULL, 
-                                                                            @TicketId            INT, 
-                                                                            @NotificationContent NVARCHAR(MAX)
+                                                                             @IsImportant         BIT, 
+                                                                             @IsWatcher           BIT, 
+                                                                             @NotificationType    INT, 
+                                                                             @SessionId           VARCHAR(100)  = NULL, 
+                                                                             @TicketId            INT, 
+                                                                             @NotificationContent NVARCHAR(MAX)
 AS
 
 /*
@@ -38,10 +38,11 @@ Revisions:
      -- Subject name
      SELECT TOP 1 @eventName = CASE
                                    WHEN AdminsiteId IS NOT NULL
-                                   THEN CONVERT(NVARCHAR(2000), AdminsiteId)
+                                   THEN '[' + CONVERT(NVARCHAR(100), AdminsiteId) + '] ' + LeagueName + ' - ' + HomeName + ' - vs - ' + AwayName
                                    ELSE [Subject]
                                END
      FROM dbo.TicketIssueLogWork AS tio WITH(NOLOCK)
+          LEFT JOIN InfoSiteMatch AS imf ON tio.AdminsiteId = imf.AdminSiteMatchId
      WHERE tio.TicketId = @TicketId;
      -- end
 

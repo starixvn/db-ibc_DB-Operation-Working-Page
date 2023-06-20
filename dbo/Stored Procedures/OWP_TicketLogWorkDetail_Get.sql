@@ -20,6 +20,7 @@ AS
                im.LeagueName, 
                im.HomeName, 
                im.AwayName, 
+               im.AdminSiteMatchId AS 'AdminSiteId', 
                ti.TicketId, 
                ti.TicketStatus, 
                ti.TicketType, 
@@ -30,7 +31,7 @@ AS
         FROM TicketIssue AS ti
              INNER JOIN TicketIssueLogWork AS til ON ti.TicketId = til.TicketId
              INNER JOIN TicketType AS tt ON tt.TypeId = ti.TicketType
-			 LEFT JOIN InfoSiteMatch As im ON til.AdminsiteId = im.AdminSiteMatchId
+             LEFT JOIN InfoSiteMatch AS im ON til.AdminsiteId = im.AdminSiteMatchId
              LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId
                                                AND ti.SubtypeId = tst.SubtypeId
         WHERE ti.TicketId = @TicketId;
