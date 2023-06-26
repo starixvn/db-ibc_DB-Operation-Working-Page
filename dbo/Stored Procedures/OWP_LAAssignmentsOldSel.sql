@@ -12,51 +12,66 @@ AS
     
  Revisions:
 	20220407@Mira: Query old data - [Redmine: #171212]	
+	20200602@Los: LA Report change rule count Suspender - [Redmine: #184832]
 */
 
      SET NOCOUNT ON;
      SET @FromDate = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00');
      SET @ToDate = DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
      SELECT DISTINCT 
-            a.UserId, 
-            a.AssignmentId, 
+            tm.UserId, 
+            tm.AssignmentId, 
             p.ProviderName, 
             l.OWPLeagueName, 
             mn.MinorBettypeId, 
             ma.OWPMatchId, 
             mn.ParentMatchId, 
             ma.EventDateTime
-     FROM dbo.Assignment_Old a WITH(NOLOCK)
-          INNER JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = a.OWPMatchId
+     FROM (
+		SELECT a.UserId,
+		   a.AssignmentId,
+		   a.OWPMatchId,
+		   a.Bettype,
+		  ROW_NUMBER() OVER(PARTITION BY OWPMatchId ORDER BY a.AssignmentId ASC) row_num
+			FROM dbo.Assignment_Old a WITH(NOLOCK)
+			WHERE a.Bettype=-1002
+				AND (a.AssignmentType=1 OR (a.AssignmentType=2 AND LOWER(a.AssignmentNote) LIKE '%2nd%'))) tm
+          INNER JOIN dbo.OWPMatch_Old ma WITH(NOLOCK) ON ma.OWPMatchId = tm.OWPMatchId
           INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
           LEFT JOIN dbo.MatchProvider_Old mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
           LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
           LEFT JOIN dbo.MinorMatch_Old mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
-     WHERE a.AssignmentType = 1
-           AND a.Bettype = -1002
+     WHERE tm.UserId IS NOT NULL
+		AND tm.row_num<=2
            AND mi.MatchStatus = 'Live'
            AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
      UNION
-     SELECT DISTINCT 
-            a.UserId, 
-            a.AssignmentId, 
+     SELECT tm.UserId,
+			tm.AssignmentId,
             p.ProviderName, 
             l.OWPLeagueName, 
             mn.MinorBettypeId, 
             ma.OWPMatchId, 
-            mn.ParentMatchId, 
+			mn.ParentMatchId,
             ma.EventDateTime
-     FROM dbo.Assignment a WITH(NOLOCK)
-          INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = a.OWPMatchId
+      FROM (
+		SELECT a.UserId,
+		   a.AssignmentId,
+		   a.OWPMatchId,
+		   a.Bettype,
+		  ROW_NUMBER() OVER(PARTITION BY OWPMatchId ORDER BY a.AssignmentId ASC) row_num
+			FROM dbo.Assignment a WITH(NOLOCK)
+			WHERE a.Bettype=-1002
+				AND (a.AssignmentType=1 OR (a.AssignmentType=2 AND LOWER(a.AssignmentNote) LIKE '%2nd%'))) tm
+          INNER JOIN dbo.OWPMatch ma WITH(NOLOCK) ON ma.OWPMatchId = tm.OWPMatchId
           INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
           INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
           LEFT JOIN dbo.MatchProvider mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
           LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
           LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
-     WHERE a.AssignmentType = 1
-           AND a.Bettype = -1002
+     WHERE tm.UserId IS NOT NULL
+		AND tm.row_num<=2
            AND mi.MatchStatus = 'Live'
            AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
-     ORDER BY UserId ASC, 
-              ma.EventDateTime ASC;
+     ORDER BY UserId ASC, ma.EventDateTime ASC;

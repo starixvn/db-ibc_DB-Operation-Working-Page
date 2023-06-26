@@ -18,6 +18,7 @@ Revisions:
 	20220418@Johnny: Adding FT_Corner_5ML match to LA Report - [Redmine: #171212]
 	20220920@Mira: LA Report enhancement - [Redmine: #177768]
 	20230511@Carlos.nguyen: Insert TotalMatchInGroupMultiple - [Redmine: #187937]
+	20230613@Carlos.nguyen: Change datatype - [Redmine: #184832]
 */
 
      SET NOCOUNT ON;
@@ -95,6 +96,6 @@ Revisions:
                    [Others], 
                    [OtherProductMatchIds], 
                    GETDATE()
-            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] INT, [TotalMatches] INT, [Link2] INT, [Link3] INT, [Link4] INT, [Link5] INT, [Link6] INT, [Link7] INT, [Link8Plus] INT,  [TotalMatchInGroupMultiple] INT,[OnlyProvider] INT, [OnlyTV] INT, [OnlyReporter] INT, [MixedProviderTVReporter] INT, [CornerPlus] INT, [TBookingPlus] INT, [Fantasy] INT, [GoalKick] INT, [OtherProducts] INT, [FTCorner] INT, [FTCorner5ML] INT, [FiveMajorLeague] INT, [ESoccer5Mins] INT, [ESoccer6Mins] INT, [ESoccer15Mins] INT, [ESoccer16Mins] INT, [ESoccer20Mins] INT, [Others] INT, [OtherProductMatchIds] VARCHAR(MAX));
+            FROM OPENXML(@idoc, '/Root/LAReportModel', 1) WITH([UserId] INT, [TotalMatches] MONEY, [Link2] MONEY, [Link3] MONEY, [Link4] MONEY, [Link5] MONEY, [Link6] MONEY, [Link7] MONEY, [Link8Plus] MONEY,  [TotalMatchInGroupMultiple] MONEY,[OnlyProvider] MONEY, [OnlyTV] MONEY, [OnlyReporter] MONEY, [MixedProviderTVReporter] MONEY, [CornerPlus] MONEY, [TBookingPlus] MONEY, [Fantasy] MONEY, [GoalKick] MONEY, [OtherProducts] MONEY, [FTCorner] MONEY, [FTCorner5ML] MONEY, [FiveMajorLeague] MONEY, [ESoccer5Mins] MONEY, [ESoccer6Mins] MONEY, [ESoccer15Mins] MONEY, [ESoccer16Mins] MONEY, [ESoccer20Mins] MONEY, [Others] MONEY, [OtherProductMatchIds] VARCHAR(MAX));
      EXEC sp_xml_removedocument 
           @idoc;
