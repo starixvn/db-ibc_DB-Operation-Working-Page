@@ -1,4 +1,6 @@
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+
 ALTER PROCEDURE [dbo].[OWP_TicketCenterLogWork_Get] @ActorId        INT, 
                                                     @Keyword        NVARCHAR(255) = NULL, 
                                                     @TicketId       NVARCHAR(255) = NULL, 
@@ -14,6 +16,7 @@ AS
       
  Revisions:          
 	20230602@Johnny: Get Ticket Log Work - [Redmine: #185890]
+	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 */
 
     BEGIN
@@ -26,6 +29,34 @@ AS
         DECLARE @fromDate DATETIME;
         DECLARE @toDate DATETIME;
         DECLARE @tblTicketStatus TABLE(TicketStatus VARCHAR(10));
+        DECLARE @tblTicketLogWorkEvent TABLE
+        (TicketId      INT, 
+         AdminSiteId   INT, 
+         LeagueId      INT, 
+         HomeId        INT, 
+         AwayId        INT, 
+         EventDateTime DATETIME, 
+         [Subject]     NVARCHAR(2000)
+        );
+        INSERT INTO @tblTicketLogWorkEvent
+        (TicketId, 
+         AdminSiteId, 
+         LeagueId, 
+         HomeId, 
+         AwayId, 
+         EventDateTime, 
+         [Subject]
+        )
+               SELECT til.TicketId, 
+                      til.AdminsiteId, 
+                      COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
+                      COALESCE(m.homeid, m14.homeid) AS HomeId, 
+                      COALESCE(m.awayid, m14.awayid) AS AwayId, 
+                      COALESCE(m.globalshowtime, m14.globalshowtime) AS EventDateTime, 
+                      til.[Subject]
+               FROM TicketIssueLogWork AS til WITH(NOLOCK)
+                    LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId = m.matchid
+                    LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId = m14.matchid;
         DECLARE @tblTicketType TABLE
         (TypeId    INT, 
          SubTypeId INT
@@ -58,16 +89,21 @@ AS
         EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] 
              @ActorId = @ActorId;
         SELECT DISTINCT 
-               tbltk.TicketId, 
-			   til.[Subject],
-               im.LeagueName, 
-               im.HomeName, 
-               im.AwayName, 
+               tbltk.TicketId,
+               CASE
+                   WHEN til.[Subject] IS NULL
+                        OR til.[Subject] = ''
+                   THEN CONVERT(NVARCHAR(100), AdminsiteId)
+                   ELSE til.[Subject]
+               END AS [Subject], 
+               l.leaguename AS LeagueName, 
+               t.teamname AS HomeName, 
+               ta.teamname AS AwayName, 
                tis.TicketType, 
                tis.TicketStatus, 
                tis.LastCommentDate, 
                ty.TypeName, 
-               im.EventDateTime AS KOTime, 
+               til.EventDateTime AS KOTime, 
                reader.IsRead, 
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
@@ -75,25 +111,27 @@ AS
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
-             INNER JOIN TicketIssueLogWork AS til WITH(NOLOCK) ON tis.TicketId = til.TicketId
+             INNER JOIN @tblTicketLogWorkEvent AS til ON tis.TicketId = til.TicketId
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
-			 LEFT JOIN InfoSiteMatch As im ON til.AdminsiteId = im.AdminSiteMatchId
+             LEFT JOIN [bodb02].[dbo].[league] AS l ON til.LeagueId = l.leagueid
+             LEFT JOIN [bodb02].[dbo].[Team] AS t ON til.HomeId = t.teamid
+             LEFT JOIN [bodb02].[dbo].[Team] AS ta ON til.AwayId = ta.teamid
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE(@Keyword IS NULL
               OR @Keyword = ''
-              OR im.LeagueName LIKE '%' + @Keyword + '%'
-              OR im.AwayName LIKE '%' + @Keyword + '%'
-              OR im.HomeName LIKE '%' + @Keyword + '%')
+              OR l.leaguename LIKE '%' + @Keyword + '%'
+              OR t.teamname LIKE '%' + @Keyword + '%'
+              OR ta.teamname LIKE '%' + @Keyword + '%')
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')
              AND (@MarketKey = @allMarketKey
                   OR (@MarketKey = @earlyMarketKey
-                      AND im.EventDateTime >= @fromDate)
+                      AND til.EventDateTime >= @fromDate)
                   OR (@MarketKey = @todayMarketKey
-                      AND im.EventDateTime BETWEEN @fromDate AND @toDate))
+                      AND til.EventDateTime BETWEEN @fromDate AND @toDate))
              AND (tis.SubtypeId = temp.SubTypeId
                   OR (tis.SubtypeId IS NULL
                       AND temp.SubTypeId IS NULL))
