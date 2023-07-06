@@ -38,7 +38,12 @@ Revisions:
                    WHEN mm.MinorBettypeId IS NOT NULL
                    THEN mip.Remark
                    ELSE i.Remark
-               END 'Remark', 
+               END 'Remark',
+			   CASE
+                   WHEN mm.MinorBettypeId IS NOT NULL
+                   THEN [at].AssignmentNote
+                   ELSE am.AssignmentNote
+               END 'AssignmentNote',
                i.IsSoloMatch
         FROM dbo.OWPMatch m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
@@ -50,5 +55,7 @@ Revisions:
              LEFT JOIN dbo.MatchInfo AS mip WITH(NOLOCK) ON mm.ParentMatchId = mip.OWPMatchId
              LEFT JOIN dbo.MatchSetting ms WITH(NOLOCK) ON m.OWPMatchId = ms.OWPMatchId
                                                            AND ms.Bettype = @HDP
+			LEFT JOIN dbo.Assignment am WITH (NOLOCK) ON am.OWPMatchId = m.OWPMatchId
+			LEFT JOIN dbo.Assignment [at] WITH (NOLOCK) ON [at].OWPMatchId = mm.ParentMatchId
         WHERE m.OWPMatchId = @OwpMatchId;
     END;

@@ -36,8 +36,13 @@ Revisions:
                    THEN mip.Remark
                    ELSE mi.Remark
                END 'Remark',
+			   CASE
+                   WHEN mm.MinorBettypeId IS NOT NULL
+                   THEN am.AssignmentNote
+                   ELSE a.AssignmentNote
+               END 'AssignmentNote',
                CASE
-                   WHEN l.CategoryId = 1
+                   WHEN l.CategoryId = 1 OR l.OWPLeagueName='*UEFA CHAMPIONS LEAGUE'
                    THEN 1
                    ELSE 0
                END 'IsMajorLeague',
@@ -78,6 +83,7 @@ Revisions:
              INNER JOIN dbo.OWPTeam aw WITH(NOLOCK) ON m.OWPAwayId = aw.OWPTeamId
              LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
              LEFT JOIN MatchInfo AS mip WITH(NOLOCK) ON mm.ParentMatchId = mip.OWPMatchId
+			 LEFT JOIN Assignment AS am WITH(NOLOCK) ON mm.ParentMatchId = am.OWPMatchId
              LEFT JOIN MatchSetting AS ms WITH(NOLOCK) ON ms.OWPMatchId = m.OWPMatchId
                                                           AND ms.Bettype = @HDP
              LEFT JOIN MatchSetting AS msm WITH(NOLOCK) ON msm.OWPMatchId = mm.ParentMatchId
