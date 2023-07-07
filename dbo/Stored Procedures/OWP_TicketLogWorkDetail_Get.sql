@@ -46,7 +46,12 @@ AS
                     LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId = m14.matchid
                WHERE til.TicketId = @TicketId;
         SELECT DISTINCT 
-               til.[Subject], 
+               CASE
+                   WHEN(til.AdminSiteId IS NOT NULL
+                        AND l.leaguename IS NULL)
+                   THEN CONVERT(NVARCHAR(2000), til.AdminSiteId)
+                   ELSE til.[Subject]
+               END 'Subject', 
                l.leaguename AS LeagueName, 
                t.teamname AS HomeName, 
                ta.teamname AS AwayName, 
