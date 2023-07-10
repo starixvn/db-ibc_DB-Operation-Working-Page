@@ -1,9 +1,9 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_OddsCompiler_UpdateOdds] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_OddsCompiler_UpdateOdds] @ActorId INT
 	,@MatchRecommendOddsId INT
 	,@HDP SMALLMONEY = NULL
-	,@TeamChoice TINYINT = 1
+	,@TeamChoice TINYINT = NULL
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
 	,@Odds1 MONEY = NULL
@@ -17,6 +17,7 @@ AS
           
  Revisions:
 	20191106@Leo.Vo: Init SP - [Redmine: #116230]
+	20230630@Mira: Change default team choice - [Redmine: #188032]
 */
 BEGIN
 	SET NOCOUNT ON
