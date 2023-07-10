@@ -56,7 +56,13 @@ AS
                       COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
                       COALESCE(m.homeid, m14.homeid) AS HomeId, 
                       COALESCE(m.awayid, m14.awayid) AS AwayId, 
-                      COALESCE(m.globalshowtime, m14.globalshowtime) AS EventDateTime, 
+                      CASE
+                          WHEN m.globalshowtime IS NOT NULL
+                          THEN DATEADD(HOUR, 12, m.globalshowtime)
+                          WHEN m14.globalshowtime IS NOT NULL
+                          THEN DATEADD(HOUR, 12, m14.globalshowtime)
+                          ELSE NULL
+                      END AS EventDateTime, 
                       til.[Subject]
                FROM TicketIssueLogWork AS til WITH(NOLOCK)
                     LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId = m.matchid

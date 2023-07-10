@@ -21,7 +21,7 @@ AS
         SELECT l.leaguename AS LeagueName, 
                t.teamname AS HomeName, 
                te.teamname AS AwayName, 
-               m.GlobalShowTime AS KOTime
+               DATEADD(HOUR, 12, m.GlobalShowTime) AS KOTime
         FROM [match] AS m
              LEFT JOIN league AS l WITH(NOLOCK) ON m.leagueid = l.leagueid
              LEFT JOIN Team AS t WITH(NOLOCK) ON m.homeid = t.teamid
