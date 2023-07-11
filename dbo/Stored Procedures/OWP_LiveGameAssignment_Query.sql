@@ -29,6 +29,7 @@ AS
 	20210129@Esther: Display Match Code on Task List and LGA - [Redmine: #149347]
 	20210810@Mira: Sync Special Product Match - [Redmine: #153498]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20230710@Johnny: Get League Group - [Redmine: #190405]
 */
 
      SET NOCOUNT ON;
@@ -238,6 +239,7 @@ AS
             ml.EventDateTime, 
             ml.KickOffTime, 
             ml.OtherTime, 
+			rr.[Value] AS LeagueGroup,
             l.OWPLeagueName AS League, 
             (CASE
                  WHEN ml.IsNeutral = 1
@@ -312,6 +314,8 @@ AS
           INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
           INNER JOIN dbo.OWPTeam AS a WITH(NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
           INNER JOIN dbo.OWPMatch AS ma WITH(NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
+		  LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
+                                                         AND rr.RefName = 'LeagueCategory'
           LEFT JOIN #tblNoOfHDPResource AS ref ON ml.NoOfHDPId = ref.Id
           LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
                                                             AND im.IsDeleted = 0
