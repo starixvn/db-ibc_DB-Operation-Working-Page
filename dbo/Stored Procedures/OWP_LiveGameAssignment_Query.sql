@@ -34,6 +34,24 @@ AS
 
      SET NOCOUNT ON;
      DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59'), @BettypeHDP INT= 1, @Specific15Mins INT= -1, @Specific10Mins INT= -2, @Specific15MinsNoOfCorners INT= -5, @Specific15MinsTotalBooking INT= -8, @FastMarket INT= -88, @AllInOne INT= -89, @MatchStatusText NVARCHAR(100);
+     DECLARE @dateNow DATETIME;
+     SET @dateNow = GETDATE();
+     DECLARE @tblAdminSiteId TABLE
+     (Matchid    INT NOT NULL, 
+      OddsStatus NVARCHAR(200)
+     );
+     INSERT INTO @tblAdminSiteId
+     (Matchid, 
+      OddsStatus
+     )
+            SELECT od.matchid AS AdminSiteMatchId, 
+                   od.oddsstatus AS OddsStatus
+            FROM [bodb02].[dbo].[match] AS m WITH(NOLOCK)
+                 INNER JOIN [bodb02].[dbo].odds AS od WITH(NOLOCK) ON m.matchid = od.matchid
+            WHERE m.eventstatus = 'running'
+                  AND @dateNow >= m.GlobalShowTime
+                  AND od.bettype = 1
+                  AND od.liveindicator = 1;
      DECLARE @tblRefResourceMatchStatus TABLE
      (Id    INT NOT NULL, 
       Value NVARCHAR(50) NOT NULL
@@ -239,7 +257,7 @@ AS
             ml.EventDateTime, 
             ml.KickOffTime, 
             ml.OtherTime, 
-			rr.[Value] AS LeagueGroup,
+            rr.[Value] AS LeagueGroup, 
             l.OWPLeagueName AS League, 
             (CASE
                  WHEN ml.IsNeutral = 1
@@ -298,7 +316,7 @@ AS
             ml.IsMinorMatch, 
             ml.MinorBettypeId, 
             ml.ParentMatchId, 
-            ml.InfoSiteMatchId,            
+            ml.InfoSiteMatchId, 
             imn.AdminSiteMatchId 'ParentAdminSiteId', 
             ml.IpTv,
             CASE
@@ -306,16 +324,18 @@ AS
                      OR ml.InfoSiteMatchId IS NULL
                 THEN 0
                 ELSE 1
-            END AS IsInfoSiteLinked,
-			ml.IsLive AS IsLiveMatchStatus, 
-            ma.MatchCode
+            END AS IsInfoSiteLinked, 
+            ml.IsLive AS IsLiveMatchStatus, 
+            ma.MatchCode, 
+            ai.OddsStatus
      FROM #owpMatchListByDate AS ml WITH(NOLOCK)
           INNER JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
           INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
           INNER JOIN dbo.OWPTeam AS a WITH(NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
           INNER JOIN dbo.OWPMatch AS ma WITH(NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
-		  LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
-                                                         AND rr.RefName = 'LeagueCategory'
+          LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
+                                                      AND rr.RefName = 'LeagueCategory'
+          LEFT JOIN @tblAdminSiteId AS ai ON ml.MatchId = ai.Matchid
           LEFT JOIN #tblNoOfHDPResource AS ref ON ml.NoOfHDPId = ref.Id
           LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
                                                             AND im.IsDeleted = 0
@@ -412,7 +432,7 @@ AS
       Bettype        INT, 
       MinorBettypeId INT, 
       MaxBet         MONEY, 
-      Spread         MONEY,  
+      Spread         MONEY, 
       IsMatchSetting BIT, 
       LeagueId       INT
      );
@@ -422,7 +442,7 @@ AS
       Bettype, 
       MinorBettypeId, 
       MaxBet, 
-      Spread,
+      Spread, 
       IsMatchSetting
      )
             SELECT ml.owpmatchid, 
@@ -430,7 +450,7 @@ AS
                    ms.Bettype, 
                    ml.MinorBettypeId, 
                    ms.Maxbet, 
-                   ms.Spread,
+                   ms.Spread, 
                    1
             FROM #owpMatchListByDate AS ml WITH(NOLOCK)
                  INNER JOIN dbo.MatchSetting AS ms WITH(NOLOCK) ON ml.owpmatchid = ms.OWPMatchId
