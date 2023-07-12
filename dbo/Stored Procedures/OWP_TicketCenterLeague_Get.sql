@@ -6,7 +6,9 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenterLeague_Get] @ActorId        INT,
                                                    @TicketId       NVARCHAR(255) = NULL, 
                                                    @TicketStatuses VARCHAR(100), 
                                                    @TicketTypeXML  NVARCHAR(MAX), 
-                                                   @MarketKey      INT           = 1
+                                                   @MarketKey      INT           = 1, 
+                                                   @FromDateFilter DATETIME, 
+                                                   @ToDateFilter   DATETIME
 AS
 
 /* 
@@ -23,11 +25,14 @@ AS
 	20220311@Johnny.Thai: Hide Ticket - [Redmine: #169841]
 	20220311@Liam: Performance tuning - [Redmine: #169841]
 	20220613@Johnny.Thai: Hide ticket without any comment in 30 days  - [Redmine: #173994]
-		20230517@Liam: Performance tuning - [Redmine: #169841]
+	20230517@Liam: Performance tuning - [Redmine: #169841]
+	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 */
 
     BEGIN
         SET NOCOUNT ON;
+        SET @FromDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDateFilter), '00:00:00');
+        SET @ToDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @ToDateFilter), '23:59:59');
         DECLARE @tblTicketRecipient TABLE(TicketId INT);
         DECLARE @allMarketKey INT= 1;
         DECLARE @tblTicketStatus TABLE(TicketStatus VARCHAR(10));
@@ -89,5 +94,5 @@ AS
             SELECT TicketStatus
             FROM @tblTicketStatus
         )
-                AND	DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) <= 30
+             AND tis.LastCommentDate BETWEEN @FromDateFilter AND @ToDateFilter;
     END;

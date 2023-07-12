@@ -6,7 +6,9 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenterLiveIncident_Get] @ActorId        INT,
                                                          @TicketId       NVARCHAR(255) = NULL, 
                                                          @TicketStatuses VARCHAR(100), 
                                                          @TicketTypeXML  NVARCHAR(MAX), 
-                                                         @MarketKey      INT           = 1
+                                                         @MarketKey      INT           = 1, 
+                                                         @FromDateFilter DATETIME, 
+                                                         @ToDateFilter   DATETIME
 AS
 
 /*      
@@ -17,10 +19,13 @@ AS
  Revisions:          
 	20221005@Mira: Get Ticket Live Incident - [Redmine: #178183]
 	20220311@Liam: Performance tuning - [Redmine: #169841]
+	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 */
 
     BEGIN
         SET NOCOUNT ON;
+        SET @FromDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDateFilter), '00:00:00');
+        SET @ToDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @ToDateFilter), '23:59:59');
         DECLARE @tblTicketRecipient TABLE(TicketId INT);
         DECLARE @allMarketKey INT= 1;
         DECLARE @earlyMarketKey INT= 2;
@@ -110,5 +115,5 @@ AS
             SELECT TicketStatus
             FROM @tblTicketStatus
         )
-                AND	DATEDIFF(DAY, tis.LastCommentDate, DATEADD(HOUR, 12, GETDATE())) <= 30
+             AND tis.LastCommentDate BETWEEN @FromDateFilter AND @ToDateFilter;
     END;
