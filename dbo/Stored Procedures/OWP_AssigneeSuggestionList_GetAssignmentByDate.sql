@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	202303238@Los: Initial SP - [Redmine: #185365]
 	20230419@Mira: Get remark of the parent match - [Redmine: #186740]
+    20230712@Liam: Get more special products - [Redmine: #188985]
 */
 
     BEGIN
@@ -21,7 +22,7 @@ Revisions:
         DECLARE @MainAssignmentType INT= 1;
         DECLARE @MJ INT= 1;
         DECLARE @HDP INT= 1, @OU INT= 3, @1H_HDP INT= 7, @1H_OU INT= 8;
-        DECLARE @Specific15Mins INT= -1, @NoOfCorner INT= -3, @NextCorner INT= -4;
+        DECLARE @Specific15Mins INT= -1, @NoOfCorner INT= -3, @NextCorner INT= -4, @TotalBookings INT= -6, @Nextbookings INT= -7, @15MinsBookings INT= -8, @Winner INT= -14, @HomeSingleTeam INT= -92, @AwaySingleTeam INT= -93;
 
         -- select assignment info
         SELECT DISTINCT 
@@ -67,8 +68,8 @@ Revisions:
                    WHEN mm.MinorBettypeId IS NOT NULL
                    THEN msm.Maxbet
                    ELSE ms.Maxbet
-               END 'MaxbetHDP', 
-			   CASE
+               END 'MaxbetHDP',
+               CASE
                    WHEN mm.MinorBettypeId IS NOT NULL
                    THEN msm.Spread
                    ELSE ms.Spread
@@ -93,7 +94,7 @@ Revisions:
               AND a.Bettype IN(@HDP, @OU, @1H_HDP, @1H_OU)
              AND mi.MatchStatus NOT IN('Cancel', 'Suspended')
         AND (mm.MinorBettypeId IS NULL
-             OR mm.MinorBettypeId IN(@NoOfCorner, @NextCorner, @Specific15Mins))
+             OR mm.MinorBettypeId IN(@NoOfCorner, @NextCorner, @Specific15Mins, @TotalBookings, @Nextbookings, @15MinsBookings, @Winner, @HomeSingleTeam, @AwaySingleTeam))
         ORDER BY UserId, 
                  EventDateTime, 
                  IsMainMatch, 
