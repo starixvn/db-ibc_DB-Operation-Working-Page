@@ -19,6 +19,7 @@ AS
  Revisions:          
 	20230602@Johnny: Get Ticket Log Work - [Redmine: #185890]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
+	20230713@Johnny: Search subject  - [Redmine: #190284]
 */
 
     BEGIN
@@ -55,7 +56,7 @@ AS
                       til.AdminsiteId, 
                       COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
                       COALESCE(m.homeid, m14.homeid) AS HomeId, 
-                      COALESCE(m.awayid, m14.awayid) AS AwayId, 
+                      COALESCE(m.awayid, m14.awayid) AS AwayId,
                       CASE
                           WHEN m.globalshowtime IS NOT NULL
                           THEN DATEADD(HOUR, 12, m.globalshowtime)
@@ -133,7 +134,8 @@ AS
               OR @Keyword = ''
               OR l.leaguename LIKE '%' + @Keyword + '%'
               OR t.teamname LIKE '%' + @Keyword + '%'
-              OR ta.teamname LIKE '%' + @Keyword + '%')
+              OR ta.teamname LIKE '%' + @Keyword + '%'
+              OR til.[Subject] LIKE '%' + @Keyword + '%')
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')
