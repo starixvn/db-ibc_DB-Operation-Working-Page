@@ -13,6 +13,7 @@ Revisions:
    20230324@Mira: Initial - [Redmine: #185365]	
    20230419@Mira: Get Spread, remark of the parent match - [Redmine: #186740]
    20230512@Liamn: Get solo match info - [Redmine: #186740]
+   20230712@Liam: Get more special products - [Redmine: #188985]
 */
 
     BEGIN
