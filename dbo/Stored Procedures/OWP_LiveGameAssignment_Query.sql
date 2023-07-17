@@ -36,22 +36,16 @@ AS
      DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59'), @BettypeHDP INT= 1, @Specific15Mins INT= -1, @Specific10Mins INT= -2, @Specific15MinsNoOfCorners INT= -5, @Specific15MinsTotalBooking INT= -8, @FastMarket INT= -88, @AllInOne INT= -89, @MatchStatusText NVARCHAR(100);
      DECLARE @dateNow DATETIME;
      SET @dateNow = GETDATE();
-     DECLARE @tblAdminSiteId TABLE
-     (Matchid    INT NOT NULL, 
-      OddsStatus NVARCHAR(200)
-     );
-     INSERT INTO @tblAdminSiteId
-     (Matchid, 
-      OddsStatus
-     )
-            SELECT od.matchid AS AdminSiteMatchId, 
-                   od.oddsstatus AS OddsStatus
+     DECLARE @tblAdminSiteIdShouldShowAbsenceIcon TABLE(Matchid INT NOT NULL);
+     INSERT INTO @tblAdminSiteIdShouldShowAbsenceIcon(Matchid)
+            SELECT distinct od.matchid AS AdminSiteMatchId
             FROM [bodb02].[dbo].[match] AS m WITH(NOLOCK)
                  INNER JOIN [bodb02].[dbo].odds AS od WITH(NOLOCK) ON m.matchid = od.matchid
             WHERE m.eventstatus = 'running'
                   AND @dateNow >= m.GlobalShowTime
-                  AND od.bettype = 1
-                  AND od.liveindicator = 1;
+                  AND od.oddsstatus NOT IN('running', 'closePrice', 'internal', 'suspend')
+                 AND od.bettype = 1
+                 AND od.liveindicator = 1;
      DECLARE @tblRefResourceMatchStatus TABLE
      (Id    INT NOT NULL, 
       Value NVARCHAR(50) NOT NULL
@@ -326,8 +320,12 @@ AS
                 ELSE 1
             END AS IsInfoSiteLinked, 
             ml.IsLive AS IsLiveMatchStatus, 
-            ma.MatchCode, 
-            ai.OddsStatus
+            ma.MatchCode,
+            CASE
+                WHEN ai.Matchid IS NULL
+                THEN 0
+                ELSE 1
+            END AS IsShowAbsenceIcon
      FROM #owpMatchListByDate AS ml WITH(NOLOCK)
           INNER JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
           INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -335,7 +333,7 @@ AS
           INNER JOIN dbo.OWPMatch AS ma WITH(NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
           LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
                                                       AND rr.RefName = 'LeagueCategory'
-          LEFT JOIN @tblAdminSiteId AS ai ON ml.MatchId = ai.Matchid
+          LEFT JOIN @tblAdminSiteIdShouldShowAbsenceIcon AS ai ON ml.MatchId = ai.Matchid
           LEFT JOIN #tblNoOfHDPResource AS ref ON ml.NoOfHDPId = ref.Id
           LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId
                                                             AND im.IsDeleted = 0
