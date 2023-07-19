@@ -24,6 +24,7 @@ Revisions:
 			UPDATE a  
 			SET a.[Count]=a.[Count]+1
 			FROM AccessCounter AS a WITH (NOLOCK) 
+			WHERE [Date] = @currentDate AND [UserId]=@ActorId AND [Function]=@FunctionName
 		END  
 		ELSE  
 		BEGIN  
