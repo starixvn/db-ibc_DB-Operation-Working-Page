@@ -8,7 +8,7 @@ DB: bodb_OWP
 Revisions:
 	20230717@Los: Create table AccessCounter [Redmine: #189526]
 */
-/**/
+
 CREATE TABLE [dbo].[AccessCounter]
 ([Id]    [INT] IDENTITY(1, 1) NOT NULL PRIMARY KEY, 
 [Date]         DATETIME NOT NULL, 
