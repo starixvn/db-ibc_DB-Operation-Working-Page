@@ -15,6 +15,8 @@ Revisions:
 	20230717@Los: Create table AccessCounter [Redmine: #189526]
 */
 
+/**/
+
     BEGIN
         SET NOCOUNT ON;
         DECLARE @currentDate DATETIME=CAST( GETDATE() AS Date )
