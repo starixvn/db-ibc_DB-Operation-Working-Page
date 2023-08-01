@@ -14,6 +14,7 @@ AS
  Revisions: 
 	20221222@Carlos: Refactor flow get detail - [Redmine: #181438]
 	20230209@Johnny: Edit data type for message - [Redmine: #183655]
+	20230801@Johnny: Get quote message - [Redmine: #191543]
 */
 
     BEGIN
@@ -21,13 +22,14 @@ AS
         DECLARE @MinMessageId INT;
         DECLARE @MinCurrentMessageId INT= @MessageId;
         CREATE TABLE #tblMessageDetail
-        (CreatedDate DATETIME NOT NULL, 
-         MessageId   INT NOT NULL, 
-         [Message]   NVARCHAR(2000) NOT NULL, 
-         UserId      INT NOT NULL, 
-         FileId      INT, 
-         IsSaved     BIT, 
-         Username    NVARCHAR(100)
+        (CreatedDate    DATETIME NOT NULL, 
+         MessageId      INT NOT NULL, 
+         [Message]      NVARCHAR(2000) NOT NULL, 
+         UserId         INT NOT NULL, 
+         FileId         INT, 
+         IsSaved        BIT, 
+         Username       NVARCHAR(100), 
+         QuoteMessageId INT
         );
         INSERT INTO #tblMessageDetail
         (CreatedDate, 
@@ -36,7 +38,8 @@ AS
          UserId, 
          FileId, 
          IsSaved, 
-         Username
+         Username, 
+         QuoteMessageId
         )
                SELECT DISTINCT 
                       tm.CreatedDate, 
@@ -49,7 +52,8 @@ AS
                           WHEN u.Nickname IS NULL
                           THEN u.Username
                           ELSE u.Nickname
-                      END AS Username
+                      END AS Username, 
+                      tm.QuoteMessageId
                FROM TicketMessage AS tm
                     LEFT JOIN [User] AS u ON u.UserId = tm.UserId
                WHERE tm.TicketId = @TicketId
@@ -62,8 +66,17 @@ AS
                tm.UserId, 
                tm.FileId, 
                tm.IsSaved, 
-               tm.Username
-        FROM #tblMessageDetail AS tm;
+               tm.Username, 
+               ti.[Message] AS QuoteMessage,
+               CASE
+                   WHEN u.Nickname IS NULL
+                   THEN u.Username
+                   ELSE u.Nickname
+               END AS QuoteUsername, 
+               ti.CreatedDate AS QuoteCreatedDate
+        FROM #tblMessageDetail AS tm
+             LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
+             LEFT JOIN [User] AS u ON ti.UserId = u.UserId;
 
         -- Can show more message
         SELECT @MinMessageId = MIN(tm.Id)
