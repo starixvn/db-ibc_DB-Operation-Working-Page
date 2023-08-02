@@ -11,13 +11,14 @@ DB: bodb_OWP
 
 Revisions:
 	20201201@Tyler: file upload  - [Redmine: #145591]
+	20230802@Mira: remove save binary file  - [Redmine: #191543]
 */
 
     BEGIN
         SET NOCOUNT ON;
         SELECT [FileId], 
                [Title], 
-               [FileContent]
+               [SavedFileName]
         FROM [bodb_OWP].[dbo].[FileUpload] WITH(NOLOCK)
         WHERE [FileId] = @FileId;
     END;
