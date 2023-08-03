@@ -10,11 +10,12 @@ GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TicketIssueMessage_Create] @TicketId INT, 
-                                                      @Message  NVARCHAR(2000), 
-                                                      @UserId   INT, 
-                                                      @IsSaved  BIT, 
-                                                      @FileId   INT            = NULL
+ALTER PROCEDURE [dbo].[OWP_TicketIssueMessage_Create] @TicketId       INT, 
+                                                      @Message        NVARCHAR(2000), 
+                                                      @UserId         INT, 
+                                                      @IsSaved        BIT, 
+                                                      @FileId         INT            = NULL, 
+                                                      @QuoteMessageId INT            = NULL
 AS
 
 /*      
@@ -25,6 +26,7 @@ AS
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20220311@Johnny.Thai: Update LastComment - [Redmine: #169841]
+	20230801@Johnny: Get quote message - [Redmine: #191543]
 */
 
     BEGIN
@@ -40,7 +42,8 @@ AS
          [Message], 
          UserId, 
          IsSaved, 
-         FileId
+         FileId, 
+         QuoteMessageId
         )
         VALUES
         (@TicketId, 
@@ -48,22 +51,65 @@ AS
          @Message, 
          @UserId, 
          0, 
-         @FileId
+         @FileId, 
+         @QuoteMessageId
         );
         DECLARE @id INT;
         SELECT @id = MAX(tm.Id)
         FROM TicketMessage AS tm;
-        SELECT u.UserId, 
-               tm.CreatedDate, 
+        CREATE TABLE #tblMessageDetail
+        (CreatedDate    DATETIME NOT NULL, 
+         MessageId      INT NOT NULL, 
+         [Message]      NVARCHAR(2000) NOT NULL, 
+         UserId         INT NOT NULL, 
+         FileId         INT, 
+         IsSaved        BIT, 
+         Username       NVARCHAR(100), 
+         QuoteMessageId INT
+        );
+        INSERT INTO #tblMessageDetail
+        (CreatedDate, 
+         MessageId, 
+         [Message], 
+         UserId, 
+         FileId, 
+         IsSaved, 
+         Username, 
+         QuoteMessageId
+        )
+               SELECT DISTINCT 
+                      tm.CreatedDate, 
+                      tm.Id AS MessageId, 
+                      tm.[Message], 
+                      tm.UserId, 
+                      tm.FileId, 
+                      tm.IsSaved,
+                      CASE
+                          WHEN u.Nickname IS NULL
+                          THEN u.Username
+                          ELSE u.Nickname
+                      END AS Username, 
+                      tm.QuoteMessageId
+               FROM TicketMessage AS tm
+                    LEFT JOIN [User] AS u ON u.UserId = tm.UserId
+               WHERE tm.Id = @id;
+
+        -- select ticket detail
+        SELECT tm.CreatedDate, 
+               tm.MessageId, 
                tm.[Message], 
-               tm.Id AS MessageId, 
-               tm.FileId,
+               tm.UserId, 
+               tm.FileId, 
+               tm.IsSaved, 
+               tm.Username, 
+               ti.[Message] AS QuoteMessage,
                CASE
                    WHEN u.Nickname IS NULL
                    THEN u.Username
                    ELSE u.Nickname
-               END AS Username
-        FROM TicketMessage AS tm
-             INNER JOIN [User] AS u ON tm.UserId = u.UserId
-        WHERE tm.Id = @id;
+               END AS QuoteUsername, 
+               ti.CreatedDate AS QuoteCreatedDate
+        FROM #tblMessageDetail AS tm
+             LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
+             LEFT JOIN [User] AS u ON ti.UserId = u.UserId;
     END;
