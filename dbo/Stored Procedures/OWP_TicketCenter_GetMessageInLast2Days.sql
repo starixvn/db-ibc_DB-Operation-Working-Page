@@ -14,6 +14,7 @@ AS
 	20221222@Mira: Refactor flow get detail - [Redmine: #181438]
 	20230209@Johnny: Edit data type for message - [Redmine: #183655]
 	20230801@Johnny: Get quote message - [Redmine: #191543]
+	20230801@Liam: Get image file name - [Redmine: #191543]
 */
 
     BEGIN
@@ -30,7 +31,8 @@ AS
          FileId         INT, 
          IsSaved        BIT, 
          Username       NVARCHAR(100), 
-         QuoteMessageId INT
+         QuoteMessageId INT, 
+         ImageFileName  NVARCHAR(200)
         );
         INSERT INTO #tblMessageDetail
         (CreatedDate, 
@@ -40,7 +42,8 @@ AS
          FileId, 
          IsSaved, 
          Username, 
-         QuoteMessageId
+         QuoteMessageId, 
+         ImageFileName
         )
                SELECT DISTINCT 
                       tm.CreatedDate, 
@@ -54,9 +57,19 @@ AS
                           THEN u.Username
                           ELSE u.Nickname
                       END AS Username, 
-                      tm.QuoteMessageId
+                      tm.QuoteMessageId,
+                      CASE
+                          WHEN f.Title LIKE '%.jpg'
+                               OR f.Title LIKE '%.jpeg'
+                               OR f.Title LIKE '%.png'
+                               OR f.Title LIKE '%.gif'
+                               OR f.Title LIKE '%.bmp'
+                          THEN f.SavedFileName
+                          ELSE NULL
+                      END
                FROM TicketMessage AS tm
                     LEFT JOIN [User] AS u ON u.UserId = tm.UserId
+                    LEFT JOIN [FileUpload] AS f ON tm.FileId = f.FileId
                WHERE tm.TicketId = @TicketId
                      AND tm.CreatedDate >= @FromDateTime;
 
@@ -74,7 +87,8 @@ AS
                    THEN u.Username
                    ELSE u.Nickname
                END AS QuoteUsername, 
-               ti.CreatedDate AS QuoteCreatedDate
+               ti.CreatedDate AS QuoteCreatedDate, 
+               tm.ImageFileName
         FROM #tblMessageDetail AS tm
              LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
              LEFT JOIN [User] AS u ON ti.UserId = u.UserId;
