@@ -63,7 +63,7 @@ AS
                                OR f.Title LIKE '%.png'
                                OR f.Title LIKE '%.gif'
                                OR f.Title LIKE '%.bmp'
-                          THEN f.FileContent
+                          THEN f.SavedFileName
                           ELSE NULL
                       END
                FROM TicketMessage AS tm
