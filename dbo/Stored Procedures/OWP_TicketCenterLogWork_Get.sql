@@ -8,7 +8,8 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenterLogWork_Get] @ActorId        INT,
                                                     @TicketTypeXML  NVARCHAR(MAX), 
                                                     @MarketKey      INT           = 1, 
                                                     @FromDateFilter DATETIME, 
-                                                    @ToDateFilter   DATETIME
+                                                    @ToDateFilter   DATETIME,
+													@EventType      INT
 AS
 
 /*      
@@ -20,6 +21,7 @@ AS
 	20230602@Johnny: Get Ticket Log Work - [Redmine: #185890]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 	20230713@Johnny: Search subject  - [Redmine: #190284]
+	20230807@Los: Get ticket logwork - [Redmine: #191778]
 */
 
     BEGIN
@@ -65,9 +67,10 @@ AS
                           ELSE NULL
                       END AS EventDateTime, 
                       til.[Subject]
-               FROM TicketIssueLogWork AS til WITH(NOLOCK)
+               FROM TicketIssue AS til WITH(NOLOCK)
                     LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId = m.matchid
-                    LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId = m14.matchid;
+                    LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId = m14.matchid
+			WHERE til.EventType=@EventType
         DECLARE @tblTicketType TABLE
         (TypeId    INT, 
          SubTypeId INT
@@ -104,7 +107,7 @@ AS
                CASE
                    WHEN til.[Subject] IS NULL
                         OR til.[Subject] = ''
-                   THEN CONVERT(NVARCHAR(100), AdminsiteId)
+                   THEN CONVERT(NVARCHAR(100), til.AdminsiteId)
                    ELSE til.[Subject]
                END AS [Subject], 
                l.leaguename AS LeagueName, 

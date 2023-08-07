@@ -8,7 +8,8 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenterOther_Get] @ActorId        INT,
                                                   @TicketTypeXML  NVARCHAR(MAX), 
                                                   @MarketKey      INT           = 1, 
                                                   @FromDateFilter DATETIME, 
-                                                  @ToDateFilter   DATETIME
+                                                  @ToDateFilter   DATETIME,
+												  @EventType      INT
 AS
 
 /*      
@@ -27,6 +28,7 @@ AS
 	20220613@Johnny.Thai: Hide ticket without any comment in 30 days  - [Redmine: #173994]
 	20230517@Liam: Performance tuning - [Redmine: #169841]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
+	20230807@Los: Get ticket support - [Redmine: #191778]
 */
 
     BEGIN
@@ -80,6 +82,7 @@ AS
         WHERE(@Keyword IS NULL
               OR @Keyword = ''
               OR tl.[Subject] LIKE '%' + @Keyword + '%')
+			  AND tis.EventType=@EventType
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')
