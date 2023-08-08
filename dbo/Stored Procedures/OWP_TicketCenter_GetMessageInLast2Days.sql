@@ -87,6 +87,7 @@ AS
                    THEN u.Username
                    ELSE u.Nickname
                END AS QuoteUsername, 
+			   tm.QuoteMessageId,
                ti.CreatedDate AS QuoteCreatedDate, 
                tm.ImageFileName
         FROM #tblMessageDetail AS tm
