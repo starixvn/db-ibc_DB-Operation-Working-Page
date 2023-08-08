@@ -20,6 +20,7 @@ AS
  Revisions:          
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20211015@Liam.Pham: update create ticket event - [Redmine: #158037]
+	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
 BEGIN
