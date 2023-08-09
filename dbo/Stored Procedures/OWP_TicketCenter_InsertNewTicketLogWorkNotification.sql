@@ -18,6 +18,7 @@ DB: bodb_OWP
 Revisions:
 	20230612@Liam: Init SP - [Redmine: #185890]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
+	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
      SET NOCOUNT ON;
@@ -48,7 +49,7 @@ Revisions:
                    COALESCE(m.awayid, m14.awayid) AS AwayId, 
                    COALESCE(m.globalshowtime, m14.globalshowtime) AS EventDateTime, 
                    til.[Subject]
-            FROM TicketIssueLogWork AS til WITH(NOLOCK)
+            FROM TicketIssue AS til WITH(NOLOCK)
                  LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId = m.matchid
                  LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId = m14.matchid
             WHERE til.TicketId = @TicketId;
