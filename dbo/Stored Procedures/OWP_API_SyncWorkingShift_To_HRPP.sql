@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROC OWP_API_SyncWorkingShift_To_HRPP @FromDate DATE, 
-                                             @ToDate   DATE
+ALTER PROCEDURE OWP_API_SyncWorkingShift_To_HRPP @FromDate DATE, 
+                                                 @ToDate   DATE
 
 /*
 Created: 20220523@Luca.Duong
@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20220523@Luca.Duong: get WorkingShift To HRPP - [Redmine: #172970]
+	20230810@Liam: get IsPublicHoliday - [Redmine: #191783]
 */
 
 AS
@@ -18,14 +19,15 @@ AS
         SET NOCOUNT ON;
         --
         DECLARE @TEMP TABLE
-        (EmployeeID     VARCHAR(30), 
-         ScheduleDate   DATE, 
-         ShiftStartTime DATETIME, 
-         ShiftEndTime   DATETIME, 
-         LastUpdated    DATETIME, 
-         IsDayOff       BIT, 
-         RefShiftId     INT, 
-         ShiftId        INT
+        (EmployeeID      VARCHAR(30), 
+         ScheduleDate    DATE, 
+         ShiftStartTime  DATETIME, 
+         ShiftEndTime    DATETIME, 
+         LastUpdated     DATETIME, 
+         IsDayOff        BIT, 
+         IsPublicHoliday BIT, 
+         RefShiftId      INT, 
+         ShiftId         INT
         );
         --
         INSERT INTO @TEMP
@@ -40,7 +42,13 @@ AS
                                OR ew.ShiftId = 293 --Off (R) shift
                           THEN 1
                           ELSE 0
-                      END AS IsDayOff, 
+                      END AS IsDayOff,
+                      CASE
+                          WHEN ew.RefShiftId = 192
+                               OR ew.ShiftId = 192
+                          THEN 1
+                          ELSE 0
+                      END AS IsPublicHoliday, 
                       ew.RefShiftId, 
                       ew.ShiftId
                FROM EmployeeWorkingShift ew WITH(NOLOCK)
@@ -57,7 +65,8 @@ AS
                ShiftStartTime, 
                ShiftEndTime, 
                LastUpdated, 
-               IsDayOff
+               IsDayOff, 
+               IsPublicHoliday
         FROM @TEMP
         WHERE(ShiftStartTime IS NOT NULL
               AND ShiftEndTime IS NOT NULL)
