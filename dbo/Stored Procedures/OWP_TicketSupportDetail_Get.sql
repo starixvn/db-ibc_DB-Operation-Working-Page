@@ -14,12 +14,13 @@ AS
 	20220222@Luca: Get TicketSubType - [Redmine: #168624]
 	20220310@Liam: Save message  - [Redmine: #163767]
 	20221222@Mira: Refactor flow get detail - [Redmine: #181438]
+	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
     BEGIN
         SET NOCOUNT ON;
         SELECT DISTINCT 
-               til.[Subject], 
+               ti.[Subject], 
                ti.TicketId, 
                ti.TicketType, 
                ti.TicketStatus, 
@@ -27,7 +28,7 @@ AS
                tst.SubtypeId AS TicketSubTypeId, 
                tst.SubtypeName AS TicketSubTypeName
         FROM TicketIssue AS ti
-             INNER JOIN TicketIssueSupport AS til WITH(NOLOCK) ON ti.TicketId = til.TicketId
+             --INNER JOIN TicketIssueSupport AS til WITH(NOLOCK) ON ti.TicketId = til.TicketId
              INNER JOIN TicketType AS tt WITH(NOLOCK) ON tt.TypeId = ti.TicketType
              LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId
                                                AND ti.SubtypeId = tst.SubtypeId
