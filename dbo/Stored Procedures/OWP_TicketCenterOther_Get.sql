@@ -62,7 +62,7 @@ AS
              @ActorId = @ActorId;
         SELECT DISTINCT 
                tbltk.TicketId, 
-               tl.[Subject], 
+               tis.[Subject], 
                tis.TicketType, 
                tis.TicketStatus, 
                tis.LastCommentDate, 
@@ -74,14 +74,14 @@ AS
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
-             INNER JOIN TicketIssueOther AS tl WITH(NOLOCK) ON tis.TicketId = tl.TicketId
+             --INNER JOIN TicketIssueOther AS tl WITH(NOLOCK) ON tis.TicketId = tl.TicketId
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE(@Keyword IS NULL
               OR @Keyword = ''
-              OR tl.[Subject] LIKE '%' + @Keyword + '%')
+              OR tis.[Subject] LIKE '%' + @Keyword + '%')
 			  AND tis.EventType=@EventType
              AND (@TicketId IS NULL
                   OR @TicketId = ''
