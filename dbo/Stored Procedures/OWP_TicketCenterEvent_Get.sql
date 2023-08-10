@@ -91,7 +91,8 @@ AS
                reader.IsRead, 
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
-               ts.SubtypeId 'TicketSubTypeId'
+               ts.SubtypeId 'TicketSubTypeId',
+			   tis.EventType
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
