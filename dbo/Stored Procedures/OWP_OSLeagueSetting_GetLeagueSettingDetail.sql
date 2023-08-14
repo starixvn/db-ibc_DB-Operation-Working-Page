@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20220705@Mira: Initial - [Redmine: #174431]	
 	20220809@Liam: correct betdelay - [Redmine: #175994]
+	20230811@Johnny: Active MaxBet - [Redmine: #191541]
 */
 
     BEGIN
@@ -87,7 +88,8 @@ Revisions:
                @OfferLines AS offerLines, 
                @Providers AS providers, 
                @BetTypes AS betTypes, 
-               @BetDelay AS betDelay
+               @BetDelay AS betDelay,
+			   ls.IsActive AS isActiveMaxBet
         FROM dbo.OSLeagueSetting ls
              INNER JOIN dbo.OSLeague ol WITH(NOLOCK) ON ol.OSLeagueId = ls.OSLeagueId
              LEFT JOIN dbo.OSRegionOption ro WITH(NOLOCK) ON ro.Id = ol.RegionId
