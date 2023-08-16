@@ -30,15 +30,17 @@ AS
 	20210810@Mira: Sync Special Product Match - [Redmine: #153498]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 	20230710@Johnny: Get League Group - [Redmine: #190405]
+    20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
 */
 
      SET NOCOUNT ON;
-     DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59'), @BettypeHDP INT= 1, @Specific15Mins INT= -1, @Specific10Mins INT= -2, @Specific15MinsNoOfCorners INT= -5, @Specific15MinsTotalBooking INT= -8, @FastMarket INT= -88, @AllInOne INT= -89, @MatchStatusText NVARCHAR(100);
+     DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59'), @BettypeHDP INT= 1, @Specific15Mins INT= -1, @Specific10Mins INT= -2, @Specific15MinsNoOfCorners INT= -5, @Specific15MinsTotalBooking INT= -8, @FastMarket INT= -88, @AllInOne INT= -89, @AllInOneTotalBookings INT= -189, @AllInOneCorners INT= -289, @FastMarketTotalBookings INT= -188, @FastMarketCorners INT= -288, @MatchStatusText NVARCHAR(100);
      DECLARE @dateNow DATETIME;
      SET @dateNow = GETDATE();
      DECLARE @tblAdminSiteIdShouldShowAbsenceIcon TABLE(Matchid INT NOT NULL);
      INSERT INTO @tblAdminSiteIdShouldShowAbsenceIcon(Matchid)
-            SELECT distinct od.matchid AS AdminSiteMatchId
+            SELECT DISTINCT 
+                   od.matchid AS AdminSiteMatchId
             FROM [bodb02].[dbo].[match] AS m WITH(NOLOCK)
                  INNER JOIN [bodb02].[dbo].odds AS od WITH(NOLOCK) ON m.matchid = od.matchid
             WHERE m.eventstatus = 'running'
@@ -220,7 +222,7 @@ AS
                  INNER JOIN dbo.OWPTeam AS a WITH(NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
                  INNER JOIN dbo.OWPMatch AS ma WITH(NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
                  LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
-            WHERE(ml.MinorBettypeId IN(@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
+            WHERE(ml.MinorBettypeId IN(@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne, @AllInOneTotalBookings, @AllInOneCorners, @FastMarketTotalBookings, @FastMarketCorners)
             OR ml.MinorBettypeId IS NOT NULL)
                  AND (@MatchStatusIds IS NULL
                       OR ml.MatchStatus IN
@@ -236,7 +238,7 @@ AS
                  INNER JOIN dbo.OWPTeam AS a WITH(NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
                  INNER JOIN dbo.OWPMatch AS ma WITH(NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
                  LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
-            WHERE(ml.MinorBettypeId NOT IN(@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
+            WHERE(ml.MinorBettypeId NOT IN(@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne, @AllInOneTotalBookings, @AllInOneCorners, @FastMarketTotalBookings, @FastMarketCorners)
             OR ml.MinorBettypeId IS NULL)
                  AND (@MatchStatusIds IS NULL
                       OR ml.MatchStatus IN
