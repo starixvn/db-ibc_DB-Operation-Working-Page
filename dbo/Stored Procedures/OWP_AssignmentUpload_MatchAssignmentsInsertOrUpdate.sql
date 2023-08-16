@@ -13,10 +13,16 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
-	
+	20230816@Mira: handle save/unsave FM, AIO child match  - [Redmine: #191226]
 */
 
      SET NOCOUNT ON;
+     -- FM and AIO bettypes
+     DECLARE @FMandAIObettype TABLE(Id INT);
+     INSERT INTO @FMandAIObettype
+     VALUES(-88), (-89), (-188), (-189), (-288), (-289);
+
+     -- MatchIds
      DECLARE @allMatchIds TABLE(MatchId INT);
      INSERT INTO @allMatchIds
             SELECT DISTINCT 
@@ -57,7 +63,11 @@ Revisions:
           INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId
           INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
      WHERE @IsUploadFMAndAIO = 1
-           OR (mm.MinorBettypeId NOT IN(-88, -89));
+           OR (mm.MinorBettypeId NOT IN
+     (
+         SELECT Id
+         FROM @FMandAIObettype
+     ));
 
      -- INSERT Main Assignment
      INSERT INTO [dbo].[Assignment]
@@ -96,6 +106,10 @@ Revisions:
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
             WHERE @IsUploadFMAndAIO = 1
-                  OR (mm.MinorBettypeId NOT IN(-88, -89));
+                  OR (mm.MinorBettypeId NOT IN
+            (
+                SELECT Id
+                FROM @FMandAIObettype
+            ));
      -- DROP tmpTable
      DROP TABLE #tmpTable;
