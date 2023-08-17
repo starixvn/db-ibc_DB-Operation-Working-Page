@@ -62,12 +62,13 @@ Revisions:
      FROM dbo.MatchSetting ma
           INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId
           INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
-     WHERE @IsUploadFMAndAIO = 1
-           OR (mm.MinorBettypeId NOT IN
+     WHERE mm.MinorBettypeId NOT IN(-188, -288)
+     AND (@IsUploadFMAndAIO = 1
+          OR (mm.MinorBettypeId NOT IN
      (
          SELECT Id
          FROM @FMandAIObettype
-     ));
+     )));
 
      -- INSERT Main MatchSetting
      INSERT INTO [dbo].[MatchSetting]
@@ -117,11 +118,12 @@ Revisions:
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
-            WHERE @IsUploadFMAndAIO = 1
-                  OR (mm.MinorBettypeId NOT IN
+            WHERE mm.MinorBettypeId NOT IN(-188, -288)
+                 AND (@IsUploadFMAndAIO = 1
+                      OR (mm.MinorBettypeId NOT IN
             (
                 SELECT Id
                 FROM @FMandAIObettype
-            ));
+            )));
      -- DROP tmpTable
      DROP TABLE #tmpTable;
