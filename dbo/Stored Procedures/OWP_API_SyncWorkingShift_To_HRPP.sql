@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20220523@Luca.Duong: get WorkingShift To HRPP - [Redmine: #172970]
 	20230810@Liam: get IsPublicHoliday - [Redmine: #191783]
+	20230821@Liam: get correct IsPublicHoliday   - [Redmine: #192954]
 */
 
 AS
@@ -70,5 +71,6 @@ AS
         FROM @TEMP
         WHERE(ShiftStartTime IS NOT NULL
               AND ShiftEndTime IS NOT NULL)
-             OR IsDayOff = 1;
+             OR IsDayOff = 1
+             OR IsPublicHoliday = 1;
     END;
