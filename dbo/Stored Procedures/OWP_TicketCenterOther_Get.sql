@@ -62,7 +62,7 @@ AS
              @ActorId = @ActorId;
         SELECT DISTINCT 
                tbltk.TicketId, 
-               tis.[Subject], 
+               tis.[Subject_New] AS [Subject], 
                tis.TicketType, 
                tis.TicketStatus, 
                tis.LastCommentDate, 
@@ -71,19 +71,18 @@ AS
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
                ts.SubtypeId 'TicketSubTypeId',
-			   tis.EventType
+			   tis.EventType_New AS EventType
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
-             INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
-             --INNER JOIN TicketIssueOther AS tl WITH(NOLOCK) ON tis.TicketId = tl.TicketId
+             INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId       
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE(@Keyword IS NULL
               OR @Keyword = ''
-              OR tis.[Subject] LIKE '%' + @Keyword + '%')
-			  AND tis.EventType=@EventType
+              OR tis.[Subject_New] LIKE '%' + @Keyword + '%')
+			  AND tis.EventType_New=@EventType
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')

@@ -79,8 +79,8 @@ AS
                tbltk.TicketId, 
                ifm.OWPLeagueId, 
                ifm.LeagueName 'OWPLeagueName', 
-               tis.OwpHomeId, 
-               tis.OwpAwayId, 
+               tis.OwpHomeId_New AS OwpHomeId, 
+               tis.OwpAwayId_New AS OwpAwayId, 
                ifm.HomeName, 
                ifm.AwayName, 
                tis.TicketType, 
@@ -92,11 +92,11 @@ AS
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
                ts.SubtypeId 'TicketSubTypeId',
-			   tis.EventType
+			   tis.EventType_New AS EventType
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
-             INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId = tis.InfoSiteMatchId
+             INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId = tis.InfoSiteMatchId_New
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
@@ -106,7 +106,7 @@ AS
               OR ifm.LeagueName LIKE '%' + @Keyword + '%'
               OR ifm.HomeName LIKE '%' + @Keyword + '%'
               OR ifm.AwayName LIKE '%' + @Keyword + '%')
-			  AND tis.EventType=@EventType
+			  AND tis.EventType_New=@EventType
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')

@@ -36,9 +36,9 @@ AS
                    MAX(tm.Id) MaxId,
 				   owpm.OWPMatchId
             FROM @OWPMatchId AS owpm
-				INNER JOIN  dbo.TicketIssue AS te WITH(NOLOCK) ON owpm.OWPMatchId=te.OwpMatchId
+				INNER JOIN  dbo.TicketIssue AS te WITH(NOLOCK) ON owpm.OWPMatchId=te.OwpMatchId_New
                 INNER JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON te.TicketId = tm.TicketId
-			WHERE te.EventType=5
+			WHERE te.EventType_New=5
             GROUP BY te.TicketId, owpm.OWPMatchId
         ) AS x
         LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId

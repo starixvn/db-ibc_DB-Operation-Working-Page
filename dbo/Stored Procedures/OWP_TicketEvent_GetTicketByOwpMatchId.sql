@@ -46,9 +46,9 @@ AS
                    ti.SubtypeId,
 				   owpm.OWPMatchId
             FROM @OWPMatchId AS owpm 
-                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON owpm.OWPMatchId=ti.OwpMatchId
+                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON owpm.OWPMatchId=ti.OwpMatchId_New
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
-			WHERE ti.EventType=5
+			WHERE ti.EventType_New=5
             GROUP BY ti.TicketId, 
                      ti.SubtypeId,
 					 owpm.OWPMatchId

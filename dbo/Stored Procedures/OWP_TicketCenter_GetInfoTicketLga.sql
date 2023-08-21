@@ -16,7 +16,7 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT tl.OwpMatchId
+        SELECT tl.OwpMatchId_New AS OwpMatchId
         FROM [dbo].[TicketIssue] AS tl WITH(NOLOCK)
 		WHERE tl.TicketId = @TicketId
     END;

@@ -72,11 +72,11 @@ AS
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
                ts.SubtypeId 'TicketSubTypeId',
-			   tis.EventType
+			   tis.EventType_New AS EventType
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId           
-             INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON owpl.OWPLeagueId = tis.OwpLeagueId
+             INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON owpl.OWPLeagueId = tis.OwpLeagueId_New
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
@@ -87,7 +87,7 @@ AS
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')
-			AND tis.EventType=@EventType
+			AND tis.EventType_New=@EventType
              AND @MarketKey = @allMarketKey
              AND (tis.SubtypeId = temp.SubTypeId
                   OR (tis.SubtypeId IS NULL

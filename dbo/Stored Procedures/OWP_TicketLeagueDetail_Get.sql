@@ -21,17 +21,16 @@ AS
     BEGIN
         SET NOCOUNT ON;
         SELECT DISTINCT 
-               ti.OWPLeagueId AS OwpLeagueId, 
+               ti.OWPLeagueId_New AS OwpLeagueId, 
                owpl.OWPLeagueName, 
                ti.TicketId, 
-               ti.TicketType, 
+               ti.TicketType,
                ti.TicketStatus, 
                tt.TypeName, 
                tst.SubtypeId AS TicketSubTypeId, 
                tst.SubtypeName AS TicketSubTypeName
         FROM TicketIssue AS ti
-             --INNER JOIN TicketIssueLeague AS til ON ti.TicketId = til.TicketId
-             INNER JOIN OWPLeague AS owpl ON owpl.OWPLeagueId = ti.OwpLeagueId
+             INNER JOIN OWPLeague AS owpl ON owpl.OWPLeagueId = ti.OwpLeagueId_New
              INNER JOIN TicketType AS tt ON tt.TypeId = ti.TicketType
              LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId
                                                AND ti.SubtypeId = tst.SubtypeId

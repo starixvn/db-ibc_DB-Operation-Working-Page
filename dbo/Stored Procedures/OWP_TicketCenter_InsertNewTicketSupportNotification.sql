@@ -35,7 +35,7 @@ Revisions:
      WHERE UserId = @ActorId;
      -- end
      -- Subject name
-     SELECT TOP 1 @eventName = tis.[Subject]
+     SELECT TOP 1 @eventName = tis.[Subject_New]
      FROM dbo.[TicketIssue] AS tis WITH(NOLOCK)
      WHERE tis.TicketId = @TicketId;
      -- end

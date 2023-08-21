@@ -30,7 +30,7 @@ AS
                tst.SubtypeName AS TicketSubTypeName
         FROM TicketIssue AS ti
              INNER JOIN TicketType AS tt ON tt.TypeId = ti.TicketType
-             LEFT JOIN OWPMatch AS owpm ON owpm.OWPMatchId = ti.OwpMatchId
+             LEFT JOIN OWPMatch AS owpm ON owpm.OWPMatchId = ti.OwpMatchId_New
              LEFT JOIN OWPLeague AS owpl ON owpl.OWPLeagueId = owpm.OWPLeagueId
              LEFT JOIN OWPTeam AS owph ON owph.OWPTeamId = owpm.OWPHomeId
              LEFT JOIN OWPTeam AS owpa ON owpa.OWPTeamId = owpm.OWPAwayId

@@ -12,12 +12,11 @@ AS
       
  Revisions:          
 	202210104@Johnny.Thai: Event ticket - [Redmine: #178183]
-	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        INSERT INTO TicketIssue
+        INSERT INTO TicketIssueLiveIncident
         (TicketId, 
          OwpMatchId
         )

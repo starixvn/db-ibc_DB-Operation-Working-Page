@@ -44,9 +44,8 @@ AS
                    ti.TicketId, 
                    MAX(tm.CreatedDate) MaxDateTime, 
                    ti.SubtypeId
-            FROM @OWPLeagueId AS ol
-                 --INNER JOIN dbo.TicketIssueLeague AS tl WITH(NOLOCK) ON ol.OWPLeagueId = tl.OwpLeagueId
-                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.EventType=1 AND ol.OWPLeagueId = ti.OwpLeagueId
+            FROM @OWPLeagueId AS ol                
+                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.EventType_New=1 AND ol.OWPLeagueId = ti.OwpLeagueId_New
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
             GROUP BY ol.OWPLeagueId, 
                      ti.TicketId, 

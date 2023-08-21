@@ -21,13 +21,13 @@ Revisions:
         -- select Id
         IF(@IsTicketLeague = 1)
             BEGIN
-                SELECT OwpLeagueId
+                SELECT OwpLeagueId_New AS OwpLeagueId
                 FROM dbo.TicketIssue WITH(NOLOCK)
                 WHERE TicketId = @TicketId;
         END;
             ELSE
             BEGIN
-                SELECT InfoSiteMatchId
+                SELECT InfoSiteMatchId_New AS InfoSiteMatchId
                 FROM dbo.TicketIssue WITH(NOLOCK)
                 WHERE TicketId = @TicketId;
         END;

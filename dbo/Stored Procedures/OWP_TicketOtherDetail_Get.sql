@@ -21,7 +21,7 @@ AS
     BEGIN
         SET NOCOUNT ON;
         SELECT DISTINCT 
-               ti.[Subject], 
+               ti.Subject_New  AS [Subject], 
                ti.TicketId, 
                ti.TicketType, 
                ti.TicketStatus, 

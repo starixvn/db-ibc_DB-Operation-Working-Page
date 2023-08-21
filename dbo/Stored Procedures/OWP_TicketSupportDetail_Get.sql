@@ -20,7 +20,7 @@ AS
     BEGIN
         SET NOCOUNT ON;
         SELECT DISTINCT 
-               ti.[Subject], 
+               ti.Subject_New AS [Subject], 
                ti.TicketId, 
                ti.TicketType, 
                ti.TicketStatus, 
@@ -28,7 +28,6 @@ AS
                tst.SubtypeId AS TicketSubTypeId, 
                tst.SubtypeName AS TicketSubTypeName
         FROM TicketIssue AS ti
-             --INNER JOIN TicketIssueSupport AS til WITH(NOLOCK) ON ti.TicketId = til.TicketId
              INNER JOIN TicketType AS tt WITH(NOLOCK) ON tt.TypeId = ti.TicketType
              LEFT JOIN TicketSubtype AS tst ON ti.TicketType = tst.TypeId
                                                AND ti.SubtypeId = tst.SubtypeId

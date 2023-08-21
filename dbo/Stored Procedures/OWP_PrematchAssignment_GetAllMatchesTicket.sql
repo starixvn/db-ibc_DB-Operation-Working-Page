@@ -45,8 +45,7 @@ AS
                    MAX(tm.CreatedDate) MaxDateTime, 
                    ti.SubtypeId
             FROM @InfoSiteMatchId AS im
-                 --INNER JOIN dbo.TicketIssueEvent AS te WITH(NOLOCK) ON im.InfoSiteMatchId = te.InfoSiteMatchId
-                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.EventType = 2 AND im.InfoSiteMatchId = ti.InfoSiteMatchId
+                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.EventType_New = 2 AND im.InfoSiteMatchId = ti.InfoSiteMatchId_New
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
             GROUP BY im.InfoSiteMatchId, 
                      ti.TicketId, 

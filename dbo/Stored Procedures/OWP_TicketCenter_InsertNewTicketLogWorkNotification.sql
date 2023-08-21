@@ -43,15 +43,15 @@ Revisions:
       [Subject]
      )
             SELECT til.TicketId, 
-                   til.AdminsiteId, 
+                   til.AdminsiteId_New, 
                    COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
                    COALESCE(m.homeid, m14.homeid) AS HomeId, 
                    COALESCE(m.awayid, m14.awayid) AS AwayId, 
                    COALESCE(m.globalshowtime, m14.globalshowtime) AS EventDateTime, 
-                   til.[Subject]
+                   til.[Subject_New]
             FROM TicketIssue AS til WITH(NOLOCK)
-                 LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId = m.matchid
-                 LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId = m14.matchid
+                 LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId_New = m.matchid
+                 LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId_New = m14.matchid
             WHERE til.TicketId = @TicketId;
      -- username
      DECLARE @actorName NVARCHAR(50);
