@@ -10,12 +10,13 @@ Task :Ticket Center
 DB: bodb_OWP  
   
 Revisions:  
- 20221013@Johnny: Init sp  - [Redmine: #178183]  
+ 20221013@Johnny: Init sp  - [Redmine: #178183]
+ 20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT tl.OwpMatchId
-        FROM [dbo].[TicketIssueLiveIncident] AS tl WITH(NOLOCK)
+        SELECT tl.OwpMatchId_New AS OwpMatchId
+        FROM [dbo].[TicketIssue] AS tl WITH(NOLOCK)
 		WHERE tl.TicketId = @TicketId
     END;

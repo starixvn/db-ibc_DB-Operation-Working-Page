@@ -13,6 +13,7 @@ AS
  Revisions:        
 	20211222@Mira: Integrate my ticket - [Redmine: #163766]
 	20220321@Mira: Get subtype - [Redmine: #170097]
+	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
     BEGIN
@@ -40,15 +41,14 @@ AS
         FROM
         (
             SELECT ol.OWPLeagueId, 
-                   tl.TicketId, 
+                   ti.TicketId, 
                    MAX(tm.CreatedDate) MaxDateTime, 
                    ti.SubtypeId
-            FROM @OWPLeagueId AS ol
-                 INNER JOIN dbo.TicketIssueLeague AS tl WITH(NOLOCK) ON ol.OWPLeagueId = tl.OwpLeagueId
-                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = tl.TicketId
+            FROM @OWPLeagueId AS ol                
+                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.EventType_New=1 AND ol.OWPLeagueId = ti.OwpLeagueId_New
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
             GROUP BY ol.OWPLeagueId, 
-                     tl.TicketId, 
+                     ti.TicketId, 
                      ti.SubtypeId
         ) AS x
         LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId

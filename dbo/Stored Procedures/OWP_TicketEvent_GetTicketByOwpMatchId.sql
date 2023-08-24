@@ -12,6 +12,7 @@ AS
       
  Revisions:          
 	20220929@Carlos.nguyen: Init sp - [Redmine: #178183]
+	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
     BEGIN
@@ -40,15 +41,15 @@ AS
 			   x.OWPMatchId
         FROM
         (
-            SELECT te.TicketId, 
+            SELECT ti.TicketId, 
                    MAX(tm.Id) MaxId, 
                    ti.SubtypeId,
 				   owpm.OWPMatchId
-            FROM dbo.TicketIssueLiveIncident AS te WITH(NOLOCK)
-				INNER JOIN @OWPMatchId AS owpm ON owpm.OWPMatchId=te.OwpMatchId
-                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON ti.TicketId = te.TicketId
+            FROM @OWPMatchId AS owpm 
+                 INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON owpm.OWPMatchId=ti.OwpMatchId_New
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
-            GROUP BY te.TicketId, 
+			WHERE ti.EventType_New=5
+            GROUP BY ti.TicketId, 
                      ti.SubtypeId,
 					 owpm.OWPMatchId
         ) AS x

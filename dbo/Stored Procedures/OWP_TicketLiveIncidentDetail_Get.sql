@@ -12,6 +12,7 @@ AS
  Revisions:          
 	20221005@Mira: Get Ticket Live Incident - [Redmine: #178183]
 	20221222@Mira: Refactor flow get detail - [Redmine: #181438]
+	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
     BEGIN
@@ -28,9 +29,8 @@ AS
                tst.SubtypeId AS TicketSubTypeId, 
                tst.SubtypeName AS TicketSubTypeName
         FROM TicketIssue AS ti
-             INNER JOIN TicketIssueLiveIncident AS tli ON ti.TicketId = tli.TicketId
              INNER JOIN TicketType AS tt ON tt.TypeId = ti.TicketType
-             LEFT JOIN OWPMatch AS owpm ON owpm.OWPMatchId = tli.OwpMatchId
+             LEFT JOIN OWPMatch AS owpm ON owpm.OWPMatchId = ti.OwpMatchId_New
              LEFT JOIN OWPLeague AS owpl ON owpl.OWPLeagueId = owpm.OWPLeagueId
              LEFT JOIN OWPTeam AS owph ON owph.OWPTeamId = owpm.OWPHomeId
              LEFT JOIN OWPTeam AS owpa ON owpa.OWPTeamId = owpm.OWPAwayId

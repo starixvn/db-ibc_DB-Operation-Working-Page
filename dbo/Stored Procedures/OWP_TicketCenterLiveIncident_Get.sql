@@ -8,7 +8,8 @@ ALTER PROCEDURE [dbo].[OWP_TicketCenterLiveIncident_Get] @ActorId        INT,
                                                          @TicketTypeXML  NVARCHAR(MAX), 
                                                          @MarketKey      INT           = 1, 
                                                          @FromDateFilter DATETIME, 
-                                                         @ToDateFilter   DATETIME
+                                                         @ToDateFilter   DATETIME,
+														 @EventType      INT
 AS
 
 /*      
@@ -20,6 +21,7 @@ AS
 	20221005@Mira: Get Ticket Live Incident - [Redmine: #178183]
 	20220311@Liam: Performance tuning - [Redmine: #169841]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
+	20230807@Los: Get ticket live - [Redmine: #191778]
 */
 
     BEGIN
@@ -81,16 +83,16 @@ AS
                reader.IsRead, 
                reader.IsPinned, 
                ts.SubtypeName 'TicketSubTypeName', 
-               ts.SubtypeId 'TicketSubTypeId'
+               ts.SubtypeId 'TicketSubTypeId',
+			   tis.EventType_New AS EventType
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN @tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
-             INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
-             INNER JOIN TicketIssueLiveIncident AS tli WITH(NOLOCK) ON tis.TicketId = tli.TicketId
+             INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId          
              INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
-             LEFT JOIN OWPMatch AS owpm ON owpm.OWPMatchId = tli.OwpMatchId
+             LEFT JOIN OWPMatch AS owpm ON owpm.OWPMatchId = tis.OwpMatchId_New
              LEFT JOIN OWPLeague AS owpl ON owpl.OWPLeagueId = owpm.OWPLeagueId
              LEFT JOIN OWPTeam AS owph ON owph.OWPTeamId = owpm.OWPHomeId
              LEFT JOIN OWPTeam AS owpa ON owpa.OWPTeamId = owpm.OWPAwayId
@@ -99,6 +101,7 @@ AS
               OR owpl.OWPLeagueName LIKE '%' + @Keyword + '%'
               OR owph.OWPTeamName LIKE '%' + @Keyword + '%'
               OR owpa.OWPTeamName LIKE '%' + @Keyword + '%')
+			  AND tis.EventType_New=@EventType
              AND (@TicketId IS NULL
                   OR @TicketId = ''
                   OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')

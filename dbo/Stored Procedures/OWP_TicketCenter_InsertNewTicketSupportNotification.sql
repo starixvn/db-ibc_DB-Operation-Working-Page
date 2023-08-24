@@ -16,7 +16,7 @@ DB: bodb_OWP
 
 Revisions:
 	20211231@Johnny.Thai: Init SP - [Redmine: #162851]
-	
+	20230807@Los: Get ticket event - [Redmine: #191778]
 */
 
      SET NOCOUNT ON;
@@ -35,8 +35,8 @@ Revisions:
      WHERE UserId = @ActorId;
      -- end
      -- Subject name
-     SELECT TOP 1 @eventName = tis.[Subject]
-     FROM dbo.[TicketIssueSupport] AS tis WITH(NOLOCK)
+     SELECT TOP 1 @eventName = tis.[Subject_New]
+     FROM dbo.[TicketIssue] AS tis WITH(NOLOCK)
      WHERE tis.TicketId = @TicketId;
      -- end
 
