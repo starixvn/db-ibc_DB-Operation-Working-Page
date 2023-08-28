@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId            INT           = 0, 
+ALTER PROCEDURE [dbo].[OWP_QuickSearchMatchGet] @UserId            INT           = 0, 
                                                  @SearchKeywords    NVARCHAR(100), 
                                                  @IsNumericKeywords BIT           = 0, 
                                                  @IsFullTimeView    BIT           = 0, 
@@ -29,12 +29,13 @@ Revisions:
   20200713@Mira.Nguyen: Apply new time range - [Redmine: #137410]
   20200714@Esther.Nguyen: Build Home Name (N) - [Redmine: #137417]
   20230314@Liam.Pham: Add more Info [Redmide: #184831]
+  20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @owpTodayFrom DATETIME, @owpTodayTo DATETIME, @FromTimeToGetData DATETIME, @FromTimePM TIME= '12:00:00', @ToTimePM TIME= '23:59:59', @YesterdayGMT8 DATETIME= DATEADD(hh, 12, DATEADD(DAY, -1, GETDATE()));
-        DECLARE @FromTime DATETIME, @ToTime DATETIME, @Specific15Mins INT= -1, @Specific10Mins INT= -2, @Specific15MinsNoOfCorners INT= -5, @NoOfCorners INT= -3, @NextCorners INT= -4, @LastCorners INT= -90, @HomeSingleTeamCorners INT= -94, @AwaySingleTeamCorners INT= -95, @Specific15MinsTotalBooking INT= -8, @TotalBooking INT= -6, @NextBooking INT= -7, @LastBooking INT= -91, @FastMarket INT= -88, @AllInOne INT= -89;
+        DECLARE @FromTime DATETIME, @ToTime DATETIME, @Specific15Mins INT= -1, @Specific10Mins INT= -2, @Specific15MinsNoOfCorners INT= -5, @NoOfCorners INT= -3, @NextCorners INT= -4, @LastCorners INT= -90, @HomeSingleTeamCorners INT= -94, @AwaySingleTeamCorners INT= -95, @Specific15MinsTotalBooking INT= -8, @TotalBooking INT= -6, @NextBooking INT= -7, @LastBooking INT= -91, @FastMarket INT= -88, @AllInOne INT= -89, @AllInOneTotalBookings INT= -189, @AllInOneCorners INT= -289, @FastMarketTotalBookings INT= -188, @FastMarketCorners INT= -288;
 
         --Initialize parameter
         SELECT @FromTimeToGetData = (CASE
@@ -126,7 +127,7 @@ Revisions:
                                   ISNULL(om.MatchNo, '') AS MatchNo, 
                                   om.EventDateTime AS EventDate, 
                                   (CASE
-                                       WHEN minor.MinorBettypeId IN(@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
+                                       WHEN minor.MinorBettypeId IN(@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne, @AllInOneTotalBookings, @AllInOneCorners,@FastMarketTotalBookings, @FastMarketCorners)
                                        THEN NULL
                                        ELSE CASE
                                                 WHEN om.IsNeutral = 1
@@ -259,16 +260,16 @@ Revisions:
         FROM #tblSuggestedMatches AS sm WITH(ROWLOCK)
              LEFT JOIN dbo.MinorMatch AS minor WITH(NOLOCK) ON minor.ParentMatchId = sm.ParentMatchId
                                                                AND minor.MinorBettypeId = (CASE
-                                                                                               WHEN sm.MinorBettypeId = @Specific15MinsNoOfCorners
+                                                                                               WHEN sm.MinorBettypeId = @Specific15MinsNoOfCorners or sm.MinorBettypeId = @AllInOneCorners or sm.MinorBettypeId = @FastMarketCorners
                                                                                                THEN @NoOfCorners
-                                                                                               WHEN sm.MinorBettypeId = @Specific15MinsTotalBooking
+                                                                                               WHEN sm.MinorBettypeId = @Specific15MinsTotalBooking or sm.MinorBettypeId = @AllInOneTotalBookings  or sm.MinorBettypeId = @FastMarketTotalBookings
                                                                                                THEN @TotalBooking
                                                                                                ELSE NULL
                                                                                            END)
              LEFT JOIN dbo.OWPMatch AS om WITH(NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
              INNER JOIN dbo.OWPTeam AS home WITH(NOLOCK) ON home.OWPTeamId = om.OWPHomeId
              INNER JOIN dbo.OWPTeam AS away WITH(NOLOCK) ON away.OWPTeamId = om.OWPAwayId
-        WHERE sm.MinorBettypeId IN(@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking);
+        WHERE sm.MinorBettypeId IN(@Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @AllInOneTotalBookings, @AllInOneCorners,@FastMarketTotalBookings, @FastMarketCorners);
 
         -- GET USER'S ASSIGNED MATCHES
         INSERT INTO #tblAssignedMatches(OWPMatchId)
@@ -462,23 +463,23 @@ Revisions:
         FROM #tblOrderedResult AS ot WITH(NOLOCK)
              INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON ot.OWPMatchId = mm.MinorMatchId;
 
-        -- 2. update ID match SPECIFIC 15 MINS TOTAL BOOKINGS to ID match bookings
+        -- 2. update ID match SPECIFIC 15 MINS,AIO,FM TOTAL BOOKINGS to ID match bookings
         UPDATE #tblOrderedResult
           SET 
               OWPMatchId = mm.MinorMatchId
         FROM #tblOrderedResult AS ot WITH(NOLOCK)
              INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON ot.ParentMatchId = mm.ParentMatchId
         WHERE mm.MinorBettypeId = -6
-              AND ot.Bettype = -8;
+              AND (ot.Bettype = -8 or ot.Bettype = -189  or ot.Bettype =  -188);
 
-        -- 3. update ID match SPECIFIC 15 MINS TOTAL CORNER to ID match corner
+        -- 3. update ID match SPECIFIC 15 MINS,AIO,FM TOTAL CORNER to ID match corner
         UPDATE #tblOrderedResult
           SET 
               OWPMatchId = mm.MinorMatchId
         FROM #tblOrderedResult AS ot WITH(NOLOCK)
              INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON ot.ParentMatchId = mm.ParentMatchId
         WHERE mm.MinorBettypeId = -3
-              AND ot.Bettype = -5;
+              AND (ot.Bettype = -5 or ot.Bettype =-288 or ot.Bettype =-289);
 
         -- Correct league name 'SPECIFIC 15 MINS TOTAL BOOKINGS'=> BOOKINGS, 'SPECIFIC 15 MINS CORNER'=>"CORNER"
         UPDATE #tblOrderedResult
@@ -486,12 +487,20 @@ Revisions:
               LeagueName = CASE
                                WHEN LeagueName LIKE '%SPECIFIC 15 MINS TOTAL BOOKINGS'
                                THEN REPLACE(LeagueName, 'SPECIFIC 15 MINS TOTAL BOOKINGS', 'BOOKING')
-                               WHEN LeagueName LIKE '%SPECIFIC 15 MINS NUMBER OF CORNERS'
-                               THEN REPLACE(LeagueName, 'SPECIFIC 15 MINS NUMBER OF CORNERS', 'CORNERS')
+                               WHEN LEAGUENAME LIKE '%SPECIFIC 15 MINS NUMBER OF CORNERS'
+                               THEN REPLACE(LEAGUENAME, 'SPECIFIC 15 MINS NUMBER OF CORNERS', 'CORNERS')
+							   WHEN LeagueName LIKE '%FAST MARKET TOTAL BOOKINGS'
+                               THEN REPLACE(LeagueName, 'FAST MARKET TOTAL BOOKINGS', 'BOOKING')
+                               WHEN LEAGUENAME LIKE '%FAST MARKET NUMBER OF CORNERS'
+                               THEN REPLACE(LEAGUENAME, 'FAST MARKET NUMBER OF CORNERS', 'CORNERS')
+							   WHEN LeagueName LIKE '%ALL IN ONE TOTAL BOOKINGS'
+                               THEN REPLACE(LeagueName, 'ALL IN ONE TOTAL BOOKINGS', 'BOOKING')
+                               WHEN LEAGUENAME LIKE '%ALL IN ONE NUMBER OF CORNERS'
+                               THEN REPLACE(LEAGUENAME, 'ALL IN ONE NUMBER OF CORNERS', 'CORNERS')
                                ELSE LeagueName
                            END
         WHERE ParentMatchId IS NOT NULL
-              AND Bettype IN(-5, -8);
+              AND Bettype IN(-5, -8,-189,-188,-288,-289);
         SELECT DISTINCT 
                ot.OWPMatchId, 
                ot.ParentMatchId, 

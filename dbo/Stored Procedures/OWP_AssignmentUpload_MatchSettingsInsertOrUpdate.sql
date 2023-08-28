@@ -14,20 +14,27 @@ DB: bodb_OWP
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
-	
+	20230816@Mira: handle save/unsave FM, AIO child match  - [Redmine: #191226]
 */
 
      SET NOCOUNT ON;
      DECLARE @allMatchIds TABLE(MatchId INT);
+
+     -- FM and AIO bettypes
+     DECLARE @FMandAIObettype TABLE(Id INT);
+     INSERT INTO @FMandAIObettype
+     VALUES(-88), (-89), (-188), (-189), (-288), (-289);
+
+     -- MatchIds
      INSERT INTO @allMatchIds
             SELECT DISTINCT 
                    val
             FROM fnc_SplitStrings(@MatchIds, ',') u OPTION(MAXRECURSION 0);
      CREATE TABLE #tmpTable
-     (MatchId    INT, 
-      BetType    INT, 
-      Spread     MONEY, 
-      MaxBet     MONEY
+     (MatchId INT, 
+      BetType INT, 
+      Spread  MONEY, 
+      MaxBet  MONEY
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -55,8 +62,13 @@ Revisions:
      FROM dbo.MatchSetting ma
           INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId
           INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
-     WHERE @IsUploadFMAndAIO = 1
-           OR (mm.MinorBettypeId NOT IN(-88, -89));
+     WHERE mm.MinorBettypeId NOT IN(-188, -288)
+     AND (@IsUploadFMAndAIO = 1
+          OR (mm.MinorBettypeId NOT IN
+     (
+         SELECT Id
+         FROM @FMandAIObettype
+     )));
 
      -- INSERT Main MatchSetting
      INSERT INTO [dbo].[MatchSetting]
@@ -67,17 +79,17 @@ Revisions:
      )
             SELECT DISTINCT 
                    MatchId, 
-                   t.BetType, 
-                   CASE 
-						WHEN Spread = ''
-							THEN NULL
-						ELSE Spread
-						END 
-                   ,CASE 
-						WHEN MaxBet = ''
-							THEN NULL
-						ELSE MaxBet
-						END  
+                   t.BetType,
+                   CASE
+                       WHEN Spread = ''
+                       THEN NULL
+                       ELSE Spread
+                   END,
+                   CASE
+                       WHEN MaxBet = ''
+                       THEN NULL
+                       ELSE MaxBet
+                   END
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  LEFT JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
@@ -92,21 +104,26 @@ Revisions:
      )
             SELECT DISTINCT 
                    MatchId, 
-                   t.BetType, 
-                   CASE 
-						WHEN Spread = ''
-							THEN NULL
-						ELSE Spread
-						END 
-                   ,CASE 
-						WHEN MaxBet = ''
-							THEN NULL
-						ELSE MaxBet
-						END  
+                   t.BetType,
+                   CASE
+                       WHEN Spread = ''
+                       THEN NULL
+                       ELSE Spread
+                   END,
+                   CASE
+                       WHEN MaxBet = ''
+                       THEN NULL
+                       ELSE MaxBet
+                   END
             FROM #tmpTable t
                  INNER JOIN MajorBettype v WITH(NOLOCK) ON t.BetType = v.BettypeId
                  INNER JOIN dbo.MinorMatch mm ON mm.MinorMatchId = t.MatchId
-            WHERE @IsUploadFMAndAIO = 1
-                  OR (mm.MinorBettypeId NOT IN(-88, -89));
+            WHERE mm.MinorBettypeId NOT IN(-188, -288)
+                 AND (@IsUploadFMAndAIO = 1
+                      OR (mm.MinorBettypeId NOT IN
+            (
+                SELECT Id
+                FROM @FMandAIObettype
+            )));
      -- DROP tmpTable
      DROP TABLE #tmpTable;

@@ -28,19 +28,12 @@ AS;
 	20200729@Jack.Nguyen: get IPTV, MatchId  - [Redmine: #137756]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 	20211122@Liam.Pham: add filter sync live status  - [Redmine: #159109]
+	20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
 */
 BEGIN
 	SET NOCOUNT ON
 
-	DECLARE @FromDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00')
-		,@ToDate DATETIME = DATEADD(DAY, DATEDIFF(DAY, - 1, @EventDate), '11:59:59')
-		,@BettypeHDP INT = 1
-		,@Specific15Mins INT = - 1
-		,@Specific10Mins INT = - 2
-		,@Specific15MinsNoOfCorners INT = - 5
-		,@Specific15MinsTotalBooking INT = - 8
-		,@FastMarket INT = - 88
-		,@AllInOne INT = - 89
+DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59'), @BettypeHDP INT= 1, @Specific15Mins INT= -1, @Specific10Mins INT= -2, @Specific15MinsNoOfCorners INT= -5, @Specific15MinsTotalBooking INT= -8, @FastMarket INT= -88, @AllInOne INT= -89, @AllInOneTotalBookings INT= -189, @AllInOneCorners INT= -289, @FastMarketTotalBookings INT= -188, @FastMarketCorners INT= -288, @MatchStatusText NVARCHAR(100);
 
 	DECLARE @tblRefResourceMatchStatus TABLE
 	(Id    INT NOT NULL, 
@@ -293,7 +286,7 @@ BEGIN
 				ON ml.ParentInfoSiteId = imn.InfoSiteMatchId AND imn.IsDeleted = 0
 		LEFT JOIN #tblNoOfHDPResource ref ON ml.NoOfHDPId = ref.Id
 	WHERE (
-			ml.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne)
+			ml.MinorBettypeId NOT IN (@Specific15Mins, @Specific10Mins, @Specific15MinsNoOfCorners, @Specific15MinsTotalBooking, @FastMarket, @AllInOne,@AllInOneTotalBookings, @AllInOneCorners,@FastMarketTotalBookings, @FastMarketCorners )
 			OR ml.MinorBettypeId IS NULL
 			)
 	ORDER BY ml.MatchNo
