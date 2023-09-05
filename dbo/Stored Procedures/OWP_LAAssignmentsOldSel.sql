@@ -13,6 +13,7 @@ AS
  Revisions:
 	20220407@Mira: Query old data - [Redmine: #171212]	
 	20200602@Los: LA Report change rule count Suspender - [Redmine: #184832]
+	20230824@Mira: Get data to group 5 mins - [Redmine: #185887]
 */
 
      SET NOCOUNT ON;
@@ -26,7 +27,9 @@ AS
             mn.MinorBettypeId, 
             ma.OWPMatchId, 
             mn.ParentMatchId, 
-            ma.EventDateTime
+            ma.EventDateTime,
+            h.OWPTeamName 'OWPHomeName', 
+            a.OWPTeamName 'OWPAwayName'
      FROM (
 		SELECT a.UserId,
 		   a.AssignmentId,
@@ -42,8 +45,10 @@ AS
           LEFT JOIN dbo.MatchProvider_Old mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
           LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
           LEFT JOIN dbo.MinorMatch_Old mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
+          INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON ma.OWPHomeId = h.OWPTeamId
+          INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON ma.OWPAwayId = a.OWPTeamId
      WHERE tm.UserId IS NOT NULL
-		AND tm.row_num<=2
+           AND tm.row_num<=2
            AND mi.MatchStatus = 'Live'
            AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
      UNION
@@ -54,7 +59,9 @@ AS
             mn.MinorBettypeId, 
             ma.OWPMatchId, 
 			mn.ParentMatchId,
-            ma.EventDateTime
+            ma.EventDateTime,
+            h.OWPTeamName 'OWPHomeName', 
+            a.OWPTeamName 'OWPAwayName'
       FROM (
 		SELECT a.UserId,
 		   a.AssignmentId,
@@ -70,8 +77,10 @@ AS
           LEFT JOIN dbo.MatchProvider mp WITH(NOLOCK) ON ma.OWPMatchId = mp.OWPMatchId
           LEFT JOIN dbo.[Provider] p WITH(NOLOCK) ON mp.ProviderId = p.ProviderId
           LEFT JOIN dbo.MinorMatch mn WITH(NOLOCK) ON ma.OWPMatchId = mn.MinorMatchId
+          INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON ma.OWPHomeId = h.OWPTeamId
+          INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON ma.OWPAwayId = a.OWPTeamId
      WHERE tm.UserId IS NOT NULL
-		AND tm.row_num<=2
+           AND tm.row_num<=2
            AND mi.MatchStatus = 'Live'
            AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
      ORDER BY UserId ASC, ma.EventDateTime ASC;
