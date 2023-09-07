@@ -34,8 +34,13 @@ VALUES('New match','New'),
  PRIMARY KEY IDENTITY(1, 1) NOT NULL, 
  [Date]     DATETIME NOT NULL, 
  InfositeId INT, 
+ UpdateType VARCHAR(5000),
  ModifiedBy VARCHAR(5000), 
  [Action]   VARCHAR(5000), 
  [OldValue] VARCHAR(5000), 
  [NewValue] VARCHAR(5000)
 );
+
+
+CREATE TABLE EventPickingConfirmed
+(InfositeId INT);
