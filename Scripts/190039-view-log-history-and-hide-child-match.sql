@@ -9,38 +9,39 @@ Revisions:
 	20230906@los: New table [Redmine: #190039]
 */
 
-CREATE TABLE EventPickingAction(
-	Id INT PRIMARY KEY IDENTITY(1, 1) NOT NULL,
+CREATE TABLE EventPickingUpdateType(
+	Id INT PRIMARY KEY  NOT NULL,
 	UpdateType VARCHAR(5000),
 	RAndDUpdate VARCHAR(5000)
 )
 
-INSERT INTO EventPickingAction(UpdateType, RAndDUpdate)
-VALUES('New match','New'),
-	('KO time update','Update KO time'),
-	('League name update','Update League name'),
-	('Team name update','Update Team name'),
-	('TV update','Update TV'),
-	('TV cancel','Cancel TV'),
-	('IPTV update','Update IPTV'),
-	('IPTV cancel','Cancel IPTV'),
-	('Provider update','Update Provider'),
-	('Provider cancel','Cancel Provider'),
-	('Delete match','Deleted')
+
+INSERT INTO EventPickingUpdateType(Id,UpdateType, RAndDUpdate)
+VALUES(1,'New match','New'),
+	(2,'KO time update','Update KO time'),
+	(3,'League name update','Update League name'),
+	(4, 'Team name update','Update Team name'),
+	(5,'TV update','Update TV'),
+	(6,'TV cancel','Cancel TV'),
+	(7,'IPTV update','Update IPTV'),
+	(8,'IPTV cancel','Cancel IPTV'),
+	(9,'Provider update','Update Provider'),
+	(10,'Provider cancel','Cancel Provider'),
+	(11,'Delete match','Deleted')
 	
 	
-	CREATE TABLE EventPickingLog
+CREATE TABLE EventPickingLog
 (Id         INT
  PRIMARY KEY IDENTITY(1, 1) NOT NULL, 
  [Date]     DATETIME NOT NULL, 
  InfositeId INT, 
- UpdateType VARCHAR(5000),
+ UpdateTypeId INT,
  ModifiedBy VARCHAR(5000), 
- [Action]   VARCHAR(5000), 
+ [Action]   VARCHAR(5000) , 
  [OldValue] VARCHAR(5000), 
  [NewValue] VARCHAR(5000)
 );
 
 
 CREATE TABLE EventPickingConfirmed
-(InfositeId INT);
+(InfositeId INT );
