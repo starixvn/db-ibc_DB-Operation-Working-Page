@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_GetRandDInfo] @Date DATE
+CREATE PROCEDURE [dbo].[OWP_EventPicking_SaveLogs] @XML NVARCHAR(MAX)
 AS
 
 /*      
@@ -10,37 +10,60 @@ AS
  DB: bodb_OWP      
  
  Revisions:
-    20230907@Liam: Get event picking log - [Redmine: #190039]
+    20230907@Liam: save event picking log - [Redmine: #190039]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
-        DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @Date), '11:59:59');
-        DECLARE @CheckValue VARCHAR(5000)= 'New';
-        DECLARE @InitValue VARCHAR(5000)= 'Initialize';
-        DECLARE @TempTime TABLE
-        (InfoSiteMatchId INT NOT NULL, 
-         ShowDate       DATETIME
+        DECLARE @idoc INT;
+        DECLARE @tblLog TABLE
+        (InfositeId   INT, 
+         [Date]       DATETIME NOT NULL, 
+         UpdateTypeId INT, 
+         [Action]     VARCHAR(5000), 
+         [NewValue]   VARCHAR(5000), 
+         [OldValue]   VARCHAR(5000)
         );
-        INSERT INTO @TempTime
-        (InfoSiteMatchId, 
-         ShowDate
+        EXEC sp_xml_preparedocument 
+             @idoc OUTPUT, 
+             @XML;
+        INSERT INTO @tblLog
+        (InfositeId, 
+         [Date], 
+         UpdateTypeId, 
+         [Action], 
+         [OldValue], 
+         [NewValue]
         )
-               SELECT el.InfositeId, 
-                      MAX([date])
-               FROM EventPickingLog el WITH(NOLOCK)
-                    INNER JOIN InfoSiteMatch im WITH(NOLOCK) ON el.InfositeId = im.InfoSiteMatchId
-               WHERE el.OldValue = @InitValue
-                     OR el.NewValue = @CheckValue
-                     AND im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
-               GROUP BY el.InfositeId;
+               SELECT [InfoSiteMatchId], 
+                      [UpDateTime], 
+                      [UpdateTypeId], 
+                      [Action], 
+                      [NewValue], 
+                      [OldValue]
+               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000), [NewValue] VARCHAR(5000), [OldValue] VARCHAR(5000));
+        EXEC sp_xml_removedocument 
+             @idoc;
 
-        SELECT el.InfositeId, 
-               ea.UpdateType, 
-               ea.RAndDUpdate
-        FROM dbo.EventPickingLog AS el WITH(NOLOCK)
-             INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId
-             INNER JOIN EventPickingAction ea ON el.UpdateType = ea.UpdateType
-        WHERE el.[Date] >= temp.ShowDate;
+        DELETE e
+        FROM EventPickingConfirmed e
+             INNER JOIN @tblLog tl ON e.InfositeId = tl.InfositeId;
+
+        INSERT INTO EventPickingLog
+        (InfositeId, 
+         [Date], 
+         UpdateTypeId, 
+         ModifiedBy, 
+         [Action], 
+         [OldValue], 
+         [NewValue]
+        )
+               SELECT InfositeId, 
+                      [Date], 
+                      UpdateTypeId, 
+                      'System', 
+                      [Action], 
+                      [OldValue], 
+                      [NewValue]
+               FROM @tblLog;
     END;
