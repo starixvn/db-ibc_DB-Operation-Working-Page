@@ -21,11 +21,11 @@ VALUES('New match','New'),
 	('League name update','Update League name'),
 	('Team name update','Update Team name'),
 	('TV update','Update TV'),
-	('TV cancelation','Cancel TV'),
+	('TV cancel','Cancel TV'),
 	('IPTV update','Update IPTV'),
-	('IPTV cancelation','Cancel IPTV'),
+	('IPTV cancel','Cancel IPTV'),
 	('Provider update','Update Provider'),
-	('Provider cancelation','Cancel Provider'),
+	('Provider cancel','Cancel Provider'),
 	('Delete match','Deleted')
 	
 	
