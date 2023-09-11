@@ -1,11 +1,11 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_SaveLogs] @Xml NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_EventPicking_SaveLogs] @XML NVARCHAR(MAX)
 AS
 
 /*      
- Created: 20221102@Liam
+ Created: 20221102@Liam 
  Task : Get log
  DB: bodb_OWP      
  
@@ -16,9 +16,36 @@ AS
     BEGIN
         SET NOCOUNT ON;
         DECLARE @idoc INT;
+        DECLARE @tblLog TABLE
+        (InfositeId   INT, 
+         [Date]       DATETIME NOT NULL, 
+         UpdateTypeId INT, 
+         [Action]     VARCHAR(5000), 
+         [NewValue]   VARCHAR(5000), 
+         [OldValue]   VARCHAR(5000)
+        );
+
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
-             @Xml;
+             @XML;
+        INSERT INTO @tblLog
+        (InfositeId, 
+         [Date], 
+         UpdateTypeId, 
+         [Action], 
+         [OldValue], 
+         [NewValue]
+        )
+               SELECT [InfoSiteMatchId], 
+                      [UpDateTime], 
+                      [UpdateTypeId], 
+                      [Action], 
+                      [OldValue],
+					  [NewValue]
+               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000),  [OldValue] VARCHAR(5000),[NewValue] VARCHAR(5000));
+        EXEC sp_xml_removedocument 
+             @idoc;
+
         INSERT INTO EventPickingLog
         (InfositeId, 
          [Date], 
@@ -28,14 +55,17 @@ AS
          [OldValue], 
          [NewValue]
         )
-               SELECT [InfoSiteMatchId], 
-                      [UpDateTime], 
-                      [UpdateTypeId], 
+               SELECT InfositeId, 
+                      [Date], 
+                      UpdateTypeId, 
                       'System', 
                       [Action], 
-                      [NewValue], 
-                      [OldValue]
-               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000), [NewValue] VARCHAR(5000), [OldValue] VARCHAR(5000));
-        EXEC sp_xml_removedocument 
-             @idoc;
+                      [OldValue], 
+                      [NewValue]
+               FROM @tblLog;
+
+        -- delete match checked 
+        DELETE e
+        FROM EventPickingConfirmed e
+             INNER JOIN @tblLog tl ON e.InfositeId = tl.InfositeId;
     END;
