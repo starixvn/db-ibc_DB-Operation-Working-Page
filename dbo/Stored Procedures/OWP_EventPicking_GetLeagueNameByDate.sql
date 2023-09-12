@@ -23,5 +23,5 @@ AS
                im.OWPLeagueId 'Value', 
                im.LeagueName 'Label'
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
-        WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
+        WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime and im.IsTest = 0;
     END;
