@@ -26,7 +26,8 @@ AS
         DELETE c
         FROM EventPickingConfirmed c
              LEFT JOIN @tempMatch m ON c.InfositeId = m.InfoSiteMatchId
-        WHERE c.InfositeId IS NOT NULL;
+        WHERE m.InfoSiteMatchId IS NOT NULL;
+
         IF @Confirmed = 1
             BEGIN
                 INSERT INTO EventPickingConfirmed

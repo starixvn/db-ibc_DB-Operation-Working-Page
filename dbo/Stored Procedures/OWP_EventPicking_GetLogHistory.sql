@@ -19,7 +19,8 @@ AS
         SELECT el.[Date], 
                el.OldValue, 
                el.NewValue,
-			   el.[Action]
+			   el.[Action],
+			   el.ModifiedBy
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
         WHERE el.InfositeId = @InfoSiteMatchId
     END;
