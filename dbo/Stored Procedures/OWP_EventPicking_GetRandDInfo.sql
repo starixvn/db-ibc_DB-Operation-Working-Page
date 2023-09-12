@@ -17,7 +17,7 @@ AS
         SET NOCOUNT ON;
         DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
         DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @Date), '11:59:59');
-        DECLARE @CheckValue VARCHAR(5000)= 'New';
+        DECLARE @CheckValue VARCHAR(5000)= 'Checked';
         DECLARE @InitValue VARCHAR(5000)= 'Initialize';
         DECLARE @TempTime TABLE
         (InfoSiteMatchId INT NOT NULL, 
@@ -31,16 +31,19 @@ AS
                       MAX([date])
                FROM EventPickingLog el WITH(NOLOCK)
                     INNER JOIN InfoSiteMatch im WITH(NOLOCK) ON el.InfositeId = im.InfoSiteMatchId
-               WHERE el.OldValue = @InitValue
-                     OR el.NewValue = @CheckValue
+               WHERE (el.NewValue = @CheckValue
+                     OR el.OldValue = @InitValue)
                      AND im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
                GROUP BY el.InfositeId;
 
         SELECT el.InfositeId, 
                eu.UpdateType, 
-               eu.RAndDUpdate
+               eu.RAndDUpdate,
+			   eu.Id as UpdateTypeId
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
              INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId
-             INNER JOIN EventPickingUpDateType eu ON el.UpdateTypeId = eu.UpdateType
+             INNER JOIN EventPickingUpDateType eu ON el.UpdateTypeId = eu.Id
         WHERE el.[Date] >= temp.ShowDate;
     END;
+
+
