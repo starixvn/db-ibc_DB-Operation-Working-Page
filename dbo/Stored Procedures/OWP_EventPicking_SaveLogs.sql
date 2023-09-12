@@ -24,7 +24,6 @@ AS
          [NewValue]   VARCHAR(5000), 
          [OldValue]   VARCHAR(5000)
         );
-
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
              @XML;
@@ -38,14 +37,13 @@ AS
         )
                SELECT [InfoSiteMatchId], 
                       [UpDateTime], 
-                      [UpdateTypeId], 
+                      NULLIF([UpdateTypeId], ''), 
                       [Action], 
-                      [OldValue],
-					  [NewValue]
-               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000),  [OldValue] VARCHAR(5000),[NewValue] VARCHAR(5000));
+                      [OldValue], 
+                      [NewValue]
+               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000), [OldValue] VARCHAR(5000), [NewValue] VARCHAR(5000));
         EXEC sp_xml_removedocument 
              @idoc;
-
         INSERT INTO EventPickingLog
         (InfositeId, 
          [Date], 
