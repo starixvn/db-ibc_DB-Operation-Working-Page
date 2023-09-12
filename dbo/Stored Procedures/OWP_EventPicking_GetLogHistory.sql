@@ -23,4 +23,5 @@ AS
 			   el.ModifiedBy
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
         WHERE el.InfositeId = @InfoSiteMatchId
+		ORDER BY el.[Date] DESC
     END;
