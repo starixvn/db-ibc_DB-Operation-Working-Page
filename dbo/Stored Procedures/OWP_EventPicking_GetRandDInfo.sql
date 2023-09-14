@@ -37,9 +37,8 @@ AS
                GROUP BY el.InfositeId;
 
         SELECT el.InfositeId, 
-               eu.UpdateType, 
-               eu.RAndDUpdate,
-			   eu.Id as UpdateTypeId
+               eu.Id as UpdateTypeId, 
+               eu.RAndDUpdate
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
              INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId
              INNER JOIN EventPickingUpDateType eu ON el.UpdateTypeId = eu.Id
