@@ -17,17 +17,18 @@ CREATE TABLE EventPickingUpdateType(
 
 
 INSERT INTO EventPickingUpdateType(Id,UpdateType, RAndDUpdate)
-VALUES(1,'New match','New'),
-	(2,'KO time update','Update KO time'),
-	(3,'League name update','Update League name'),
-	(4, 'Team name update','Update Team name'),
-	(5,'TV update','Update TV'),
-	(6,'TV cancel','Cancel TV'),
-	(7,'IPTV update','Update IPTV'),
-	(8,'IPTV cancel','Cancel IPTV'),
-	(9,'Provider update','Update Provider'),
-	(10,'Provider cancel','Cancel Provider'),
-	(11,'Delete match','Deleted')
+VALUES
+    (1,'New match','New'),
+	(2,'Update KO time','Update KO time'),
+	(3,'Update League name','Update League name'),
+	(4,'Update Team name','Update Team name'),
+	(5,'Update TV','Update TV'),
+	(6,'Cancel TV','Cancel TV'),
+	(7,'Update IPTV','Update IPTV'),
+	(8,'Cancel IPTV','Cancel IPTV'),
+	(9,'Update Provider','Update Provider'),
+	(10,'Cancel Provider','Cancel Provider'),
+	(11,'Deleted match','Deleted')
 	
 	
 CREATE TABLE EventPickingLog
