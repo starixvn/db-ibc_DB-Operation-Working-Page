@@ -10,11 +10,11 @@ Revisions:
 */
 
 CREATE TABLE EventPickingUpdateType(
-	Id INT PRIMARY KEY  NOT NULL,
+	Id INT    NOT NULL,
 	UpdateType VARCHAR(5000),
-	RAndDUpdate VARCHAR(5000)
+	RAndDUpdate VARCHAR(5000),
+	CONSTRAINT [PK_EventPickingUpdateType_Id] PRIMARY KEY CLUSTERED ( [Id] )
 )
-
 
 INSERT INTO EventPickingUpdateType(Id,UpdateType, RAndDUpdate)
 VALUES
@@ -32,17 +32,16 @@ VALUES
 	
 	
 CREATE TABLE EventPickingLog
-(Id         INT
- PRIMARY KEY IDENTITY(1, 1) NOT NULL, 
+(Id         INT IDENTITY(1, 1) NOT NULL, 
  [Date]     DATETIME NOT NULL, 
  InfositeId INT, 
  UpdateTypeId INT,
  ModifiedBy VARCHAR(5000), 
  [Action]   VARCHAR(5000) , 
  [OldValue] VARCHAR(5000), 
- [NewValue] VARCHAR(5000)
+ [NewValue] VARCHAR(5000),
+ CONSTRAINT [PK_EventPickingLog_Id] PRIMARY KEY CLUSTERED ( [Id] ASC)
 );
-
 
 CREATE TABLE EventPickingConfirmed
 (InfositeId INT );
