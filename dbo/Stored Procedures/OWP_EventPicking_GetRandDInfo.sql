@@ -31,18 +31,17 @@ AS
                       MAX([date])
                FROM EventPickingLog el WITH(NOLOCK)
                     INNER JOIN InfoSiteMatch im WITH(NOLOCK) ON el.InfositeId = im.InfoSiteMatchId
-               WHERE (el.NewValue = @CheckValue
+               WHERE(el.NewValue = @CheckValue
                      OR el.OldValue = @InitValue)
-                     AND im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
+                    AND im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
                GROUP BY el.InfositeId;
 
-        SELECT el.InfositeId, 
-               eu.Id as UpdateTypeId, 
+        SELECT DISTINCT 
+               el.InfositeId, 
+               eu.Id AS UpdateTypeId, 
                eu.RAndDUpdate
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
              INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId
              INNER JOIN EventPickingUpDateType eu ON el.UpdateTypeId = eu.Id
         WHERE el.[Date] >= temp.ShowDate;
     END;
-
-
