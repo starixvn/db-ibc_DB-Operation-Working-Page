@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20221102@Mira: Event picking new - [Redmine: #179302]
+	20230907@Liam: Get deleted matches  - [Redmine: #190039]
 */
 
     BEGIN
@@ -57,11 +58,17 @@ AS
                    ELSE 1
                END AS 'IsNoOffer', 
                us.ChildMatchId, 
-               im.IsTest AS IsTestMatch
+               im.IsTest AS IsTestMatch,
+               CASE
+                   WHEN ec.InfositeId IS NULL
+                   THEN 0
+                   ELSE 1
+               END AS IsCheck, 
+               im.IsDeleted
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
                                                                           AND us.ChildMatchId IS NULL
-        WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
-              AND im.IsDeleted = 0;
+             LEFT JOIN dbo.EventPickingConfirmed ec ON im.InfoSiteMatchId = ec.InfositeId
+        WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
     END;
