@@ -11,6 +11,7 @@ AS
     
  Revisions:
 	20220811@Mira: Re-generate data for Trader report - [Redmine: #176575]	
+	20230918@Los: Count suspened - [Redmine: #193722]
 */
 
     BEGIN
@@ -36,7 +37,7 @@ AS
               AND ass.AssignmentType = 1
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> @LA_Bettype
-              AND mi.MatchStatus = 'Live'
+               AND mi.MatchStatus IN('Live', 'Suspended')
               AND la.OWPLeagueName LIKE '%SABA %'
 
         -- Union old SABA assignment
@@ -57,7 +58,7 @@ AS
               AND ass.AssignmentType = 1
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> @LA_Bettype
-              AND mi.MatchStatus = 'Live'
+               AND mi.MatchStatus IN('Live', 'Suspended')
               AND la.OWPLeagueName LIKE '%SABA %'
         ORDER BY UserId ASC, 
                  ma.EventDateTime ASC;

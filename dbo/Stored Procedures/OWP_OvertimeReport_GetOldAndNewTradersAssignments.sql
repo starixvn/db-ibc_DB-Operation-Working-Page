@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_OvertimeReport_GetOldAndNewTradersAssignments] @EventDate DATE, 
+ALTER PROCEDURE [dbo].[OWP_OvertimeReport_GetOldAndNewTradersAssignments] @EventDate DATE, 
                                                                            @UserIds   NVARCHAR(MAX)
 AS
 
@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20220816@Mira: Get old, new data for re-generate data - [Redmine: #176629]
+	20230918@Los: Count suspened - [Redmine: #193722]
 */
 
     BEGIN
@@ -63,7 +64,7 @@ Revisions:
                     LEFT JOIN MinorMatch mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
                     INNER JOIN OWPLeague l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
                     INNER JOIN MatchInfo i WITH(NOLOCK) ON i.OWPMatchId = m.OWPMatchId
-               WHERE i.MatchStatus LIKE '%live%'
+               WHERE i.MatchStatus IN('Live', 'Suspended')
                      AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN)
                     AND (CASE
                              WHEN m.OtherTime IS NOT NULL
@@ -92,7 +93,7 @@ Revisions:
                     LEFT JOIN MinorMatch_Old mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
                     INNER JOIN OWPLeague l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
                     INNER JOIN MatchInfo_Old i WITH(NOLOCK) ON i.OWPMatchId = m.OWPMatchId
-               WHERE i.MatchStatus LIKE '%live%'
+               WHERE i.MatchStatus IN('Live', 'Suspended')
                      AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN)
                     AND (CASE
                              WHEN m.OtherTime IS NOT NULL

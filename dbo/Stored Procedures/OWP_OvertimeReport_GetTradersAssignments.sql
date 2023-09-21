@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20211014@Tyler: init sp - [Redmine: #162821]
+	20230918@Los: Count suspened - [Redmine: #193722]
 */
 
     BEGIN
@@ -62,7 +63,7 @@ Revisions:
                     LEFT JOIN MinorMatch mm WITH(NOLOCK) ON mm.MinorMatchId = m.OWPMatchId
                     INNER JOIN OWPLeague l WITH(NOLOCK) ON l.OWPLeagueId = m.OWPLeagueId
                     INNER JOIN MatchInfo i WITH(NOLOCK) ON i.OWPMatchId = m.OWPMatchId
-               WHERE i.MatchStatus LIKE '%live%'
+               WHERE i.MatchStatus IN('Live', 'Suspended')
                      AND u.SectionId IN(@SecionLiveTradingPH, @SecionLiveTradingVN)
                     AND (CASE
                              WHEN m.OtherTime IS NOT NULL

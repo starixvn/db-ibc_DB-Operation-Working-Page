@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20230301@Los: Calculate FT_Other - [Redmine: #184170]	
+	20230918@Los: Count suspened - [Redmine: #193722]
 */
 
      SET NOCOUNT ON;
@@ -66,7 +67,7 @@ Revisions:
                   AND ma.EventDateTime >= @FromDate
                   AND ma.EventDateTime <= @ToDate
                   AND ass.Bettype <> @LA_Bettype
-                  AND mi.MatchStatus NOT IN('Cancel', 'Postponed', 'Suspended')
+                  AND mi.MatchStatus NOT IN('Cancel', 'Postponed')
                  AND UPPER(la.OWPLeagueName) NOT LIKE '%SABA %'
                  AND la.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
                  AND (la.CategoryId IS NULL
@@ -94,7 +95,7 @@ Revisions:
                   AND ma.EventDateTime >= @FromDate
                   AND ma.EventDateTime <= @ToDate
                   AND ass.Bettype <> @LA_Bettype
-                  AND mi.MatchStatus NOT IN('Cancel', 'Postponed', 'Suspended')
+                  AND mi.MatchStatus NOT IN('Cancel', 'Postponed')
                  AND UPPER(la.OWPLeagueName) NOT LIKE '%SABA %'
                  AND la.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
                  AND (la.CategoryId IS NULL
