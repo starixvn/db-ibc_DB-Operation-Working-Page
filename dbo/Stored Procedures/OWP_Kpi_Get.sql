@@ -34,4 +34,5 @@ AS
      GROUP BY a.UserId, 
               r.[Value], 
               t.TargetId, 
-              u.UserName;
+              u.UserName
+     ORDER BY u.Username ASC;
