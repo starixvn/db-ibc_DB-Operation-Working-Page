@@ -12,6 +12,7 @@ AS
     
  Revisions:
 	20230829@Carlos.nguyen: new column - [Redmine: #188514]
+    20230829@Liam.Pham: get Target - [Redmine: #193488]
 */
 
      SET NOCOUNT ON;
@@ -21,9 +22,17 @@ AS
             (SUM(a.TotalMatchInGroupMultiple) + SUM(a.OnlyProvider) + SUM(a.OnlyReporter) + SUM(a.OnlyTV) + SUM(a.MixedProviderTVReporter) + SUM(a.Others)) AS MultipleMatches, 
             (SUM(a.CornerPlus) + SUM(a.TBookingPlus) + SUM(a.Fantasy) + SUM(a.GoalKick) + SUM(a.OtherProducts)) AS SpecialProducts, 
             (SUM(a.FTCorner5ML) + SUM(a.FiveMajorLeague)) AS FiveMajorLeagues, 
-            (SUM(a.FTCorner) + SUM(a.FTCorner5ML)) AS MultipleProducts
+            (SUM(a.FTCorner) + SUM(a.FTCorner5ML)) AS MultipleProducts, 
+            r.[Value] 'Target', 
+            t.TargetId
      FROM dbo.LAReport a
           INNER JOIN dbo.[User] u ON u.UserId = a.UserId
+          LEFT JOIN LATargetSetting t WITH(NOLOCK) ON u.UserId = t.UserId
+          LEFT JOIN RefResource r WITH(NOLOCK) ON r.RefName = 'LaKpiLevel'
+                                                  AND r.ResourceId = t.TargetId
      WHERE a.ReportDate BETWEEN @FromDate AND @ToDate
      GROUP BY a.UserId, 
-              u.UserName;
+              r.[Value], 
+              t.TargetId, 
+              u.UserName
+     ORDER BY u.Username ASC;
