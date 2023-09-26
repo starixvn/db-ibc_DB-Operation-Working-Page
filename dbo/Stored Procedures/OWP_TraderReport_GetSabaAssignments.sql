@@ -11,6 +11,7 @@ AS
     
  Revisions:
 	20220119@Mira: Add SABA Soccer into Trader report - [Redmine: #167636]	
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN
@@ -36,8 +37,8 @@ AS
               AND ass.AssignmentType = 1
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> @LA_Bettype
-              AND mi.MatchStatus = 'Live'
-              AND la.OWPLeagueName LIKE '%SABA %'
+              AND mi.MatchStatus IN('Live', 'Suspended')
+             AND la.OWPLeagueName LIKE '%SABA %'
         ORDER BY UserId ASC, 
                  ma.EventDateTime ASC;
     END;

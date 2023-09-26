@@ -13,6 +13,7 @@ AS
  Revisions:
 	20220811@Mira: Get old and new data - [Redmine: #176575]	
 	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN
@@ -33,7 +34,7 @@ AS
         WHERE mn.MinorMatchId IS NULL
               AND ass.AssignmentType = 1
               AND ass.Bettype IN(1, 3)
-             AND mi.MatchStatus = 'Live'
+              AND mi.MatchStatus IN('Live', 'Suspended')
              AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
              AND l.OWPLeagueName NOT LIKE '%FANTASY MATCH%'
@@ -51,7 +52,7 @@ AS
         WHERE mn.MinorMatchId IS NULL
               AND ass.AssignmentType = 1
               AND ass.Bettype IN(1, 3)
-             AND mi.MatchStatus = 'Live'
+              AND mi.MatchStatus IN('Live', 'Suspended')
              AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
              AND UPPER(l.OWPLeagueName) NOT LIKE '%SABA %'
              AND l.OWPLeagueName NOT LIKE '%FANTASY MATCH%'

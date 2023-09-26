@@ -13,6 +13,7 @@ AS
  Revisions:
 	20220811@Mira: Get old and new data - [Redmine: #176575]
 	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN
@@ -42,7 +43,7 @@ AS
              INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
         WHERE ass.AssignmentType = 1
-              AND mi.MatchStatus = 'Live'
+               AND mi.MatchStatus IN('Live', 'Suspended')
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> -1002
 
@@ -69,7 +70,7 @@ AS
              INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = ma.OWPMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON ma.OWPLeagueId = l.OWPLeagueId
         WHERE ass.AssignmentType = 1
-              AND mi.MatchStatus = 'Live'
+               AND mi.MatchStatus IN('Live', 'Suspended')
               AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ass.Bettype <> -1002
         ORDER BY ma.EventDateTime ASC, 
