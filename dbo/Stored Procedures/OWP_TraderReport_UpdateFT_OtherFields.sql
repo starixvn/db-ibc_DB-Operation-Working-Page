@@ -11,7 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20230301@Los: Calculate FT_Other - [Redmine: #184170]	
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
      SET NOCOUNT ON;

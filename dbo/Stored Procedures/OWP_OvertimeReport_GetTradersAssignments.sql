@@ -12,7 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20211014@Tyler: init sp - [Redmine: #162821]
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN

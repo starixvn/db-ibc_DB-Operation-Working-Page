@@ -11,7 +11,7 @@ AS
     
  Revisions:
 	20220811@Mira: Re-generate data for Trader report - [Redmine: #176575]	
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN

@@ -12,7 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20220816@Mira: Get old, new data for re-generate data - [Redmine: #176629]
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN

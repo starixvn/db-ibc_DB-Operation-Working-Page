@@ -11,7 +11,7 @@ AS
     
  Revisions:
 	20220119@Mira: Add SABA Soccer into Trader report - [Redmine: #167636]	
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN

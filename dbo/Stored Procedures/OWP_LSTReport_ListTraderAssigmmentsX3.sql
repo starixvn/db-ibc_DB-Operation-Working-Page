@@ -14,7 +14,7 @@ AS
 	20200226@Kane.Le: Initial SP - [Redmine: #124448]	
 	20200715@Jacob: Initial SP - [Redmine: #137210]	
 	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
      SET NOCOUNT ON;

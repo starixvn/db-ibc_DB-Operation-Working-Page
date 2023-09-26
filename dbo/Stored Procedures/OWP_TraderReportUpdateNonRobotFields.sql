@@ -13,7 +13,7 @@ Revisions:
 	20200815@Jacob: Archive plan for OWP tables - [Redmine: #137757]	
 	20220217@Tyler: Update condition for PENALTY SHOOT-OUT - [Redmine: #168465]	
 	20230228@Los: Exclude SABA match + FANTASY MATCH + gen data old - [Redmine: #184170]
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
      SET NOCOUNT ON;

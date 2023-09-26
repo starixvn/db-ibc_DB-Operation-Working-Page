@@ -13,7 +13,7 @@ AS
  Revisions:
 	20220811@Mira: Get old and new data - [Redmine: #176575]
 	20230228@Los: Exclude SABA match + FANTASY MATCH - [Redmine: #184170]
-	20230918@Los: Count suspened - [Redmine: #193722]
+	20230918@Los: Count suspened - [Redmine: #194475]
 */
 
     BEGIN
