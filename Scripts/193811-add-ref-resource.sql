@@ -8,8 +8,14 @@ Revisions:
 	20230922@Johnny: Add function for feedback [Redmine: #193811]
 */
 
-insert into RefResource(RefName,ResourceId,[Value],[Order])
-VALUES ('FunctionFeedback',1,'Task List',0),
+INSERT INTO RefResource
+(RefName, 
+ ResourceId, 
+ [Value], 
+ [Order]
+)
+VALUES
+('FunctionFeedback',1,'Task List',0),
 ('FunctionFeedback',2,'User Management',0),
 ('FunctionFeedback',3,'Working Shift Management',0),
 ('FunctionFeedback',4,'Daily Working Shift',0),
@@ -31,4 +37,10 @@ VALUES ('FunctionFeedback',1,'Task List',0),
 ('FunctionFeedback',20,'OS Live Game Assignment',0),
 ('FunctionFeedback',21,'OS Basketball Maxbet',0),
 ('FunctionFeedback',22,'Provider Arrangement',0),
-('FunctionFeedback',23,'Suggestion List',0)
+('FunctionFeedback',23,'Suggestion List',0);
+
+-- drop unused SP
+DROP PROCEDURE OWP_FileUpload_InitialOldData;
+
+-- drop unused column
+ALTER TABLE [dbo].[FileUpload] DROP COLUMN [FileContent];
