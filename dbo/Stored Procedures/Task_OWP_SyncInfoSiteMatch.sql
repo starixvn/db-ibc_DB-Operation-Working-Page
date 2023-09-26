@@ -40,6 +40,7 @@ AS
 	20210128@carlos.nguyen: Display Match Code - [Redmine: #149347]
 	20210427@carlos.nguyen: Match-code is not displayed - [Redmine: #154164]
 	20220314@carlos.nguyen: Fail to update AdminSiteId - [Redmine: #169899]
+	20230926@Mira: Correct with no lock - [Redmine: #193811]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -175,7 +176,7 @@ BEGIN
 		WHERE m.EventDateTime >= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
 			AND NOT EXISTS (
 				SELECT 1
-				FROM dbo.MinorMatch AS mm
+				FROM dbo.MinorMatch AS mm WITH (NOLOCK)
 				WHERE m.OWPMatchId = mm.MinorMatchId
 				)
 		) AS m
@@ -256,7 +257,7 @@ BEGIN
 			,m.OWPMatchId
 			,om.InfoSiteMatchId
 		FROM #tblMatch AS m
-		INNER JOIN dbo.OWPMatch AS om ON m.OWPMatchId = om.OWPMatchId
+		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON m.OWPMatchId = om.OWPMatchId
 		WHERE m.IsSync = 0
 			AND om.InfoSiteMatchId IS NOT NULL;
 	END;
@@ -349,7 +350,7 @@ BEGIN
 	SELECT m.OWPMatchId
 		,f.Value
 	FROM #tblMatch AS m
-	INNER JOIN dbo.InfoSiteMatch AS im ON m.InfoSiteMatchId = im.InfoSiteMatchId
+	INNER JOIN dbo.InfoSiteMatch AS im WITH (NOLOCK) ON m.InfoSiteMatchId = im.InfoSiteMatchId
 	CROSS APPLY dbo.fnc_SplitString(im.TVIds, ',') AS f
 	WHERE im.TVIds <> '';
 	
@@ -720,7 +721,7 @@ BEGIN
 		,'<OldEvent>', oh.OWPTeamName + CASE WHEN el.IsNeutral = 1 THEN ' (N)' ELSE '' END  + ' -vs- ' + oa.OWPTeamName)
 		,t.MsgTemplateId
 	FROM #tblMatchInTimeRange AS mt
-	INNER JOIN dbo.OWPMatch AS m ON mt.OWPMatchId = m.OWPMatchId
+	INNER JOIN dbo.OWPMatch AS m WITH (NOLOCK) ON mt.OWPMatchId = m.OWPMatchId
 	INNER JOIN #tblEventLog AS el ON mt.OWPMatchId = el.OWPMatchId
 	INNER JOIN dbo.OWPLeague AS ol WITH (NOLOCK) ON ol.OWPLeagueId = el.OldLeagueId
 	INNER JOIN dbo.OWPLeague AS nl WITH (NOLOCK) ON m.OWPLeagueId = nl.OWPLeagueId
