@@ -11,11 +11,13 @@ DB: bodb_OWP
 
 Revisions:
 	20220804@Carlos: Initial - [Redmine: #175994]
+	20230310@Mira: Sort betday - [Redmine: #194449]
 */
 
     BEGIN
         SET NOCOUNT ON;
         SELECT Id AS [value], 
                [label]
-        FROM OSBetDelayOption;
+        FROM OSBetDelayOption
+        ORDER BY [Order];
     END;
