@@ -201,3 +201,7 @@ WHERE LeagueName IN (
 'USA The Basketball Tournament (4x9 Mins)',
 'Cyprus Super Cup'
 );
+
+-- change remark type 
+ALTER TABLE OSLeagueSetting
+ALTER COLUMN Remark NVARCHAR(2000); 
