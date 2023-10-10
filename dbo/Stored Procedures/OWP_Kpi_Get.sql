@@ -13,12 +13,13 @@ AS
  Revisions:
 	20230829@Carlos.nguyen: new column - [Redmine: #188514]
     20230829@Liam.Pham: get Target - [Redmine: #193488]
+	20231005@Los: Caculate virtual match - [Redmine: #194499]
 */
 
      SET NOCOUNT ON;
      SELECT a.UserId, 
             u.Username, 
-            (SUM(a.ESoccer15Mins) + SUM(a.ESoccer16Mins) + SUM(a.ESoccer20Mins) + SUM(a.ESoccer5MinsGroup) + CEILING(SUM(a.ESoccer6Mins) / 3)) AS VirtualMatches, 
+            ROUND((SUM(a.ESoccer15Mins) + SUM(a.ESoccer16Mins) + SUM(a.ESoccer20Mins) + SUM(a.ESoccer5Mins/4) + SUM(a.ESoccer6Mins / 3)),1) AS VirtualMatches, 
             (SUM(a.TotalMatchInGroupMultiple) + SUM(a.OnlyProvider) + SUM(a.OnlyReporter) + SUM(a.OnlyTV) + SUM(a.MixedProviderTVReporter) + SUM(a.Others)) AS MultipleMatches, 
             (SUM(a.CornerPlus) + SUM(a.TBookingPlus) + SUM(a.Fantasy) + SUM(a.GoalKick) + SUM(a.OtherProducts)) AS SpecialProducts, 
             (SUM(a.FTCorner5ML) + SUM(a.FiveMajorLeague)) AS FiveMajorLeagues, 
