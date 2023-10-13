@@ -1,8 +1,9 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_Kpi_Get] @FromDate DATETIME, 
-                                    @ToDate   DATETIME
+ALTER PROCEDURE [dbo].[OWP_Kpi_Get] @FromDate   DATETIME, 
+                                    @ToDate     DATETIME, 
+                                    @SectionIds VARCHAR(100) = NULL
 AS
 
 /*    
@@ -17,6 +18,11 @@ AS
 */
 
      SET NOCOUNT ON;
+     DECLARE @tempSection TABLE(SectionId SMALLINT);
+     INSERT INTO @tempSection
+            SELECT DISTINCT 
+                   val
+            FROM fnc_SplitStrings(@SectionIds, ',') u OPTION(MAXRECURSION 0);
      SELECT a.UserId, 
             u.Username, 
             ROUND((SUM(a.ESoccer15Mins) + SUM(a.ESoccer16Mins) + SUM(a.ESoccer20Mins) + SUM(a.ESoccer5Mins/4) + SUM(a.ESoccer6Mins / 3)),1) AS VirtualMatches, 
@@ -28,6 +34,9 @@ AS
             t.TargetId
      FROM dbo.LAReport a
           INNER JOIN dbo.[User] u ON u.UserId = a.UserId
+          INNER JOIN @tempSection temp ON(u.SectionId = temp.SectionId)
+                                         OR (u.SectionId IS NULL
+                                             AND temp.SectionId = 0)
           LEFT JOIN LATargetSetting t WITH(NOLOCK) ON u.UserId = t.UserId
           LEFT JOIN RefResource r WITH(NOLOCK) ON r.RefName = 'LaKpiLevel'
                                                   AND r.ResourceId = t.TargetId
