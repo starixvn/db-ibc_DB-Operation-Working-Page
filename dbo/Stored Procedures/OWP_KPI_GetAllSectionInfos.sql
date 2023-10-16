@@ -17,8 +17,7 @@ AS
      DECLARE @SectionId INT;
      SELECT @SectionId = u.SectionId
      FROM [User] u
-     WHERE u.UserId = 8;
-	 select @SectionId
+     WHERE u.UserId = @UserId;
 
      SELECT r.ResourceId 'SectionId', 
             r.[Value] 'SectionName',
