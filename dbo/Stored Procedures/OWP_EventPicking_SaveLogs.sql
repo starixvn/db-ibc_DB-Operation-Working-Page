@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20230907@Liam: save event picking log - [Redmine: #190039]
+	20231016@los: Export event picking [Redmine: #194448]
 */
 
     BEGIN
@@ -22,7 +23,9 @@ AS
          UpdateTypeId INT, 
          [Action]     VARCHAR(5000), 
          [NewValue]   VARCHAR(5000), 
-         [OldValue]   VARCHAR(5000)
+         [OldValue]   VARCHAR(5000),
+		 [HomeUpdated] BIT,
+		 [AwayUpdated] BIT
         );
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
@@ -33,15 +36,19 @@ AS
          UpdateTypeId, 
          [Action], 
          [OldValue], 
-         [NewValue]
+         [NewValue],
+		 [HomeUpdated],
+		 [AwayUpdated]
         )
                SELECT [InfoSiteMatchId], 
                       [UpDateTime], 
                       NULLIF([UpdateTypeId], ''), 
                       [Action], 
                       [OldValue], 
-                      [NewValue]
-               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000), [OldValue] VARCHAR(5000), [NewValue] VARCHAR(5000));
+                      [NewValue],
+					  [HomeUpdated],
+					  [AwayUpdated]
+               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000), [OldValue] VARCHAR(5000), [NewValue] VARCHAR(5000), [HomeUpdated] BIT, [AwayUpdated] BIT);
         EXEC sp_xml_removedocument 
              @idoc;
         INSERT INTO EventPickingLog
@@ -51,7 +58,9 @@ AS
          ModifiedBy, 
          [Action], 
          [OldValue], 
-         [NewValue]
+         [NewValue],
+		 [HomeUpdated],
+		 [AwayUpdated]
         )
                SELECT InfositeId, 
                       [Date], 
@@ -59,7 +68,9 @@ AS
                       'System', 
                       [Action], 
                       [OldValue], 
-                      [NewValue]
+                      [NewValue],
+					  [HomeUpdated],
+					  [AwayUpdated]
                FROM @tblLog;
 
         -- delete match checked 

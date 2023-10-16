@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20230907@Liam: Get event picking log - [Redmine: #190039]
+	20231016@los: Export event picking [Redmine: #194448]
 */
 
     BEGIN
