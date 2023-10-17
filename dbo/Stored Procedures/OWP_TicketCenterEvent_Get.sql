@@ -125,4 +125,9 @@ AS
             SELECT TicketStatus
             FROM #tblTicketStatus
         );
+
+        -- drop table 
+        DROP TABLE #tblTicketRecipient;
+        DROP TABLE #tblTicketStatus;
+        DROP TABLE #tblTicketType;
     END;
