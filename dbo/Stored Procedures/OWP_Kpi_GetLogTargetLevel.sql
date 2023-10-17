@@ -17,7 +17,7 @@ Revisions:
         SET NOCOUNT ON;
 
         -- log info -- 
-        SELECT ul.LoggedDate AS ModifiedDate, 
+        SELECT DATEADD(hour, 12, ul.LoggedDate) AS ModifiedDate, 
                u.Username AS ModifiedBy, 
                ul.DataOld, 
                ul.Data
