@@ -87,7 +87,7 @@ AS
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
              INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON owpl.OWPLeagueId = tis.OwpLeagueId_New
              INNER JOIN #tblTicketType AS temp ON tis.TicketType = temp.TypeId
-             LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
+             LEFT JOIN [TicketSubtype] AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE tis.LastCommentDate BETWEEN @FromDateFilter AND @ToDateFilter

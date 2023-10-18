@@ -43,6 +43,8 @@ AS
         (TypeId    INT, 
          SubTypeId INT
         );
+
+        -- ticket type
         DECLARE @idoc INT;
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
@@ -54,13 +56,17 @@ AS
                SELECT [TypeId], 
                       NULLIF([SubTypeId], '')
                FROM OPENXML(@idoc, '/Root/TicketType', 1) WITH([TypeId] INT, [SubTypeId] INT);
+        -- match status
         INSERT INTO #tblTicketStatus
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
+        -- parse date time
         INSERT INTO #tblTicketRecipient
         EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] 
              @ActorId = @ActorId;
+
+        -- select by param
         SELECT DISTINCT 
                tbltk.TicketId, 
                tis.[Subject_New] AS [Subject], 
@@ -77,7 +83,7 @@ AS
              INNER JOIN #tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
              INNER JOIN #tblTicketType AS temp ON tis.TicketType = temp.TypeId
-             LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
+             LEFT JOIN [TicketSubtype] AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE tis.LastCommentDate BETWEEN @FromDateFilter AND @ToDateFilter

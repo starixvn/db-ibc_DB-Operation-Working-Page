@@ -35,20 +35,30 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
-        SET @FromDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDateFilter), '00:00:00');
-        SET @ToDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @ToDateFilter), '23:59:59');
+        -- define constants
         DECLARE @allMarketKey INT= 1;
         DECLARE @earlyMarketKey INT= 2;
         DECLARE @todayMarketKey INT= 3;
         DECLARE @earlyFilter INT= 2;
-        DECLARE @fromDate DATETIME;
-        DECLARE @toDate DATETIME;
-        CREATE TABLE #tblTicketRecipient(TicketId INT);
+
+        -- declare date variable
+        SET @FromDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @FromDateFilter), '00:00:00');
+        SET @ToDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @ToDateFilter), '23:59:59');
+        DECLARE @fromMarketDate DATETIME, @toMarketDate DATETIME;
+
+        -- temp table
+        CREATE TABLE #tblTicketRecipient
+        (TicketId INT
+        );
         CREATE TABLE #tblTicketStatus(TicketStatus VARCHAR(10));
         CREATE TABLE #tblTicketType
         (TypeId    INT, 
          SubTypeId INT
         );
+
+        /********* PARSE PARAM XML *********/
+
+        -- ticket type
         DECLARE @idoc INT;
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
@@ -60,22 +70,29 @@ AS
                SELECT [TypeId], 
                       NULLIF([SubTypeId], '')
                FROM OPENXML(@idoc, '/Root/TicketType', 1) WITH([TypeId] INT, [SubTypeId] INT);
+        -- match status
         INSERT INTO #tblTicketStatus
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
+        -- parse date time
         IF @MarketKey = @earlyMarketKey
             BEGIN
-                SET @fromDate = DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '12:00:00');
+                SET @fromMarketDate = DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '12:00:00');
+                SET @toMarketDate = NULL;
         END;
         IF @MarketKey = @todayMarketKey
             BEGIN
-                SET @fromDate = DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00');
-                SET @toDate = DATEADD(DAY, DATEDIFF(DAY, -1, @fromDate), '11:59:59');
+                SET @fromMarketDate = DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00');
+                SET @toMarketDate = DATEADD(DAY, DATEDIFF(DAY, -1, @fromMarketDate), '11:59:59');
         END;
+
+        -- get TicketId related to actorId 
         INSERT INTO #tblTicketRecipient
         EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] 
              @ActorId = @ActorId;
+
+        -- select by param
         SELECT DISTINCT 
                tbltk.TicketId, 
                ifm.OWPLeagueId, 
@@ -97,26 +114,25 @@ AS
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN #tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
-             INNER JOIN InfoSiteMatch AS ifm ON ifm.InfoSiteMatchId = tis.InfoSiteMatchId_New
+             INNER JOIN InfoSiteMatch AS ifm WITH(NOLOCK) ON ifm.InfoSiteMatchId = tis.InfoSiteMatchId_New
              INNER JOIN #tblTicketType AS temp ON tis.TicketType = temp.TypeId
-             LEFT JOIN [TicketSubtype] AS ts ON tis.SubtypeId = ts.SubtypeId
+             LEFT JOIN [TicketSubtype] AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
         WHERE tis.LastCommentDate BETWEEN @FromDateFilter AND @ToDateFilter
+              AND tis.EventType_New = @EventType
               AND (@Keyword IS NULL
                    OR @Keyword = ''
                    OR ifm.LeagueName LIKE '%' + @Keyword + '%'
                    OR ifm.HomeName LIKE '%' + @Keyword + '%'
                    OR ifm.AwayName LIKE '%' + @Keyword + '%')
-              AND tis.EventType_New = @EventType
               AND (@TicketId IS NULL
                    OR @TicketId = ''
                    OR CONVERT(VARCHAR(255), tbltk.TicketId) LIKE @TicketId + '%')
               AND (@MarketKey = @allMarketKey
-                   OR (@MarketKey = @earlyMarketKey
-                       AND ifm.EventDateTime >= @fromDate)
-                   OR (@MarketKey = @todayMarketKey
-                       AND ifm.EventDateTime BETWEEN @fromDate AND @toDate))
+                   OR (@toMarketDate IS NULL
+                       AND ifm.EventDateTime >= @fromMarketDate
+                       OR ifm.EventDateTime BETWEEN @fromMarketDate AND @toMarketDate))
               AND (tis.SubtypeId = temp.SubTypeId
                    OR (tis.SubtypeId IS NULL
                        AND temp.SubTypeId IS NULL))
