@@ -83,8 +83,6 @@ Revisions:
                 SET @NewLogData = REPLACE(CONVERT(NVARCHAR(MAX), @newData), '" />', '"/"');
                 SET @EndRun = GETDATE();
                 SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
-                SELECT @OldLogData, 
-                       @NewLogData;
                 EXEC dbo.OWP_WriteLog 
                      @CreatorId = @ActorId, 
                      @SPName = 'OWP_Kpi_UpdateTargetLevel', 
