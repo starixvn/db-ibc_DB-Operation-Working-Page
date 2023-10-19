@@ -22,8 +22,8 @@ AS
      DECLARE @tempSection TABLE(SectionId SMALLINT);
      INSERT INTO @tempSection
             SELECT DISTINCT 
-                   val
-            FROM fnc_SplitStrings(@SectionIds, ',') u OPTION(MAXRECURSION 0);
+                   value
+            FROM STRING_SPLIT(@SectionIds, ',');
      SELECT a.UserId, 
             u.Username, 
             ROUND((SUM(a.ESoccer15Mins) + SUM(a.ESoccer16Mins) + SUM(a.ESoccer20Mins) + SUM(a.ESoccer5Mins / 4) + SUM(a.ESoccer6Mins / 3)), 1) AS VirtualMatches, 
@@ -38,9 +38,9 @@ AS
                 THEN 'None'
                 ELSE rr.[Value]
             END 'SectionName'
-     FROM dbo.LAReport a
+     FROM dbo.LAReport a WITH(NOLOCK)
           INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId
-          INNER JOIN @tempSection temp ON(u.SectionId = temp.SectionId)
+          INNER JOIN @tempSection temp  ON(u.SectionId = temp.SectionId)
                                          OR (u.SectionId IS NULL
                                              AND temp.SectionId = 0)
           LEFT JOIN LATargetSetting t WITH(NOLOCK) ON u.UserId = t.UserId

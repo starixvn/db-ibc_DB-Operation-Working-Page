@@ -16,7 +16,7 @@ AS
      SET NOCOUNT ON;
      DECLARE @SectionId INT;
      SELECT @SectionId = u.SectionId
-     FROM [User] u
+     FROM [User] u WITH(NOLOCK)
      WHERE u.UserId = @UserId;
 
      SELECT r.ResourceId 'SectionId', 
@@ -26,5 +26,5 @@ AS
                 THEN 1
                 ELSE 0
             END 'IsContainUser'
-     FROM dbo.RefResource r
+     FROM dbo.RefResource r WITH(NOLOCK)
      WHERE r.RefName = 'Section';
