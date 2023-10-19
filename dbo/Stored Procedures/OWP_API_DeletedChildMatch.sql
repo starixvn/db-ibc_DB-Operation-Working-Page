@@ -10,6 +10,7 @@ DB: bodb_OWP
 
 Revisions:
 	20201020@Carlos.nguyen: delete child matches from Infosite - Redmine: #179302
+	20231016@los: Export event picking [Redmine: #194448]
 */
 
 AS
@@ -37,8 +38,4 @@ AS
              INNER JOIN @Temp AS t ON u.ParentInfoSiteMatchId = t.InfoSiteMatchId
                                       AND u.SubType = t.SubType
                                       AND u.AdminSiteMatchId = t.AdminSiteMatchId;
-        DELETE n
-        FROM dbo.EventPickingNoOfferMatch AS n WITH(NOLOCK)
-             LEFT JOIN dbo.InfoSiteChildMatch AS u WITH(NOLOCK) ON n.ChildMatchId = u.ChildMatchId
-        WHERE u.ChildMatchId IS NULL;
     END;
