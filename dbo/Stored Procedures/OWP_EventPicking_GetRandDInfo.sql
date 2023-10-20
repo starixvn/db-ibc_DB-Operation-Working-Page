@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20230907@Liam: Get event picking log - [Redmine: #190039]
+	20231016@los: Export event picking [Redmine: #194448]
 */
 
     BEGIN
@@ -39,9 +40,11 @@ AS
         SELECT DISTINCT 
                el.InfositeId, 
                eu.Id AS UpdateTypeId, 
-               eu.RAndDUpdate
+               eu.RAndDUpdate,
+			   el.AwayUpdated,
+			   el.HomeUpdated
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
-             INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId
-             INNER JOIN EventPickingUpDateType eu ON el.UpdateTypeId = eu.Id
+             INNER JOIN @TempTime temp  ON el.InfositeId = temp.InfoSiteMatchId
+             INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id
         WHERE el.[Date] >= temp.ShowDate;
     END;
