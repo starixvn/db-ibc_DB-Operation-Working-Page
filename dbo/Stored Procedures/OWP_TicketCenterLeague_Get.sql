@@ -38,8 +38,8 @@ AS
         SET @ToDateFilter = DATEADD(DAY, DATEDIFF(DAY, 0, @ToDateFilter), '23:59:59');
         CREATE TABLE #tblTicketRecipient(TicketId INT);
         DECLARE @allMarketKey INT= 1;
-        CREATE TABLE #tblTicketStatus(TicketStatus VARCHAR(10));
-        CREATE TABLE #tblTicketType
+        DECLARE @tblTicketStatus TABLE(TicketStatus VARCHAR(10));
+        DECLARE @tblTicketType TABLE
         (TypeId    INT, 
          SubTypeId INT
         );
@@ -49,7 +49,7 @@ AS
              @TicketTypeXML;
 
         -- parse TicketType
-        INSERT INTO #tblTicketType
+        INSERT INTO @tblTicketType
         (TypeId, 
          SubTypeId
         )
@@ -58,7 +58,7 @@ AS
                FROM OPENXML(@idoc, '/Root/TicketType', 1) WITH([TypeId] INT, [SubTypeId] INT);
 
         -- parse TicketStatus
-        INSERT INTO #tblTicketStatus
+        INSERT INTO @tblTicketStatus
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
@@ -86,7 +86,7 @@ AS
              INNER JOIN #tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
              INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON owpl.OWPLeagueId = tis.OwpLeagueId_New
-             INNER JOIN #tblTicketType AS temp ON tis.TicketType = temp.TypeId
+             INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
@@ -105,11 +105,9 @@ AS
               AND tis.TicketStatus IN
         (
             SELECT TicketStatus
-            FROM #tblTicketStatus
+            FROM @tblTicketStatus
         );
 
         -- drop temp table 
         DROP TABLE #tblTicketRecipient;
-        DROP TABLE #tblTicketStatus;
-        DROP TABLE #tblTicketType;
     END;

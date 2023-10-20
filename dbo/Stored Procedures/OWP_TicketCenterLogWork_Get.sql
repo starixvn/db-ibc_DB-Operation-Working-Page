@@ -18,7 +18,7 @@ AS
  DB: bodb_OWP      
       
  Revisions:          
-	20230602@Johnny: Get Ticket Log Work - [Redmine: #185890]@fromDateFilter
+	20230602@Johnny: Get Ticket Log Work - [Redmine: #185890]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 	20230713@Johnny: Search subject  - [Redmine: #190284]
 	20230807@Los: Get ticket logwork - [Redmine: #191778]
@@ -42,7 +42,7 @@ AS
         CREATE TABLE #tblTicketRecipient
         (TicketId INT
         );
-        CREATE TABLE #tblTicketStatus(TicketStatus VARCHAR(10));
+        DECLARE @tblTicketStatus TABLE(TicketStatus VARCHAR(10));
         CREATE TABLE #tblTicketLogWork
         (TicketId    INT, 
          AdminsiteId INT
@@ -54,7 +54,7 @@ AS
          AwayId        INT, 
          EventDateTime DATETIME
         );
-        CREATE TABLE #tblTicketType
+        DECLARE @tblTicketType TABLE
         (TypeId    INT, 
          SubTypeId INT
         );
@@ -66,7 +66,7 @@ AS
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
              @TicketTypeXML;
-        INSERT INTO #tblTicketType
+        INSERT INTO @tblTicketType
         (TypeId, 
          SubTypeId
         )
@@ -74,7 +74,7 @@ AS
                       NULLIF([SubTypeId], '')
                FROM OPENXML(@idoc, '/Root/TicketType', 1) WITH([TypeId] INT, [SubTypeId] INT);
         -- match status
-        INSERT INTO #tblTicketStatus
+        INSERT INTO @tblTicketStatus
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
@@ -104,13 +104,13 @@ AS
                       til.AdminsiteId_New
                FROM TicketIssue AS til WITH(NOLOCK)
                     INNER JOIN #tblTicketRecipient AS tbltk ON tbltk.TicketId = til.TicketId
-                    INNER JOIN #tblTicketType AS temp ON til.TicketType = temp.TypeId
+                    INNER JOIN @tblTicketType AS temp ON til.TicketType = temp.TypeId
                WHERE til.EventType_New = @EventType
                      AND til.LastCommentDate BETWEEN @fromDateFilter AND @toDateFilter
                      AND til.TicketStatus IN
                (
                    SELECT TicketStatus
-                   FROM #tblTicketStatus
+                   FROM @tblTicketStatus
                )
                      AND (@TicketId IS NULL
                           OR @TicketId = ''
@@ -181,8 +181,6 @@ AS
 
         --drop temp table
         DROP TABLE #tblTicketRecipient;
-        DROP TABLE #tblTicketStatus;
         DROP TABLE #tblTicketLogWork;
         DROP TABLE #tblTicketLogWorkEvent;
-        DROP TABLE #tblTicketType;
     END;

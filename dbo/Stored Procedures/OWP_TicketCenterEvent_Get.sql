@@ -50,8 +50,8 @@ AS
         CREATE TABLE #tblTicketRecipient
         (TicketId INT
         );
-        CREATE TABLE #tblTicketStatus(TicketStatus VARCHAR(10));
-        CREATE TABLE #tblTicketType
+        DECLARE @tblTicketStatus TABLE(TicketStatus VARCHAR(10));
+        DECLARE @tblTicketType TABLE
         (TypeId    INT, 
          SubTypeId INT
         );
@@ -63,7 +63,7 @@ AS
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
              @TicketTypeXML;
-        INSERT INTO #tblTicketType
+        INSERT INTO @tblTicketType
         (TypeId, 
          SubTypeId
         )
@@ -71,7 +71,7 @@ AS
                       NULLIF([SubTypeId], '')
                FROM OPENXML(@idoc, '/Root/TicketType', 1) WITH([TypeId] INT, [SubTypeId] INT);
         -- match status
-        INSERT INTO #tblTicketStatus
+        INSERT INTO @tblTicketStatus
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
@@ -115,7 +115,7 @@ AS
              INNER JOIN #tblTicketRecipient AS tbltk ON tbltk.TicketId = tis.TicketId
              INNER JOIN TicketType AS ty WITH(NOLOCK) ON tis.TicketType = ty.TypeId
              INNER JOIN InfoSiteMatch AS ifm WITH(NOLOCK) ON ifm.InfoSiteMatchId = tis.InfoSiteMatchId_New
-             INNER JOIN #tblTicketType AS temp ON tis.TicketType = temp.TypeId
+             INNER JOIN @tblTicketType AS temp ON tis.TicketType = temp.TypeId
              LEFT JOIN [TicketSubtype] AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
              LEFT JOIN TicketMessageReader AS reader WITH(NOLOCK) ON tbltk.TicketId = reader.TicketId
                                                                      AND reader.RecipientId = @ActorId
@@ -139,11 +139,9 @@ AS
               AND tis.TicketStatus IN
         (
             SELECT TicketStatus
-            FROM #tblTicketStatus
+            FROM @tblTicketStatus
         );
 
         -- drop table 
         DROP TABLE #tblTicketRecipient;
-        DROP TABLE #tblTicketStatus;
-        DROP TABLE #tblTicketType;
     END;
