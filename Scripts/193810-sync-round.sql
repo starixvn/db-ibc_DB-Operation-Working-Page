@@ -11,3 +11,6 @@ Revisions:
 
 ALTER TABLE InfoSiteMatch
 	ADD [TeamRound] NVARCHAR(2000);   
+	
+		ALTER TABLE OWPMatch
+	ADD [TeamRound] NVARCHAR(2000);  
