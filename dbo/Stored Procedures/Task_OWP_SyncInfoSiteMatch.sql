@@ -41,6 +41,7 @@ AS
 	20210427@carlos.nguyen: Match-code is not displayed - [Redmine: #154164]
 	20220314@carlos.nguyen: Fail to update AdminSiteId - [Redmine: #169899]
 	20230926@Mira: Correct with no lock - [Redmine: #193811]
+	20231026@los: sync round - [Redmine: #193810]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -91,6 +92,7 @@ BEGIN
 		,IsNeutral BIT NOT NULL
 		,MatchId INT
 		,MatchCode NVARCHAR(50)
+		,TeamRound NVARCHAR(2000)
 		);
 
 	CREATE TABLE #tblSimilarMatchInfo (
@@ -99,6 +101,7 @@ BEGIN
 		,OWPHomeId INT NOT NULL
 		,OWPAwayId INT NOT NULL
 		,MatchCode NVARCHAR(50)
+		,TeamRound NVARCHAR(2000)
 		);
 
 	CREATE TABLE #tblAssignee (
@@ -154,6 +157,7 @@ BEGIN
 		,IsNeutral
 		,MatchId
 		,MatchCode
+		,TeamRound
 		)
 	SELECT m.OWPMatchId
 		,m.InfoSiteMatchId
@@ -165,6 +169,7 @@ BEGIN
 		,ISNULL(im.IsNeutral,0)
 		,im.AdminSiteMatchId
 		,im.MatchCode
+		,im.TeamRound
 	FROM (
 		SELECT m.OWPMatchId
 			,m.EventDateTime
@@ -198,18 +203,21 @@ BEGIN
 			,OWPHomeId
 			,OWPAwayId
 			,MatchCode
+			,TeamRound
 			)
 		SELECT EventDate
 			,OWPLeagueId
 			,OWPHomeId
 			,OWPAwayId
 			,MatchCode
+			,TeamRound
 		FROM #tblMatch
 		GROUP BY EventDate
 			,OWPLeagueId
 			,OWPHomeId
 			,OWPAwayId
 			,MatchCode
+			,TeamRound
 		HAVING COUNT(1) > 1;
 		
 		UPDATE m
@@ -223,6 +231,7 @@ BEGIN
 			AND m.OWPHomeId = mi.OWPHomeId
 			AND m.OWPAwayId = mi.OWPAwayId
 			AND m.MatchCode = mi.MatchCode
+			AND m.TeamRound=mi.TeamRound
 		INNER JOIN dbo.OWPMatch AS om WITH (NOLOCK) ON om.OWPMatchId = m.OWPMatchId
 		WHERE m.IsSync = 1;
 
@@ -293,6 +302,7 @@ BEGIN
 		,IsNeutral BIT NOT NULL
 		,MatchId INT
 		,MatchCode NVARCHAR(50)
+		,TeamRound NVARCHAR(2000)
 		);
 
 	CREATE TABLE #tblAssigneeReceiver (
@@ -314,6 +324,7 @@ BEGIN
 		,om.IsNeutral = tm.IsNeutral
 		,om.MatchId=tm.MatchId
 		,om.MatchCode= tm.MatchCode
+		,om.TeamRound=tm.TeamRound
 	OUTPUT DELETED.OWPMatchId
 		,DELETED.OWPLeagueId
 		,DELETED.OWPHomeId
@@ -321,7 +332,8 @@ BEGIN
 		,DELETED.IsNeutral
 		,DELETED.MatchId
 		,DELETED.MatchCode
-	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral,MatchId, MatchCode)
+		,DELETED.TeamRound
+	INTO #tblEventLog(OWPMatchId, OldLeagueId, OldHomeId, OldAwayId, IsNeutral,MatchId, MatchCode,TeamRound)
 	FROM dbo.OWPMatch AS om WITH (ROWLOCK)
 	INNER JOIN #tblMatch AS tm ON om.OWPMatchId = tm.OWPMatchId
 	WHERE om.OWPLeagueId <> tm.OWPLeagueId OR
@@ -329,7 +341,8 @@ BEGIN
 	 om.OWPAwayId <> tm.OWPAwayId OR
 	 om.IsNeutral <> tm.IsNeutral OR
 	 ISNULL(om.MatchId, 0) <> ISNULL(tm.MatchId, 0) OR
-	 ISNULL(om.MatchCode, '') <> ISNULL(tm.MatchCode, '')
+	 ISNULL(om.MatchCode, '') <> ISNULL(tm.MatchCode, '') OR
+	 ISNULL(om.TeamRound, '') <> ISNULL(tm.TeamRound, '')
 
 	-- sync TVIds
 	TRUNCATE TABLE #tblMatchChangeLog
