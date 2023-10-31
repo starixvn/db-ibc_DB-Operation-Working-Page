@@ -29,6 +29,7 @@ AS;
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 	20211122@Liam.Pham: add filter sync live status  - [Redmine: #159109]
 	20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
+	20231026@los: sync round - [Redmine: #193810]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -277,6 +278,7 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,ml.EventDateTime
 		,ml.IsLive 
 		,imn.AdminSiteMatchId 'ParentAdminSiteId'
+		,ma.TeamRound
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId

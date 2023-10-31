@@ -24,6 +24,7 @@ Revisions:
  20220216@Johnny: get match parentId is null only - [Redmine: #168050]
  20220321@Mira: get AdminsiteId - [Redmine: #170097]
  20230607@Mira: get LeagueId for InfositeMatch - [Redmine: #186299]
+ 20231026@los: sync round - [Redmine: #193810]
 */
 
     BEGIN
@@ -345,7 +346,8 @@ Revisions:
                n.PreMatchNoteId, 
                n.HasNotes, 
                m.IsLive, 
-               m.OWPLeagueId 'LeagueId'
+               m.OWPLeagueId 'LeagueId',
+			   m.TeamRound
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN @tblDayShiftTable AS l ON l.LeagueId = m.OWPLeagueId
              LEFT JOIN @tblMatchNotes AS n ON n.InfoSiteMatchId = m.InfoSiteMatchId

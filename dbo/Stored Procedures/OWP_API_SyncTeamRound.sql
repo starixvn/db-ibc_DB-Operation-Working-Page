@@ -1,5 +1,4 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_API_SyncTeamRound] @Xml NVARCHAR(MAX)
 AS
@@ -39,15 +38,12 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
-	CREATE CLUSTERED INDEX IX_tbl#tblInfoSiteMatch_InfoSiteMatchId
-	ON #tblInfoSiteMatch(InfoSiteMatchId ASC)
 
-
-	-- update OWPLeagueId
-	UPDATE im
-	SET im.TeamRound = l.TeamRound
-	FROM #tblInfoSiteMatch AS im
-	INNER JOIN dbo.InfoSiteMatch AS l WITH (NOLOCK) ON im.InfoSiteMatchId = l.InfoSiteMatchId
+	UPDATE l
+	SET l.TeamRound = im.TeamRound
+	FROM dbo.InfoSiteMatch AS l WITH (NOLOCK) INNER JOIN #tblInfoSiteMatch AS im
+	ON im.InfoSiteMatchId = l.InfoSiteMatchId
 	
 	DROP TABLE #tblInfoSiteMatch
 END
+

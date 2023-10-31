@@ -31,6 +31,7 @@ AS
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
 	20230710@Johnny: Get League Group - [Redmine: #190405]
     20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
+	20231026@los: sync round - [Redmine: #193810]
 */
 
      SET NOCOUNT ON;
@@ -323,6 +324,7 @@ AS
             END AS IsInfoSiteLinked, 
             ml.IsLive AS IsLiveMatchStatus, 
             ma.MatchCode,
+			ma.TeamRound,
             CASE
                 WHEN ai.Matchid IS NULL
                 THEN 0
