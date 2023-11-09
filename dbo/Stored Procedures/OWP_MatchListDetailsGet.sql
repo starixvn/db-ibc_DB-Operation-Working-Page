@@ -256,7 +256,7 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 				), 1, 2, '') AS [Provider]
 		,STUFF((
 				SELECT ', ' + r.Value
-				FROM dbo.MatchOfferDetail AS mo
+				FROM dbo.MatchOfferDetail AS mo WITH (NOLOCK)
 					INNER JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
 				WHERE mo.OWPMatchId = ml.OWPMatchId
 				FOR XML PATH('')

@@ -10,7 +10,8 @@ Task : Get InfoSiteMatch
 DB: bodb_OWP    
     
 Revisions:     
- 20230906@Johnny: initial SP - [Redmine: #156321]    
+  20230906@Johnny: initial SP - [Redmine: #156321]    
+  20231109@Liam: add nolock - [Redmine: #193810]
 */
 
     BEGIN
@@ -32,7 +33,7 @@ Revisions:
                    ELSE 1
                END AS IsCheck
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
-             LEFT JOIN dbo.EventPickingConfirmed AS ec ON m.InfoSiteMatchId = ec.InfositeId
+             LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON m.InfoSiteMatchId = ec.InfositeId
         WHERE m.EventDateTime >= @FromDateTime
               AND m.EventDateTime <= @ToDateTime
               AND m.IsDeleted = 0;
