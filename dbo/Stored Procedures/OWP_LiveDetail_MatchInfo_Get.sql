@@ -14,6 +14,7 @@ Revisions:
 	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 	20200723@Esther.Nguyen: Build Home name (N) - [Redmind: #137417]
 	20200729@Carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmind: #137755]
+	20231026@los: sync round - [Redmine: #193810]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -48,6 +49,7 @@ BEGIN
 		,minor.ParentMatchId
 		,main.MatchStatus AS ParentMatchStatus
 		,@OWPMatchId AS OWPMatchId
+		,om.TeamRound
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON minor.MinorMatchId = om.OWPMatchId
 		LEFT JOIN dbo.MatchInfo AS main WITH (NOLOCK) ON main.OWPMatchId = minor.ParentMatchId
