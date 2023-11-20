@@ -32,6 +32,7 @@ AS
 	20230710@Johnny: Get League Group - [Redmine: #190405]
     20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
 	20231026@los: sync round - [Redmine: #193810]
+	20231116@Mira: get off VR - [Redmine: #194500]
 */
 
      SET NOCOUNT ON;
@@ -569,7 +570,8 @@ AS
 
      -- Return Match Offer
      SELECT mf.OWPMatchId, 
-            r.[Value] AS MatchOfferValue
+            r.[Value] AS MatchOfferValue,
+			r.Id
      FROM #owpMatchListByDate AS mf
           INNER JOIN dbo.MatchOfferDetail AS mo WITH(NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
           LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
