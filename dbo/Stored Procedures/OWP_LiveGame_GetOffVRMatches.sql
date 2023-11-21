@@ -26,7 +26,8 @@ Revisions:
              INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
              INNER JOIN dbo.MatchOfferDetail mo WITH(NOLOCK) ON mo.OWPMatchId = m.OWPMatchId
              INNER JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'MatchOffer'
-                                                          AND r.Value LIKE '%OFF VR %'
+                                                          AND r.Value LIKE '%OFF VR%'
+                                                          AND r.Value NOT LIKE '%Big HDP%'
                                                           AND mo.MatchOfferId = r.ResourceId
         WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
               AND i.IsSelected = 1

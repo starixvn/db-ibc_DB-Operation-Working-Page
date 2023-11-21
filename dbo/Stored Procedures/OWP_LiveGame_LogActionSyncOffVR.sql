@@ -19,7 +19,7 @@ Revisions:
         IF EXISTS
         (
             SELECT 1
-            FROM SyncOffVRHistory
+            FROM SyncOffVRHistory WITH(NOLOCK)
             WHERE EventDate = @EventDate
         )
             BEGIN

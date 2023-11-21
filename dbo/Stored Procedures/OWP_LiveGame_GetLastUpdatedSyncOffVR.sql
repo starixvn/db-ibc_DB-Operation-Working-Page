@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LiveGame_GetLastUpdatedSyncOffVR] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_LiveGame_GetLastUpdatedSyncOffVR] @EventDate DATE
 AS
 
 /*
