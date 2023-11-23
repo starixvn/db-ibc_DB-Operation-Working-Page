@@ -30,6 +30,7 @@ AS;
 	20211122@Liam.Pham: add filter sync live status  - [Redmine: #159109]
 	20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
 	20231026@los: sync round - [Redmine: #193810]
+	20231116@Mira: get off VR - [Redmine: #194500]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -465,6 +466,7 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 	-- Return Match Offer
 	SELECT mf.OWPMatchId
 		,r.[Value] AS MatchOfferValue
+		,Id
 	FROM #owpMatchListByDate AS mf
 		INNER JOIN dbo.MatchOfferDetail AS mo WITH (NOLOCK) ON mf.OWPMatchId = mo.OWPMatchId
 		LEFT JOIN #tblMatchOfferResource AS r ON mo.MatchOfferId = r.Id
