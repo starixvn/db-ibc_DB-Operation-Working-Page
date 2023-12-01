@@ -1,14 +1,19 @@
-﻿
+﻿USE [bodb_OWP]
+GO
+/****** Object:  StoredProcedure [dbo].[OWP_UserListGet_Los]    Script Date: 12/1/2023 4:34:42 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_UserListGet] @User VARCHAR(30) = NULL
-	,@RoleId SMALLINT = NULL
-	,@SectionId SMALLINT = NULL
-	,@DepartmentId SMALLINT = NULL
-	,@CategoryId SMALLINT = NULL
-	,@LocationCode VARCHAR(10) = NULL
-	,@PageSize INT = NULL
-	,@PageIndex INT = NULL
-	,@TotalRecords INT = 0 OUTPUT
+ALTER PROCEDURE [dbo].[OWP_UserListGet]
+	@User VARCHAR(30)
+	,@RoleId VARCHAR(200)
+	,@SectionId VARCHAR(200)
+	,@DepartmentId VARCHAR(200)
+	,@CategoryId VARCHAR(200)
+	,@LocationCode VARCHAR(200)
 	,@ExcludeClosedAccount BIT = 1
 	,@SiteId INT
 AS
@@ -28,15 +33,45 @@ Revisions:
 	20191011@Kane.Le: Get User Group - [Redmine: #121765]
 	20191206@Carlos.Nguyen:  Update language - [Redmine: #124940]
 	20220531@Liam.Pham: Hide section [Redmine: #173255]
+	20230112@Los: Query user - [Redmine: #196814]
 */
 BEGIN
 	SET NOCOUNT ON
-	DECLARE @UserName VARCHAR(30) 
+	DECLARE @UserName VARCHAR(30)
+	DECLARE @tblUser TABLE (Id INT)
+	DECLARE @tblRoleId TABLE (Id INT)
+	DECLARE @tblSectionId TABLE (Id INT)
+	DECLARE @tblDepartmentId TABLE (Id INT)
+	DECLARE @tblCategoryId TABLE (Id INT)
+	DECLARE @tblLocationCode TABLE (Id VARCHAR(30))
+
 	SELECT @UserName = RTRIM(LTRIM(@User))
-	DECLARE @RowCount INT
-		,@RowStart INT
-		,@RowEnd INT
 	
+	INSERT INTO @tblRoleId
+	SELECT val
+	FROM fnc_SplitStrings(@RoleId, ',')u
+	OPTION (MAXRECURSION 0)
+
+	INSERT INTO @tblSectionId
+	SELECT val
+	FROM dbo.fnc_SplitStrings(@SectionId, ',') AS t
+	OPTION (MAXRECURSION 0)
+
+	INSERT INTO @tblDepartmentId
+	SELECT val
+	FROM dbo.fnc_SplitStrings(@DepartmentId, ',') AS t
+	OPTION (MAXRECURSION 0)
+
+	INSERT INTO @tblCategoryId
+	SELECT val
+	FROM dbo.fnc_SplitStrings(@CategoryId, ',') AS t
+	OPTION (MAXRECURSION 0)
+
+	INSERT INTO @tblLocationCode
+	SELECT val
+	FROM dbo.fnc_SplitStrings(@LocationCode, ',') AS t
+	OPTION (MAXRECURSION 0)
+
 	CREATE TABLE #tblUserId (
 		RowNumber INT
 		,UserId INT
@@ -47,19 +82,18 @@ BEGIN
 		,UserId INT
 		)
 
-	INSERT INTO #tblUserId (
-		RowNumber
-		,UserId
-		)
-	SELECT ROW_NUMBER() OVER (
-			ORDER BY u.UserName
-			) AS RowNumber
-		,u.UserId
+	INSERT INTO #tblUserId (UserId)
+	SELECT u.UserId
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
 		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
 		AND us.SiteId = @SiteId
 		LEFT JOIN dbo.UserRole AS r WITH (NOLOCK) ON r.UserId = u.UserId
+		LEFT JOIN @tblRoleId AS tblr ON tblr.Id=r.RoleId
+		LEFT JOIN @tblSectionId AS tbls ON u.SectionId=tbls.Id
+		LEFT JOIN @tblDepartmentId AS tbld ON u.DepartmentId=tbld.Id
+		LEFT JOIN @tblCategoryId AS tblc ON u.CategoryId=tblc.Id
+		LEFT JOIN @tblLocationCode AS tblcode ON u.LocationCode=tblcode.Id
 	WHERE (
 			@ExcludeClosedAccount = 0
 			OR (
@@ -73,44 +107,13 @@ BEGIN
 			ISNULL(u.Username, '') LIKE '%' + ISNULL(@UserName, '') + '%'
 			OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@UserName, '') + '%'
 			)
-		AND (
-			@RoleId IS NULL
-			OR @RoleId = ISNULL(r.RoleId, 0)
-			)
-		AND (
-			@SectionId IS NULL
-			OR @SectionId = ISNULL(u.SectionId, 0)
-			)
-		AND (
-			@DepartmentId IS NULL
-			OR @DepartmentId = ISNULL(u.DepartmentId, 0)
-			)
-		AND (
-			@CategoryId IS NULL
-			OR @CategoryId = ISNULL(u.CategoryId, 0)
-			)
-		AND (
-			@LocationCode IS NULL
-			OR @LocationCode = ISNULL(u.LocationCode, 'None')
-			)
-		AND ( u.SectionId NOT IN (17,23,28)
+		AND tblr.Id = ISNULL(r.RoleId, 0)
+		AND tbls.Id = ISNULL(u.SectionId, 0)
+		AND tbld.Id = ISNULL(u.DepartmentId, 0)
+		AND tblc.Id = ISNULL(u.CategoryId, 0)
+		AND tblcode.Id = ISNULL(u.LocationCode, 'None')
+		AND (u.SectionId NOT IN (17,23,28)
 		   OR u.SectionId IS NULL )
-
-	IF @PageIndex IS NOT NULL
-		AND @PageSize IS NOT NULL
-	BEGIN
-		INSERT INTO #tblFinalUserId (RowNumber, UserId)
-		SELECT RowNumber, UserId
-		FROM #tblUserId WITH (NOLOCK)
-		WHERE RowNumber BETWEEN ((@PageIndex - 1) * @PageSize + 1)
-				AND (@PageIndex * @PageSize)
-	END
-	ELSE
-	BEGIN
-		INSERT INTO #tblFinalUserId (RowNumber, UserId)
-		SELECT RowNumber, UserId
-		FROM #tblUserId WITH (NOLOCK)
-	END
 	
 	SELECT u.UserId
 		,u.Username
@@ -154,11 +157,7 @@ BEGIN
 		AND ugr.RefName = 'UserGroup'
 		LEFT JOIN dbo.RefResource AS r WITH (NOLOCK) ON ur.RoleId = r.ResourceId
 		AND r.RefName = 'UserRole'
-	ORDER BY ul.RowNumber
 
-	-- total item
-	SELECT @TotalRecords = COUNT(1)
-	FROM #tblUserId	 
 	DROP TABLE #tblUserId
 
 	DROP TABLE #tblFinalUserId
