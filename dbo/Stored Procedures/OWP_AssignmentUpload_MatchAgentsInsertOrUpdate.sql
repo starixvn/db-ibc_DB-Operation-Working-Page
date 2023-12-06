@@ -12,18 +12,19 @@ DB: bodb_OWP
 
 Revisions:
 	20200310@Jacob: New structure of Assignment Uploading - [Redmine: #129397]
-	
+	20231215@Mira: refactor upload flow - [Redmine: #1976174]
 */
 
      SET NOCOUNT ON;
-     DECLARE @allMatchIds TABLE(MatchId INT);
-     INSERT INTO @allMatchIds
+     CREATE TABLE #allMatchIds(MatchId INT);
+     INSERT INTO #allMatchIds
             SELECT DISTINCT 
                    val
             FROM fnc_SplitStrings(@MatchIds, ',') u OPTION(MAXRECURSION 0);
      CREATE TABLE #tmpTable
      (MatchId INT, 
-      Agent   NVARCHAR(500)
+      Agent   NVARCHAR(500), 
+      AgentId INT
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
@@ -32,13 +33,13 @@ Revisions:
      INSERT INTO #tmpTable
             SELECT DISTINCT 
                    MatchId, 
-                   Agent
+                   Agent, 
+                   NULL
             FROM OPENXML(@idoc, '/Root/MatchAgent', 1) WITH(MatchId INT, Agent NVARCHAR(500));
      EXEC sp_xml_removedocument 
           @idoc;
 
-
-	 -- INSERT Agent
+     -- INSERT Agent
      INSERT INTO dbo.Agent
             SELECT DISTINCT 
                    t.Agent
@@ -46,10 +47,20 @@ Revisions:
                  LEFT JOIN dbo.Agent a WITH(NOLOCK) ON t.Agent = a.AgentName
             WHERE a.AgentName IS NULL;
 
+     -- Update AgentId to temp table
+     UPDATE t
+       SET 
+           t.AgentId = a.AgentId
+     FROM #tmpTable T
+          LEFT JOIN dbo.Agent a WITH(NOLOCK) ON t.Agent = a.AgentName;
+
      -- DELETE Match Agent
      DELETE ma
      FROM dbo.MatchAgent ma
-          INNER JOIN @allMatchIds t ON t.MatchId = ma.OWPMatchId;
+          INNER JOIN #allMatchIds t ON t.MatchId = ma.OWPMatchId
+          LEFT JOIN #tmpTable tt ON tt.MatchId = ma.OWPMatchId
+                                    AND tt.AgentId = ma.AgentId
+     WHERE tt.AgentId IS NULL;
 
      -- INSERT Match Agent
      INSERT INTO dbo.MatchAgent
@@ -58,8 +69,16 @@ Revisions:
      )
             SELECT DISTINCT 
                    t.MatchId, 
-                   a.AgentId
+                   t.AgentId
             FROM #tmpTable t
-                 INNER JOIN dbo.Agent a WITH(NOLOCK) ON t.Agent = a.AgentName;
+            WHERE NOT EXISTS
+            (
+                SELECT 1
+                FROM MatchAgent ma
+                WHERE ma.OWPMatchId = t.MatchId
+                      AND t.AgentId = ma.AgentId
+            );
+
      -- DROP tmpTable
      DROP TABLE #tmpTable;
+     DROP TABLE #allMatchIds;
