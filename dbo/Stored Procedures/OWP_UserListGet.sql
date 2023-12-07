@@ -1,9 +1,11 @@
-﻿USE [bodb_OWP]
+﻿USE [bodb_OWP];
 GO
-/****** Object:  StoredProcedure [dbo].[OWP_UserListGet]    Script Date: 12/6/2023 3:43:03 PM ******/
-SET ANSI_NULLS ON
+
+/****** Object:  StoredProcedure [dbo].[OWP_UserListGet]    Script Date: 12/7/2023 1:46:50 PM ******/
+
+SET ANSI_NULLS ON;
 GO
-SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON;
 GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
@@ -64,17 +66,28 @@ Revisions:
                FROM dbo.fnc_SplitStrings(@LocationCode, ',') AS t OPTION(MAXRECURSION 0);
         CREATE TABLE #tblUserId(UserId INT);
         INSERT INTO #tblUserId(UserId)
-               SELECT u.UserId
+               SELECT DISTINCT 
+                      u.UserId
                FROM dbo.[User] AS u WITH(NOLOCK)
                     INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
                     INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
                                                                                             AND us.SiteId = @SiteId
                     LEFT JOIN dbo.UserRole AS r WITH(NOLOCK) ON r.UserId = u.UserId
-                    LEFT JOIN @tblRoleId AS tblr ON tblr.Id = r.RoleId
-                    LEFT JOIN @tblSectionId AS tbls ON u.SectionId = tbls.Id
-                    LEFT JOIN @tblDepartmentId AS tbld ON u.DepartmentId = tbld.Id
-                    LEFT JOIN @tblCategoryId AS tblc ON u.CategoryId = tblc.Id
-                    LEFT JOIN @tblLocationCode AS tblcode ON u.LocationCode = tblcode.Id
+                    INNER JOIN @tblRoleId AS tblr ON(tblr.Id = r.RoleId)
+                                                    OR (tblr.Id = 0
+                                                        AND r.RoleId IS NULL)
+                    INNER JOIN @tblSectionId AS tbls ON u.SectionId = tbls.Id
+                                                        OR (tbls.Id = 0
+                                                            AND u.SectionId IS NULL)
+                    INNER JOIN @tblDepartmentId AS tbld ON u.DepartmentId = tbld.Id
+                                                           OR (tbld.Id = 0
+                                                               AND u.DepartmentId IS NULL)
+                    INNER JOIN @tblCategoryId AS tblc ON u.CategoryId = tblc.Id
+                                                         OR (tblc.Id = 0
+                                                             AND u.CategoryId IS NULL)
+                    INNER JOIN @tblLocationCode AS tblcode ON u.LocationCode = tblcode.Id
+                                                              OR (tblcode.Id = 'None'
+                                                                  AND u.LocationCode IS NULL)
                WHERE(@ExcludeClosedAccount = 0
                      OR (ci.closed = 0
                          AND ci.reject = 0
@@ -82,13 +95,8 @@ Revisions:
                          AND us.IsActive = 1))
                     AND (ISNULL(u.Username, '') LIKE '%' + ISNULL(@UserName, '') + '%'
                          OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@UserName, '') + '%')
-             AND tblr.Id = ISNULL(r.RoleId, 0)
-             AND tbls.Id = ISNULL(u.SectionId, 0)
-             AND tbld.Id = ISNULL(u.DepartmentId, 0)
-             AND tblc.Id = ISNULL(u.CategoryId, 0)
-             AND tblcode.Id = ISNULL(u.LocationCode, 'None')
-             AND (u.SectionId NOT IN(17, 23, 28)
-        OR u.SectionId IS NULL);
+                    AND (u.SectionId NOT IN(17, 23, 28)
+               OR u.SectionId IS NULL);
         SELECT u.UserId, 
                u.Username, 
                u.ProfilePic, 
@@ -120,11 +128,11 @@ Revisions:
                ucl.[Value] AS 'LevelName', 
                u.GroupId, 
                ugr.[Value] AS 'GroupName',
-			   CASE
+               CASE
                    WHEN u.IsSecondAccount = 1
                    THEN 'true'
                    ELSE 'false'
-               END AS IsSecondAccount,
+               END AS IsSecondAccount, 
                u.LanguageId
         FROM dbo.[User] AS u WITH(NOLOCK)
              INNER JOIN #tblUserId AS ul ON ul.UserId = u.UserId
