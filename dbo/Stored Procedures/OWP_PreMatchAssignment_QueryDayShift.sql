@@ -25,6 +25,7 @@ Revisions:
  20220321@Mira: get AdminsiteId - [Redmine: #170097]
  20230607@Mira: get LeagueId for InfositeMatch - [Redmine: #186299]
  20231026@los: sync round - [Redmine: #193810]
+ 20231219@Liam: Get League Group - [Redmine: #198232]
 */
 
     BEGIN
@@ -200,6 +201,7 @@ Revisions:
         DECLARE @tblDayShiftTable TABLE
         (PreMatchLeagueId         INT, 
          LeagueId                 INT, 
+         CategoryId               INT, 
          LeagueName               VARCHAR(MAX), 
          MatchCount               INT, 
          HDP                      VARCHAR(200), 
@@ -225,6 +227,7 @@ Revisions:
         INSERT INTO @tblDayShiftTable
         (PreMatchLeagueId, 
          LeagueId, 
+         CategoryId, 
          LeagueName, 
          MatchCount, 
          HDP, 
@@ -249,6 +252,7 @@ Revisions:
         )
                SELECT pl.PreMatchLeagueId, 
                       pl.OWPLeagueId, 
+                      l.CategoryId, 
                       l.OWPLeagueName, 
                       a.MatchCount,
                       --main
@@ -331,9 +335,13 @@ Revisions:
                Remark, 
                n.PreMatchNoteId, 
                n.HasNotes, 
-               l.IsDeleted
+               l.IsDeleted, 
+               rr.[Value] AS LeagueGroup, 
+               rr.[Order] AS LeagueGroupOrder
         FROM @tblDayShiftTable AS l
-             LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId;
+             LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId
+             LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
+                                                         AND rr.RefName = 'LeagueCategory';
 
         -- Query InfoSiteMatches --
         SELECT m.InfoSiteMatchId, 
@@ -346,8 +354,8 @@ Revisions:
                n.PreMatchNoteId, 
                n.HasNotes, 
                m.IsLive, 
-               m.OWPLeagueId 'LeagueId',
-			   m.TeamRound
+               m.OWPLeagueId 'LeagueId', 
+               m.TeamRound
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
              INNER JOIN @tblDayShiftTable AS l ON l.LeagueId = m.OWPLeagueId
              LEFT JOIN @tblMatchNotes AS n ON n.InfoSiteMatchId = m.InfoSiteMatchId
