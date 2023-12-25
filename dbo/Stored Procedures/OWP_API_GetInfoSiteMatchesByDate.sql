@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:     
   20230906@Johnny: initial SP - [Redmine: #156321]    
   20231109@Liam: add nolock - [Redmine: #193810]
+  20231225@Liam: add more infos - [Redmine: #198102]
 */
 
     BEGIN
@@ -26,7 +27,12 @@ Revisions:
                m.EventDateTime, 
                m.TV, 
                m.IPTV, 
-               m.[Provider],
+               m.[Provider], 
+               m.[Round], 
+               m.[Remark], 
+               m.HomeRemark, 
+               m.AwayRemark, 
+               m.Division,
                CASE
                    WHEN ec.InfositeId IS NULL
                    THEN 0
