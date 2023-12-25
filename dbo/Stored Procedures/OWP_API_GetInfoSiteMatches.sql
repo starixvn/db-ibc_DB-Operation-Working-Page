@@ -21,15 +21,7 @@ Revisions:
                m.LeagueName, 
                m.HomeName, 
                m.AwayName, 
-               m.EventDateTime, 
-               m.TV, 
-               m.IPTV, 
-               m.[Provider], 
-               m.[Round], 
-               m.[Remark], 
-               m.HomeRemark, 
-               m.AwayRemark, 
-               m.Division,
+               m.EventDateTime,
                CASE
                    WHEN ec.InfositeId IS NULL
                    THEN 0
