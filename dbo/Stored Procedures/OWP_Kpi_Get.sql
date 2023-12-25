@@ -3,7 +3,10 @@
 
 ALTER PROCEDURE [dbo].[OWP_Kpi_Get] @FromDate   DATETIME, 
                                     @ToDate     DATETIME, 
-                                    @SectionIds VARCHAR(100) = NULL
+                                    @SectionIds VARCHAR(100) = NULL, 
+                                    @SiteId     INT, 
+                                    @ActiveUser BIT, 
+                                    @ResignUser BIT
 AS
 
 /*    
@@ -16,6 +19,7 @@ AS
     20230829@Liam.Pham: get Target - [Redmine: #193488]
 	20231005@Los: Caculate virtual match - [Redmine: #194499]
 	20231005@Liam: Query by section - [Redmine: #195223]
+	20231225@Carlos.nguyen: hide resign account - [Redmine: #198234]
 */
 
      SET NOCOUNT ON;
@@ -40,7 +44,10 @@ AS
             END 'SectionName'
      FROM dbo.LAReport a WITH(NOLOCK)
           INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId
-          INNER JOIN @tempSection temp  ON(u.SectionId = temp.SectionId)
+          INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
+          INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
+                                                                                  AND us.SiteId = @SiteId
+          INNER JOIN @tempSection temp ON(u.SectionId = temp.SectionId)
                                          OR (u.SectionId IS NULL
                                              AND temp.SectionId = 0)
           LEFT JOIN LATargetSetting t WITH(NOLOCK) ON u.UserId = t.UserId
@@ -48,7 +55,17 @@ AS
                                                   AND r.ResourceId = t.TargetId
           LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON u.SectionId = rr.ResourceId
                                                        AND RR.RefName = 'Section'
-     WHERE a.ReportDate BETWEEN @FromDate AND @ToDate
+     WHERE(@ActiveUser = 1
+           AND ci.closed = 0
+           AND ci.reject = 0
+           AND ci.[Enabled] = 1
+           AND us.IsActive = 1)
+          OR (@ResignUser = 1
+              AND (ci.closed = 1
+                   OR ci.reject = 1
+                   OR ci.[Enabled] = 0
+                   OR us.IsActive = 0))
+          AND a.ReportDate BETWEEN @FromDate AND @ToDate
      GROUP BY a.UserId, 
               r.[Value], 
               t.TargetId, 
