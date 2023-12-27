@@ -16,7 +16,7 @@ Revisions:
     BEGIN
         SET NOCOUNT ON;
         DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00'), @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '11:59:59');
-        -- select from infosite match
+     
         SELECT DISTINCT 
                m.InfoSiteMatchId, 
                m.TeamRound,
