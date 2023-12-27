@@ -13,6 +13,7 @@ AS
 	20220112@Tyler: Initial SP - [Redmine: #167315]
 	20220419@Mira: Get offerLive - [Redmine: #171515]
 	20220630@Mira: Get eventDateTime - [Redmine: #171515]
+	20231219@Mira: Get event date - [Redmine: #198187]
 */
 
     BEGIN
@@ -23,7 +24,8 @@ AS
                m.HomeName, 
                m.AwayName, 
                m.Sport, 
-               m.EventDateTime,
+               m.EventDateTime, 
+               m.EventDate,
                CASE m.OfferLiveStatus
                    WHEN 'live'
                    THEN 1
