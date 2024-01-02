@@ -1,8 +1,11 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_LAReports] @FromDate DATETIME = '2020-01-03', 
-                                      @ToDate   DATETIME = '2020-01-05'
+ALTER PROCEDURE [dbo].[OWP_LAReports] @FromDate   DATETIME = '2020-01-03', 
+                                      @ToDate     DATETIME = '2020-01-05', 
+                                      @SiteId     INT, 
+                                      @ActiveUser BIT, 
+                                      @ResignUser BIT
 AS
 
 /*    
@@ -18,6 +21,7 @@ AS
 	20220418@Liam: Adding FTCorner5ML to LA Report - [Redmine:#171212]
 	20220920@Johnny: Change query LA Report - [Redmine:#177768]
 	20230511@Carlos.nguyen: new column - [Redmine: #187937]
+	20231225@Carlos.nguyen: hide resign account - [Redmine: #198234]
 */
 
      SET NOCOUNT ON;
@@ -27,12 +31,12 @@ AS
             SUM(a.TotalMatches) TotalMatches, 
             SUM(a.Link2) Link2, 
             SUM(a.Link3) Link3, 
-            SUM(a.Link4) Link4,
-			SUM(a.Link5) Link5, 
-			SUM(a.Link6) Link6,
-			SUM(a.Link7) Link7, 
-			SUM(a.Link8Plus) Link8Plus, 
-			SUM(a.TotalMatchInGroupMultiple) TotalMultiMatches,
+            SUM(a.Link4) Link4, 
+            SUM(a.Link5) Link5, 
+            SUM(a.Link6) Link6, 
+            SUM(a.Link7) Link7, 
+            SUM(a.Link8Plus) Link8Plus, 
+            SUM(a.TotalMatchInGroupMultiple) TotalMultiMatches, 
             SUM(a.OnlyProvider) OnlyProvider, 
             SUM(a.OnlyReporter) OnlyReporter, 
             SUM(a.OnlyTV) OnlyTV, 
@@ -56,7 +60,20 @@ AS
           LEFT JOIN dbo.[User] u ON u.UserId = a.UserId
           LEFT JOIN dbo.RefResource r ON r.RefName = 'Section'
                                          AND u.SectionId = r.ResourceId
-     WHERE a.ReportDate BETWEEN @FromDate AND @ToDate
+          INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
+          INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
+                                                                                  AND us.SiteId = @SiteId
+     WHERE(@ActiveUser = 1
+           AND ci.closed = 0
+           AND ci.reject = 0
+           AND ci.[Enabled] = 1
+           AND us.IsActive = 1)
+          OR (@ResignUser = 1
+              AND (ci.closed = 1
+                   OR ci.reject = 1
+                   OR ci.[Enabled] = 0
+                   OR us.IsActive = 0))
+          AND a.ReportDate BETWEEN @FromDate AND @ToDate
      GROUP BY a.UserId, 
               u.Username, 
               r.Value
