@@ -63,7 +63,7 @@ AS
           INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
           INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
                                                                                   AND us.SiteId = @SiteId
-     WHERE(@ActiveUser = 1
+     WHERE((@ActiveUser = 1
            AND ci.closed = 0
            AND ci.reject = 0
            AND ci.[Enabled] = 1
@@ -72,7 +72,7 @@ AS
               AND (ci.closed = 1
                    OR ci.reject = 1
                    OR ci.[Enabled] = 0
-                   OR us.IsActive = 0))
+                   OR us.IsActive = 0)))
           AND a.ReportDate BETWEEN @FromDate AND @ToDate
      GROUP BY a.UserId, 
               u.Username, 

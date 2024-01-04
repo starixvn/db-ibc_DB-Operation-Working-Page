@@ -60,11 +60,11 @@ AS
            AND ci.reject = 0
            AND ci.[Enabled] = 1
            AND us.IsActive = 1)
-          OR (@ResignUser = 1
+          OR ((@ResignUser = 1
               AND (ci.closed = 1
                    OR ci.reject = 1
                    OR ci.[Enabled] = 0
-                   OR us.IsActive = 0))
+                   OR us.IsActive = 0)))
           AND a.ReportDate BETWEEN @FromDate AND @ToDate
      GROUP BY a.UserId, 
               r.[Value], 
