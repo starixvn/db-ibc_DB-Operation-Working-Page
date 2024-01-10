@@ -14,7 +14,8 @@ Task : Get product assignment preferences
 DB: bodb_OWP
 
 Revisions:
-	20230213@carlos.nguyen: Init SP - [Redmine: #183243]  	 
+	20230213@carlos.nguyen: Init SP - [Redmine: #183243]
+	20240110@Mira: Edit location type - [Redmine: #199132]
 */
 
     BEGIN
@@ -31,7 +32,7 @@ Revisions:
                FROM UserBetTypePreferences AS ub
                GROUP BY ub.UserId;
         DECLARE @tempSection TABLE(SectionId SMALLINT);
-        DECLARE @tempLocation TABLE(LocationId VARCHAR(5));
+        DECLARE @tempLocation TABLE(LocationId VARCHAR(20));
         DECLARE @tempRole TABLE(RoleId SMALLINT);
         INSERT INTO @tempSection
                SELECT DISTINCT 
@@ -84,7 +85,7 @@ Revisions:
                     INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
                                                                                             AND us.SiteId = @SiteId
                     INNER JOIN @tempSection AS t ON u.SectionId = t.SectionId
-                    INNER JOIN @tempLocation AS tl ON tl.LocationId = u.LocationCode
+                    INNER JOIN @tempLocation AS tl ON tl.LocationId = ISNULL(u.LocationCode, 'None')
                     LEFT JOIN [UserRole] AS ur ON ur.UserId = u.UserId
                     LEFT JOIN @tempBettype AS tb ON u.UserId = tb.UserId
                WHERE(ci.closed = 0
@@ -95,13 +96,13 @@ Revisions:
                     AND (ISNULL(u.Username, '') LIKE '%' + ISNULL(@UserName, '') + '%'
                          OR ISNULL(u.Nickname, '') LIKE '%' + ISNULL(@UserName, '') + '%');
         SELECT tu.Username, 
-         tu.UserId, 
-         tu.LevelId, 
-         tu.RoleId, 
-         tu.BetTypePreferencesId, 
-         tu.MultipleGamesId, 
-         tu.AssignmentRemark, 
-         tu.SectionId
+               tu.UserId, 
+               tu.LevelId, 
+               tu.RoleId, 
+               tu.BetTypePreferencesId, 
+               tu.MultipleGamesId, 
+               tu.AssignmentRemark, 
+               tu.SectionId
         FROM @tblUserAllRole AS tu
              INNER JOIN @tempRole AS tr ON tu.RoleId = tr.RoleId;
     END;
