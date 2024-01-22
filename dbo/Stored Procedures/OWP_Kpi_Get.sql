@@ -20,6 +20,7 @@ AS
 	20231005@Los: Caculate virtual match - [Redmine: #194499]
 	20231005@Liam: Query by section - [Redmine: #195223]
 	20231225@Carlos.nguyen: hide resign account - [Redmine: #198234]
+	20230108@Carlos.nguyen: correct condition - [Redmine: #198234]
 */
 
      SET NOCOUNT ON;
@@ -55,12 +56,12 @@ AS
                                                   AND r.ResourceId = t.TargetId
           LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON u.SectionId = rr.ResourceId
                                                        AND RR.RefName = 'Section'
-     WHERE(@ActiveUser = 1
+     WHERE((@ActiveUser = 1
            AND ci.closed = 0
            AND ci.reject = 0
            AND ci.[Enabled] = 1
            AND us.IsActive = 1)
-          OR ((@ResignUser = 1
+          OR (@ResignUser = 1
               AND (ci.closed = 1
                    OR ci.reject = 1
                    OR ci.[Enabled] = 0
