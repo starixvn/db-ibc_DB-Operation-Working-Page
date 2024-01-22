@@ -30,6 +30,7 @@ AS
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 	20230807@Los: Get ticket support - [Redmine: #191778]
 	20231016@Johnny: tuning SP - [Redmine: #195524]
+	20240119@Mira: Correct SP - [Redmine: #123456]
 */
 
     BEGIN
@@ -56,6 +57,9 @@ AS
                SELECT [TypeId], 
                       NULLIF([SubTypeId], '')
                FROM OPENXML(@idoc, '/Root/TicketType', 1) WITH([TypeId] INT, [SubTypeId] INT);
+        EXEC sp_xml_removedocument 
+             @idoc;
+
         -- match status
         INSERT INTO @tblTicketStatus
                SELECT DISTINCT 
