@@ -18,6 +18,7 @@ Revisions:
 	20200901@Mira.Nguyen: Notification when re-uploading match with Neutral [Redmine: #140807]
 	20201109@Carlos.Nguyen: LA Auto Assignment - Determine ET/PK match - [Redmine: #144570]
 	20200128@Mira: Saba match validation rule - [Redmine: 149472]
+	20240131@Los: Fix not save other time at 12AM - [Redmine: 200529]
 */
 
      SET NOCOUNT ON;
@@ -74,7 +75,7 @@ Revisions:
                    Away, 
                    EventDate, 
                    MatchNo, 
-                   NULLIF(OtherTime, '00:00:00.0000000'), 
+                   NULLIF((OtherTime), ''), 
                    KickOffTime, 
                    Channel, 
                    IPTV, 
@@ -97,7 +98,7 @@ Revisions:
                    0, 
                    0, 
                    EtPk
-            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), IsSaba BIT, InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime TIME(7), KickOffTime TIME(7), Channel NVARCHAR(100), IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT, EtPk NVARCHAR(2000))
+            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), IsSaba BIT, InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime NVARCHAR(7), KickOffTime TIME(7), Channel NVARCHAR(100), IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT, EtPk NVARCHAR(2000))
             ORDER BY ISNULL(MinorBettypeId, 0) DESC;
      EXEC sp_xml_removedocument 
           @idoc;
