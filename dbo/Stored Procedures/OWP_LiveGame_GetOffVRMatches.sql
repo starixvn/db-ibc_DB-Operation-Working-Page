@@ -48,7 +48,6 @@ Revisions:
                     LEFT JOIN dbo.MatchOfferDetail mo WITH(NOLOCK) ON mo.OWPMatchId = m.OWPMatchId
                     LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'MatchOffer'
                                                                 AND r.Value LIKE '%OFF VR%'
-                                                                AND r.Value NOT LIKE '%Big HDP%'
                                                                 AND mo.MatchOfferId = r.ResourceId
                WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
                      AND m.EventDateTime > @SyncTime
@@ -58,18 +57,14 @@ Revisions:
 
         -- select distinct OWPMatchId with more information where count off vr value = 1
         SELECT OWPMatchId, 
-               MatchId 'AdminSiteMatchId',
-               CASE
-                   WHEN COUNT(Value) > 1
-                   THEN NULL
-                   WHEN MAX(Value) LIKE '%OFF VR%'
-                        OR MAX(Value) IS NULL
-                   THEN MAX(Value)
-                   ELSE NULL
-               END AS 'OffVR'
-        FROM #TempTable
+               MatchId AS AdminSiteMatchId, 
+               MAX(Value) AS OffVR
+        FROM #TempTable t
         GROUP BY OWPMatchId, 
-                 MatchId;
+                 MatchId
+        HAVING COUNT(Value) <= 1
+               AND (MAX(Value) IS NULL
+                    OR MAX(Value) NOT LIKE '%Big HDP%');
 
         -- drop temp table
         DROP TABLE #TempTable;
