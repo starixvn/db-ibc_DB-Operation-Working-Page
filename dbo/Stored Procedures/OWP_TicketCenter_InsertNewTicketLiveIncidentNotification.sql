@@ -2,15 +2,15 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenter_InsertNewTicketLiveIncidentNotification] @ActorId             INT, 
-                                                                                  @OwpLeagueName       NVARCHAR(MAX), 
-                                                                                  @OwpHomeName         NVARCHAR(MAX), 
-                                                                                  @OwpAwayName         NVARCHAR(MAX), 
-                                                                                  @IsImportant         BIT, 
-                                                                                  @IsWatcher           BIT, 
-                                                                                  @NotificationType    INT, 
-                                                                                  @SessionId           VARCHAR(100)  = NULL, 
-                                                                                  @TicketId            INT, 
-                                                                                  @NotificationContent NVARCHAR(MAX)
+                                                                                 @OwpLeagueName       NVARCHAR(MAX), 
+                                                                                 @OwpHomeName         NVARCHAR(MAX), 
+                                                                                 @OwpAwayName         NVARCHAR(MAX), 
+                                                                                 @IsImportant         BIT, 
+                                                                                 @IsWatcher           BIT, 
+                                                                                 @NotificationType    INT, 
+                                                                                 @SessionId           VARCHAR(100)  = NULL, 
+                                                                                 @TicketId            INT, 
+                                                                                 @NotificationContent NVARCHAR(MAX)
 AS
 
 /*
@@ -20,7 +20,7 @@ DB: bodb_OWP
 
 Revisions:
 	20221006@Johnny: Init SP - [Redmine: #178183]
-	
+	20240216@Mira: Refactor ticket center - [Redmine: #200671]
 */
 
      SET NOCOUNT ON;
@@ -43,8 +43,10 @@ Revisions:
 
      SELECT @messageTemplate = REPLACE(REPLACE(@NotificationContent, '<Event>', @eventName), '<username>', @actorName);
      INSERT INTO @tblReceivedUser(Id)
-     EXEC [dbo].[OWP_TicketCenterEvent_GetUserIdsByTicketId] 
-          @TicketId = @TicketId;
+            SELECT DISTINCT 
+                   RecipientId
+            FROM TicketMessageReader
+            WHERE TicketId = @TicketId;
 
      -- Delete creatorId
      DELETE FROM @tblReceivedUser

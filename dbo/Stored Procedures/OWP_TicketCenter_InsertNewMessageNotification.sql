@@ -1,10 +1,3 @@
-USE [bodb_OWP]
-GO
-/****** Object:  StoredProcedure [dbo].[OWP_TicketCenter_InsertNewMessageNotification]    Script Date: 11/1/2021 9:46:29 AM ******/
-SET ANSI_NULLS ON
-GO
-SET QUOTED_IDENTIFIER ON
-GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
@@ -24,7 +17,8 @@ DB: bodb_OWP
 
 Revisions:
 	20211101@Luca.Duong: Init SP - [Redmine: #163895]
-	
+	20240216@Mira: Refactor ticket center - [Redmine: #200671]
+	20240216@Mira: Refactor ticket center - [Redmine: #200671]
 */
 BEGIN
      SET NOCOUNT ON;
@@ -45,8 +39,11 @@ BEGIN
      SELECT @messageTemplate = REPLACE(@NotificationContent, '<username>', @actorName);
      
      INSERT INTO @tblReceivedUser(Id)
-	 EXEC [dbo].[OWP_TicketCenterEvent_GetUserIdsByTicketId] @TicketId=@TicketId
-	 
+            SELECT DISTINCT 
+                   RecipientId
+            FROM TicketMessageReader
+            WHERE TicketId = @TicketId;
+			
 	 -- Delete creatorId
 	 DELETE FROM @tblReceivedUser
 	 WHERE Id=@ActorId
