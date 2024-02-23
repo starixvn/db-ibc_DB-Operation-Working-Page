@@ -2,7 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_LiveGame_LogActionSyncOffVR] @EventDate DATE, 
-                                                        @ActorId   INT
+                                                        @ActorId   INT, 
+                                                        @SyncTime  DATETIME
 AS
 
 /*
@@ -12,6 +13,7 @@ DB: bodb_OWP
 
 Revisions:
 	20231117@Mira: Log action sync off vr - [Redmine: #195697]	
+	20231226@Mira: get matches by new condition - [Redmine: #197659]
 */
 
     BEGIN
@@ -25,7 +27,7 @@ Revisions:
             BEGIN
                 UPDATE SyncOffVRHistory
                   SET 
-                      SyncDateTime = DATEADD(HOUR, 12, CONVERT(DATETIME, GETDATE())), 
+                      SyncDateTime = @SyncTime, 
                       CreatedBy = @ActorId
                 WHERE EventDate = @EventDate;
         END;
@@ -38,7 +40,7 @@ Revisions:
                 )
                 VALUES
                 (@EventDate, 
-                 DATEADD(HOUR, 12, CONVERT(DATETIME, GETDATE())), 
+                 @SyncTime, 
                  @ActorId
                 );
         END;
