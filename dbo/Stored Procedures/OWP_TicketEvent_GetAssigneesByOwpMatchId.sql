@@ -21,11 +21,11 @@ Revisions:
         VALUES(@OwpMatchId);
         INSERT INTO #tblOwpMatch(Id)
                SELECT mm.ParentMatchId
-               FROM MinorMatch AS mm
+               FROM MinorMatch AS mm WITH(NOLOCK)
                WHERE mm.MinorMatchId = @OwpMatchId;
         INSERT INTO #tblOwpMatch(Id)
                SELECT mm.MinorMatchId
-               FROM MinorMatch AS mm
+               FROM MinorMatch AS mm WITH(NOLOCK)
                     INNER JOIN #tblOwpMatch AS r ON mm.ParentMatchId = r.Id;
 
         --select recipient
