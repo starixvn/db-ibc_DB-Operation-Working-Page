@@ -12,7 +12,7 @@ AS
       
  Revisions:          
 	20220929@Carlos.nguyen: Init sp - [Redmine: #178183]
-	20230807@Los: Get ticket event - [Redmine: #191778]
+	20240222@Los : Get parent match Id - [Redmine: #200265]
 */
 
     BEGIN
@@ -60,7 +60,7 @@ AS
               owpm.OWPMatchId = mm.ParentMatchId
         FROM @OWPMatch AS owpm
              INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = owpm.OWPMatchId;
-        SELECT OWPMatchId, 
+        SELECT DISTINCT OWPMatchId, 
                IsRead, 
                HasTicket
         FROM @OWPMatch;

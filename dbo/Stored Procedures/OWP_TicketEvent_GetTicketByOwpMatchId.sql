@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TicketEvent_GetTicketByOwpMatchId] @OWPMatchIds VARCHAR(MAX),
+ALTER PROCEDURE [dbo].[OWP_TicketEvent_GetTicketByOwpMatchId] @OwpMatchId INT,
 																@ActorId INT
 AS
 
@@ -13,16 +13,23 @@ AS
  Revisions:          
 	20220929@Carlos.nguyen: Init sp - [Redmine: #178183]
 	20230807@Los: Get ticket event - [Redmine: #191778]
+	20240222@Johnny : Get ticket relative - [Redmine: #200265]
 */
 
     BEGIN
         SET NOCOUNT ON;
-		DECLARE @OWPMatchId TABLE(OWPMatchId INT);
+		CREATE TABLE #tblOwpMatch (OWPMatchId INT);
 
-        INSERT INTO @OWPMatchId
-        SELECT DISTINCT 
-                      val
-        FROM fnc_SplitStrings(@OWPMatchIds, ',') u OPTION(MAXRECURSION 0);
+        INSERT INTO #tblOwpMatch(OWPMatchId)
+        VALUES(@OwpMatchId);
+        INSERT INTO #tblOwpMatch(OWPMatchId)
+               SELECT mm.ParentMatchId
+               FROM MinorMatch AS mm
+               WHERE mm.MinorMatchId = @OwpMatchId;
+        INSERT INTO #tblOwpMatch(OWPMatchId)
+               SELECT mm.MinorMatchId
+               FROM MinorMatch AS mm
+                    INNER JOIN #tblOwpMatch AS r ON mm.ParentMatchId = r.OWPMatchId;
 
 		-- select Latest comment ticket
         SELECT DISTINCT 
@@ -45,7 +52,7 @@ AS
                    MAX(tm.Id) MaxId, 
                    ti.SubtypeId,
 				   owpm.OWPMatchId
-            FROM @OWPMatchId AS owpm 
+            FROM #tblOwpMatch AS owpm 
                  INNER JOIN dbo.TicketIssue ti WITH(NOLOCK) ON owpm.OWPMatchId=ti.OwpMatchId_New
                  LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON ti.TicketId = tm.TicketId
 			WHERE ti.EventType_New=5
