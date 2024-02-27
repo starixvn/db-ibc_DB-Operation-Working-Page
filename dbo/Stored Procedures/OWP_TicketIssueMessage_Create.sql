@@ -27,6 +27,7 @@ AS
 	20210917@Carlos.Nguyen: Event ticket - [Redmine: #158037]
 	20220311@Johnny.Thai: Update LastComment - [Redmine: #169841]
 	20230801@Johnny: Get quote message - [Redmine: #191543]
+	20240216@Los: Refactor ticket center - [Redmine: #200671]
 */
 
     BEGIN
@@ -108,8 +109,18 @@ AS
                    THEN u.Username
                    ELSE u.Nickname
                END AS QuoteUsername, 
-               ti.CreatedDate AS QuoteCreatedDate
+               ti.CreatedDate AS QuoteCreatedDate,
+               CASE
+                   WHEN f.Title LIKE '%.jpg'
+                        OR f.Title LIKE '%.jpeg'
+                        OR f.Title LIKE '%.png'
+                        OR f.Title LIKE '%.gif'
+                        OR f.Title LIKE '%.bmp'
+                   THEN f.SavedFileName 
+                   ELSE NULL 
+               END 'ImageFileName'
         FROM #tblMessageDetail AS tm
              LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
-             LEFT JOIN [User] AS u ON ti.UserId = u.UserId;
+             LEFT JOIN [User] AS u ON ti.UserId = u.UserId
+             LEFT JOIN [FileUpload] AS f ON tm.FileId = f.FileId;
     END;
