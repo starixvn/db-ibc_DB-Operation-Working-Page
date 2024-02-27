@@ -104,6 +104,7 @@ AS
                tm.IsSaved, 
                tm.Username, 
                ti.[Message] AS QuoteMessage,
+			   tm.QuoteMessageId,
                CASE
                    WHEN u.Nickname IS NULL
                    THEN u.Username
