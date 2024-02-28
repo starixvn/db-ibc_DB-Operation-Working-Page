@@ -60,7 +60,7 @@ AS
               owpm.OWPMatchId = mm.ParentMatchId
         FROM @OWPMatch AS owpm
              INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = owpm.OWPMatchId;
-        SELECT DISTINCT OWPMatchId, 
+        SELECT DISTINCT OWPMatchId 'ParentMatchId', 
                IsRead, 
                HasTicket
         FROM @OWPMatch;
