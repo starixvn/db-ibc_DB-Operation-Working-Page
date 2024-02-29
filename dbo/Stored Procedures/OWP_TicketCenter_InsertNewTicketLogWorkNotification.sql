@@ -19,6 +19,7 @@ Revisions:
 	20230612@Liam: Init SP - [Redmine: #185890]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 	20230807@Los: Get ticket event - [Redmine: #191778]
+	20240216@Mira: Refactor ticket center - [Redmine: #200671]
 */
 
      SET NOCOUNT ON;
@@ -81,8 +82,10 @@ Revisions:
 
      SELECT @messageTemplate = REPLACE(REPLACE(@NotificationContent, '<Event>', @eventName), '<username>', @actorName);
      INSERT INTO @tblReceivedUser(Id)
-     EXEC [dbo].[OWP_TicketCenterEvent_GetUserIdsByTicketId] 
-          @TicketId = @TicketId;
+            SELECT DISTINCT 
+                   RecipientId
+            FROM TicketMessageReader
+            WHERE TicketId = @TicketId;
 
      -- Delete creatorId
      DELETE FROM @tblReceivedUser
