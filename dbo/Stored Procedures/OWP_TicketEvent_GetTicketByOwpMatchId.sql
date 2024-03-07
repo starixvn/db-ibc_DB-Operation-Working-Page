@@ -32,8 +32,7 @@ AS
                     INNER JOIN #tblOwpMatch AS r ON mm.ParentMatchId = r.OWPMatchId;
 
 		-- select Latest comment ticket
-        SELECT DISTINCT 
-			
+        SELECT DISTINCT
                x.TicketId,
                CASE
                    WHEN u.Nickname IS NULL

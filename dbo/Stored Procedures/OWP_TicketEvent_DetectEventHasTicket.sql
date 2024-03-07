@@ -18,25 +18,19 @@ AS
     BEGIN
         SET NOCOUNT ON;
         DECLARE @OWPMatchId TABLE(OWPMatchId INT);
-        DECLARE @OWPMatch TABLE
-        (OWPMatchId INT, 
-         IsRead     BIT, 
-         HasTicket  BIT
-        );
+       
         INSERT INTO @OWPMatchId
                SELECT DISTINCT 
-                      val
-               FROM fnc_SplitStrings(@OWPMatchIds, ',') u OPTION(MAXRECURSION 0);
+                      value
+               FROM STRING_SPLIT(@OWPMatchIds, ',') u OPTION(MAXRECURSION 0);
 
         -- select Latest comment ticket
         DECLARE @HasTicket BIT= 1;
-        INSERT INTO @OWPMatch
-        (OWPMatchId, 
-         IsRead, 
-         HasTicket
-        )
-               SELECT DISTINCT 
-                      x.OWPMatchId, 
+        SELECT DISTINCT 
+                      CASE WHEN mm.MinorMatchId IS NULL
+						THEN x.OWPMatchId
+						ELSE mm.ParentMatchId
+						END 'ParentMatchId', 
                       reader.IsRead, 
                       @HasTicket AS HasTicket
                FROM
@@ -54,14 +48,6 @@ AS
                LEFT JOIN dbo.TicketMessage AS tm WITH(NOLOCK) ON tm.TicketId = x.TicketId
                INNER JOIN dbo.TicketMessageReader AS reader WITH(NOLOCK) ON x.TicketId = reader.TicketId
                                                                             AND reader.RecipientId = @ActorId
+				LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = x.OWPMatchId
                WHERE tm.Id = x.MaxId;
-        UPDATE owpm
-          SET 
-              owpm.OWPMatchId = mm.ParentMatchId
-        FROM @OWPMatch AS owpm
-             INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = owpm.OWPMatchId;
-        SELECT DISTINCT OWPMatchId 'ParentMatchId', 
-               IsRead, 
-               HasTicket
-        FROM @OWPMatch;
     END;

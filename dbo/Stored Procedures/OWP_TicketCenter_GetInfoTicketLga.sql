@@ -17,16 +17,12 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        CREATE TABLE #tblOwpMatch(Id INT);
-        INSERT INTO #tblOwpMatch(Id)
-               SELECT tl.OwpMatchId_New AS OwpMatchId
-               FROM [dbo].[TicketIssue] AS tl WITH(NOLOCK)
-               WHERE tl.TicketId = @TicketId;
-        UPDATE owpm
-          SET 
-              owpm.Id = mm.ParentMatchId
-        FROM #tblOwpMatch AS owpm
-             INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = owpm.Id;
-        SELECT Id 'ParentMatchId'
-        FROM #tblOwpMatch;
+        SELECT CASE
+                   WHEN mm.MinorMatchId IS NULL
+                   THEN tl.OwpMatchId_New
+                   ELSE mm.ParentMatchId
+               END 'ParentMatchId'
+        FROM [dbo].[TicketIssue] AS tl WITH(NOLOCK)
+             LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = tl.OwpMatchId_New
+        WHERE tl.TicketId = @TicketId;
     END;
