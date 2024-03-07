@@ -13,16 +13,17 @@ Revisions:
 	202303238@Los: Initial SP - [Redmine: #185365]
 	20230419@Mira: Get remark of the parent match - [Redmine: #186740]
     20230712@Liam: Get more special products - [Redmine: #188985]
+	20240229@Liam: Get CO trader - [Redmine: #200304]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '2AM');
         DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @EventDate), '4PM');
-        DECLARE @MainAssignmentType INT= 1;
+        DECLARE @MainAssignmentType INT= 1, @OtherAssignmentType INT= 2;
         DECLARE @MJ INT= 1;
         DECLARE @HDP INT= 1, @OU INT= 3, @1H_HDP INT= 7, @1H_OU INT= 8;
-        DECLARE @Specific15Mins INT= -1, @NoOfCorner INT= -3, @NextCorner INT= -4, @TotalBookings INT= -6, @Nextbookings INT= -7, @15MinsBookings INT= -8, @Winner INT= -14, @HomeSingleTeam INT= -92, @AwaySingleTeam INT= -93;
+        DECLARE @Specific15Mins INT= -1, @NoOfCorner INT= -3, @NextCorner INT= -4, @TotalBookings INT= -6, @Nextbookings INT= -7, @15MinsBookings INT= -8, @15MinsCorner INT= -5, @Winner INT= -14, @HomeSingleTeam INT= -92, @AwaySingleTeam INT= -93;
 
 		CREATE TABLE #AssignmentResult(
 			UserId INT NOT NULL,
@@ -127,11 +128,12 @@ Revisions:
              LEFT JOIN MatchSetting AS msm WITH(NOLOCK) ON msm.OWPMatchId = mm.ParentMatchId
                                                            AND msm.Bettype = @HDP
         WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
-              AND a.AssignmentType = @MainAssignmentType
+              AND ((a.AssignmentType = @MainAssignmentType) OR (a.AssignmentType = @OtherAssignmentType
+                         AND a.AssignmentNote LIKE '%CO #<user>%'))
               AND a.Bettype IN(@HDP, @OU, @1H_HDP, @1H_OU)
              AND mi.MatchStatus NOT IN('Cancel', 'Suspended')
         AND (mm.MinorBettypeId IS NULL
-             OR mm.MinorBettypeId IN(@NoOfCorner, @NextCorner, @Specific15Mins, @TotalBookings, @Nextbookings, @15MinsBookings, @Winner, @HomeSingleTeam, @AwaySingleTeam))
+             OR mm.MinorBettypeId IN(@NoOfCorner, @NextCorner, @Specific15Mins, @TotalBookings, @Nextbookings, @15MinsBookings, @15MinsCorner, @Winner, @HomeSingleTeam, @AwaySingleTeam))
         ORDER BY UserId, 
                  EventDateTime, 
                  IsMainMatch, 
@@ -142,7 +144,7 @@ Revisions:
 	SELECT DISTINCT r.OWPMatchId, STRING_AGG(a.AssignmentNote, '_')
 	FROM #AssignmentResult AS r
 	INNER JOIN Assignment AS a WITH (NOLOCK) ON r.OWPMatchId=a.OWPMatchId
-	WHERE r.IsMainMatch=1 AND a.Bettype=1
+	WHERE r.IsMainMatch=1 AND a.Bettype=1  AND a.AssignmentNote NOT LIKE '%CO #<user>%'
 	GROUP BY r.OWPMatchId
 
 	/*Minor match*/
@@ -151,7 +153,7 @@ Revisions:
 	FROM #AssignmentResult AS r
 	INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = r.OWPMatchId
 	INNER JOIN Assignment AS a WITH (NOLOCK) ON mm.ParentMatchId=a.OWPMatchId
-	WHERE r.IsMainMatch=0 AND a.Bettype=1
+	WHERE r.IsMainMatch=0 AND a.Bettype=1 AND a.AssignmentNote NOT LIKE '%CO #<user>%'
 	GROUP BY r.OWPMatchId
 
 	UPDATE a 
