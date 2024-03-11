@@ -129,7 +129,7 @@ Revisions:
                                                            AND msm.Bettype = @HDP
         WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
               AND ((a.AssignmentType = @MainAssignmentType) OR (a.AssignmentType = @OtherAssignmentType
-                         AND a.AssignmentNote LIKE '%CO #<user>%'))
+                         AND ((a.AssignmentNote LIKE '%CO %' OR a.AssignmentNote LIKE '% CO%') AND a.AssignmentNote LIKE '%#<user>%')))
               AND a.Bettype IN(@HDP, @OU, @1H_HDP, @1H_OU)
              AND mi.MatchStatus NOT IN('Cancel', 'Suspended')
         AND (mm.MinorBettypeId IS NULL
@@ -144,7 +144,7 @@ Revisions:
 	SELECT DISTINCT r.OWPMatchId, STRING_AGG(a.AssignmentNote, '_')
 	FROM #AssignmentResult AS r
 	INNER JOIN Assignment AS a WITH (NOLOCK) ON r.OWPMatchId=a.OWPMatchId
-	WHERE r.IsMainMatch=1 AND a.Bettype=1  AND a.AssignmentNote NOT LIKE '%CO #<user>%'
+	WHERE r.IsMainMatch=1 AND a.Bettype=1  AND a.AssignmentNote NOT LIKE '%CO %' AND a.AssignmentNote NOT LIKE '% CO%'
 	GROUP BY r.OWPMatchId
 
 	/*Minor match*/
@@ -153,14 +153,14 @@ Revisions:
 	FROM #AssignmentResult AS r
 	INNER JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = r.OWPMatchId
 	INNER JOIN Assignment AS a WITH (NOLOCK) ON mm.ParentMatchId=a.OWPMatchId
-	WHERE r.IsMainMatch=0 AND a.Bettype=1 AND a.AssignmentNote NOT LIKE '%CO #<user>%'
+	WHERE r.IsMainMatch=0 AND a.Bettype=1 AND a.AssignmentNote NOT LIKE '%CO %' AND a.AssignmentNote NOT LIKE '% CO%'
 	GROUP BY r.OWPMatchId
 
 	UPDATE a 
 	SET a.AssignmentNote= note.Note
 	FROM #AssignmentNote AS note INNER JOIN #AssignmentResult AS a ON a.OWPMatchId=note.OWPMatchId
 
-	SELECT UserId ,
+	SELECT  UserId ,
 			BettypeId,
 			OWPMatchId,
 			KOTime,
