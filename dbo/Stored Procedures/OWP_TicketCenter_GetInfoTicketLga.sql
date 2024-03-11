@@ -12,11 +12,17 @@ DB: bodb_OWP
 Revisions:  
  20221013@Johnny: Init sp  - [Redmine: #178183]
  20230807@Los: Get ticket event - [Redmine: #191778]
+ 20240222@Los : Get parent match Id - [Redmine: #200265]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT tl.OwpMatchId_New AS OwpMatchId
+        SELECT CASE
+                   WHEN mm.MinorMatchId IS NULL
+                   THEN tl.OwpMatchId_New
+                   ELSE mm.ParentMatchId
+               END 'ParentMatchId'
         FROM [dbo].[TicketIssue] AS tl WITH(NOLOCK)
-		WHERE tl.TicketId = @TicketId
+             LEFT JOIN MinorMatch AS mm WITH(NOLOCK) ON mm.MinorMatchId = tl.OwpMatchId_New
+        WHERE tl.TicketId = @TicketId;
     END;
