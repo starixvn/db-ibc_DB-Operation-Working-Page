@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
 AS
@@ -30,6 +30,7 @@ AS
 	20220224@tyler: upgrade XML package - [Redmine: #168050]   
 	20220510@Mira: Update IsDeleted for re-created events - [Redmine: #172559]   
 	20221110@Liam.Pham: Sync more info - [Redmine: #179302]
+	20240307@Mira: Save IsBlackList column - [Redmine: #201375]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -91,6 +92,7 @@ BEGIN
 		,[HomeRemark] NVARCHAR(2000)
 		,[AwayRemark] NVARCHAR(2000)
 		,[TotalRound] NVARCHAR(2000)
+		,[IsBlackList] BIT
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -127,6 +129,7 @@ BEGIN
 		,[HomeRemark]
 		,[AwayRemark] 
 		,[TotalRound]
+		,[IsBlackList]
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -161,7 +164,7 @@ BEGIN
 		,[HomeRemark]
 		,[AwayRemark] 
 		,[TotalRound]
-
+		,[IsBlackList] BIT
 	FROM OPENXML(@idoc, '/Root/Event', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
@@ -196,6 +199,7 @@ BEGIN
 		    ,[HomeRemark] [nvarchar](2000)
 		    ,[AwayRemark] [nvarchar](2000)
 			,[TotalRound] [nvarchar](2000)
+			,[IsBlackList] BIT
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -387,6 +391,7 @@ BEGIN
 		    ,[HomeRemark] 
 		    ,[AwayRemark] 
 			,[TotalRound]
+			,[IsBlackList]
 		FROM #tblInfoSiteMatch
 		) AS s
 		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
@@ -432,6 +437,7 @@ BEGIN
 				,t.[HomeRemark] = s.[HomeRemark]
 			    ,t.[AwayRemark] = s.[AwayRemark]
 				,t.[TotalRound] = s.[TotalRound]
+				,t.[IsBlackList] = s.[IsBlackList]
 	WHEN NOT MATCHED BY TARGET
 		THEN
 			INSERT (
@@ -474,6 +480,7 @@ BEGIN
 				,[HomeRemark] 
 				,[AwayRemark] 
 				,[TotalRound]
+				,[IsBlackList]
 				)
 			VALUES (
 				s.[InfoSiteMatchId]
@@ -515,6 +522,7 @@ BEGIN
 				,s.[HomeRemark] 
 				,s.[AwayRemark] 
 				,s.[TotalRound]
+				,s.[IsBlackList]
 				);
 
 	

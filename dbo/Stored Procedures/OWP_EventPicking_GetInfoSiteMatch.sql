@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_EventPicking_GetInfoSiteMatch] @Date DATE
 AS
@@ -13,6 +13,7 @@ AS
     20221102@Mira: Event picking new - [Redmine: #179302]
 	20230907@Liam: Get deleted matches  - [Redmine: #190039]
 	20231026@los: sync round - [Redmine: #193810]
+	20240307@Mira: get IsBlackList column - [Redmine: #201375]
 */
 
     BEGIN
@@ -66,7 +67,8 @@ AS
                    ELSE 1
                END AS IsCheck, 
                im.IsDeleted,
-			   im.TeamRound
+			   im.TeamRound,
+			   im.IsBlackList 'IsBlackListFromInfoSite'
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
