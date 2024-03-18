@@ -31,6 +31,7 @@ AS
 	20230807@Los: Get ticket support - [Redmine: #191778]
 	20231016@Johnny: tuning SP - [Redmine: #195524]
 	20240119@Mira: Correct SP - [Redmine: #123456]
+	20240131@Mira: Refactor get recipient - [Redmine: #123456]
 */
 
     BEGIN
@@ -67,8 +68,22 @@ AS
                FROM fnc_SplitStrings(@TicketStatuses, ',') u OPTION(MAXRECURSION 0);
         -- parse date time
         INSERT INTO #tblTicketRecipient
-        EXEC [dbo].[OWP_TicketCenter_GetTicketIdByRecipientId] 
-             @ActorId = @ActorId;
+               SELECT tr.TicketId
+               FROM TicketRecipient AS tr WITH(NOLOCK)
+               WHERE tr.RecipientType = 1
+                     AND tr.RecipientId = @ActorId
+               UNION
+               SELECT tr.TicketId
+               FROM TicketRecipient AS tr WITH(NOLOCK)
+                    INNER JOIN RecipientGroup AS rg WITH(NOLOCK) ON tr.RecipientId = rg.GroupId
+               WHERE tr.RecipientType = 2
+                     AND rg.RecipientId = @ActorId
+               UNION
+               SELECT tr.TicketId
+               FROM TicketRecipient AS tr WITH(NOLOCK)
+                    INNER JOIN [User] AS u WITH(NOLOCK) ON tr.RecipientId = u.SectionId
+               WHERE tr.RecipientType = 3
+                     AND u.UserId = @ActorId;
 
         -- select by param
         SELECT DISTINCT 
