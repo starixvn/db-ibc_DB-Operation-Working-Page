@@ -31,6 +31,7 @@ AS
 	20220510@Mira: Update IsDeleted for re-created events - [Redmine: #172559]   
 	20221110@Liam.Pham: Sync more info - [Redmine: #179302]
 	20240307@Mira: Save IsBlackList column - [Redmine: #201375]
+	20240325@Mira: correct agent length - [Redmine: #202817]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -40,14 +41,14 @@ BEGIN
 	--list of upload values of TV
 	CREATE TABLE #tblTextList (
 		InfoSiteMatchId INT NOT NULL
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		,OrderId INT IDENTITY(1, 1)
 		)
 
 	CREATE TABLE #tblDistinctTextList (
 		InfoSiteMatchId INT NOT NULL
 		,Id INT
-		,[Text] NVARCHAR(100) NOT NULL
+		,[Text] NVARCHAR(2000) NOT NULL
 		)
 
 	EXEC sp_xml_preparedocument @idoc OUTPUT
