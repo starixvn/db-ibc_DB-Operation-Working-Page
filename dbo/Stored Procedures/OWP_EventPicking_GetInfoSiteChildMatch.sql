@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_EventPicking_GetInfoSiteChildMatch] @Date DATE
 AS
@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20221102@Mira: Event picking new - [Redmine: #179302]
+	20240328@Johnny: reduce select match - [Redmine: #202638]
 */
 
     BEGIN
@@ -40,5 +41,16 @@ AS
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = m.ParentInfoSiteMatchId
                                                                           AND us.ChildMatchId = m.ChildMatchId
-        WHERE m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
-    END;
+        WHERE 
+		(
+			m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
+		)
+		AND m.MinorBettypeId not in(
+			-100, -101, -102, -109, -1189, -1190, 
+			-1191, -1192, -1193, -1194, -1195, 
+			-1196, -1197, -1198, -1199, -1200, 
+			-1201, -1202, -1203, -1204, -1205, 
+			-1206, -1207, -1208, -1209, -1252, 
+			-1253, -1254, -1255, -1256, -1257, 
+			-1258
+		) END;
