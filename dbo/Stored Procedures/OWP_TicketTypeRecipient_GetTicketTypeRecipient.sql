@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketTypeRecipient_GetTicketTypeRecipient]
 AS
@@ -14,12 +14,14 @@ Revisions:
   20220222@Mira: Save subtypes - [Redmine: #168468]
   20221027@Liam.Pham: add recipient by section - [Redmine: #179305]
   20230510@Johnny: get recipient with SubtypeId - [Redmine: #186518]
+  20240329@Johnny: add assignee type - [Redmine: #202819]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @GroupType INT= 2;
         DECLARE @SectionType INT= 3;
+        DECLARE @AssigneeType INT= 4;
 
         -- select ticket type
         SELECT t.TypeId, 
@@ -37,6 +39,8 @@ Revisions:
                    THEN g.GroupName
                    WHEN r.RecipientType = @SectionType
                    THEN rr.[Value]
+				   WHEN r.RecipientType = @AssigneeType
+				   THEN 'Assignee'
                    ELSE u.Username
                END 'RecipientName'
         FROM dbo.TicketTypeRecipient r WITH(NOLOCK)
