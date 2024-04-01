@@ -8,7 +8,15 @@ Revisions:
 	20240402@Johnny: Init script - [Redmine: #202819]
 */
 
-
+ALTER TABLE MatchInfo
+ADD [Agent_EST]  NVARCHAR(2000), 
+    [Remark_EST] NVARCHAR(2000), 
+    [RemarkBy]   NVARCHAR(2000);
+ALTER TABLE MatchInfo_Old
+ADD [Agent_EST]  NVARCHAR(2000), 
+    [Remark_EST] NVARCHAR(2000), 
+    [RemarkBy]   NVARCHAR(2000);
+	
 INSERT INTO [dbo].[RefResource]
            ([RefName]
            ,[ResourceId]
