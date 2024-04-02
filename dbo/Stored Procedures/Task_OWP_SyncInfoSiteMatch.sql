@@ -5,7 +5,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[Task_OWP_SyncInfoSiteMatch]
 AS
 /*    
@@ -42,6 +42,7 @@ AS
 	20220314@carlos.nguyen: Fail to update AdminSiteId - [Redmine: #169899]
 	20230926@Mira: Correct with no lock - [Redmine: #193811]
 	20231026@los: sync round - [Redmine: #193810]
+	20240327@Mira: solve deadlock - [Redmine: #200841]
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -64,19 +65,21 @@ BEGIN
 		,@LogId INT
 
 	-- remove data older than 1 month
-	DELETE dbo.InfoSiteMatch WITH (ROWLOCK)
-	WHERE EventDateTime < DATEADD(DAY, - 31, GETDATE());
+	DECLARE @CurrentDate DATETIME= CAST(GETDATE() AS DATE);
+	DECLARE @CurrentDateTime DATETIME= GETDATE();
+	DELETE dbo.InfoSiteMatch
+	WHERE EventDateTime < DATEADD(DAY, -31, @CurrentDate);
 
 	DELETE ld
 	FROM dbo.InfoSiteSyncLogDetail AS ld WITH (ROWLOCK)
 	INNER JOIN dbo.InfoSiteSyncLog AS l WITH (NOLOCK) ON ld.LogId = l.LogId
-	WHERE l.StartTime < DATEADD(DAY, - 3, GETDATE());
+	WHERE l.StartTime < DATEADD(DAY, - 3, @CurrentDateTime);
 	
 	DELETE dbo.InfoSiteSyncLog WITH (ROWLOCK)
-	WHERE StartTime < DATEADD(DAY, - 3, GETDATE());
+	WHERE StartTime < DATEADD(DAY, - 3, @CurrentDateTime);
 
 	INSERT INTO dbo.InfoSiteSyncLog (StartTime)
-	VALUES (GETDATE());
+	VALUES (@CurrentDateTime);
 
 	SET @LogId = SCOPE_IDENTITY();
 

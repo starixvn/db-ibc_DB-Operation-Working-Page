@@ -32,6 +32,7 @@ AS
 	20221110@Liam.Pham: Sync more info - [Redmine: #179302]
 	20240307@Mira: Save IsBlackList column - [Redmine: #201375]
 	20240325@Mira: correct agent length - [Redmine: #202817]
+	20240327@Mira: solve deadlock - [Redmine: #200841]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -352,181 +353,140 @@ BEGIN
 				), 1, 1, '')
 	FROM #tblInfoSiteMatch AS im
 
-	MERGE INTO dbo.InfoSiteMatch AS t
-	USING (
-		SELECT [InfoSiteMatchId]
-		    ,[AdminSiteMatchId]
-			,[EventDateTime]
-			,[UpdatedTime]
-			,[LeagueName]
-			,[HomeName]
-			,[AwayName]
-			,[Round]
-			,[Division]
-			,[Agent]
-			,[Venue]
-			,[TV]
-			,[Channel]
-			,[WB]
-			,[Website1]
-			,[Website2]
-			,[Website3]
-			,[Website4]
-			,[OWPLeagueId]
-			,[OWPHomeId]
-			,[OWPAwayId]
-			,[TVIds]
-			,[AgentIds]
-			,[IsNeutral]
-			,[IPTV]
-			,[ETPK]
-			,[IsLive]	
-			,[MatchCode]
-			,[Provider]
-			,[OtherProvider]
-			,[Remark]
-			,[ProviderUsed]
-			,[ProviderTV]
-		    ,[IsTest] 
-		    ,[Remark2] 
-		    ,[HomeRemark] 
-		    ,[AwayRemark] 
-			,[TotalRound]
-			,[IsBlackList]
-		FROM #tblInfoSiteMatch
-		) AS s
-		ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
-	WHEN MATCHED
-		THEN
-			UPDATE
-			SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId]
-			    ,t.[AdminSiteMatchId] = s.[AdminSiteMatchId]
-				,t.[EventDateTime] = s.[EventDateTime]
-				,t.[UpdatedTime] = s.[UpdatedTime]
-				,t.[LeagueName] = s.[LeagueName]
-				,t.[HomeName] = s.[HomeName]
-				,t.[AwayName] = s.[AwayName]
-				,t.[Round] = s.[Round]
-				,t.[Division] = s.[Division]
-				,t.[Agent] = s.[Agent]
-				,t.[Venue] = s.[Venue]
-				,t.[TV] = s.[TV]
-				,t.[Channel] = s.[Channel]
-				,t.[WB] = s.[WB]
-				,t.[Website1] = s.[Website1]
-				,t.[Website2] = s.[Website2]
-				,t.[Website3] = s.[Website3]
-				,t.[Website4] = s.[Website4]
-				,t.[OWPLeagueId] = s.[OWPLeagueId]
-				,t.[OWPHomeId] = s.[OWPHomeId]
-				,t.[OWPAwayId] = s.[OWPAwayId]
-				,t.[TVIds] = s.[TVIds]
-				,t.[AgentIds] = s.[AgentIds]
-				,t.[IsDeleted] = 0
-				,t.[IsNeutral] = s.[IsNeutral]
-				,t.[IPTV]=s.[IPTV]
-				,t.[ETPK]=s.[ETPK]
-				,t.[IsLive]=s.[IsLive]
-				,t.[MatchCode]=s.[MatchCode]
-				,t.[Provider]=s.[Provider]
-				,t.[OtherProvider]=s.[OtherProvider]
-				,t.[Remark]=s.[Remark]
-				,t.[ProviderUsed] = s.[ProviderUsed]
-				,t.[ProviderTV]=s.[ProviderTV]
-				,t.[IsTest] = s.[IsTest]
-				,t.[Remark2] = s.[Remark2]
-				,t.[HomeRemark] = s.[HomeRemark]
-			    ,t.[AwayRemark] = s.[AwayRemark]
-				,t.[TotalRound] = s.[TotalRound]
-				,t.[IsBlackList] = s.[IsBlackList]
-	WHEN NOT MATCHED BY TARGET
-		THEN
-			INSERT (
-				[InfoSiteMatchId]
-				,[AdminSiteMatchId]
-				,[EventDateTime]
-				,[UpdatedTime]
-				,[LeagueName]
-				,[HomeName]
-				,[AwayName]
-				,[Round]
-				,[Division]
-				,[Agent]
-				,[Venue]
-				,[TV]
-				,[Channel]
-				,[WB]
-				,[Website1]
-				,[Website2]
-				,[Website3]
-				,[Website4]
-				,[OWPLeagueId]
-				,[OWPHomeId]
-				,[OWPAwayId]
-				,[TVIds]
-				,[AgentIds]
-				,[IsDeleted]
-				,[IsNeutral]
-				,[IPTV]
-				,[ETPK]
-				,[IsLive]
-				,[MatchCode]
-				,[Provider]
-				,[OtherProvider]
-				,[Remark]
-				,[ProviderUsed]
-				,[ProviderTV]
-				,[IsTest] 
-				,[Remark2] 
-				,[HomeRemark] 
-				,[AwayRemark] 
-				,[TotalRound]
-				,[IsBlackList]
-				)
-			VALUES (
-				s.[InfoSiteMatchId]
-				,s.[AdminSiteMatchId]
-				,s.[EventDateTime]
-				,s.[UpdatedTime]
-				,s.[LeagueName]
-				,s.[HomeName]
-				,s.[AwayName]
-				,s.[Round]
-				,s.[Division]
-				,s.[Agent]
-				,s.[Venue]
-				,s.[TV]
-				,s.[Channel]
-				,s.[WB]
-				,s.[Website1]
-				,s.[Website2]
-				,s.[Website3]
-				,s.[Website4]
-				,s.[OWPLeagueId]
-				,s.[OWPHomeId]
-				,s.[OWPAwayId]
-				,s.[TVIds]
-				,s.[AgentIds]
-				,0
-				,[IsNeutral]
-				,[IPTV]
-				,s.[ETPK]
-				,[IsLive]
-				,s.[MatchCode]
-				,s.[Provider]
-				,s.[OtherProvider]
-				,s.[Remark]
-				,s.[ProviderUsed]
-				,s.[ProviderTV]
-				,s.[IsTest] 
-				,s.[Remark2] 
-				,s.[HomeRemark] 
-				,s.[AwayRemark] 
-				,s.[TotalRound]
-				,s.[IsBlackList]
-				);
+	-- Update
+	UPDATE t
+	  SET 
+		  t.[InfoSiteMatchId] = s.[InfoSiteMatchId], 
+		  t.[AdminSiteMatchId] = s.[AdminSiteMatchId], 
+		  t.[EventDateTime] = s.[EventDateTime], 
+		  t.[UpdatedTime] = s.[UpdatedTime], 
+		  t.[LeagueName] = s.[LeagueName], 
+		  t.[HomeName] = s.[HomeName], 
+		  t.[AwayName] = s.[AwayName], 
+		  t.[Round] = s.[Round], 
+		  t.[Division] = s.[Division], 
+		  t.[Agent] = s.[Agent], 
+		  t.[Venue] = s.[Venue], 
+		  t.[TV] = s.[TV], 
+		  t.[Channel] = s.[Channel], 
+		  t.[WB] = s.[WB], 
+		  t.[Website1] = s.[Website1], 
+		  t.[Website2] = s.[Website2], 
+		  t.[Website3] = s.[Website3], 
+		  t.[Website4] = s.[Website4], 
+		  t.[OWPLeagueId] = s.[OWPLeagueId], 
+		  t.[OWPHomeId] = s.[OWPHomeId], 
+		  t.[OWPAwayId] = s.[OWPAwayId], 
+		  t.[TVIds] = s.[TVIds], 
+		  t.[AgentIds] = s.[AgentIds], 
+		  t.[IsDeleted] = 0, 
+		  t.[IsNeutral] = s.[IsNeutral], 
+		  t.[IPTV] = s.[IPTV], 
+		  t.[ETPK] = s.[ETPK], 
+		  t.[IsLive] = s.[IsLive], 
+		  t.[MatchCode] = s.[MatchCode], 
+		  t.[Provider] = s.[Provider], 
+		  t.[OtherProvider] = s.[OtherProvider], 
+		  t.[Remark] = s.[Remark], 
+		  t.[ProviderUsed] = s.[ProviderUsed], 
+		  t.[ProviderTV] = s.[ProviderTV], 
+		  t.[IsTest] = s.[IsTest], 
+		  t.[Remark2] = s.[Remark2], 
+		  t.[HomeRemark] = s.[HomeRemark], 
+		  t.[AwayRemark] = s.[AwayRemark], 
+		  t.[TotalRound] = s.[TotalRound], 
+		  t.[IsBlackList] = s.[IsBlackList]
+	FROM dbo.InfoSiteMatch AS t
+		 JOIN #tblInfoSiteMatch AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId];
 
-	
+	-- insert
+	INSERT INTO dbo.InfoSiteMatch
+	([InfoSiteMatchId], 
+	 [AdminSiteMatchId], 
+	 [EventDateTime], 
+	 [UpdatedTime], 
+	 [LeagueName], 
+	 [HomeName], 
+	 [AwayName], 
+	 [Round], 
+	 [Division], 
+	 [Agent], 
+	 [Venue], 
+	 [TV], 
+	 [Channel], 
+	 [WB], 
+	 [Website1], 
+	 [Website2], 
+	 [Website3], 
+	 [Website4], 
+	 [OWPLeagueId], 
+	 [OWPHomeId], 
+	 [OWPAwayId], 
+	 [TVIds], 
+	 [AgentIds], 
+	 [IsDeleted], 
+	 [IsNeutral], 
+	 [IPTV], 
+	 [ETPK], 
+	 [IsLive], 
+	 [MatchCode], 
+	 [Provider], 
+	 [OtherProvider], 
+	 [Remark], 
+	 [ProviderUsed], 
+	 [ProviderTV], 
+	 [IsTest], 
+	 [Remark2], 
+	 [HomeRemark], 
+	 [AwayRemark], 
+	 [TotalRound], 
+	 [IsBlackList]
+	)
+		   SELECT s.[InfoSiteMatchId], 
+				  s.[AdminSiteMatchId], 
+				  s.[EventDateTime], 
+				  s.[UpdatedTime], 
+				  s.[LeagueName], 
+				  s.[HomeName], 
+				  s.[AwayName], 
+				  s.[Round], 
+				  s.[Division], 
+				  s.[Agent], 
+				  s.[Venue], 
+				  s.[TV], 
+				  s.[Channel], 
+				  s.[WB], 
+				  s.[Website1], 
+				  s.[Website2], 
+				  s.[Website3], 
+				  s.[Website4], 
+				  s.[OWPLeagueId], 
+				  s.[OWPHomeId], 
+				  s.[OWPAwayId], 
+				  s.[TVIds], 
+				  s.[AgentIds], 
+				  0, 
+				  s.[IsNeutral], 
+				  s.[IPTV], 
+				  s.[ETPK], 
+				  s.[IsLive], 
+				  s.[MatchCode], 
+				  s.[Provider], 
+				  s.[OtherProvider], 
+				  s.[Remark], 
+				  s.[ProviderUsed], 
+				  s.[ProviderTV], 
+				  s.[IsTest], 
+				  s.[Remark2], 
+				  s.[HomeRemark], 
+				  s.[AwayRemark], 
+				  s.[TotalRound], 
+				  s.[IsBlackList]
+		   FROM #tblInfoSiteMatch AS s
+				LEFT JOIN dbo.InfoSiteMatch AS t ON s.[InfoSiteMatchId] = t.[InfoSiteMatchId]
+		   WHERE t.[InfoSiteMatchId] IS NULL;
+
+    -- Drop table	
 	DROP TABLE #tblInfoSiteMatch
 
 	DROP TABLE #tblTextList
