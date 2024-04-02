@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_nap" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[OWP_MatchListDetailsGet] @EventDate DATE, @MatchStatusIds VARCHAR(MAX)
 AS;
 /*
@@ -31,6 +31,7 @@ AS;
 	20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
 	20231026@los: sync round - [Redmine: #193810]
 	20231116@Mira: get off VR - [Redmine: #194500]
+	20240401@los: get AgentEst, RemarkEst, RemarkBy - [Redmine: #202819]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -104,6 +105,9 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,[Round] NVARCHAR(2000)
 		,OutSide NVARCHAR(2000)
 		,Remark NVARCHAR(2000)
+		,AgentEst NVARCHAR(2000)
+		,RemarkEst NVARCHAR(2000)
+		,RemarkBy NVARCHAR(2000)
 		,Website NVARCHAR(1000)
 		,Website2 NVARCHAR(1000)
 		,Website3 NVARCHAR(1000)
@@ -138,6 +142,9 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,[Round]
 		,OutSide
 		,Remark
+		,AgentEst,
+		RemarkEst,
+		RemarkBy
 		,Website
 		,Website2
 		,Website3
@@ -170,6 +177,9 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,mi.[Round]
 		,mi.Division
 		,mi.Remark
+		,mi.Agent_EST 'AgentEst',
+		mi.Remark_EST 'RemarkEst',
+		mi.RemarkBy
 		,mi.Website1
 		,mi.Website2
 		,mi.Website3
@@ -266,6 +276,9 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,ml.[Round]
 		,ml.OutSide
 		,ml.Remark
+		,ml.AgentEst
+		,ml.RemarkEst
+		,ml.RemarkBy
 		,ml.Website
 		,ml.Website2
 		,ml.Website3
