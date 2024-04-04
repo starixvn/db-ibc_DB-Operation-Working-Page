@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_nap" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 ALTER PROCEDURE [dbo].[OWP_MatchListDetailsGet] @EventDate DATE, @MatchStatusIds VARCHAR(MAX)
 AS;
 /*
