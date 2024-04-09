@@ -14,6 +14,7 @@ AS
 	20230907@Liam: Get deleted matches  - [Redmine: #190039]
 	20231026@los: sync round - [Redmine: #193810]
 	20240307@Mira: get IsBlackList column - [Redmine: #201375]
+	20240328@Johnny: reduce select match - [Redmine: #202638]
 */
 
     BEGIN
@@ -67,12 +68,12 @@ AS
                    ELSE 1
                END AS IsCheck, 
                im.IsDeleted,
-			   im.TeamRound,
 			   im.IsBlackList 'IsBlackListFromInfoSite'
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
                                                                           AND us.ChildMatchId IS NULL
              LEFT JOIN dbo.EventPickingConfirmed  AS ec  WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
-        WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
+        WHERE (im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime) 
+				AND im.LeagueName not like '%Fantasy%';
     END;
