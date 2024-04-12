@@ -77,3 +77,58 @@ VALUES
 4
 );
 SET IDENTITY_INSERT TicketSubtype OFF;
+
+--- lOG ---- 
+
+INSERT INTO [dbo].[Module]
+([ModuleId], 
+ [ModuleName]
+)
+       SELECT 19, 
+              'Provider Verification'
+       WHERE NOT EXISTS
+       (
+           SELECT 1
+           FROM [dbo].[Module] WITH(NOLOCK)
+           WHERE [ModuleId] = 19
+       );
+
+INSERT INTO [dbo].[ModuleObject]
+([ModuleObjectId], 
+ [ModuleObjectName], 
+ [ModuleId]
+)
+       SELECT 47, 
+              'Provider Verification', 
+              19
+       WHERE NOT EXISTS
+       (
+           SELECT 1
+           FROM [dbo].[ModuleObject] WITH(NOLOCK)
+           WHERE [ModuleObjectId] = 47
+       );
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM [LogAction]
+    WHERE ActionId = 132
+)
+    INSERT INTO [dbo].[LogAction]
+    ([ActionId], 
+     [ModuleId], 
+     [ModuleObjectId], 
+     [ActionTypeId], 
+     [ActionName], 
+     [SPName], 
+     [LogItems]
+    )
+    VALUES
+    (132, 
+     19, 
+     47, 
+     2, 
+     N'OWP_ProviderVerification_SaveAgentConfirm', 
+     N'OWP_ProviderVerification_SaveAgentConfirm', 
+     N'<root><xml path="r/z"/><row item="AgentConfirm" alias="agentConfirm"/></root>'
+    );
