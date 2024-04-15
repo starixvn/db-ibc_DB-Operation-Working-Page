@@ -148,6 +148,7 @@ AS
      -- Return Matches info
      SELECT ml.OWPMatchId, 
             ml.MatchNo, 
+			ml.MatchStatus,
             ml.EventDateTime, 
             ml.KickOffTime, 
             l.OWPLeagueName AS League, 
