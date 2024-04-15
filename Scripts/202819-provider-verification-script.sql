@@ -132,3 +132,28 @@ IF NOT EXISTS
      N'OWP_ProviderVerification_SaveAgentConfirm', 
      N'<root><xml path="r/z"/><row item="AgentConfirm" alias="agentConfirm"/></root>'
     );
+
+	IF NOT EXISTS
+(
+    SELECT 1
+    FROM [LogAction]
+    WHERE ActionId = 133
+)
+    INSERT INTO [dbo].[LogAction]
+    ([ActionId], 
+     [ModuleId], 
+     [ModuleObjectId], 
+     [ActionTypeId], 
+     [ActionName], 
+     [SPName], 
+     [LogItems]
+    )
+    VALUES
+    (133, 
+     19, 
+     47, 
+     2, 
+     N'OWP_ProviderVerification_SaveEstAgent', 
+     N'OWP_ProviderVerification_SaveEstAgent', 
+     N'<root><xml path="r/z"/><row item="EstAgent" alias="esta"/></root>'
+    );
