@@ -112,8 +112,8 @@ AS
                  ELSE h.OWPTeamName
              END) AS Home, 
             a.OWPTeamName AS Away, 
-            ml.AgentEst AS Agent, 
-            ml.RemarkEst AS RemarkEst, 
+            ml.AgentEst, 
+            ml.RemarkEst, 
             ml.RemarkBy, 
             STUFF(
      (
