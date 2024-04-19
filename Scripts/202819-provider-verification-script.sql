@@ -153,7 +153,7 @@ IF NOT EXISTS
      19, 
      47, 
      2, 
-     N'OWP_ProviderVerification_SaveEstAgent', 
-     N'OWP_ProviderVerification_SaveEstAgent', 
-     N'<root><xml path="r/z"/><row item="EstAgent" alias="esta"/></root>'
+     N'OWP_ProviderVerification_SaveEstNote', 
+     N'OWP_ProviderVerification_SaveEstNote', 
+     N'<root><xml path="r/z"/><row item="EstNote" alias="estNote"/></root>'
     );
