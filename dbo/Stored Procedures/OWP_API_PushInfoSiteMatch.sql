@@ -404,7 +404,9 @@ BEGIN
 		  t.[HomeRemark] = s.[HomeRemark], 
 		  t.[AwayRemark] = s.[AwayRemark], 
 		  t.[TotalRound] = s.[TotalRound], 
-		  t.[IsHomeBlackList] = s.[IsHomeBlackList]
+		  t.[IsLeagueBlackList] = s.[IsLeagueBlackList],
+		  t.[IsHomeBlackList] = s.[IsHomeBlackList],
+		  t.[IsAwayBlackList] = s.[IsAwayBlackList]
 	FROM dbo.InfoSiteMatch AS t
 		 JOIN #tblInfoSiteMatch AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId];
 
