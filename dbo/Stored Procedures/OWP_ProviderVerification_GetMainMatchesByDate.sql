@@ -21,13 +21,7 @@ Revisions:
         -- Result
         SELECT m.OWPMatchId, 
                i.MatchStatus, 
-               ISNULL(STUFF(
-        (
-            SELECT ', ' + p.ProviderName
-            FROM dbo.[Provider] p WITH(NOLOCK)
-                 INNER JOIN dbo.MatchProvider mp WITH(NOLOCK) ON p.ProviderId = mp.ProviderId
-            WHERE mp.OWPMatchId = m.OWPMatchId FOR XML PATH('')
-        ), 1, 2, ''), '') AS [Provider],
+               ISNULL(i.Agent_EST, '') AS [Provider],
                CASE
                    WHEN l.OWPLeagueName LIKE '%SABA %'
                    THEN 1
