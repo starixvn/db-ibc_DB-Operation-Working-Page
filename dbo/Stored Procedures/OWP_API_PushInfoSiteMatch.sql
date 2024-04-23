@@ -33,7 +33,8 @@ AS
 	20240307@Mira: Save IsHomeBlackList column - [Redmine: #201375]
 	20240325@Mira: correct agent length - [Redmine: #202817]
 	20240327@Mira: solve deadlock - [Redmine: #200841]
-	20240419@Mira: save league, home, away blacklist column - [Redmine: #203309s]
+	20240419@Mira: save league, home, away blacklist column - [Redmine: #203309]
+	20240423@Mira: save team round column, resolve blacklist - [Redmine: #204002]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -66,6 +67,7 @@ BEGIN
 		,[HomeName] [nvarchar](200) NOT NULL
 		,[AwayName] [nvarchar](200) NOT NULL
 		,[Round] [nvarchar](2000) NULL
+		,[TeamRound] [nvarchar](2000) NULL
 		,[Division] [nvarchar](2000) NULL
 		,[Agent] [nvarchar](2000) NULL
 		,[Venue] [nvarchar](100) NULL
@@ -110,6 +112,7 @@ BEGIN
 		,[HomeName]
 		,[AwayName]
 		,[Round]
+		,[TeamRound]
 		,[Division]
 		,[Agent]
 		,[Venue]
@@ -147,6 +150,7 @@ BEGIN
 		,[HomeName]
 		,[AwayName]
 		,[Round]
+		,[TeamRound]
 		,[Division]
 		,[Agent]
 		,[Venue]
@@ -184,6 +188,7 @@ BEGIN
 			,[HomeName] [nvarchar](200)
 			,[AwayName] [nvarchar](200)
 			,[Round] [nvarchar](2000)
+			,[TeamRound] [nvarchar](2000)
 			,[Division] [nvarchar](2000)
 			,[Agent] [nvarchar](2000)
 			,[Venue] [nvarchar](100)
@@ -373,6 +378,7 @@ BEGIN
 		  t.[HomeName] = s.[HomeName], 
 		  t.[AwayName] = s.[AwayName], 
 		  t.[Round] = s.[Round], 
+		  t.[TeamRound] = s.[TeamRound],
 		  t.[Division] = s.[Division], 
 		  t.[Agent] = s.[Agent], 
 		  t.[Venue] = s.[Venue], 
