@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_GetInfoSiteMatchForLST] @Date DATE
+ALTER PROCEDURE [dbo].[OWP_EventPicking_GetInfoSiteMatchForLST] @Date DATE
 AS
 
 /*      
@@ -38,8 +38,21 @@ AS
                im.Channel, 
                im.Website1, 
                im.Website2, 
-               im.InfoSiteMatchId
+               im.Website3, 
+               im.Website4, 
+               im.InfoSiteMatchId, 
+               im.IsLeagueBlackList, 
+               im.IsHomeBlackList, 
+               im.IsAwayBlackList,
+               CASE
+                   WHEN us.Id IS NULL
+                   THEN 0
+                   ELSE 1
+               END AS 'IsNoOffer', 
+               im.IsTest AS IsTestMatch
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
+             LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
+                                                                          AND us.ChildMatchId IS NULL
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';
     END;
