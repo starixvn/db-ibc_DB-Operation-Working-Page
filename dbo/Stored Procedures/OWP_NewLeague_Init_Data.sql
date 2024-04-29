@@ -97,25 +97,34 @@ Revisions:
         EXEC sp_xml_removedocument 
              @idoc;
 
-        /*Init new league category*/
+        --/*Init new league category*/
 
         DECLARE @tblLeagueCategory TABLE
         (Id       INT IDENTITY(1, 1), 
          Category NVARCHAR(200)
         );
+
+		DECLARE @temResourceId INT;
+
+		SELECT @temResourceId=MAX(ref.ResourceId)
+		FROM RefResource AS ref WITH(NOLOCK)
+		WHERE ref.RefName='NewLeagueCategory'
+
+
         INSERT INTO @tblLeagueCategory
                SELECT DISTINCT 
                       LeagueGroup
                FROM #tblLeague
                WHERE(LeagueGroup IS NOT NULL
                      AND TRIM(LeagueGroup) <> '');
+
         INSERT INTO RefResource
         (RefName, 
          ResourceId, 
          [Value]
         )
                SELECT 'NewLeagueCategory', 
-                      l.Id, 
+                      ISNULL(@temResourceId,0) + l.Id, 
                       TRIM(l.Category)
                FROM @tblLeagueCategory AS l
                WHERE NOT EXISTS
