@@ -89,9 +89,10 @@ Revisions:
 			   [MaxbetWD_NoOfHDP_Note] NVARCHAR(2000),
 			   [MaxbetWK_HDP_value] MONEY, 
 			   [MaxbetWK_HDP_Note] NVARCHAR(2000),
+			  
 			   [MaxbetWK_NoOfHDP_value] NVARCHAR(2000),
 			   [MaxbetWK_NoOfHDP_Note] NVARCHAR(2000),
-			   [LSTNote] NVARCHAR(2000),
+			   [LstNote] NVARCHAR(2000),
 			   [Remark2] NVARCHAR(2000),
 			   [Comment] NVARCHAR(MAX));
         EXEC sp_xml_removedocument 
@@ -190,14 +191,33 @@ Revisions:
 
 		SELECT tbll.LeagueId,
 			tbll.FullConditionDescription,
-			tbll.Spread_HDP_value,
-			tbll.[Spread_OU_value],
+			CASE
+                       WHEN tbll.Spread_HDP_value = ''
+                       THEN NULL
+                       ELSE tbll.Spread_HDP_value
+                   END,
+				   CASE
+                       WHEN tbll.[Spread_OU_value] = ''
+                       THEN NULL
+                       ELSE tbll.[Spread_OU_value]
+                   END,
+			
 			tbll.[Spread_Note],
-			tbll.[MaxbetWD_HDP_value],
+			 CASE
+                       WHEN tbll.[MaxbetWD_HDP_value] = ''
+                       THEN NULL
+                       ELSE tbll.[MaxbetWD_HDP_value]
+                   END
+			,
 			tbll.[MaxbetWD_HDP_Note],
 			tbll.[MaxbetWD_NoOfHDP_value],
 			tbll.[MaxbetWD_NoOfHDP_Note],
-			tbll.[MaxbetWK_HDP_value],
+			 CASE
+                       WHEN tbll.[MaxbetWK_HDP_value] = ''
+                       THEN NULL
+                       ELSE tbll.[MaxbetWK_HDP_value]
+                   END
+			,
 			tbll.[MaxbetWK_HDP_Note],
 			tbll.[MaxbetWK_NoOfHDP_value] ,
 			tbll.[MaxbetWK_NoOfHDP_Note],
