@@ -77,18 +77,18 @@ AS
                 CASE
                    WHEN ep.InfositeMatchId IS NULL
                    THEN NULL
-                   ELSE ep.Maxbet
-               END AS Maxbet,
+                   ELSE ep.MaxbetHdp
+               END AS MaxbetHdp,
 			   CASE
                    WHEN ep.InfositeMatchId IS NULL
                    THEN NULL
-                   ELSE ep.Spread_HDP
-               END AS Spread_HDP,
+                   ELSE ep.MaxbetHdp
+               END AS MaxbetHdp,
 			   CASE
                    WHEN ep.InfositeMatchId IS NULL
                    THEN NULL
-                   ELSE ep.Spread_OU
-               END AS Spread_OU,
+                   ELSE ep.SpreadOu
+               END AS SpreadOu,
 			    CASE
                    WHEN ep.InfositeMatchId IS NULL
                    THEN NULL
