@@ -30,9 +30,10 @@ AS
 	20220224@tyler: upgrade XML package - [Redmine: #168050]   
 	20220510@Mira: Update IsDeleted for re-created events - [Redmine: #172559]   
 	20221110@Liam.Pham: Sync more info - [Redmine: #179302]
-	20240307@Mira: Save IsBlackList column - [Redmine: #201375]
+	20240307@Mira: Save IsHomeBlackList column - [Redmine: #201375]
 	20240325@Mira: correct agent length - [Redmine: #202817]
 	20240327@Mira: solve deadlock - [Redmine: #200841]
+	20240419@Mira: save league, home, away blacklist column - [Redmine: #203309s]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -94,7 +95,9 @@ BEGIN
 		,[HomeRemark] NVARCHAR(2000)
 		,[AwayRemark] NVARCHAR(2000)
 		,[TotalRound] NVARCHAR(2000)
-		,[IsBlackList] BIT
+		,[IsLeagueBlackList] BIT
+		,[IsHomeBlackList] BIT
+		,[IsAwayBlackList] BIT
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -131,7 +134,9 @@ BEGIN
 		,[HomeRemark]
 		,[AwayRemark] 
 		,[TotalRound]
-		,[IsBlackList]
+		,[IsLeagueBlackList]
+		,[IsHomeBlackList]
+		,[IsAwayBlackList]
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -166,7 +171,9 @@ BEGIN
 		,[HomeRemark]
 		,[AwayRemark] 
 		,[TotalRound]
-		,[IsBlackList] BIT
+		,[IsLeagueBlackList]
+		,[IsHomeBlackList]
+		,[IsAwayBlackList]
 	FROM OPENXML(@idoc, '/Root/Event', 1) WITH (
 			 [InfoSiteMatchId] [int]
 			,[AdminSiteMatchId] [int]
@@ -201,7 +208,9 @@ BEGIN
 		    ,[HomeRemark] [nvarchar](2000)
 		    ,[AwayRemark] [nvarchar](2000)
 			,[TotalRound] [nvarchar](2000)
-			,[IsBlackList] BIT
+			,[IsLeagueBlackList] BIT
+			,[IsHomeBlackList] BIT
+			,[IsAwayBlackList] BIT
 			)
 
 	EXEC sp_xml_removedocument @idoc
@@ -395,7 +404,9 @@ BEGIN
 		  t.[HomeRemark] = s.[HomeRemark], 
 		  t.[AwayRemark] = s.[AwayRemark], 
 		  t.[TotalRound] = s.[TotalRound], 
-		  t.[IsBlackList] = s.[IsBlackList]
+		  t.[IsLeagueBlackList] = s.[IsLeagueBlackList],
+		  t.[IsHomeBlackList] = s.[IsHomeBlackList],
+		  t.[IsAwayBlackList] = s.[IsAwayBlackList]
 	FROM dbo.InfoSiteMatch AS t
 		 JOIN #tblInfoSiteMatch AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId];
 
@@ -440,7 +451,9 @@ BEGIN
 	 [HomeRemark], 
 	 [AwayRemark], 
 	 [TotalRound], 
-	 [IsBlackList]
+	 [IsLeagueBlackList],
+	 [IsHomeBlackList],
+	 [IsAwayBlackList]
 	)
 		   SELECT s.[InfoSiteMatchId], 
 				  s.[AdminSiteMatchId], 
@@ -481,7 +494,9 @@ BEGIN
 				  s.[HomeRemark], 
 				  s.[AwayRemark], 
 				  s.[TotalRound], 
-				  s.[IsBlackList]
+				  s.[IsLeagueBlackList],
+				  s.[IsHomeBlackList],
+				  s.[IsAwayBlackList]
 		   FROM #tblInfoSiteMatch AS s
 				LEFT JOIN dbo.InfoSiteMatch AS t ON s.[InfoSiteMatchId] = t.[InfoSiteMatchId]
 		   WHERE t.[InfoSiteMatchId] IS NULL;
