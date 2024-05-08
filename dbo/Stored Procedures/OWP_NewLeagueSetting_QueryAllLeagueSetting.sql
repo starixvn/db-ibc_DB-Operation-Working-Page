@@ -27,7 +27,7 @@ AS
                l.[MaxbetWD_HDP_Note], 
                l.[WD_NoOfHDP] 'WD_NoOfHDP_Value', 
                l.[WD_NoOfHDP_Note], 
-               l.[MaxbetWK_HDP] 'WK_HDP_Value', 
+               l.[MaxbetWK_HDP] 'MaxbetWK_HDP_Value', 
                l.[MaxbetWK_HDP_Note], 
                l.[WK_NoOfHDP] 'WK_NoOfHDP_Value', 
                l.[WK_NoOfHDP_Note], 
