@@ -3,6 +3,7 @@
 
 CREATE PROCEDURE [dbo].[OWP_NewLeagueSetting_UpdateLeagueSetting] @LeagueSettingId          INT, 
                                                                   @OWPLeagueId              INT, 
+																  @UserId                   INT,
                                                                   @LeagueGroupId            INT, 
                                                                   @Spread_HDP_value         MONEY NULL, 
                                                                   @Spread_OU_value          MONEY NULL, 
@@ -33,6 +34,37 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
+        -- WRITE LOG
+        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @LogSettingDataOld NVARCHAR(MAX), @LogSettingData NVARCHAR(MAX), @XmlSettingOld XML, @XmlSettingNew XML, @LogInfoDataOld NVARCHAR(MAX), @LogInfoData NVARCHAR(MAX), @XmlInfoOld XML, @XmlInfoNew XML;
+        SET @StartRun = GETDATE();
+
+        SET @XmlSettingOld =
+        (
+            SELECT l.Id 'LeagueSettingId', 
+                   l.OWPLeagueId, 
+                   l.[FullConditionDescription], 
+                   l.[Spread_HDP] 'Spread_HDP_value', 
+                   l.[Spread_OU] 'Spread_OU_value', 
+                   l.[Spread_Note], 
+                   l.[MaxbetWD_HDP] 'MaxbetWD_HDP_value', 
+                   l.[MaxbetWD_HDP_Note], 
+                   l.[MaxbetWD_NoOfHDP] 'MaxbetWD_NoOfHDP_value', 
+                   l.[MaxbetWD_NoOfHDP_Note], 
+                   l.[MaxbetWK_HDP] 'MaxbetWK_HDP_value', 
+                   l.[MaxbetWK_HDP_Note], 
+                   l.[MaxbetWK_NoOfHDP] 'MaxbetWK_NoOfHDP_value', 
+                   l.[MaxbetWK_NoOfHDP_Note], 
+                   l.[LSTNote], 
+                   l.[Remark2], 
+                   l.[Comment], 
+                   o.New_CategoryId 'LeagueGroupId'
+            FROM LeagueManagementSetting l
+                 INNER JOIN OWPLeague o ON l.OWPLeagueId = o.OWPLeagueId
+            WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
+        );
+        SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
+
+
 
         UPDATE OWPLeague
           SET 
@@ -56,4 +88,42 @@ AS
               Comment = @Comment, 
               FullConditionDescription = @FullConditionDescription
         WHERE Id = @LeagueSettingId;
+
+
+
+        SET @XmlSettingNew =
+        (
+            SELECT l.Id 'LeagueSettingId', 
+                   l.OWPLeagueId, 
+                   l.[FullConditionDescription], 
+                   l.[Spread_HDP] 'Spread_HDP_value', 
+                   l.[Spread_OU] 'Spread_OU_value', 
+                   l.[Spread_Note], 
+                   l.[MaxbetWD_HDP] 'MaxbetWD_HDP_value', 
+                   l.[MaxbetWD_HDP_Note], 
+                   l.[MaxbetWD_NoOfHDP] 'MaxbetWD_NoOfHDP_value', 
+                   l.[MaxbetWD_NoOfHDP_Note], 
+                   l.[MaxbetWK_HDP] 'MaxbetWK_HDP_value', 
+                   l.[MaxbetWK_HDP_Note], 
+                   l.[MaxbetWK_NoOfHDP] 'MaxbetWK_NoOfHDP_value', 
+                   l.[MaxbetWK_NoOfHDP_Note], 
+                   l.[LSTNote], 
+                   l.[Remark2], 
+                   l.[Comment], 
+                   o.New_CategoryId 'LeagueGroupId'
+            FROM LeagueManagementSetting l
+                 INNER JOIN OWPLeague o ON l.OWPLeagueId = o.OWPLeagueId
+            WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
+        );
+        SET @LogSettingData = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingNew), '" />', '"/"');
+		 SET @EndRun = GETDATE();
+        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+        EXEC dbo.OWP_WriteLog 
+             @CreatorId = @UserId, 
+             @SPName = 'OWP_NewLeagueSetting_UpdateLeagueSetting', 
+             @LoggedDate = @StartRun, 
+             @Duration = @Duration, 
+             @ObjectId = @LeagueSettingId, 
+             @Data = @LogSettingData, 
+             @DataOld = @LogSettingDataOld;
     END;
