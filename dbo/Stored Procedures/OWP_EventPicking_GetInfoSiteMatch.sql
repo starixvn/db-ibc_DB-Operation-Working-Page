@@ -82,8 +82,8 @@ AS
 			   CASE
                    WHEN ep.InfositeMatchId IS NULL
                    THEN NULL
-                   ELSE ep.MaxbetHdp
-               END AS MaxbetHdp,
+                   ELSE ep.SpreadHdp
+               END AS SpreadHdp,
 			   CASE
                    WHEN ep.InfositeMatchId IS NULL
                    THEN NULL
