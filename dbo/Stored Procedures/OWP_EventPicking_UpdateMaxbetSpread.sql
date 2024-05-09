@@ -43,7 +43,18 @@ AS
                FROM OPENXML(@idoc, '/Root/UpdateEvents', 1) WITH(InfoSiteMatchId INT, SpreadOu MONEY, SpreadHdp MONEY, MaxbetHdp MONEY, NoOfHDP NVARCHAR(2000));
         EXEC sp_xml_removedocument 
              @idoc;
-
+        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX), @ActionName NVARCHAR(MAX);
+        SET @StartRun = GETDATE();
+        SET @XmlLogOld =
+        (
+            SELECT e.InfoSiteMatchId, 
+                   e.MaxbetHdp, 
+                   e.NoOfHDP, 
+                   e.SpreadHdp, 
+                   e.SpreadOu
+            FROM EventPicking e
+                 INNER JOIN #tbltemp t ON e.InfositeMatchId = t.InfoSiteMatchId FOR XML PATH('z'), ROOT('r')
+        );
         UPDATE e
           SET 
               MaxbetHdp = temp.MaxbetHdp, 
@@ -52,7 +63,6 @@ AS
               NoOfHDP = temp.NoOfHDP
         FROM EventPicking e
              INNER JOIN #tbltemp temp ON e.InfositeMatchId = temp.InfoSiteMatchId;
-
         INSERT INTO EventPicking
         (InfositeMatchId, 
          MaxbetHdp, 
@@ -69,5 +79,26 @@ AS
                     LEFT JOIN EventPicking e ON temp.InfositeMatchId = e.InfositeMatchId
                WHERE e.InfositeMatchId IS NULL;
 
+        --Write log
+        SET @XmlLogNew =
+        (
+            SELECT t.InfoSiteMatchId, 
+                   t.MaxbetHdp, 
+                   t.NoOfHDP, 
+                   t.SpreadHdp, 
+                   t.SpreadOu
+            FROM #tbltemp t FOR XML PATH('z'), ROOT('r')
+        );
+        SET @LogNew = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogNew), '" />', '"/"');
+        SET @LogOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogOld), '" />', '"/"');
+        SET @EndRun = GETDATE();
+        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+        EXEC dbo.OWP_WriteLog 
+             @CreatorId = @ActorId, 
+             @SPName = 'OWP_EventPicking_UpdateMaxbetSpread', 
+             @LoggedDate = @StartRun, 
+             @Duration = @Duration, 
+             @Data = @LogNew, 
+             @DataOld = @LogOld;
         DROP TABLE #tbltemp;
     END;
