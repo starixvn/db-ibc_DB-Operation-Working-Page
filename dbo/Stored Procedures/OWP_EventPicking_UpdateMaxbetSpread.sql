@@ -1,8 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_UpdateMaxbetSpread] @XML     NVARCHAR(MAX), 
-                                                             @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_EventPicking_UpdateMaxbetSpread] @XML     NVARCHAR(MAX), 
+                                                            @ActorId INT
 
 /*      
  Created: 20240429@Liam
@@ -40,10 +40,11 @@ AS
                       SpreadHdp, 
                       MaxbetHdp, 
                       NoOfHDP
-               FROM OPENXML(@idoc, '/Root/Events', 1) WITH(InfoSiteMatchId INT, SpreadOu MONEY, SpreadHdp MONEY, MaxbetHdp MONEY, NoOfHDP NVARCHAR(2000));
+               FROM OPENXML(@idoc, '/Root/UpdateEvents', 1) WITH(InfoSiteMatchId INT, SpreadOu MONEY, SpreadHdp MONEY, MaxbetHdp MONEY, NoOfHDP NVARCHAR(2000));
         EXEC sp_xml_removedocument 
              @idoc;
-        UPDATE EventPicking
+
+        UPDATE e
           SET 
               MaxbetHdp = temp.MaxbetHdp, 
               SpreadHdp = temp.SpreadHdp, 
@@ -51,5 +52,22 @@ AS
               NoOfHDP = temp.NoOfHDP
         FROM EventPicking e
              INNER JOIN #tbltemp temp ON e.InfositeMatchId = temp.InfoSiteMatchId;
+
+        INSERT INTO EventPicking
+        (InfositeMatchId, 
+         MaxbetHdp, 
+         SpreadHdp, 
+         SpreadOu, 
+         NoOfHDP
+        )
+               SELECT temp.InfositeMatchId, 
+                      temp.MaxbetHdp, 
+                      temp.SpreadHdp, 
+                      temp.SpreadOu, 
+                      temp.NoOfHDP
+               FROM #tbltemp temp
+                    LEFT JOIN EventPicking e ON temp.InfositeMatchId = e.InfositeMatchId
+               WHERE e.InfositeMatchId IS NULL;
+
         DROP TABLE #tbltemp;
     END;
