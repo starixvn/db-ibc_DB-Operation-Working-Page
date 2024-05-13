@@ -1,0 +1,46 @@
+
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
+
+CREATE PROCEDURE [dbo].[OWP_NewLeagueSetting_QueryLeagueSettingByLeagueId] @OwpLeagueId int
+AS
+
+/*      
+ Created: 20240429@Johnny
+ Task : Get league setting
+ DB: bodb_OWP      
+ 
+ Revisions:
+    20240429@Johnny: Init  - [Redmine: #202639]
+
+*/
+
+    BEGIN
+        SET NOCOUNT ON;
+        SELECT l.Id 'LeagueSettingId', 
+               l.OWPLeagueId, 
+               o.OWPLeagueName 'League', 
+               l.[FullConditionDescription], 
+               l.[Spread_HDP] 'Spread_HDP_Value', 
+               l.[Spread_OU] 'Spread_OU_Value', 
+               l.[Spread_Note], 
+               l.[MaxbetWD_HDP] 'MaxbetWD_HDP_Value', 
+               l.[MaxbetWD_HDP_Note], 
+               l.[WD_NoOfHDP] 'WD_NoOfHDP_Value', 
+               l.[WD_NoOfHDP_Note], 
+               l.[MaxbetWK_HDP] 'MaxbetWK_HDP_Value', 
+               l.[MaxbetWK_HDP_Note], 
+               l.[WK_NoOfHDP] 'WK_NoOfHDP_Value', 
+               l.[WK_NoOfHDP_Note], 
+               l.[LSTNote], 
+               l.[Remark2], 
+               l.[Comment], 
+               o.OWPLeagueName, 
+               o.New_CategoryId 'LeagueGroupId', 
+               rr.Value 'LeagueGroup'
+        FROM LeagueManagementSetting l
+             INNER JOIN OWPLeague o ON l.OWPLeagueId = o.OWPLeagueId
+             LEFT JOIN RefResource rr ON rr.RefName = 'NewLeagueCategory'
+                                         AND o.New_CategoryId = rr.ResourceId
+        WHERE o.OWPLeagueId = @OwpLeagueId;
+
+    END;
