@@ -153,7 +153,8 @@ Revisions:
           SET 
               tbll.LeagueGroupId = ref.[ResourceId]
         FROM #tblLeague AS tbll
-             INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value];
+             INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value]
+		WHERE ref.RefName='NewLeagueCategory';
         UPDATE owpl
           SET 
               owpl.New_CategoryId = tbll.LeagueGroupId
