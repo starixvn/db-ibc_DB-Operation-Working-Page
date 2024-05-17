@@ -1,7 +1,8 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_QueryAllLeagueSetting] @League NVARCHAR(500) = ''
+ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_QueryAllLeagueSetting] @League        NVARCHAR(500) = '', 
+                                                                   @IsEqualLeague BIT           = 0
 AS
 
 /*      
@@ -41,5 +42,8 @@ AS
              INNER JOIN OWPLeague o ON l.OWPLeagueId = o.OWPLeagueId
              LEFT JOIN RefResource rr ON rr.RefName = 'NewLeagueCategory'
                                          AND o.New_CategoryId = rr.ResourceId
-        WHERE o.OWPLeagueName LIKE '%' + @League + '%';
+        WHERE(@IsEqualLeague = 0
+              AND o.OWPLeagueName LIKE '%' + @League + '%')
+             OR (@IsEqualLeague = 1
+                 AND o.OWPLeagueName = @League);
     END;
