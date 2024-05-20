@@ -36,9 +36,9 @@ AS
          NoOfHDP
         )
                SELECT InfoSiteMatchId, 
-                      SpreadOu, 
-                      SpreadHdp, 
-                      MaxbetHdp, 
+                      NULLIF(SpreadOu, ''), 
+                      NULLIF(SpreadHdp, ''), 
+                      NULLIF(MaxbetHdp, ''), 
                       NoOfHDP
                FROM OPENXML(@idoc, '/Root/UpdateEvents', 1) WITH(InfoSiteMatchId INT, SpreadOu MONEY, SpreadHdp MONEY, MaxbetHdp MONEY, NoOfHDP NVARCHAR(2000));
         EXEC sp_xml_removedocument 
