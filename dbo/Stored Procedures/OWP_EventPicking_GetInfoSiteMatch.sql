@@ -73,33 +73,17 @@ AS
                im.IsDeleted, 
                im.IsLeagueBlackList, 
                im.IsHomeBlackList, 
-               im.IsAwayBlackList,
-                CASE
-                   WHEN ep.InfositeMatchId IS NULL
-                   THEN NULL
-                   ELSE ep.MaxbetHdp
-               END AS MaxbetHdp,
-			   CASE
-                   WHEN ep.InfositeMatchId IS NULL
-                   THEN NULL
-                   ELSE ep.SpreadHdp
-               END AS SpreadHdp,
-			   CASE
-                   WHEN ep.InfositeMatchId IS NULL
-                   THEN NULL
-                   ELSE ep.SpreadOu
-               END AS SpreadOu,
-			    CASE
-                   WHEN ep.InfositeMatchId IS NULL
-                   THEN NULL
-                   ELSE ep.NoOfHDP
-               END AS NoOfHDP
+               im.IsAwayBlackList, 
+               ep.MaxbetHdp 'MaxbetHdp', 
+               ep.SpreadHdp 'SpreadHdp', 
+               ep.SpreadOu 'SpreadOu', 
+               ep.NoOfHDP 'NoOfHDP'
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
                                                                           AND us.ChildMatchId IS NULL
              LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
-			 LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId=im.InfoSiteMatchId
+             LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId = im.InfoSiteMatchId
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';
     END;
