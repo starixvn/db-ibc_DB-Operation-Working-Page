@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_EventPicking_UpdateMaxbetSpread] @XML     NVARCHAR(MAX), 
+CREATE PROCEDURE [dbo].[OWP_EventPicking_UpdateMaxbetSpread] @TargetJson     NVARCHAR(MAX), 
                                                             @ActorId INT
 
 /*      
@@ -17,10 +17,7 @@ ALTER PROCEDURE [dbo].[OWP_EventPicking_UpdateMaxbetSpread] @XML     NVARCHAR(MA
 AS
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @idoc INT;
-        EXEC sp_xml_preparedocument 
-             @idoc OUTPUT, 
-             @XML;
+       
         CREATE TABLE #tbltemp
         (InfoSiteMatchId INT, 
          SpreadOu        MONEY, 
@@ -39,10 +36,9 @@ AS
                       NULLIF(SpreadOu, ''), 
                       NULLIF(SpreadHdp, ''), 
                       NULLIF(MaxbetHdp, ''), 
-                      NoOfHDP
-               FROM OPENXML(@idoc, '/Root/UpdateEvents', 1) WITH(InfoSiteMatchId INT, SpreadOu MONEY, SpreadHdp MONEY, MaxbetHdp MONEY, NoOfHDP NVARCHAR(2000));
-        EXEC sp_xml_removedocument 
-             @idoc;
+					  NoOfHDP
+              FROM OPENJSON(@TargetJson) WITH(InfoSiteMatchId INT, SpreadOu NVARCHAR(2000), SpreadHdp NVARCHAR(2000), MaxbetHdp NVARCHAR(2000), NoOfHDP NVARCHAR(2000));
+      
         DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX), @ActionName NVARCHAR(MAX);
         SET @StartRun = GETDATE();
         SET @XmlLogOld =
@@ -55,6 +51,8 @@ AS
             FROM EventPicking e
                  INNER JOIN #tbltemp t ON e.InfositeMatchId = t.InfoSiteMatchId FOR XML PATH('z'), ROOT('r')
         );
+
+		
         UPDATE e
           SET 
               MaxbetHdp = temp.MaxbetHdp, 
