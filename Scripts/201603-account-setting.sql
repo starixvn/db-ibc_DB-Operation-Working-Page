@@ -23,3 +23,11 @@ CREATE TABLE dbo.UserProfile
 (UserId INT NOT NULL, 
  FileId INT NULL
 );
+
+-- new table IconMessage
+CREATE TABLE dbo.MessageIcon
+(Id        INT IDENTITY(1, 1) PRIMARY KEY, 
+ MessageId INT NOT NULL, 
+ IconKey   NVARCHAR(200), 
+ CreatorId INT
+);
