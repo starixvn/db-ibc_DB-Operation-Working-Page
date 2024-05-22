@@ -16,6 +16,7 @@ AS
 	20230209@Johnny: Edit data type for message - [Redmine: #183655]
 	20230801@Johnny: Get quote message - [Redmine: #191543]
 	20230801@Liam: Get image file name - [Redmine: #191543]
+	20240522@Los: Get extension - [Redmine: #201603]
 */
 
     BEGIN
@@ -88,7 +89,8 @@ AS
                    ELSE u.Nickname
                END AS QuoteUsername, 
                ti.CreatedDate AS QuoteCreatedDate, 
-               tm.ImageFileName
+               tm.ImageFileName,
+			   u.Extension
         FROM #tblMessageDetail AS tm
              LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
              LEFT JOIN [User] AS u ON ti.UserId = u.UserId;
