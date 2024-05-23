@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_UpdateMaxbetSpread] @TargetJson     NVARCHAR(MAX), 
+ALTER PROCEDURE [dbo].[OWP_EventPicking_UpdateMaxbetSpread] @TargetJson     NVARCHAR(MAX), 
                                                             @ActorId INT
 
 /*      
@@ -23,21 +23,24 @@ AS
          SpreadOu        MONEY, 
          SpreadHdp       MONEY, 
          MaxbetHdp       MONEY, 
-         NoOfHDP         NVARCHAR(2000)
+         NoOfHDP         NVARCHAR(2000),
+		 LstNote		 NVARCHAR(2000)
         );
         INSERT INTO #tbltemp
         (InfoSiteMatchId, 
          SpreadOu, 
          SpreadHdp, 
          MaxbetHdp, 
-         NoOfHDP
+         NoOfHDP,
+		 LstNote
         )
                SELECT InfoSiteMatchId, 
                       NULLIF(SpreadOu, ''), 
                       NULLIF(SpreadHdp, ''), 
                       NULLIF(MaxbetHdp, ''), 
-					  NoOfHDP
-              FROM OPENJSON(@TargetJson) WITH(InfoSiteMatchId INT, SpreadOu NVARCHAR(2000), SpreadHdp NVARCHAR(2000), MaxbetHdp NVARCHAR(2000), NoOfHDP NVARCHAR(2000));
+					  NoOfHDP,
+					  LstNote
+              FROM OPENJSON(@TargetJson) WITH(InfoSiteMatchId INT, SpreadOu NVARCHAR(2000), SpreadHdp NVARCHAR(2000), MaxbetHdp NVARCHAR(2000), NoOfHDP NVARCHAR(2000), LstNote NVARCHAR(2000));
       
         DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX), @ActionName NVARCHAR(MAX);
         SET @StartRun = GETDATE();
@@ -47,7 +50,8 @@ AS
                    e.MaxbetHdp, 
                    e.NoOfHDP, 
                    e.SpreadHdp, 
-                   e.SpreadOu
+                   e.SpreadOu,
+				   e.LSTNote
             FROM EventPicking e
                  INNER JOIN #tbltemp t ON e.InfositeMatchId = t.InfoSiteMatchId FOR XML PATH('z'), ROOT('r')
         );
@@ -58,7 +62,8 @@ AS
               MaxbetHdp = temp.MaxbetHdp, 
               SpreadHdp = temp.SpreadHdp, 
               SpreadOu = temp.SpreadOu, 
-              NoOfHDP = temp.NoOfHDP
+              NoOfHDP = temp.NoOfHDP,
+			  LSTNote=temp.LstNote
         FROM EventPicking e
              INNER JOIN #tbltemp temp ON e.InfositeMatchId = temp.InfoSiteMatchId;
         INSERT INTO EventPicking
@@ -66,13 +71,15 @@ AS
          MaxbetHdp, 
          SpreadHdp, 
          SpreadOu, 
-         NoOfHDP
+         NoOfHDP,
+		 LSTNote
         )
                SELECT temp.InfositeMatchId, 
                       temp.MaxbetHdp, 
                       temp.SpreadHdp, 
                       temp.SpreadOu, 
-                      temp.NoOfHDP
+                      temp.NoOfHDP,
+					  temp.LstNote
                FROM #tbltemp temp
                     LEFT JOIN EventPicking e ON temp.InfositeMatchId = e.InfositeMatchId
                WHERE e.InfositeMatchId IS NULL;
@@ -84,7 +91,8 @@ AS
                    t.MaxbetHdp, 
                    t.NoOfHDP, 
                    t.SpreadHdp, 
-                   t.SpreadOu
+                   t.SpreadOu,
+				   t.LstNote
             FROM #tbltemp t FOR XML PATH('z'), ROOT('r')
         );
         SET @LogNew = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogNew), '" />', '"/"');

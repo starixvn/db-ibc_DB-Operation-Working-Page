@@ -77,7 +77,8 @@ AS
                ep.MaxbetHdp 'MaxbetHdp', 
                ep.SpreadHdp 'SpreadHdp', 
                ep.SpreadOu 'SpreadOu', 
-               ep.NoOfHDP 'NoOfHDP'
+               ep.NoOfHDP 'NoOfHDP',
+			   ep.LSTNote 'LstNote'
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
