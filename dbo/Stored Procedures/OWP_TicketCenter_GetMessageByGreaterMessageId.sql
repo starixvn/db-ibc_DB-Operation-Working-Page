@@ -81,19 +81,22 @@ AS
                tm.FileId, 
                tm.IsSaved, 
                tm.Username, 
-               ti.[Message] AS QuoteMessage,
-			   tm.QuoteMessageId,
+               ti.[Message] AS QuoteMessage, 
+               tm.QuoteMessageId,
                CASE
                    WHEN u.Nickname IS NULL
                    THEN u.Username
                    ELSE u.Nickname
                END AS QuoteUsername, 
                ti.CreatedDate AS QuoteCreatedDate, 
-               tm.ImageFileName,
-			   u.Extension
+               tm.ImageFileName, 
+               u.Extension, 
+               fu.SavedFileName 'AvatarFileName'
         FROM #tblMessageDetail AS tm
              LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
-             LEFT JOIN [User] AS u ON ti.UserId = u.UserId;
+             LEFT JOIN [User] AS u ON ti.UserId = u.UserId
+             LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = tm.UserId
+             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
 
         -- Can show more message
         SELECT @MinMessageId = MIN(tm.Id)

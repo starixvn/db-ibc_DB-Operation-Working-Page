@@ -1,9 +1,9 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_TicketCenter_AddMessageIcon] @MessageId INT, 
-                                                         @IconKey   NVARCHAR(200), 
-                                                         @CreatorId INT
+CREATE PROCEDURE [dbo].[OWP_TicketCenter_UpdateMessageIcon] @MessageId INT, 
+                                                            @IconKey   NVARCHAR(200), 
+                                                            @CreatorId INT
 AS
 
 /*
@@ -18,14 +18,33 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-        INSERT INTO MessageIcon
-        (MessageId, 
-         IconKey, 
-         CreatorId
+        IF EXISTS
+        (
+            SELECT 1
+            FROM MessageIcon
+            WHERE MessageId = @MessageId
+                  AND IconKey = @IconKey
+                  AND CreatorId = @CreatorId
         )
-        VALUES
-        (@MessageId, 
-         @IconKey, 
-         @CreatorId
-        );
+            BEGIN
+                -- If it exists, delete it
+                DELETE FROM MessageIcon
+                WHERE MessageId = @MessageId
+                      AND IconKey = @IconKey
+                      AND CreatorId = @CreatorId;
+        END;
+            ELSE
+            BEGIN
+                -- If it doesn't exist, insert it
+                INSERT INTO MessageIcon
+                (MessageId, 
+                 IconKey, 
+                 CreatorId
+                )
+                VALUES
+                (@MessageId, 
+                 @IconKey, 
+                 @CreatorId
+                );
+        END;
     END;
