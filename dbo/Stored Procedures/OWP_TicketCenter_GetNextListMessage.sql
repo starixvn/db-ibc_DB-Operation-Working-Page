@@ -92,10 +92,13 @@ AS
                tm.QuoteMessageId, 
                ti.CreatedDate AS QuoteCreatedDate, 
                tm.ImageFileName,
-			   u.Extension
+			   u.Extension,
+			   f.SavedFileName 'AvatarFileName'
         FROM #tblMessageDetail AS tm
-             LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
-             LEFT JOIN [User] AS u ON ti.UserId = u.UserId
+             LEFT JOIN TicketMessage AS ti WITH(NOLOCK) ON tm.QuoteMessageId = ti.Id
+             LEFT JOIN [User] AS u WITH(NOLOCK) ON ti.UserId = u.UserId
+			 LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId=tm.UserId
+             LEFT JOIN dbo.FileUpload f WITH(NOLOCK) ON f.FileId = up.FileId
         ORDER BY tm.MessageId ASC;
 
         -- Can show more message
