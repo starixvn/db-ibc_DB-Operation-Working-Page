@@ -13,11 +13,12 @@ DB: bodb_OWP
 
 Revisions:
 
-	20240523@Liam: add message icon  - [Redmine: #201603]
+    20240523@Liam: add message icon  - [Redmine: #201603]
 */
 
     BEGIN
         SET NOCOUNT ON;
+        DECLARE @Action NVARCHAR(10);
         IF EXISTS
         (
             SELECT 1
@@ -32,6 +33,7 @@ Revisions:
                 WHERE MessageId = @MessageId
                       AND IconKey = @IconKey
                       AND CreatorId = @CreatorId;
+                SET @Action = 'Deleted';
         END;
             ELSE
             BEGIN
@@ -46,5 +48,9 @@ Revisions:
                  @IconKey, 
                  @CreatorId
                 );
+                SET @Action = 'Inserted';
         END;
+
+        -- Output the action performed
+        SELECT @Action;
     END;
