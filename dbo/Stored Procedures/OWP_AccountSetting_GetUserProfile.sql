@@ -15,8 +15,10 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT f.SavedFileName
-        FROM dbo.UserProfile u
-             LEFT JOIN dbo.FileUpload f WITH(NOLOCK) ON f.FileId = u.FileId
+        SELECT u.Username, 
+               f.SavedFileName
+        FROM [User] AS u
+             LEFT JOIN dbo.UserProfile up ON up.UserId = u.UserId
+             LEFT JOIN dbo.FileUpload f WITH(NOLOCK) ON f.FileId = up.FileId
         WHERE u.UserId = @UserId;
     END;
