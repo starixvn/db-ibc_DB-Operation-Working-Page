@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenter_GetNextListMessage] @MsgOfPage          INT = 20, 
                                                             @TicketId           INT, 
@@ -16,6 +16,7 @@ AS
 	20221222@liam.pham: get next list message - [Redmine: #181438]
 	20230801@Johnny: Get quote message - [Redmine: #191543]
 	20230801@Liam: Get image file name - [Redmine: #191543]
+	20240617@Liam: Get correct text message  [Redmine: #206560]
 */
 
     BEGIN
@@ -25,7 +26,7 @@ AS
         CREATE TABLE #tblMessageDetail
         (CreatedDate    DATETIME NOT NULL, 
          MessageId      INT NOT NULL, 
-         [Message]      VARCHAR(2000) NOT NULL, 
+         [Message]      NVARCHAR(2000) NOT NULL, 
          UserId         INT NOT NULL, 
          FileId         INT, 
          IsSaved        BIT, 
@@ -87,7 +88,7 @@ AS
                    THEN u.Username
                    ELSE u.Nickname
                END AS QuoteUsername, 
-			   tm.QuoteMessageId,
+               tm.QuoteMessageId, 
                ti.CreatedDate AS QuoteCreatedDate, 
                tm.ImageFileName
         FROM #tblMessageDetail AS tm
