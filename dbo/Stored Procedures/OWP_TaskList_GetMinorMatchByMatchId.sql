@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="bodbAdminNet" isFunction="0"></info>*/
+/*<info serverAlias="DBACC-bodb02" executers="wsv_nap" isFunction="0"></info>*/
 
 CREATE PROCEDURE [dbo].[OWP_TaskList_GetMinorMatchByMatchId] @MatchId INT, 
                                                              @SubType INT
@@ -12,7 +12,7 @@ AS
     
  Revisions:
 	20220120@Tyler: Initial SP - [Redmine: #167774]
-	
+	20240708@Mira: Only get valid child match id - [Redmine: #207671]
 */
 
     BEGIN
@@ -21,5 +21,6 @@ AS
         FROM dbo.[match] m
              INNER JOIN dbo.match_remark mr WITH(NOLOCK) ON m.MatchId = mr.matchid
         WHERE m.ParentID = @MatchId
-              AND mr.SubType = @SubType;
+              AND mr.SubType = @SubType
+              AND m.IsDeleted = 0;
     END;
