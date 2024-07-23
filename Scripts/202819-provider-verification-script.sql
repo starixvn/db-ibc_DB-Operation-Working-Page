@@ -32,49 +32,84 @@ VALUES
 GO
 
 CREATE TABLE [ProviderVerification]
-([Id]            INT IDENTITY(1, 1) PRIMARY KEY, 
- [OWPMatchId]    INT, 
- [ESTNote]       NVARCHAR(4000), 
- [IsConfirmManual]      BIT
-);
+([Id]              INT IDENTITY(1, 1), 
+ [OWPMatchId]      INT, 
+ [ESTNote]         NVARCHAR(4000), 
+ [IsConfirmManual] BIT
+ CONSTRAINT [PK_ProviderVerification] PRIMARY KEY CLUSTERED ([Id] ASC)
+ WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+)
+ON [OWP_Data];
 
 CREATE TABLE [MatchAgentConfirm]
-([Id]            INT IDENTITY(1, 1) PRIMARY KEY, 
- [OWPMatchId] INT , 
- [AgentId] INT
+([Id]         INT IDENTITY(1, 1), 
+ [OWPMatchId] INT, 
+ [AgentId]    INT, 
+ CONSTRAINT [PK_MatchAgentConfirm] PRIMARY KEY CLUSTERED([Id] ASC)
+ WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
+ON [OWP_Data];
 
 CREATE TABLE [AgentOption]
-([Id] INT IDENTITY(1, 1) PRIMARY KEY, 
- AgentId INT ,
- AgentName NVARCHAR(255)
+([Id]      INT IDENTITY(1, 1), 
+ AgentId   INT, 
+ AgentName NVARCHAR(255), 
+ CONSTRAINT [PK_AgentOption] PRIMARY KEY CLUSTERED([Id] ASC)
+ WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
+ON [OWP_Data];
 
-INSERT INTO AgentOption (AgentId, AgentName)
-VALUES (1, '365GV'), 
-       (2, 'Betradar'), 
-       (3, 'BG'), 
-       (4, 'FC'), 
-       (5, 'IMG'), 
-       (6, 'RB2'), 
-       (7, 'RB3'), 
-       (8, 'RTS'), 
-       (9, 'SLR'), 
-       (10, 'WOO'),
-       (11, 'Streaming'),
-       (12, 'Cancel');
-
-
+INSERT INTO AgentOption
+(AgentId, 
+ AgentName
+)
+VALUES
+(1, 
+ '365GV'
+),
+(2, 
+ 'Betradar'
+),
+(3, 
+ 'BG'
+),
+(4, 
+ 'FC'
+),
+(5, 
+ 'IMG'
+),
+(6, 
+ 'RB2'
+),
+(7, 
+ 'RB3'
+),
+(8, 
+ 'RTS'
+),
+(9, 
+ 'SLR'
+),
+(10, 
+ 'WOO'
+),
+(11, 
+ 'Streaming'
+),
+(12, 
+ 'Cancel'
+);
 SET IDENTITY_INSERT TicketSubtype ON;
 INSERT INTO TicketSubtype
 (SubtypeId, 
-SubtypeName, 
-TypeId
+ SubtypeName, 
+ TypeId
 )
 VALUES
 (27, 
-'Provider Checking', 
-4
+ 'Provider Checking', 
+ 4
 );
 SET IDENTITY_INSERT TicketSubtype OFF;
 
@@ -92,7 +127,6 @@ INSERT INTO [dbo].[Module]
            FROM [dbo].[Module] WITH(NOLOCK)
            WHERE [ModuleId] = 19
        );
-
 INSERT INTO [dbo].[ModuleObject]
 ([ModuleObjectId], 
  [ModuleObjectName], 
@@ -107,7 +141,6 @@ INSERT INTO [dbo].[ModuleObject]
            FROM [dbo].[ModuleObject] WITH(NOLOCK)
            WHERE [ModuleObjectId] = 47
        );
-
 IF NOT EXISTS
 (
     SELECT 1
@@ -132,8 +165,7 @@ IF NOT EXISTS
      N'OWP_ProviderVerification_SaveAgentConfirm', 
      N'<root><xml path="r/z"/><row item="AgentConfirm" alias="agentConfirm"/></root>'
     );
-
-	IF NOT EXISTS
+IF NOT EXISTS
 (
     SELECT 1
     FROM [LogAction]

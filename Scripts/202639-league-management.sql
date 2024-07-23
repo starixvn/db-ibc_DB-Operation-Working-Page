@@ -13,7 +13,7 @@ ALTER TABLE OWPLeague
 ADD New_CategoryId INT;
 
 CREATE TABLE [dbo].[LeagueManagementSetting]
-([Id]                       [INT] IDENTITY(1, 1) PRIMARY KEY , 
+([Id]                       [INT] IDENTITY(1, 1) , 
  [OWPLeagueId]              [INT] NOT NULL, 
  [FullConditionDescription] [NVARCHAR](MAX) NULL, 
  [Spread_HDP]               [MONEY] NULL, 
@@ -29,20 +29,24 @@ CREATE TABLE [dbo].[LeagueManagementSetting]
  [WK_NoOfHDP_Note]          [NVARCHAR](2000) NULL, 
  [LSTNote]                  [NVARCHAR](2000) NULL, 
  [Remark2]                  [NVARCHAR](2000) NULL, 
- [Comment]                  [NVARCHAR](MAX) NULL
-);
-
+ [Comment]                  [NVARCHAR](MAX) NULL,
+ CONSTRAINT [PK_LeagueManagementSetting] PRIMARY KEY CLUSTERED([Id] ASC)
+ WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+)
+ON [OWP_Data];
 
 CREATE TABLE [dbo].[EventPicking]
-([Id]              [INT] IDENTITY(1, 1) PRIMARY KEY , 
+([Id]              [INT] IDENTITY(1, 1), 
  [InfositeMatchId] [INT], 
  MaxbetHdp         MONEY, 
  SpreadHdp         MONEY, 
  SpreadOu          MONEY, 
  NoOfHDP           NVARCHAR(2000),
- LSTNote NVARCHAR(2000)
-);
-
+ LSTNote NVARCHAR(2000),
+ CONSTRAINT [PK_EventPicking] PRIMARY KEY CLUSTERED([Id] ASC)
+ WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
+)
+ON [OWP_Data];
 ------------- log ------------------
 
 INSERT INTO [dbo].[Module]
