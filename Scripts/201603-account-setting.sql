@@ -18,9 +18,10 @@ CREATE TABLE dbo.QuickMessage
  CreatorId   INT NOT NULL
 );
 
+
 -- new table UserProfile
 CREATE TABLE dbo.UserProfile
-(UserId INT NOT NULL, 
+(UserId INT PRIMARY KEY NOT NULL , 
  FileId INT NULL
 );
 

@@ -11,8 +11,9 @@ Revisions:
 
 ALTER TABLE OWPLeague
 ADD New_CategoryId INT;
+
 CREATE TABLE [dbo].[LeagueManagementSetting]
-([Id]                       [INT] IDENTITY(1, 1) NOT NULL, 
+([Id]                       [INT] IDENTITY(1, 1) PRIMARY KEY , 
  [OWPLeagueId]              [INT] NOT NULL, 
  [FullConditionDescription] [NVARCHAR](MAX) NULL, 
  [Spread_HDP]               [MONEY] NULL, 
@@ -30,8 +31,10 @@ CREATE TABLE [dbo].[LeagueManagementSetting]
  [Remark2]                  [NVARCHAR](2000) NULL, 
  [Comment]                  [NVARCHAR](MAX) NULL
 );
+
+
 CREATE TABLE [dbo].[EventPicking]
-([Id]              [INT] IDENTITY NOT NULL, 
+([Id]              [INT] IDENTITY(1, 1) PRIMARY KEY , 
  [InfositeMatchId] [INT], 
  MaxbetHdp         MONEY, 
  SpreadHdp         MONEY, 
