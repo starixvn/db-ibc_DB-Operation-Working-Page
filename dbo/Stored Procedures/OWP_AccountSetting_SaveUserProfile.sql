@@ -19,7 +19,7 @@ AS
         IF EXISTS
         (
             SELECT 1
-            FROM dbo.UserProfile
+            FROM dbo.UserProfile WITH(NOLOCK)
             WHERE UserId = @UserId
         )
             BEGIN

@@ -18,7 +18,7 @@ AS
         SELECT u.Username, 
                f.SavedFileName
         FROM [User] AS u
-             LEFT JOIN dbo.UserProfile up ON up.UserId = u.UserId
+             LEFT JOIN dbo.UserProfile up WITH(NOLOCK) ON up.UserId = u.UserId
              LEFT JOIN dbo.FileUpload f WITH(NOLOCK) ON f.FileId = up.FileId
         WHERE u.UserId = @UserId;
     END;

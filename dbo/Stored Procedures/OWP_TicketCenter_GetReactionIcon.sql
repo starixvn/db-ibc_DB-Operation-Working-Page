@@ -25,7 +25,7 @@ AS
                fu.SavedFileName 'ReactAvatarName'
         FROM @tblMessageId AS m
              INNER JOIN MessageIcon AS mi WITH(NOLOCK) ON m.Id = mi.MessageId
-             LEFT JOIN [User] AS u ON mi.CreatorId = u.UserId
+             LEFT JOIN [User] AS u WITH(NOLOCK) ON mi.CreatorId = u.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = mi.CreatorId
              LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
     END;

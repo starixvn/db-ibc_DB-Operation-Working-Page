@@ -22,7 +22,7 @@ Revisions:
         IF EXISTS
         (
             SELECT 1
-            FROM MessageIcon
+            FROM MessageIcon WITH(NOLOCK)
             WHERE MessageId = @MessageId
                   AND IconKey = @IconKey
                   AND CreatorId = @CreatorId

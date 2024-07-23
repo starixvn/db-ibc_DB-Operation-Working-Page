@@ -27,7 +27,7 @@ AS
      );
      INSERT INTO #MatchIds(Id)
             SELECT OWPMatchId
-            FROM dbo.OWPMatch
+            FROM dbo.OWPMatch WITH(NOLOCK)
             WHERE EventDateTime BETWEEN @FromDateTime AND @ToDateTime;
      CREATE TABLE #MatchNoteIds(Id INT);
      INSERT INTO #MatchNoteIds(Id)
@@ -80,7 +80,7 @@ AS
                    [CreatedBy], 
                    [Note], 
                    [ShiftDate]
-            FROM [dbo].[EmployeeWorkingShiftNote]
+            FROM [dbo].[EmployeeWorkingShiftNote] WITH(NOLOCK)
             WHERE ShiftDate BETWEEN @FromDateTime AND @ToDateTime;
 
      -- OWP Match     

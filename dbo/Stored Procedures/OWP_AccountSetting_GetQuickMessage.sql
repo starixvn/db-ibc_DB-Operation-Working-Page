@@ -19,6 +19,6 @@ AS
                q.Shortcut, 
                q.Message, 
                q.CreatorId
-        FROM dbo.QuickMessage q
+        FROM dbo.QuickMessage q WITH(NOLOCK)
         WHERE q.CreatorId = @UserId;
     END;
