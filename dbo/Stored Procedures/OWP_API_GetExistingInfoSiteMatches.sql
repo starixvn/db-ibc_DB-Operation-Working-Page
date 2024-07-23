@@ -18,8 +18,8 @@ Revisions:
         DECLARE @tempMatch TABLE(InfoSiteMatchId INT);
 		INSERT INTO @tempMatch
             SELECT DISTINCT 
-                   val
-            FROM fnc_SplitStrings(@Ids, ',') u OPTION(MAXRECURSION 0);
+                   value
+            FROM STRING_SPLIT(@Ids, ',');
         -- select from infosite match
         SELECT DISTINCT 
             m.InfoSiteMatchId, 

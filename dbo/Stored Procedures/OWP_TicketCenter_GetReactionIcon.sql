@@ -16,8 +16,9 @@ AS
     BEGIN
         DECLARE @tblMessageId TABLE(Id INT NOT NULL);
         INSERT INTO @tblMessageId(Id)
-               SELECT val
-               FROM dbo.fnc_SplitStrings(@MessageIds, ',');
+              SELECT DISTINCT 
+                      value
+               FROM STRING_SPLIT(@MessageIds, ',');
         SELECT mi.MessageId, 
                mi.IconKey, 
                mi.CreatorId 'ReactUserId', 

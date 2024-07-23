@@ -16,11 +16,11 @@ Revisions:
 
     BEGIN
         SET NOCOUNT ON;
-		DECLARE @tempMatch TABLE(InfoSiteMatchId INT);
+        DECLARE @tempMatch TABLE(InfoSiteMatchId INT);
         INSERT INTO @tempMatch
-            SELECT DISTINCT 
-                   val
-            FROM fnc_SplitStrings(@Ids, ',') u OPTION(MAXRECURSION 0);
+               SELECT DISTINCT 
+                      value
+               FROM STRING_SPLIT(@Ids, ',');
         SELECT DISTINCT 
                m.InfoSiteMatchId, 
                m.LeagueName, 
@@ -33,6 +33,6 @@ Revisions:
                    ELSE 1
                END AS IsCheck
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
-			INNER JOIN @tempMatch AS t ON m.InfoSiteMatchId = t.InfoSiteMatchId
-            LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON m.InfoSiteMatchId = ec.InfositeId
+             INNER JOIN @tempMatch AS t ON m.InfoSiteMatchId = t.InfoSiteMatchId
+             LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON m.InfoSiteMatchId = ec.InfositeId;
     END;
