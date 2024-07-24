@@ -1,12 +1,12 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 /*
-Created: 20250521@Mira
+Created: 20240521@Mira
 Task : Account Setting page
 DB: bodb_OWP
 
 Revisions:
-	20250521@Mira: create new table for Account Setting Page - [Redmine: #201603]
+	20240521@Mira: create new table for Account Setting Page - [Redmine: #201603]
 */
 
 -- new table QuickMessage
@@ -29,6 +29,7 @@ CREATE TABLE dbo.UserProfile
  WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
 ON [OWP_Data];
+
 -- new table IconMessage
 CREATE TABLE dbo.MessageIcon
 (Id        INT IDENTITY(1, 1) , 
