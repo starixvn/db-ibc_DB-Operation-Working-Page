@@ -34,6 +34,8 @@ CREATE TABLE [dbo].[LeagueManagementSetting]
  WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
 ON [OWP_Data];
+GO
+
 
 CREATE TABLE [dbo].[EventPicking]
 ([Id]              [INT] IDENTITY(1, 1), 
@@ -47,6 +49,9 @@ CREATE TABLE [dbo].[EventPicking]
  WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
 ON [OWP_Data];
+GO
+
+
 ------------- log ------------------
 
 INSERT INTO [dbo].[Module]
@@ -61,6 +66,9 @@ INSERT INTO [dbo].[Module]
            FROM [dbo].[Module] WITH(NOLOCK)
            WHERE [ModuleId] = 20
        );
+GO
+
+
 INSERT INTO [dbo].[ModuleObject]
 ([ModuleObjectId], 
  [ModuleObjectName], 
@@ -75,6 +83,9 @@ INSERT INTO [dbo].[ModuleObject]
            FROM [dbo].[ModuleObject] WITH(NOLOCK)
            WHERE [ModuleObjectId] = 48
        );
+GO
+
+
 IF NOT EXISTS
 (
     SELECT 1
@@ -111,6 +122,9 @@ IF NOT EXISTS
 				<row item="WK_NoOfHDP_Note" />
 				</root>'
     );
+GO
+
+
 INSERT INTO [dbo].[Module]
 ([ModuleId], 
  [ModuleName]
@@ -123,6 +137,9 @@ INSERT INTO [dbo].[Module]
            FROM [dbo].[Module] WITH(NOLOCK)
            WHERE [ModuleId] = 21
        );
+GO
+
+
 INSERT INTO [dbo].[ModuleObject]
 ([ModuleObjectId], 
  [ModuleObjectName], 
@@ -137,6 +154,9 @@ INSERT INTO [dbo].[ModuleObject]
            FROM [dbo].[ModuleObject] WITH(NOLOCK)
            WHERE [ModuleObjectId] = 49
        );
+GO
+
+
 IF NOT EXISTS
 (
     SELECT 1
@@ -167,3 +187,4 @@ IF NOT EXISTS
 				<row item="SpreadOu" />
 			</root>'
     );
+GO

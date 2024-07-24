@@ -31,6 +31,7 @@ VALUES
 );
 GO
 
+
 CREATE TABLE [ProviderVerification]
 ([Id]              INT IDENTITY(1, 1), 
  [OWPMatchId]      INT, 
@@ -40,6 +41,8 @@ CREATE TABLE [ProviderVerification]
  WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
 ON [OWP_Data];
+GO
+
 
 CREATE TABLE [MatchAgentConfirm]
 ([Id]         INT IDENTITY(1, 1), 
@@ -49,6 +52,8 @@ CREATE TABLE [MatchAgentConfirm]
  WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
 ON [OWP_Data];
+GO
+
 
 CREATE TABLE [AgentOption]
 ([Id]      INT IDENTITY(1, 1), 
@@ -58,6 +63,8 @@ CREATE TABLE [AgentOption]
  WITH(PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [OWP_Data]
 )
 ON [OWP_Data];
+GO
+
 
 INSERT INTO AgentOption
 (AgentId, 
@@ -100,6 +107,9 @@ VALUES
 (12, 
  'Cancel'
 );
+GO
+
+
 SET IDENTITY_INSERT TicketSubtype ON;
 INSERT INTO TicketSubtype
 (SubtypeId, 
@@ -112,6 +122,7 @@ VALUES
  4
 );
 SET IDENTITY_INSERT TicketSubtype OFF;
+GO
 
 --- lOG ---- 
 
@@ -127,6 +138,9 @@ INSERT INTO [dbo].[Module]
            FROM [dbo].[Module] WITH(NOLOCK)
            WHERE [ModuleId] = 19
        );
+GO
+
+
 INSERT INTO [dbo].[ModuleObject]
 ([ModuleObjectId], 
  [ModuleObjectName], 
@@ -141,6 +155,9 @@ INSERT INTO [dbo].[ModuleObject]
            FROM [dbo].[ModuleObject] WITH(NOLOCK)
            WHERE [ModuleObjectId] = 47
        );
+Go
+
+
 IF NOT EXISTS
 (
     SELECT 1
@@ -165,6 +182,9 @@ IF NOT EXISTS
      N'OWP_ProviderVerification_SaveAgentConfirm', 
      N'<root><xml path="r/z"/><row item="AgentConfirm" alias="agentConfirm"/></root>'
     );
+GO
+
+
 IF NOT EXISTS
 (
     SELECT 1
@@ -189,3 +209,4 @@ IF NOT EXISTS
      N'OWP_ProviderVerification_SaveEstNote', 
      N'<root><xml path="r/z"/><row item="EstNote" alias="estNote"/></root>'
     );
+GO
