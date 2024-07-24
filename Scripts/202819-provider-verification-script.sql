@@ -24,9 +24,9 @@ INSERT INTO [dbo].[RefResource]
  [Order]
 )
 VALUES
-('AssigneeType', 
- 4, 
- 'Match Assignees', 
+('MatchAssignees', 
+ 1, 
+ 'Assignee', 
  0
 );
 GO
@@ -107,7 +107,7 @@ INSERT INTO TicketSubtype
  TypeId
 )
 VALUES
-(27, 
+(1000, 
  'Provider Checking', 
  4
 );
