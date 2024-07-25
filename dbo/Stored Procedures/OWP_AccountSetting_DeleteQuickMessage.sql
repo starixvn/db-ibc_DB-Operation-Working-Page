@@ -5,12 +5,12 @@ CREATE PROCEDURE [dbo].[OWP_AccountSetting_DeleteQuickMessage] @Id INT = 0
 AS
 
 /*      
- Created: 20250521@Mira
+ Created: 20240521@Mira
  Task : Account Setting page
  DB: bodb_OWP      
  
  Revisions:
-    20250521@Mira: delete quick message - [Redmine: #201603]
+    20240521@Mira: delete quick message - [Redmine: #201603]
 */
 
     BEGIN

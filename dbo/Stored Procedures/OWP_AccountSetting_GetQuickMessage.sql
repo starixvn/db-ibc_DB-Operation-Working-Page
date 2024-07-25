@@ -5,12 +5,12 @@ ALTER PROCEDURE [dbo].[OWP_AccountSetting_GetQuickMessage] @UserId INT
 AS
 
 /*      
- Created: 20250521@Mira
+ Created: 20240521@Mira
  Task : Account Setting page
  DB: bodb_OWP      
  
  Revisions:
-    20250521@Mira: get quick message - [Redmine: #201603]
+    20240521@Mira: get quick message - [Redmine: #201603]
 */
 
     BEGIN
@@ -19,6 +19,6 @@ AS
                q.Shortcut, 
                q.Message, 
                q.CreatorId
-        FROM dbo.QuickMessage q
+        FROM dbo.QuickMessage q WITH(NOLOCK)
         WHERE q.CreatorId = @UserId;
     END;

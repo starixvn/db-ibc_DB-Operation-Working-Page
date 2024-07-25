@@ -33,7 +33,8 @@ AS
          IsSaved        BIT, 
          Username       VARCHAR(100), 
          QuoteMessageId INT, 
-         ImageFileName  NVARCHAR(200)
+         ImageFileName  NVARCHAR(200),
+		 Extension NVARCHAR(200)
         );
         INSERT INTO #tblMessageDetail
         (CreatedDate, 
@@ -44,7 +45,8 @@ AS
          IsSaved, 
          Username, 
          QuoteMessageId, 
-         ImageFileName
+         ImageFileName,
+		 Extension
         )
                SELECT TOP (@MsgOfPage) tm.CreatedDate, 
                                        tm.Id AS MessageId, 
@@ -66,10 +68,11 @@ AS
                                                 OR f.Title LIKE '%.bmp'
                                            THEN f.SavedFileName
                                            ELSE NULL
-                                       END
-               FROM TicketMessage AS tm
-                    LEFT JOIN [User] AS u ON u.UserId = tm.UserId
-                    LEFT JOIN [FileUpload] AS f ON tm.FileId = f.FileId
+                                       END,
+									   u.Extension
+               FROM TicketMessage AS tm WITH(NOLOCK)
+                    LEFT JOIN [User] AS u WITH(NOLOCK) ON u.UserId = tm.UserId
+                    LEFT JOIN [FileUpload] AS f WITH(NOLOCK) ON tm.FileId = f.FileId
                WHERE tm.TicketId = @TicketId
                      AND (@FirstMsgId IS NULL
                           OR tm.Id < @FirstMsgId)
@@ -92,7 +95,7 @@ AS
                tm.QuoteMessageId, 
                ti.CreatedDate AS QuoteCreatedDate, 
                tm.ImageFileName,
-			   u.Extension,
+			   tm.Extension,
 			   f.SavedFileName 'AvatarFileName'
         FROM #tblMessageDetail AS tm
              LEFT JOIN TicketMessage AS ti WITH(NOLOCK) ON tm.QuoteMessageId = ti.Id
@@ -103,7 +106,7 @@ AS
 
         -- Can show more message
         SELECT @MinMessageId = MIN(tm.Id)
-        FROM TicketMessage AS tm
+        FROM TicketMessage AS tm WITH(NOLOCK)
         WHERE tm.TicketId = @TicketId;
         SELECT @MinCurrentMessageId = MIN(tm.MessageId)
         FROM #tblMessageDetail AS tm;

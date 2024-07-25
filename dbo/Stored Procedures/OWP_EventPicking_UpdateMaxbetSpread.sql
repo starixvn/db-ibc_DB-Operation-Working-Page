@@ -52,7 +52,7 @@ AS
                    e.SpreadHdp, 
                    e.SpreadOu,
 				   e.LSTNote
-            FROM EventPicking e
+            FROM EventPicking e WITH(NOLOCK)
                  INNER JOIN #tbltemp t ON e.InfositeMatchId = t.InfoSiteMatchId FOR XML PATH('z'), ROOT('r')
         );
 
@@ -64,7 +64,7 @@ AS
               SpreadOu = temp.SpreadOu, 
               NoOfHDP = temp.NoOfHDP,
 			  LSTNote=temp.LstNote
-        FROM EventPicking e
+        FROM EventPicking e WITH(NOLOCK)
              INNER JOIN #tbltemp temp ON e.InfositeMatchId = temp.InfoSiteMatchId;
         INSERT INTO EventPicking
         (InfositeMatchId, 
@@ -81,7 +81,7 @@ AS
                       temp.NoOfHDP,
 					  temp.LstNote
                FROM #tbltemp temp
-                    LEFT JOIN EventPicking e ON temp.InfositeMatchId = e.InfositeMatchId
+                    LEFT JOIN EventPicking e WITH(NOLOCK) ON temp.InfositeMatchId = e.InfositeMatchId
                WHERE e.InfositeMatchId IS NULL;
 
         --Write log

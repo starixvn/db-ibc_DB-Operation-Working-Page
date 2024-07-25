@@ -33,7 +33,8 @@ AS
          IsSaved        BIT, 
          Username       NVARCHAR(100), 
          QuoteMessageId INT, 
-         ImageFileName  NVARCHAR(200)
+         ImageFileName  NVARCHAR(200),
+		 Extension NVARCHAR(200)
         );
         INSERT INTO #tblMessageDetail
         (CreatedDate, 
@@ -44,7 +45,8 @@ AS
          IsSaved, 
          Username, 
          QuoteMessageId, 
-         ImageFileName
+         ImageFileName,
+		 Extension
         )
                SELECT DISTINCT 
                       tm.CreatedDate, 
@@ -67,10 +69,11 @@ AS
                                OR f.Title LIKE '%.bmp'
                           THEN f.SavedFileName
                           ELSE NULL
-                      END
-               FROM TicketMessage AS tm
-                    LEFT JOIN [User] AS u ON u.UserId = tm.UserId
-                    LEFT JOIN [FileUpload] AS f ON tm.FileId = f.FileId
+                      END,
+					  u.Extension
+               FROM TicketMessage AS tm WITH(NOLOCK)
+                    LEFT JOIN [User] AS u WITH(NOLOCK) ON u.UserId = tm.UserId
+                    LEFT JOIN [FileUpload] AS f WITH(NOLOCK) ON tm.FileId = f.FileId
                WHERE tm.TicketId = @TicketId
                      AND tm.CreatedDate >= @FromDateTime;
 
@@ -91,11 +94,11 @@ AS
                tm.QuoteMessageId, 
                ti.CreatedDate AS QuoteCreatedDate, 
                tm.ImageFileName, 
-               u.Extension, 
+               tm.Extension, 
                fu.SavedFileName 'AvatarFileName'
         FROM #tblMessageDetail AS tm
-             LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
-             LEFT JOIN [User] AS u ON ti.UserId = u.UserId
+             LEFT JOIN TicketMessage AS ti WITH(NOLOCK) ON tm.QuoteMessageId = ti.Id
+             LEFT JOIN [User] AS u WITH(NOLOCK) ON ti.UserId = u.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = tm.UserId
              LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
 

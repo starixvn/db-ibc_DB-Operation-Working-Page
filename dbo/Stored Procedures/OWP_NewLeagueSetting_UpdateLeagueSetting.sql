@@ -57,8 +57,8 @@ AS
                    l.[Remark2], 
                    l.[Comment], 
                    o.New_CategoryId 'LeagueGroupId'
-            FROM LeagueManagementSetting l
-                 INNER JOIN OWPLeague o ON l.OWPLeagueId = o.OWPLeagueId
+            FROM LeagueManagementSetting l WITH(NOLOCK)
+                 INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
             WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
         );
         SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
@@ -104,8 +104,8 @@ AS
                    l.[Remark2], 
                    l.[Comment], 
                    o.New_CategoryId 'LeagueGroupId'
-            FROM LeagueManagementSetting l
-                 INNER JOIN OWPLeague o ON l.OWPLeagueId = o.OWPLeagueId
+            FROM LeagueManagementSetting l WITH(NOLOCK)
+                 INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
             WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
         );
         SET @LogSettingData = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingNew), '" />', '"/"');

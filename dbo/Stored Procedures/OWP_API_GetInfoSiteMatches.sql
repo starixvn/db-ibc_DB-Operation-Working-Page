@@ -1,7 +1,7 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_API_GetInfoSiteMatches]
+ALTER PROCEDURE [dbo].[OWP_API_GetInfoSiteMatches] @Ids NVARCHAR(MAX)
 AS
 
 /*    
@@ -11,11 +11,16 @@ DB: bodb_OWP
     
 Revisions:     
   20231225@Johnny: initial SP - [Redmine: #198102] 
+  20240708@Johnny: refactor - [Redmine: #201604]  
 */
 
     BEGIN
         SET NOCOUNT ON;
-        -- select from infosite match
+        DECLARE @tempMatch TABLE(InfoSiteMatchId INT);
+        INSERT INTO @tempMatch
+               SELECT DISTINCT 
+                      value
+               FROM STRING_SPLIT(@Ids, ',');
         SELECT DISTINCT 
                m.InfoSiteMatchId, 
                m.LeagueName, 
@@ -28,5 +33,6 @@ Revisions:
                    ELSE 1
                END AS IsCheck
         FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
-             LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON m.InfoSiteMatchId = ec.InfositeId
+             INNER JOIN @tempMatch AS t ON m.InfoSiteMatchId = t.InfoSiteMatchId
+             LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON m.InfoSiteMatchId = ec.InfositeId;
     END;

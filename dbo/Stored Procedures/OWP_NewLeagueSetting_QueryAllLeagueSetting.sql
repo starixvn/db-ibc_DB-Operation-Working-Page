@@ -38,9 +38,9 @@ AS
                o.OWPLeagueName, 
                o.New_CategoryId 'LeagueGroupId', 
                rr.Value 'LeagueGroup'
-        FROM LeagueManagementSetting l
-             INNER JOIN OWPLeague o ON l.OWPLeagueId = o.OWPLeagueId
-             LEFT JOIN RefResource rr ON rr.RefName = 'NewLeagueCategory'
+        FROM LeagueManagementSetting l WITH(NOLOCK)
+             INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
+             LEFT JOIN RefResource rr WITH(NOLOCK) ON rr.RefName = 'NewLeagueCategory'
                                          AND o.New_CategoryId = rr.ResourceId
         WHERE(@IsEqualLeague = 0
               AND o.OWPLeagueName LIKE '%' + @League + '%')

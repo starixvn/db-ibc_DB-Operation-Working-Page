@@ -16,8 +16,9 @@ AS
     BEGIN
         DECLARE @tblMessageId TABLE(Id INT NOT NULL);
         INSERT INTO @tblMessageId(Id)
-               SELECT val
-               FROM dbo.fnc_SplitStrings(@MessageIds, ',');
+              SELECT DISTINCT 
+                      value
+               FROM STRING_SPLIT(@MessageIds, ',');
         SELECT mi.MessageId, 
                mi.IconKey, 
                mi.CreatorId 'ReactUserId', 
@@ -25,7 +26,7 @@ AS
                fu.SavedFileName 'ReactAvatarName'
         FROM @tblMessageId AS m
              INNER JOIN MessageIcon AS mi WITH(NOLOCK) ON m.Id = mi.MessageId
-             LEFT JOIN [User] AS u ON mi.CreatorId = u.UserId
+             LEFT JOIN [User] AS u WITH(NOLOCK) ON mi.CreatorId = u.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = mi.CreatorId
              LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
     END;

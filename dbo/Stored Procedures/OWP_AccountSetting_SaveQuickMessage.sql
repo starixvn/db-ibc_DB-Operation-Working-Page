@@ -8,12 +8,12 @@ ALTER PROCEDURE [dbo].[OWP_AccountSetting_SaveQuickMessage] @Id       INT       
 AS
 
 /*      
- Created: 20250521@Mira
+ Created: 20240521@Mira
  Task : Account Setting page
  DB: bodb_OWP      
  
  Revisions:
-    20250521@Mira: save quick message - [Redmine: #201603]
+    20240521@Mira: save quick message - [Redmine: #201603]
 */
 
     BEGIN
@@ -22,7 +22,7 @@ AS
         IF EXISTS
         (
             SELECT 1
-            FROM dbo.QuickMessage
+            FROM dbo.QuickMessage WITH(NOLOCK)
             WHERE Id = @Id
         )
             BEGIN

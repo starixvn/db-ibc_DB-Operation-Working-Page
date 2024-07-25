@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_EventPicking_SaveLogs] @XML NVARCHAR(MAX)
 AS
@@ -12,6 +12,7 @@ AS
  Revisions:
     20230907@Liam: save event picking log - [Redmine: #190039]
 	20231016@los: Export event picking [Redmine: #194448]
+	20240708@Johnny: refactor - [Redmine: #201604]  
 */
 
     BEGIN
@@ -25,7 +26,8 @@ AS
          [NewValue]   VARCHAR(5000), 
          [OldValue]   VARCHAR(5000),
 		 [HomeUpdated] BIT,
-		 [AwayUpdated] BIT
+		 [AwayUpdated] BIT,
+		 [FromService] NVARCHAR(50)
         );
         EXEC sp_xml_preparedocument 
              @idoc OUTPUT, 
@@ -38,7 +40,8 @@ AS
          [OldValue], 
          [NewValue],
 		 [HomeUpdated],
-		 [AwayUpdated]
+		 [AwayUpdated],
+		 [FromService]
         )
                SELECT [InfoSiteMatchId], 
                       [UpDateTime], 
@@ -47,8 +50,9 @@ AS
                       [OldValue], 
                       [NewValue],
 					  [HomeUpdated],
-					  [AwayUpdated]
-               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000), [OldValue] VARCHAR(5000), [NewValue] VARCHAR(5000), [HomeUpdated] BIT, [AwayUpdated] BIT);
+					  [AwayUpdated],
+					  [FromService]
+               FROM OPENXML(@idoc, '/Root/LoggedChangeModel', 1) WITH([InfoSiteMatchId] INT, [UpDateTime] DATETIME, [UpdateTypeId] INT, [Action] VARCHAR(5000), [OldValue] VARCHAR(5000), [NewValue] VARCHAR(5000), [HomeUpdated] BIT, [AwayUpdated] BIT, [FromService] NVARCHAR(50));
         EXEC sp_xml_removedocument 
              @idoc;
         INSERT INTO EventPickingLog
@@ -60,7 +64,8 @@ AS
          [OldValue], 
          [NewValue],
 		 [HomeUpdated],
-		 [AwayUpdated]
+		 [AwayUpdated],
+		 [FromService]
         )
                SELECT InfositeId, 
                       [Date], 
@@ -70,7 +75,8 @@ AS
                       [OldValue], 
                       [NewValue],
 					  [HomeUpdated],
-					  [AwayUpdated]
+					  [AwayUpdated],
+					  [FromService]
                FROM @tblLog;
 
         -- delete match checked 

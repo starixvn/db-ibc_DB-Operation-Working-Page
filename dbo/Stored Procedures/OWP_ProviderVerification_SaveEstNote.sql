@@ -31,7 +31,7 @@ Revisions:
         IF EXISTS
         (
             SELECT 1
-            FROM ProviderVerification p
+            FROM ProviderVerification p WITH (NOLOCK)
             WHERE p.OWPMatchId = @OwpMatchId
         )
             BEGIN
