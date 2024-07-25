@@ -17,6 +17,7 @@ AS
 	20230801@Johnny: Get quote message - [Redmine: #191543]
 	20230801@Liam: Get image file name - [Redmine: #191543]
 	20240617@Liam: Get correct text message  [Redmine: #206560]
+	20240522@Los: Get extension - [Redmine: #201603]
 */
 
     BEGIN
@@ -90,10 +91,14 @@ AS
                END AS QuoteUsername, 
                tm.QuoteMessageId, 
                ti.CreatedDate AS QuoteCreatedDate, 
-               tm.ImageFileName
+               tm.ImageFileName,
+			   u.Extension,
+			   f.SavedFileName 'AvatarFileName'
         FROM #tblMessageDetail AS tm
-             LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
-             LEFT JOIN [User] AS u ON ti.UserId = u.UserId
+             LEFT JOIN TicketMessage AS ti WITH(NOLOCK) ON tm.QuoteMessageId = ti.Id
+             LEFT JOIN [User] AS u WITH(NOLOCK) ON ti.UserId = u.UserId
+			 LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId=tm.UserId
+             LEFT JOIN dbo.FileUpload f WITH(NOLOCK) ON f.FileId = up.FileId
         ORDER BY tm.MessageId ASC;
 
         -- Can show more message

@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenter_GetMessageByGreaterMessageId] @TicketId           INT, 
                                                                       @MessageId          INT, 
@@ -16,6 +16,7 @@ AS
 	20230209@Johnny: Edit data type for message - [Redmine: #183655]
 	20230801@Johnny: Get quote message - [Redmine: #191543]
 	20230801@Liam: Get image file name - [Redmine: #191543]
+	20240522@Los: Get extension - [Redmine: #201603]
 */
 
     BEGIN
@@ -80,18 +81,22 @@ AS
                tm.FileId, 
                tm.IsSaved, 
                tm.Username, 
-               ti.[Message] AS QuoteMessage,
-			   tm.QuoteMessageId,
+               ti.[Message] AS QuoteMessage, 
+               tm.QuoteMessageId,
                CASE
                    WHEN u.Nickname IS NULL
                    THEN u.Username
                    ELSE u.Nickname
                END AS QuoteUsername, 
                ti.CreatedDate AS QuoteCreatedDate, 
-               tm.ImageFileName
+               tm.ImageFileName, 
+               u.Extension, 
+               fu.SavedFileName 'AvatarFileName'
         FROM #tblMessageDetail AS tm
              LEFT JOIN TicketMessage AS ti ON tm.QuoteMessageId = ti.Id
-             LEFT JOIN [User] AS u ON ti.UserId = u.UserId;
+             LEFT JOIN [User] AS u ON ti.UserId = u.UserId
+             LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = tm.UserId
+             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
 
         -- Can show more message
         SELECT @MinMessageId = MIN(tm.Id)
