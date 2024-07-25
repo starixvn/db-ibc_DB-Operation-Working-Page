@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_CopyDataToOldTable] @Date DATETIME
 AS
@@ -14,6 +14,7 @@ AS
 	20200825@Jacob: Use index - [Redmine: #137757]	
 	20200826@Jacob: Fix bug missing Odds - [Redmine: #137757]
 	20210909@Luca.Duong: Remove cn88 - [Feature: #160666]	
+	20240402@Los: Copy {Agent_EST, Remart_Est, RemarkBy} - [Redmine: #202819]
 */
 
      SET NOCOUNT ON;
@@ -101,7 +102,10 @@ AS
       [EventDateTime], 
       [IsChecked], 
       [InfoSiteMatchId], 
-      [IsNeutral]
+      [IsNeutral],
+	  [Agent_Est],
+	  [Remark_Est],
+	  [RemarkBy]
      )
             SELECT m.[OWPMatchId], 
                    m.[MatchNo], 
@@ -115,7 +119,10 @@ AS
                    m.[EventDateTime], 
                    m.[IsChecked], 
                    m.[InfoSiteMatchId], 
-                   m.[IsNeutral]
+                   m.[IsNeutral],
+				     m.[Agent_Est],
+					   m.[Remark_Est],
+					     m.[RemarkBy]
             FROM dbo.OWPMatch m WITH(NOLOCK)
                  INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
 

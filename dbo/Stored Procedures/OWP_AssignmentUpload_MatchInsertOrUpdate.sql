@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_AssignmentUpload_MatchInsertOrUpdate] @Assignments NVARCHAR(MAX), 
                                                                  @EventDate   DATE, 
@@ -19,6 +19,7 @@ Revisions:
 	20201109@Carlos.Nguyen: LA Auto Assignment - Determine ET/PK match - [Redmine: #144570]
 	20200128@Mira: Saba match validation rule - [Redmine: 149472]
 	20240131@Los: Fix not save other time at 12AM - [Redmine: 200529]
+	20240401@los: insert AgentEst, RemarkEst, RemarkBy - [Redmine: #202819]
 */
 
      SET NOCOUNT ON;
@@ -45,6 +46,9 @@ Revisions:
       NoHDP           VARCHAR(50), 
       Phone           NVARCHAR(200), 
       Remark          NVARCHAR(2000), 
+      AgentEst        NVARCHAR(2000), 
+      RemarkEst       NVARCHAR(2000), 
+      RemarkBy        NVARCHAR(2000), 
       [Round]         NVARCHAR(2000), 
       WB              NVARCHAR(100), 
       Website1        NVARCHAR(1000), 
@@ -85,6 +89,9 @@ Revisions:
                    NoHDP, 
                    Phone, 
                    Remark, 
+                   AgentEst, 
+                   RemarkEst, 
+                   RemarkBy, 
                    [Round], 
                    WB, 
                    Website1, 
@@ -98,7 +105,7 @@ Revisions:
                    0, 
                    0, 
                    EtPk
-            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), IsSaba BIT, InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime NVARCHAR(7), KickOffTime TIME(7), Channel NVARCHAR(100), IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT, EtPk NVARCHAR(2000))
+            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), IsSaba BIT, InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime NVARCHAR(7), KickOffTime TIME(7), Channel NVARCHAR(100), IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), AgentEst NVARCHAR(2000), RemarkEst NVARCHAR(2000), RemarkBy NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT, EtPk NVARCHAR(2000))
             ORDER BY ISNULL(MinorBettypeId, 0) DESC;
      EXEC sp_xml_removedocument 
           @idoc;
@@ -224,6 +231,9 @@ Revisions:
            i.[Round] = m.[Round], 
            i.[Division] = m.[Division], 
            i.[Remark] = m.[Remark], 
+           i.[Agent_EST] = m.AgentEst, 
+           i.[Remark_EST] = m.RemarkEst, 
+           i.[RemarkBy] = m.RemarkBy, 
            i.[Website1] = m.[Website1], 
            i.[Website2] = m.[Website2], 
            i.[Website3] = m.[Website3], 

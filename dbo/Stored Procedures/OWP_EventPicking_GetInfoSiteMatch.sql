@@ -16,6 +16,8 @@ AS
 	20240307@Mira: get IsBlackList column - [Redmine: #201375]
 	20240328@Johnny: reduce select match - [Redmine: #202638]
 	20240419@Mira: Save league, home, away blacklist column - [Redmine: #203309s]
+	20240422@Carlos.nguyen: init data league management - [Redmine: #202639]
+
 */
 
     BEGIN
@@ -71,12 +73,18 @@ AS
                im.IsDeleted, 
                im.IsLeagueBlackList, 
                im.IsHomeBlackList, 
-               im.IsAwayBlackList
+               im.IsAwayBlackList, 
+               ep.MaxbetHdp 'MaxbetHdp', 
+               ep.SpreadHdp 'SpreadHdp', 
+               ep.SpreadOu 'SpreadOu', 
+               ep.NoOfHDP 'NoOfHDP',
+			   ep.LSTNote 'LstNote'
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
                                                                           AND us.ChildMatchId IS NULL
              LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
+             LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId = im.InfoSiteMatchId
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';
     END;
