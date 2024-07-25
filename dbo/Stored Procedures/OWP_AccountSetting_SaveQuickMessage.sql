@@ -22,7 +22,7 @@ AS
         IF EXISTS
         (
             SELECT 1
-            FROM dbo.QuickMessage
+            FROM dbo.QuickMessage WITH(NOLOCK)
             WHERE Id = @Id
         )
             BEGIN
