@@ -11,18 +11,19 @@ AS
       
  Revisions: 
 	20240523@Johnny: Init - [Redmine: #201603]
+	20240725@Mira: get nickname or username - [Redmine: #201603]
 */
 
     BEGIN
         DECLARE @tblMessageId TABLE(Id INT NOT NULL);
         INSERT INTO @tblMessageId(Id)
-              SELECT DISTINCT 
+               SELECT DISTINCT 
                       value
                FROM STRING_SPLIT(@MessageIds, ',');
         SELECT mi.MessageId, 
                mi.IconKey, 
                mi.CreatorId 'ReactUserId', 
-               u.Username 'ReactUserName', 
+               COALESCE(u.Nickname, u.Username) AS 'ReactUserName', 
                fu.SavedFileName 'ReactAvatarName'
         FROM @tblMessageId AS m
              INNER JOIN MessageIcon AS mi WITH(NOLOCK) ON m.Id = mi.MessageId
