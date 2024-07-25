@@ -6,12 +6,12 @@ CREATE PROCEDURE [dbo].[OWP_AccountSetting_SaveUserProfile] @UserId INT,
 AS
 
 /*      
- Created: 20250521@Mira
+ Created: 20240521@Mira
  Task : Account Setting page
  DB: bodb_OWP      
  
  Revisions:
-    20250521@Mira: save avatar - [Redmine: #201603]
+    20240521@Mira: save avatar - [Redmine: #201603]
 */
 
     BEGIN
