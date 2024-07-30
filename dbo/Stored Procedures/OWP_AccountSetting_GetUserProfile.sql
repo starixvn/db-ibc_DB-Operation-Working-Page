@@ -11,11 +11,12 @@ AS
  
  Revisions:
     20240521@Mira: get quick message - [Redmine: #201603]
+	20240725@Mira: get nickname or username - [Redmine: #201603]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT u.Username, 
+        SELECT COALESCE(u.Nickname, u.Username) AS Username, 
                f.SavedFileName
         FROM [User] AS u WITH(NOLOCK)
              LEFT JOIN dbo.UserProfile up WITH(NOLOCK) ON up.UserId = u.UserId
