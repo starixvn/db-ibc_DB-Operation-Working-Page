@@ -134,5 +134,5 @@ AS
              @Duration = @Duration, 
              @ObjectId = @LeagueSettingId, 
              @Data = @LogSettingData, 
-             @DataOld = '';
+             @DataOld = NULL;
     END;
