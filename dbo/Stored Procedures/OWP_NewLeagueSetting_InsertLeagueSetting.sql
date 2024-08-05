@@ -34,6 +34,8 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
+        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @LogSettingData NVARCHAR(MAX), @XmlSettingNew XML, @LogInfoData NVARCHAR(MAX), @XmlInfoNew XML;
+        SET @StartRun = GETDATE();
 
         /*Insert or update league*/
 
@@ -96,4 +98,41 @@ AS
                FROM OWPLeague AS owpl WITH(NOLOCK)
                WHERE owpl.OWPLeagueName = @League;
         SELECT @LeagueSettingId = @@IDENTITY;
+
+        -- log new league setting 
+        SET @XmlSettingNew =
+        (
+            SELECT l.Id 'LeagueSettingId', 
+                   l.OWPLeagueId, 
+                   l.[FullConditionDescription], 
+                   l.[Spread_HDP] 'Spread_HDP_Value', 
+                   l.[Spread_OU] 'Spread_OU_Value', 
+                   l.[Spread_Note], 
+                   l.[MaxbetWD_HDP] 'MaxbetWD_HDP_Value', 
+                   l.[MaxbetWD_HDP_Note], 
+                   l.[WD_NoOfHDP] 'WD_NoOfHDP_Value', 
+                   l.[WD_NoOfHDP_Note], 
+                   l.[MaxbetWK_HDP] 'WK_HDP_Value', 
+                   l.[MaxbetWK_HDP_Note], 
+                   l.[WK_NoOfHDP] 'MaxbetWK_NoOfHDP_Value', 
+                   l.[WK_NoOfHDP_Note], 
+                   l.[LSTNote], 
+                   l.[Remark2], 
+                   l.[Comment], 
+                   o.New_CategoryId 'LeagueGroupId'
+            FROM LeagueManagementSetting l WITH(NOLOCK)
+                 INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
+            WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
+        );
+        SET @LogSettingData = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingNew), '" />', '"/"');
+        SET @EndRun = GETDATE();
+        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+        EXEC dbo.OWP_WriteLog 
+             @CreatorId = @ActorId, 
+             @SPName = 'OWP_NewLeagueSetting_UpdateLeagueSetting', 
+             @LoggedDate = @StartRun, 
+             @Duration = @Duration, 
+             @ObjectId = @LeagueSettingId, 
+             @Data = @LogSettingData, 
+             @DataOld = '';
     END;
