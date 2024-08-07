@@ -12,9 +12,9 @@ ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_UpdateLeagueSetting] @LeagueSettingI
                                                                  @MaxbetWD_HDP_Note        NVARCHAR(2000) = NULL, 
                                                                  @WD_NoOfHDP_Value         NVARCHAR(2000) = NULL, 
                                                                  @WD_NoOfHDP_Note          NVARCHAR(2000) = NULL, 
-                                                                 @MaxbetWK_HDP_value       MONEY          = NULL, 
+                                                                 @MaxbetWK_HDP_Value       MONEY          = NULL, 
                                                                  @MaxbetWK_HDP_Note        NVARCHAR(2000) = NULL, 
-                                                                 @WK_NoOfHDP_value         NVARCHAR(2000) = NULL, 
+                                                                 @WK_NoOfHDP_Value         NVARCHAR(2000) = NULL, 
                                                                  @WK_NoOfHDP_Note          NVARCHAR(2000) = NULL, 
                                                                  @LstNote                  NVARCHAR(2000) = NULL, 
                                                                  @Remark2                  NVARCHAR(2000) = NULL, 
@@ -29,6 +29,7 @@ AS
  
  Revisions:
     20240429@Liam: Get new league Setting detail   - [Redmine: #202639]
+	20240707@Liam: Correct maxbet setting - [Redmine: #207941]
 
 */
 
