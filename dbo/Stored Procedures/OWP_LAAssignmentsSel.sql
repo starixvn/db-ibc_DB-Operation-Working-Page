@@ -58,10 +58,6 @@ AS
            AND mi.MatchStatus IN('Live', 'Suspended')
      AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
 	 AND NOT (l.OWPLeagueName LIKE '%SPECIFIC 10 MINS%'
-			OR l.OWPLeagueName LIKE '%SPECIFIC 15 MINS%'
-			OR l.OWPLeagueName LIKE '%SPECIFIC 10 MINS NUMBER OF CORNERS%'
-			OR l.OWPLeagueName LIKE '%SPECIFIC 15 MINS NUMBER OF CORNERS%'
-			OR l.OWPLeagueName LIKE '%SPECIFIC 15 MINS TOTAL BOOKINGS%'
-			OR l.OWPLeagueName LIKE '%SPECIFIC 10 MINS TOTAL BOOKINGS%')
+			OR l.OWPLeagueName LIKE '%SPECIFIC 15 MINS%')
      ORDER BY UserId ASC, 
               ma.EventDateTime ASC;
