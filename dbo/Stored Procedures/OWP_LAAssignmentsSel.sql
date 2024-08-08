@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_LAAssignmentsSel] @FromDate DATETIME = '2020-01-03', 
                                              @ToDate   DATETIME = '2020-01-05'
@@ -15,6 +15,7 @@ AS
 	20200602@Los: LA Report change rule count Suspender - [Redmine: #184832]
 	20230824@Mira: Get data to group 5 mins - [Redmine: #185887]
 	20230918@Los: Count suspened - [Redmine: #193721]
+	20240801@Johnny: Excluding specific matches - [Redmine: #205512]
 */
 
      SET NOCOUNT ON;
@@ -56,5 +57,7 @@ AS
            AND tm.row_num <= 2
            AND mi.MatchStatus IN('Live', 'Suspended')
      AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
+	 AND NOT (l.OWPLeagueName LIKE '%SPECIFIC 10 MINS%'
+			OR l.OWPLeagueName LIKE '%SPECIFIC 15 MINS%')
      ORDER BY UserId ASC, 
               ma.EventDateTime ASC;
