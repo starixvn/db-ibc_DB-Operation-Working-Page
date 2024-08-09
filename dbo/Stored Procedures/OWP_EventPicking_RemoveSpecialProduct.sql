@@ -12,7 +12,7 @@ AS
  DB: bodb_OWP      
  
  Revisions:
-    20240808@Los: Remove special product  - [Redmine: #202639]
+    20240808@Los: Remove special product  - [Redmine: #207942]
 
 */
 
