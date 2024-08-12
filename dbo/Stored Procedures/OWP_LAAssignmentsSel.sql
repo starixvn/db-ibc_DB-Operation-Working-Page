@@ -16,6 +16,7 @@ AS
 	20230824@Mira: Get data to group 5 mins - [Redmine: #185887]
 	20230918@Los: Count suspened - [Redmine: #193721]
 	20240801@Johnny: Excluding specific matches - [Redmine: #205512]
+	20240812@Johnny: Excluding specials goal - [Redmine: #209234]
 */
 
      SET NOCOUNT ON;
@@ -58,6 +59,7 @@ AS
            AND mi.MatchStatus IN('Live', 'Suspended')
      AND ma.EventDateTime BETWEEN @FromDate AND @ToDate
 	 AND NOT (l.OWPLeagueName LIKE '%SPECIFIC 10 MINS%'
-			OR l.OWPLeagueName LIKE '%SPECIFIC 15 MINS%')
+			OR l.OWPLeagueName LIKE '%SPECIFIC 15 MINS%'
+			OR l.OWPLeagueName LIKE '%SPECIALS GOAL%')
      ORDER BY UserId ASC, 
               ma.EventDateTime ASC;
