@@ -49,7 +49,7 @@ AS
 			   NULL
 		FROM   @parentIdWithMinorBettypeId AS pa
 		WHERE  pa.ParentMatchId IN (SELECT e.ParentId FROM EventPickingChildMatch e) 
-		AND    pa.MinorBettypeId NOT IN(SELECT e.MinorBettypeId FROM EventPickingChildMatch e)
+		AND    pa.MinorBettypeId NOT IN(SELECT e.MinorBettypeId FROM EventPickingChildMatch e WHERE e.ParentId = pa.ParentMatchId)
 		UNION
 		SELECT pa.ParentMatchId,
 			   pa.MinorBettypeId,
