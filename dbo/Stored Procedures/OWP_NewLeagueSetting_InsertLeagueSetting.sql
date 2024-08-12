@@ -48,7 +48,8 @@ AS
             BEGIN
                 UPDATE OWPLeague
                   SET 
-                      New_CategoryId = @LeagueGroupId;
+                      New_CategoryId = @LeagueGroupId
+                WHERE OWPLeagueName = @League;
         END;
             ELSE
             BEGIN
