@@ -12,7 +12,7 @@ AS
  
  Revisions:
     20240429@Liam: Get new league Settings  - [Redmine: #202639]
-
+    20240802@Mira: Order setting by league  - [Redmine: #207941]
 */
 
     BEGIN
@@ -41,9 +41,11 @@ AS
         FROM LeagueManagementSetting l WITH(NOLOCK)
              INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
              LEFT JOIN RefResource rr WITH(NOLOCK) ON rr.RefName = 'NewLeagueCategory'
-                                         AND o.New_CategoryId = rr.ResourceId
+                                                      AND o.New_CategoryId = rr.ResourceId
         WHERE(@IsEqualLeague = 0
               AND o.OWPLeagueName LIKE '%' + @League + '%')
              OR (@IsEqualLeague = 1
-                 AND o.OWPLeagueName = @League);
+                 AND o.OWPLeagueName = @League)
+        ORDER BY o.OWPLeagueName, 
+                 l.Id;
     END;

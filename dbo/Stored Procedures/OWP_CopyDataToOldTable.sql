@@ -15,6 +15,7 @@ AS
 	20200826@Jacob: Fix bug missing Odds - [Redmine: #137757]
 	20210909@Luca.Duong: Remove cn88 - [Feature: #160666]	
 	20240402@Los: Copy {Agent_EST, Remart_Est, RemarkBy} - [Redmine: #202819]
+	20240809@Los: Correct Copy {Agent_EST, Remart_Est, RemarkBy} - [Redmine: #207941]
 */
 
      SET NOCOUNT ON;
@@ -102,10 +103,7 @@ AS
       [EventDateTime], 
       [IsChecked], 
       [InfoSiteMatchId], 
-      [IsNeutral],
-	  [Agent_Est],
-	  [Remark_Est],
-	  [RemarkBy]
+      [IsNeutral]
      )
             SELECT m.[OWPMatchId], 
                    m.[MatchNo], 
@@ -119,10 +117,7 @@ AS
                    m.[EventDateTime], 
                    m.[IsChecked], 
                    m.[InfoSiteMatchId], 
-                   m.[IsNeutral],
-				     m.[Agent_Est],
-					   m.[Remark_Est],
-					     m.[RemarkBy]
+                   m.[IsNeutral]
             FROM dbo.OWPMatch m WITH(NOLOCK)
                  INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
 
@@ -166,7 +161,10 @@ AS
       [MatchStatus], 
       [NoOfHDPId], 
       [Market], 
-      [IPTV]
+      [IPTV],
+	  [Agent_Est],
+	  [Remark_Est],
+	  [RemarkBy]
      )
             SELECT [OWPMatchId], 
                    [Channel], 
@@ -188,7 +186,10 @@ AS
                    [MatchStatus], 
                    [NoOfHDPId], 
                    [Market], 
-                   [IPTV]
+                   [IPTV],
+				     m.[Agent_Est],
+					   m.[Remark_Est],
+					     m.[RemarkBy]
             FROM [dbo].[MatchInfo] m WITH(NOLOCK)
                  INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id; 
      -- DELETE MatchMarket_Old
