@@ -25,6 +25,20 @@ INSERT INTO [dbo].[Module]
        );
 GO
 
+INSERT INTO [dbo].[Module]
+([ModuleId], 
+ [ModuleName]
+)
+       SELECT 51, 
+              'AddSpecialProduct'
+       WHERE NOT EXISTS
+       (
+           SELECT 1
+           FROM [dbo].[Module] WITH(NOLOCK)
+           WHERE [ModuleId] = 51
+       );
+GO
+
 
 INSERT INTO [dbo].[ModuleObject]
 ([ModuleObjectId], 
@@ -42,6 +56,21 @@ INSERT INTO [dbo].[ModuleObject]
        );
 GO
 
+INSERT INTO [dbo].[ModuleObject]
+([ModuleObjectId], 
+ [ModuleObjectName], 
+ [ModuleId]
+)
+       SELECT 71, 
+              'AddSpecialProduct', 
+              51
+       WHERE NOT EXISTS
+       (
+           SELECT 1
+           FROM [dbo].[ModuleObject] WITH(NOLOCK)
+           WHERE [ModuleObjectId] = 71
+       );
+GO
 
 IF NOT EXISTS
 (
@@ -65,6 +94,38 @@ IF NOT EXISTS
      3, 
      N'OWP_EventPicking_RemoveSpecialProduct', 
      N'OWP_EventPicking_RemoveSpecialProduct', 
+     N'<root><xml path="r/z"/><row item="ParentMatchId" />
+				<row item="MinorBettypeId" />
+				<row item="NoOfHDP" />
+				<row item="MaxbetHDP" />
+				<row item="SpreadHDP" />
+				<row item="SpreadOU" />
+				</root>'
+    );
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM [LogAction]
+    WHERE ActionId = 151
+)
+    INSERT INTO [dbo].[LogAction]
+    ([ActionId], 
+     [ModuleId], 
+     [ModuleObjectId], 
+     [ActionTypeId], 
+     [ActionName], 
+     [SPName], 
+     [LogItems]
+    )
+    VALUES
+    (151, 
+     51, 
+     71, 
+     1, 
+     N'OWP_EventPicking_AddSpecialProduct', 
+     N'OWP_EventPicking_AddSpecialProduct', 
      N'<root><xml path="r/z"/><row item="ParentMatchId" />
 				<row item="MinorBettypeId" />
 				<row item="NoOfHDP" />
