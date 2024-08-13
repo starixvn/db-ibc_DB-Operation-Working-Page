@@ -49,7 +49,7 @@ AS
                    THEN 0
                    ELSE 1
                END AS 'IsNoOffer', 
-			   epc.MaxbetHdp 'Maxbet',
+			   epc.MaxbetHdp 'MaxBetHDPNumber',
 			   epc.NoOfHDP 'NoHDP' ,
 			   epc.SpreadHdp 'SpreadHDP',
 			   epc.SpreadOu 'SpreadOU',
