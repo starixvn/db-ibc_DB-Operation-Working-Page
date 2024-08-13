@@ -25,7 +25,7 @@ AS
          ChildMatchId   INT, 
          ParentMatchId  INT, 
          MinorBettypeId INT, 
-         NoOfHDP        MONEY, 
+         NoOfHDP        NVARCHAR(2000), 
          MaxbetHDP      MONEY, 
          SpreadHDP      MONEY, 
          SpreadOU       MONEY

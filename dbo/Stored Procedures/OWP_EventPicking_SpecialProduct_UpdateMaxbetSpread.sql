@@ -46,7 +46,7 @@ AS
         SET @StartRun = GETDATE();
         SET @XmlLogOld =
         (
-            SELECT e.ParentId,
+            SELECT e.ParentId 'ParentMatchId',
 			e.MinorBettypeId,
                    e.MaxbetHdp, 
                    e.NoOfHDP, 
@@ -70,7 +70,7 @@ AS
         --Write log
         SET @XmlLogNew =
         (
-            SELECT t.ParentId,
+            SELECT t.ParentId 'ParentMatchId',
 			t.MinorBettypeId,
                    t.MaxbetHdp, 
                    t.NoOfHDP, 
