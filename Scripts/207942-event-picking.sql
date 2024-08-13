@@ -135,3 +135,66 @@ IF NOT EXISTS
 				</root>'
     );
 GO
+
+--------------Update maxbet spread special product-------------------
+INSERT INTO [dbo].[Module]
+([ModuleId], 
+ [ModuleName]
+)
+       SELECT 151, 
+              'SpecialProduct_UpdateMaxbetSpread'
+       WHERE NOT EXISTS
+       (
+           SELECT 1
+           FROM [dbo].[Module] WITH(NOLOCK)
+           WHERE [ModuleId] = 151
+       );
+GO
+
+INSERT INTO [dbo].[ModuleObject]
+([ModuleObjectId], 
+ [ModuleObjectName], 
+ [ModuleId]
+)
+       SELECT 181, 
+              'SpecialProduct_UpdateMaxbetSpread', 
+              151
+       WHERE NOT EXISTS
+       (
+           SELECT 1
+           FROM [dbo].[ModuleObject] WITH(NOLOCK)
+           WHERE [ModuleObjectId] = 181
+       );
+GO
+
+IF NOT EXISTS
+(
+    SELECT 1
+    FROM [LogAction]
+    WHERE ActionId = 170
+)
+    INSERT INTO [dbo].[LogAction]
+    ([ActionId], 
+     [ModuleId], 
+     [ModuleObjectId], 
+     [ActionTypeId], 
+     [ActionName], 
+     [SPName], 
+     [LogItems]
+    )
+    VALUES
+    (170, 
+     151, 
+     181, 
+     2, 
+     N'OWP_EventPicking_SpecialProduct_UpdateMaxbetSpread', 
+     N'OWP_EventPicking_SpecialProduct_UpdateMaxbetSpread', 
+     N'<root><xml path="r/z"/><row item="ParentMatchId" />
+				<row item="MinorBettypeId" />
+				<row item="NoOfHDP" />
+				<row item="MaxbetHDP" />
+				<row item="SpreadHDP" />
+				<row item="SpreadOU" />
+				</root>'
+    );
+GO
