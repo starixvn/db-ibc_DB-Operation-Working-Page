@@ -1,0 +1,29 @@
+ALTER PROCEDURE dbo.[OWP_Consolidation_GetSubtype] @ActorId INT
+
+/*
+Created: 20240814@Los
+Task : Event Picking New
+DB: bodb_OWP	
+
+Revisions:
+	20240814@Los: Get subtype - [Redmine: #207945]
+*/
+
+AS
+    BEGIN
+        SET NOCOUNT ON;
+		/**/
+		DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 500, GETDATE()), '12:00:00'), @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '11:59:59');
+		
+        SELECT DISTINCT 
+               tt.TypeId, 
+               tt.TypeName, 
+               tis.SubtypeId, 
+               ISNULL(ts.SubtypeName, 'None') 'SubtypeName'
+        FROM TicketIssue AS tis WITH(NOLOCK)
+             INNER JOIN TicketMessageReader AS tmr WITH(NOLOCK) ON tis.TicketId = tmr.TicketId
+             INNER JOIN TicketType AS tt WITH(NOLOCK) ON tt.TypeId = tis.TicketType
+             LEFT JOIN TicketSubtype AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
+        WHERE tmr.RecipientId = 8 AND tis.LastCommentDate BETWEEN @FromDateTime AND @ToDateTime
+        
+    END;
