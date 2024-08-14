@@ -18,7 +18,10 @@ AS
         SELECT DISTINCT 
                tt.TypeId, 
                tt.TypeName, 
-               tis.SubtypeId, 
+               CASE WHEN ts.SubtypeName IS NULL
+			   THEN 999999
+			   ELSE tis.SubtypeId
+			   END 'SubtypeId', 
                ISNULL(ts.SubtypeName, 'None') 'SubtypeName'
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN TicketMessageReader AS tmr WITH(NOLOCK) ON tis.TicketId = tmr.TicketId
