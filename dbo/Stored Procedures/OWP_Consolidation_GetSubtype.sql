@@ -13,20 +13,19 @@ AS
     BEGIN
         SET NOCOUNT ON;
 		/**/
-		DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 500, GETDATE()), '12:00:00'), @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '11:59:59');
+		DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 2000, GETDATE()), '12:00:00'), @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, GETDATE()), '11:59:59');
 		
         SELECT DISTINCT 
                tt.TypeId, 
-               tt.TypeName, 
                CASE WHEN ts.SubtypeName IS NULL
-			   THEN 999999
+			   THEN -1
 			   ELSE tis.SubtypeId
 			   END 'SubtypeId', 
-               ISNULL(ts.SubtypeName, 'None') 'SubtypeName'
+               (tt.TypeName +' - '+ISNULL(ts.SubtypeName, 'None')) 'SubtypeName'
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN TicketMessageReader AS tmr WITH(NOLOCK) ON tis.TicketId = tmr.TicketId
              INNER JOIN TicketType AS tt WITH(NOLOCK) ON tt.TypeId = tis.TicketType
              LEFT JOIN TicketSubtype AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
-        WHERE tmr.RecipientId = 8 AND tis.LastCommentDate BETWEEN @FromDateTime AND @ToDateTime
+        WHERE tmr.RecipientId = @ActorId AND tis.LastCommentDate BETWEEN @FromDateTime AND @ToDateTime
         
     END;
