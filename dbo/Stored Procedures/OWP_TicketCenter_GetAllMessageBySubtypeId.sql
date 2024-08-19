@@ -1,9 +1,9 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_TicketCenter_GetAllMessageBySubtypeId] @ActorId      INT, 
-                                                                 @SubtypeId    INT = NULL, 
-                                                                 @TicketTypeId INT = NULL
+CREATE PROCEDURE [dbo].[OWP_TicketCenter_GetAllMessageThreeDayAgo] @ActorId      INT, 
+                                                                   @SubtypeId    INT = NULL, 
+                                                                   @TicketTypeId INT = NULL
 AS
 
 /*      
@@ -13,7 +13,6 @@ AS
       
  Revisions:         
 	20240816@Liam.Pham: Get All message by subtype - [Redmine: #207945]
-
 */
 
     BEGIN
@@ -25,8 +24,11 @@ AS
         INSERT INTO #tblTicketValid
                SELECT t.TicketId
                FROM TicketIssue t WITH(NOLOCK)
+                    INNER JOIN TicketSubtype ts WITH(NOLOCK) ON t.TicketType = ts.TypeId
                WHERE t.LastCommentDate > @DateValid
-                     AND TicketType = @TicketTypeId;
+                     AND TicketType = @TicketTypeId
+                     AND (ts.SubtypeId = @SubtypeId OR @SubtypeId IS NULL);
+
         INSERT INTO #tblTicketRecipient
                SELECT tr.TicketId
                FROM TicketRecipient AS tr WITH(NOLOCK)
@@ -88,7 +90,9 @@ AS
              LEFT JOIN [User] AS u2 WITH(NOLOCK) ON ti.UserId = u2.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = tm.UserId
              LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
-
         DROP TABLE #tblTicketRecipient;
         DROP TABLE #tblTicketValid;
     END;
+
+
+
