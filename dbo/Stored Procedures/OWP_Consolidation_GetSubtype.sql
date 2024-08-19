@@ -21,11 +21,13 @@ AS
 			   THEN -1
 			   ELSE tis.SubtypeId
 			   END 'SubtypeId', 
-               (tt.TypeName +' - '+ISNULL(ts.SubtypeName, 'None')) 'SubtypeName'
+               (tt.TypeName +' - '+ISNULL(ts.SubtypeName, 'None')) 'SubtypeName',
+			   tmr.IsRead
         FROM TicketIssue AS tis WITH(NOLOCK)
              INNER JOIN TicketMessageReader AS tmr WITH(NOLOCK) ON tis.TicketId = tmr.TicketId
              INNER JOIN TicketType AS tt WITH(NOLOCK) ON tt.TypeId = tis.TicketType
              LEFT JOIN TicketSubtype AS ts WITH(NOLOCK) ON tis.SubtypeId = ts.SubtypeId
         WHERE tmr.RecipientId = @ActorId AND tis.LastCommentDate BETWEEN @FromDateTime AND @ToDateTime
         
+
     END;
