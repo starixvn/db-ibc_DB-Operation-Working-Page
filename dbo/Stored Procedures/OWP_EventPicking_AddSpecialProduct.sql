@@ -69,26 +69,36 @@ AS
 			   SpreadOU
 		FROM   @tempAdd
 		-- Log the operation
-		DECLARE @StartRun DATETIME = GETDATE();
-		DECLARE @LogSettingDataOld NVARCHAR(MAX);
-		DECLARE @Duration INT;
-		-- Prepare log data
-		SET @LogSettingDataOld = (
-			SELECT ParentMatchId, MinorBettypeId, NoOfHDP, MaxbetHDP, SpreadHDP, SpreadOU
-			FROM @tempAdd
-			FOR XML PATH('z'), ROOT('r')
-		);
-
-		SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @LogSettingDataOld), '" />', '"/"');
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, GETDATE());
-
-		-- Write log
-		EXEC dbo.OWP_WriteLog 
-			@CreatorId = @ActorId, 
-			@SPName = 'OWP_EventPicking_AddSpecialProduct', 
-			@LoggedDate = @StartRun, 
-			@Duration = @Duration, 
-			@ObjectId = 1000, 
-			@Data = NULL, 
-			@DataOld = @LogSettingDataOld;
+		DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @LogSettingDataOld NVARCHAR(MAX), @XmlSettingOld XML, @XmlSettingNew XML, @LogInfoDataOld NVARCHAR(MAX), @LogInfoData NVARCHAR(MAX), @XmlInfoOld XML, @XmlInfoNew XML;
+        SET @StartRun = GETDATE();
+        DECLARE @LoopCounter INT= 1, @MaxRowCount INT, @RowNumber INT;
+        SET @LoopCounter = 1;
+        SELECT @MaxRowCount = COUNT(Id)
+        FROM @tempAdd;
+        WHILE(@LoopCounter <= @MaxRowCount)
+            BEGIN
+                SET @XmlSettingOld =
+                (
+                    SELECT l.ParentMatchId, 
+                           l.MinorBettypeId, 
+                           l.NoOfHDP, 
+                           l.MaxbetHDP, 
+                           l.SpreadHDP, 
+                           l.SpreadOU
+                    FROM @tempAdd AS l
+                    WHERE Id = @LoopCounter FOR XML PATH('z'), ROOT('r')
+                );
+                SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
+                SET @EndRun = GETDATE();
+                SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
+                EXEC dbo.OWP_WriteLog 
+                     @CreatorId = @ActorId, 
+                     @SPName = 'OWP_EventPicking_AddSpecialProduct', 
+                     @LoggedDate = @StartRun, 
+                     @Duration = @Duration, 
+                     @ObjectId = 1000, 
+                     @Data = @LogSettingDataOld, 
+                     @DataOld = NULL;
+                SET @LoopCounter = @LoopCounter + 1;
+            END;
     END;
