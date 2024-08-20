@@ -48,8 +48,8 @@ AS
 			   NULL,
 			   NULL
 		FROM   @parentIdWithMinorBettypeId AS pa
-		WHERE  pa.ParentMatchId IN (SELECT e.ParentId FROM EventPickingChildMatch e) 
-		AND    pa.MinorBettypeId NOT IN(SELECT e.MinorBettypeId FROM EventPickingChildMatch e WHERE e.ParentId = pa.ParentMatchId)
+		WHERE  pa.ParentMatchId IN (SELECT e.ParentId FROM EventPickingChildMatch e WITH(NOLOCK)) 
+		AND    pa.MinorBettypeId NOT IN(SELECT e.MinorBettypeId FROM EventPickingChildMatch e WITH(NOLOCK) WHERE e.ParentId = pa.ParentMatchId)
 		UNION
 		SELECT pa.ParentMatchId,
 			   pa.MinorBettypeId,
@@ -59,7 +59,7 @@ AS
 			   NULL
 		FROM   @parentIdWithMinorBettypeId AS pa
 		LEFT   JOIN EventPickingChildMatch AS e WITH(NOLOCK) ON pa.ParentMatchId != e.ParentId
-		WHERE  pa.ParentMatchId NOT IN (SELECT e.ParentId FROM EventPickingChildMatch e)
+		WHERE  pa.ParentMatchId NOT IN (SELECT e.ParentId FROM EventPickingChildMatch e WITH(NOLOCK))
 		INSERT INTO EventPickingChildMatch(ParentId, MinorBettypeId, NoOfHDP, MaxbetHDP, SpreadHDP, SpreadOU)
 		SELECT ParentMatchId,
 			   MinorBettypeId,
