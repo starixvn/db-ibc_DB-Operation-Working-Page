@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20242304@Liam: Get main match for LST - [Redmine: #203309]
+	20241308@Liam: Get maxbet for LST - [Redmine: #207942]
 */
 
     BEGIN
@@ -49,10 +50,16 @@ AS
                    THEN 0
                    ELSE 1
                END AS 'IsNoOffer', 
+			   ep.MaxbetHdp 'MaxBetHDPNumber',
+			   ep.NoOfHDP 'NoHDP' ,
+			   ep.SpreadHdp 'SpreadHDP',
+			   ep.SpreadOu 'SpreadOU',
                im.IsTest AS IsTestMatch
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
                                                                           AND us.ChildMatchId IS NULL
+			  LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId = im.InfoSiteMatchId
+	        
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';
     END;
