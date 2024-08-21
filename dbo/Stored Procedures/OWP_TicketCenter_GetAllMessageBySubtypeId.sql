@@ -24,32 +24,32 @@ AS
         INSERT INTO #tblTicketValid
                SELECT t.TicketId
                FROM TicketIssue t WITH(NOLOCK)
-                    INNER JOIN TicketSubtype ts WITH(NOLOCK) ON t.TicketType = ts.TypeId
+                    LEFT JOIN TicketSubtype ts WITH(NOLOCK) ON t.SubtypeId = ts.SubtypeId
                WHERE t.LastCommentDate > @DateValid
                      AND TicketType = @TicketTypeId
-                     AND (ts.SubtypeId = @SubtypeId OR @SubtypeId IS NULL);
-
+                     AND ((ts.SubtypeId = @SubtypeId)
+                          OR (@SubtypeId IS NULL
+                              AND ts.SubtypeId IS NULL));
         INSERT INTO #tblTicketRecipient
                SELECT tr.TicketId
                FROM TicketRecipient AS tr WITH(NOLOCK)
-                    INNER JOIN #tblTicketValid AS ti WITH(NOLOCK) ON tr.TicketId = ti.TicketId
+                    INNER JOIN #tblTicketValid AS ti ON tr.TicketId = ti.TicketId
                WHERE tr.RecipientType = 1
                      AND tr.RecipientId = @ActorId
                UNION ALL
                SELECT tr.TicketId
                FROM TicketRecipient AS tr WITH(NOLOCK)
-                    INNER JOIN #tblTicketValid AS ti WITH(NOLOCK) ON tr.TicketId = ti.TicketId
+                    INNER JOIN #tblTicketValid AS ti ON tr.TicketId = ti.TicketId
                     INNER JOIN RecipientGroup AS rg WITH(NOLOCK) ON tr.RecipientId = rg.GroupId
                WHERE tr.RecipientType = 2
                      AND rg.RecipientId = @ActorId
                UNION ALL
                SELECT tr.TicketId
                FROM TicketRecipient AS tr WITH(NOLOCK)
-                    INNER JOIN #tblTicketValid AS ti WITH(NOLOCK) ON tr.TicketId = ti.TicketId
+                    INNER JOIN #tblTicketValid AS ti ON tr.TicketId = ti.TicketId
                     INNER JOIN [User] AS u WITH(NOLOCK) ON tr.RecipientId = u.SectionId
                WHERE tr.RecipientType = 3
                      AND u.UserId = @ActorId;
-
         SELECT DISTINCT 
                tm.CreatedDate, 
                tm.Id AS MessageId, 
@@ -93,6 +93,3 @@ AS
         DROP TABLE #tblTicketRecipient;
         DROP TABLE #tblTicketValid;
     END;
-
-
-
