@@ -22,20 +22,23 @@ AS
          SubtypeId       INT, 
          SubtypeName     NVARCHAR(2000), 
          IsRead          BIT, 
-         LastCommentDate DATETIME
+         LastCommentDate DATETIME, 
+         EventType       INT
         );
         INSERT INTO @tplSubtype
         (TypeId, 
          SubtypeId, 
          SubtypeName, 
          IsRead, 
-         LastCommentDate
+         LastCommentDate, 
+         EventType
         )
                SELECT tt.TypeId, 
                       ts.SubtypeId, 
                       (tt.TypeName + ' - ' + ISNULL(ts.SubtypeName, 'None')) 'SubtypeName', 
                       tmr.IsRead, 
-                      tis.LastCommentDate
+                      tis.LastCommentDate, 
+                      tis.EventType_New 'EventType'
                FROM TicketIssue AS tis WITH(NOLOCK)
                     INNER JOIN TicketMessageReader AS tmr WITH(NOLOCK) ON tis.TicketId = tmr.TicketId
                     INNER JOIN TicketType AS tt WITH(NOLOCK) ON tt.TypeId = tis.TicketType
@@ -47,6 +50,7 @@ AS
                TypeId, 
                SubtypeId, 
                SubtypeName, 
-               IsRead
+               IsRead, 
+               EventType
         FROM @tplSubtype;
     END;
