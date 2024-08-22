@@ -11,7 +11,7 @@ AS
     
  Revisions:
 	20220309@Johnny.Thai: Init sp - [Redmine: #137757]
-	20230630@Johnny.Thai: Exlude VIP Support - [Redmine: #190284]
+	20240822@Los: Archive ticket   - [Redmine: #207945]
 */
 
     BEGIN
@@ -22,35 +22,48 @@ AS
                FROM TicketIssue
                WHERE SubtypeId = 23;
         CREATE TABLE #tblFiledId(Id INT);
-        INSERT INTO #tblFiledId(Id)
-               SELECT FileId
-               FROM dbo.TicketMessage AS tm
-               WHERE DATEDIFF(DAY, tm.CreatedDate, @Date) > 30
-                     AND tm.IsSaved = 0
-                     AND tm.FileId IS NOT NULL
-                     AND tm.TicketId NOT IN
-               (
-                   SELECT TicketId
-                   FROM #tblVipSupportTicketId
-               );
+
+        -- MOVE FileUpload
+        INSERT INTO FileUpload_Old
+        ([FileId], 
+         [Title], 
+         [CreatedDate], 
+         [SavedFileName]
+        )
+               SELECT [FileId], 
+                      [Title], 
+                      [CreatedDate], 
+                      [SavedFileName]
+               FROM dbo.FileUpload AS fu WITH(NOLOCK)
+               WHERE DATEDIFF(DAY, fu.CreatedDate, @Date) > 30;
 
         -- DELETE FileUpLoad
         DELETE FROM dbo.FileUpload
-        WHERE FileId IN
-        (
-            SELECT Id
-            FROM #tblFiledId
-        );
+        WHERE DATEDIFF(DAY, CreatedDate, @Date) > 30;
+
+        -- MOVE TicketMessage
+        INSERT INTO [dbo].[TicketMessage_Old]
+        ([TicketId], 
+         [CreatedDate], 
+         [Message], 
+         [UserId], 
+         [IsSaved], 
+         [FileId], 
+         [QuoteMessageId]
+        )
+               SELECT [TicketId], 
+                      [CreatedDate], 
+                      [Message], 
+                      [UserId], 
+                      [IsSaved], 
+                      [FileId], 
+                      [QuoteMessageId]
+               FROM dbo.TicketMessage tm WITH(NOLOCK)
+               WHERE DATEDIFF(DAY, tm.CreatedDate, @Date) > 30;
         -- DELETE TicketMessage
         DELETE tm
         FROM dbo.TicketMessage tm
-        WHERE DATEDIFF(DAY, tm.CreatedDate, @Date) > 30
-              AND tm.IsSaved = 0
-              AND tm.TicketId NOT IN
-        (
-            SELECT TicketId
-            FROM #tblVipSupportTicketId
-        );
+        WHERE DATEDIFF(DAY, tm.CreatedDate, @Date) > 30;
         DROP TABLE #tblFiledId;
         DROP TABLE #tblVipSupportTicketId;
     END;
