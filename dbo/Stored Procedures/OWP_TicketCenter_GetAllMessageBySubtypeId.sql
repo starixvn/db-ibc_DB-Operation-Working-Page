@@ -89,7 +89,8 @@ AS
              LEFT JOIN TicketMessage AS ti WITH(NOLOCK) ON tm.QuoteMessageId = ti.Id
              LEFT JOIN [User] AS u2 WITH(NOLOCK) ON ti.UserId = u2.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = tm.UserId
-             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
+             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId
+		WHERE tm.CreatedDate > @DateValid
         DROP TABLE #tblTicketRecipient;
         DROP TABLE #tblTicketValid;
     END;

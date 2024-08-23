@@ -1,17 +1,16 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_DeleteOldMessage] @Date DATETIME
+CREATE PROCEDURE [dbo].[OWP_ArchiveOldMessage] @Date DATETIME
 AS
 
 /*    
- Created: 20220309@Johnny.Thai
- Task : Delete old data
+ Created: 20240822@Los
+ Task : Archive old data
  DB: bodb_OWP    
     
  Revisions:
-	20220309@Johnny.Thai: Init sp - [Redmine: #137757]
-	20240822@Los: Archive ticket   - [Redmine: #207945]
+	20240822@Los: Init sp - [Redmine: #207945]
 */
 
     BEGIN
