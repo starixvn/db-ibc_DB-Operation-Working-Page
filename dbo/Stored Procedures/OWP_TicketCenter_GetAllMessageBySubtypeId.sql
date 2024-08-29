@@ -17,8 +17,8 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @DateValid DATETIME;
-        SET @DateValid = DATEADD(DAY, -3, GETDATE());
+		DECLARE @GMT8Time DATETIME = DATEADD(HOUR, 8, CONVERT(DATETIME, GETUTCDATE()));
+        DECLARE @DateValid DATETIME = DATEDIFF(DAY, 2, @GMT8Time);
         CREATE TABLE #tblTicketValid(TicketId INT);
         CREATE TABLE #tblTicketRecipient(TicketId INT);
         INSERT INTO #tblTicketValid
