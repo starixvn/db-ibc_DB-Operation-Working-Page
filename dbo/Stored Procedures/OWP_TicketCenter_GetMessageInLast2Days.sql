@@ -16,11 +16,12 @@ AS
 	20230801@Johnny: Get quote message - [Redmine: #191543]
 	20230801@Liam: Get image file name - [Redmine: #191543]
 	20240522@Los: Get extension - [Redmine: #201603]
+	20240822@Mira: Change range time - [Redmine: #207945]
 */
 
     BEGIN
         DECLARE @GMT8Time DATETIME= DATEADD(HOUR, 8, CONVERT(DATETIME, GETUTCDATE()));
-        DECLARE @FromDateTime DATETIME= DATEDIFF(DAY, 1, @GMT8Time);
+        DECLARE @FromDateTime DATETIME= DATEDIFF(DAY, 2, @GMT8Time);
         SET NOCOUNT ON;
         DECLARE @MinMessageId INT;
         DECLARE @MinCurrentMessageId INT;
@@ -33,8 +34,8 @@ AS
          IsSaved        BIT, 
          Username       NVARCHAR(100), 
          QuoteMessageId INT, 
-         ImageFileName  NVARCHAR(200),
-		 Extension NVARCHAR(200)
+         ImageFileName  NVARCHAR(200), 
+         Extension      NVARCHAR(200)
         );
         INSERT INTO #tblMessageDetail
         (CreatedDate, 
@@ -45,8 +46,8 @@ AS
          IsSaved, 
          Username, 
          QuoteMessageId, 
-         ImageFileName,
-		 Extension
+         ImageFileName, 
+         Extension
         )
                SELECT DISTINCT 
                       tm.CreatedDate, 
@@ -69,8 +70,8 @@ AS
                                OR f.Title LIKE '%.bmp'
                           THEN f.SavedFileName
                           ELSE NULL
-                      END,
-					  u.Extension
+                      END, 
+                      u.Extension
                FROM TicketMessage AS tm WITH(NOLOCK)
                     LEFT JOIN [User] AS u WITH(NOLOCK) ON u.UserId = tm.UserId
                     LEFT JOIN [FileUpload] AS f WITH(NOLOCK) ON tm.FileId = f.FileId
@@ -78,7 +79,8 @@ AS
                      AND tm.CreatedDate >= @FromDateTime;
 
         -- select ticket detail
-        SELECT tm.CreatedDate, 
+        SELECT @TicketId 'TicketId', 
+               tm.CreatedDate, 
                tm.MessageId, 
                tm.[Message], 
                tm.UserId, 
