@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_UserListGet] @User VARCHAR(30) = NULL
+ALTER PROCEDURE [dbo].[OWP_UserListGet] @User VARCHAR(30) = NULL
 	,@RoleId SMALLINT = NULL
 	,@SectionId SMALLINT = NULL
 	,@DepartmentId SMALLINT = NULL

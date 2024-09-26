@@ -1,7 +1,9 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveDetail_User_GetAll]
+
+ALTER PROCEDURE [dbo].[OWP_LiveDetail_User_GetAll] @AllUserJson VARCHAR(MAX)
 AS
+
 /*  
  Created: Raymond.Le@20180907
  Task : Get all user for assignment
@@ -16,35 +18,36 @@ AS
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20191024@Kane.Le: Get EmployeeId - [Feature: #122604]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
-BEGIN
-	SET NOCOUNT ON
 
-	DECLARE @SiteId INT
-
-	SELECT @SiteId = SiteId
-	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
-	WHERE SiteName = 'Operation Working Page'
-		AND IsActive = 1
-		AND Environment = 'LIVE'
-
-	CREATE TABLE #tblFinalUserId (UserId INT)
-
-	SELECT u.UserId
-		,u.EmployeeId
-		,u.Username
-		,u.Nickname
-		,u.Extension
-		,u.Phone
-		,u.Skype
-		,u.IsSecondAccount
-	FROM dbo.[User] AS u WITH (NOLOCK)
-	INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-	INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
-		AND us.SiteId = @SiteId
-	WHERE ci.closed = 0
-			AND ci.reject = 0
-			AND ci.[Enabled] = 1
-			AND us.IsActive = 1
-	ORDER BY u.Username
-END
+    BEGIN
+        SET NOCOUNT ON;
+        DECLARE @tblAllUser TABLE
+        (UserId   INT NOT NULL, 
+         IsActive BIT
+        );
+        INSERT INTO @tblAllUser
+        (UserId, 
+         IsActive
+        )
+               SELECT *
+               FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
+        CREATE TABLE #tblFinalUserId(UserId INT);
+        SELECT u.UserId, 
+               u.EmployeeId, 
+               u.Username, 
+               u.Nickname, 
+               u.Extension, 
+               u.Phone, 
+               u.Skype, 
+               u.IsSecondAccount
+        FROM dbo.[User] AS u WITH(NOLOCK)
+             INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
+             INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
+        WHERE ci.closed = 0
+              AND ci.reject = 0
+              AND ci.[Enabled] = 1
+              AND us.IsActive = 1
+        ORDER BY u.Username;
+    END;

@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber8] @SessionId VARCHAR(50) = ''
+ALTER PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber8] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
 	,@Value NVARCHAR(4000) = NULL
 AS

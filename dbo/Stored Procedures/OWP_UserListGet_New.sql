@@ -1,21 +1,23 @@
-﻿USE [bodb_OWP]
+﻿USE [bodb_OWP];
 GO
+
 /****** Object:  StoredProcedure [dbo].[OWP_UserListGet_New]    Script Date: 12/15/2023 1:11:31 PM ******/
-SET ANSI_NULLS ON
+
+SET ANSI_NULLS ON;
 GO
-SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON;
 GO
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_UserListGet_New] @User                 VARCHAR(30), 
-                                        @RoleId               VARCHAR(200), 
-                                        @SectionId            VARCHAR(200), 
-                                        @DepartmentId         VARCHAR(200), 
-                                        @CategoryId           VARCHAR(200), 
-                                        @LocationCode         VARCHAR(200), 
-                                        @ExcludeClosedAccount BIT          = 1, 
-                                        @SiteId               INT
+                                            @RoleId               VARCHAR(200), 
+                                            @SectionId            VARCHAR(200), 
+                                            @DepartmentId         VARCHAR(200), 
+                                            @CategoryId           VARCHAR(200), 
+                                            @LocationCode         VARCHAR(200), 
+                                            @ExcludeClosedAccount BIT          = 1, 
+                                            @AllUserJson          VARCHAR(MAX)
 AS
 
 /*
@@ -25,6 +27,7 @@ DB: bodb_OWP
 
 Revisions:
 	20230112@Los: Query user - [Redmine: #196814]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
 
     BEGIN
@@ -36,6 +39,16 @@ Revisions:
         DECLARE @tblDepartmentId TABLE(Id INT);
         DECLARE @tblCategoryId TABLE(Id INT);
         DECLARE @tblLocationCode TABLE(Id VARCHAR(30));
+        DECLARE @tblAllUser TABLE
+        (UserId   INT NOT NULL, 
+         IsActive BIT
+        );
+        INSERT INTO @tblAllUser
+        (UserId, 
+         IsActive
+        )
+               SELECT *
+               FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
         SELECT @UserName = RTRIM(LTRIM(@User));
         INSERT INTO @tblRoleId
                SELECT VALUE
@@ -58,8 +71,7 @@ Revisions:
                       u.UserId
                FROM dbo.[User] AS u WITH(NOLOCK)
                     INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
-                    INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
-                                                                                            AND us.SiteId = @SiteId
+                    INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
                     LEFT JOIN dbo.UserRole AS r WITH(NOLOCK) ON r.UserId = u.UserId
                     INNER JOIN @tblRoleId AS tblr ON(tblr.Id = r.RoleId)
                                                     OR (tblr.Id = 0
