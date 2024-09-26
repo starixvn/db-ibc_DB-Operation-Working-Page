@@ -14,7 +14,7 @@ AS
 BEGIN
 	SELECT u.Username AS 'OldUserName', c.username AS 'NewUserName'
 	FROM [user] u
-	INNER JOIN bodb02.dbo.customer c WITH (NOLOCK) ON c.custid = u.userid
+	INNER JOIN bodb02.dbo.custInfo c WITH (NOLOCK) ON c.custid = u.userid
 	WHERE c.roleid > 4
 	AND c.username <> u.Username
 END

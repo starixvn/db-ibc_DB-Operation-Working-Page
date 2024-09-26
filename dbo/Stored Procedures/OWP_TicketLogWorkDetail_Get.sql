@@ -50,7 +50,6 @@ AS
                       til.Subject_New AS [Subject]
                FROM TicketIssue AS til WITH(NOLOCK)
                     LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId_New = m.matchid
-                    LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId_New = m14.matchid
                WHERE til.TicketId = @TicketId;
         SELECT DISTINCT 
                CASE

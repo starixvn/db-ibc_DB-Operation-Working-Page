@@ -31,7 +31,7 @@ BEGIN
 			)
 	BEGIN
 		SELECT @username = username
-		FROM bodb02.dbo.Customer WITH (NOLOCK)
+		FROM bodb02.dbo.custInfo WITH (NOLOCK)
 		WHERE custid = @UserId
 
 		BEGIN TRY

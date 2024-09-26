@@ -158,8 +158,7 @@ AS
                           ELSE NULL
                       END
                FROM #tblTicketLogWork t WITH(NOLOCK)
-                    LEFT JOIN [bodb02].[dbo].[match] m WITH(NOLOCK) ON t.AdminsiteId = m.matchid
-                    LEFT JOIN [bodb02].[dbo].[match14] m14 WITH(NOLOCK) ON t.AdminsiteId = m14.matchid;
+                    LEFT JOIN [bodb02].[dbo].[match] m WITH(NOLOCK) ON t.AdminsiteId = m.matchid;
 
         -- select and filter by keyword and Market key
         SELECT DISTINCT 
