@@ -1,5 +1,5 @@
 ﻿/*
 
-GRANT EXECUTE ON [dbo].[spname] TO [bodbOWPNet]
+GRANT EXECUTE ON [dbo].[spname] TO [wsv_owp]
 
 */

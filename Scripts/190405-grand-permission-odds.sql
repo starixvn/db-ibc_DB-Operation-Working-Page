@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBACC-bodb02" executers="wsv_owp" isFunction="0"></info>*/
 /*
 Created: 20230714@Johnny
 Task : Grand permission
@@ -9,4 +9,4 @@ Revisions:
 	20230714@Johnny: Init script - [Redmine: #190405]
 */
 use bodb02
-GRANT Select ON odds TO bodbOWPNet
+GRANT Select ON odds TO wsv_owp

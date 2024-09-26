@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_RefResource_Insert] @RefName VARCHAR(30)
 	,@Value NVARCHAR(50)
 	,@ResourceId INT = NULL OUTPUT

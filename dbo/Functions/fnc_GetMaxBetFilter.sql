@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" selecters="wsv_owp" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[fnc_GetMaxBetFilter] (@FilterId INT)
 RETURNS TABLE WITH SCHEMABINDING
 AS

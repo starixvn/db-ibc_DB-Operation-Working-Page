@@ -1,4 +1,4 @@
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 /*
 Created: 20220418@Johnny.Thai
 Task : Adding FTCorner5ML, 5ML match to LA Report

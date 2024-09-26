@@ -1,7 +1,7 @@
 ﻿USE [bodb_OWP]
 GO
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 /* SECTION */
 UPDATE [dbo].[RefResource] SET  [Value] = 'R&D CSD' WHERE  [ResourceId] = 22 AND [RefName] = N'Section'

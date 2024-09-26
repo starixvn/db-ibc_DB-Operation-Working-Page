@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 /*
 	Creator:	20191108@Carlos.Nguyen
 	Job Name:	[bodb_OWP - Job: [OWP_SoloMatchUpdate]

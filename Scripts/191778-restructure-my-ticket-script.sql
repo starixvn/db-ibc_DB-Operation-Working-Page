@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBACC-bodb02" executers="wsv_owp" isFunction="0"></info>*/
 /*
 Created: 20230802@Los
 Task : Init script

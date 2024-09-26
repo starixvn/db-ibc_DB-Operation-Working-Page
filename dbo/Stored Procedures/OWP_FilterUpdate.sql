@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_FilterUpdate] @UserId INT = 0
 	,@FilterId INT = 0
 	,@Details NVARCHAR(max)
@@ -143,9 +143,9 @@ BEGIN
 END
 /*
 GO
-GRANT EXECUTE ON [dbo].[OWP_FilterUpdate] TO [bodbOWPNet]
+GRANT EXECUTE ON [dbo].[OWP_FilterUpdate] TO [wsv_owp]
 GO
 
-GRANT VIEW DEFINITION ON [dbo].[OWP_FilterUpdate] TO [bodbOWPNet]
+GRANT VIEW DEFINITION ON [dbo].[OWP_FilterUpdate] TO [wsv_owp]
 GO
 */

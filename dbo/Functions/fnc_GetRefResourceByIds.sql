@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" selecters="wsv_owp" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[fnc_GetRefResourceByIds] (@RefResourceId VARCHAR(2000) = '', @RefResourceName VARCHAR(30) = '')
 RETURNS @tblRefResource TABLE (
 	RefResourceId INT NOT NULL
