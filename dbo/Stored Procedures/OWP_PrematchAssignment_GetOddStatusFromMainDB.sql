@@ -22,7 +22,7 @@ Revisions:
         INSERT INTO @tblAdminSiteIds
                SELECT DISTINCT 
                       val
-               FROM f_SplitString(@AdminSiteMatchIds, ',') u OPTION(MAXRECURSION 0);
+               FROM STRING_SPLIT(@AdminSiteMatchIds, ',');
 
         -- get OddStatus bettype HDP & OU
         SELECT DISTINCT 

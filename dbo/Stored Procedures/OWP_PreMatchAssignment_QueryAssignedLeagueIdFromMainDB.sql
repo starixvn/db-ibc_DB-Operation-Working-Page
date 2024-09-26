@@ -20,7 +20,7 @@ Revisions:
         INSERT INTO @tblLeagueNames
                SELECT DISTINCT 
                       val
-               FROM f_SplitString(@LeagueNames, ',') u OPTION(MAXRECURSION 0);
+               FROM STRING_SPLIT(@LeagueNames, ',');
 
         -- get league ids
         SELECT DISTINCT 

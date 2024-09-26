@@ -20,7 +20,7 @@ Revisions:
         INSERT INTO @tblAdminSiteIds
                SELECT DISTINCT 
                       val
-               FROM f_SplitString(@AdminSiteIds, ',') u OPTION(MAXRECURSION 0);
+               FROM STRING_SPLIT(@AdminSiteIds, ',');
 
         -- minor AdminSiteIds
         DECLARE @tblChildAdminSiteIds TABLE
