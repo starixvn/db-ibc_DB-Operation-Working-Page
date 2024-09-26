@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBPOL-NAP_UserControl" executers="bodbAdminNet" isFunction="0"></info>*/
+/*<info serverAlias="DBPOL-NAP_UserControl" executers="wsv_nap" isFunction="0"></info>*/
 
 CREATE PROCEDURE OWP_AutoAssignment_GetUserInfoFromNAPUserControl @SiteId INT
 AS
