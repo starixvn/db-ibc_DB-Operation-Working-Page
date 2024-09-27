@@ -1,8 +1,9 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE OWP_API_SyncWorkingShift_To_HRPP @FromDate DATE, 
-                                                 @ToDate   DATE
+ALTER PROCEDURE OWP_API_SyncWorkingShift_To_HRPP @FromDate    DATE, 
+                                                 @ToDate      DATE, 
+                                                 @AllUserJson VARCHAR(MAX)
 
 /*
 Created: 20220523@Luca.Duong
@@ -13,6 +14,7 @@ Revisions:
 	20220523@Luca.Duong: get WorkingShift To HRPP - [Redmine: #172970]
 	20230810@Liam: get IsPublicHoliday - [Redmine: #191783]
 	20230821@Liam: get correct IsPublicHoliday   - [Redmine: #192954]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
 
 AS
@@ -30,6 +32,16 @@ AS
          RefShiftId      INT, 
          ShiftId         INT
         );
+        DECLARE @tblAllUser TABLE
+        (UserId   INT NOT NULL, 
+         IsActive BIT
+        );
+        INSERT INTO @tblAllUser
+        (UserId, 
+         IsActive
+        )
+               SELECT *
+               FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
         --
         INSERT INTO @TEMP
                SELECT u.EmployeeId AS EmployeeID, 
@@ -54,12 +66,14 @@ AS
                       ew.ShiftId
                FROM EmployeeWorkingShift ew WITH(NOLOCK)
                     INNER JOIN [User] u WITH(NOLOCK) ON ew.EmployeeId = u.UserId
+                    INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
                     INNER JOIN EmployeeWorkingShiftPublish AS ewp WITH(NOLOCK) ON ew.ShiftDate BETWEEN ewp.FromDate AND ewp.ToDate
                                                                                   AND ewp.SectionId = u.SectionId
                WHERE u.LocationCode = N'CTI'
                      AND ewp.IsPublished = 1
                      AND CONVERT(DATE, ew.ShiftDate) BETWEEN @FromDate AND @ToDate
-                     AND u.EmployeeId IS NOT NULL;
+                     AND u.EmployeeId IS NOT NULL
+                     AND us.IsActive = 1;
         --
         SELECT EmployeeID, 
                ScheduleDate, 

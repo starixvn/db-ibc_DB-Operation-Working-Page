@@ -1,15 +1,18 @@
-﻿USE [bodb_OWP]
+﻿USE [bodb_OWP];
 GO
+
 /****** Object:  StoredProcedure [dbo].[OWP_API_SyncEmployeeWorkingShift_GetWorkingShift]    Script Date: 06/08/2021 14:43:40 ******/
-SET ANSI_NULLS ON
+
+SET ANSI_NULLS ON;
 GO
-SET QUOTED_IDENTIFIER ON
+SET QUOTED_IDENTIFIER ON;
 GO
+
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_API_SyncEmployeeWorkingShift_GetWorkingShift]
-@FromDate DATE,
-@ToDate DATE
+ALTER PROCEDURE [dbo].[OWP_API_SyncEmployeeWorkingShift_GetWorkingShift] @FromDate    DATE, 
+                                                                         @ToDate      DATE, 
+                                                                         @AllUserJson VARCHAR(MAX)
 AS
 
 /*
@@ -22,22 +25,41 @@ Revisions:
 	20211008@Tyler: Update emp id - [Redmine: #162852]	
 	20211228@Carlos: Support sync OT shift to HRM - [Redmine: #166487]
 	20220207@Carlos: Update timezone ShiftStartTime, ShiftEndTime to gmt+7 before sync data to HRM - [Redmine: #168078]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
-	SET NOCOUNT ON;
-    SELECT u.EmployeeId
-		, ew.ShiftDate
-		, UPPER(sc.ShiftCode) AS ShiftCode
-		, DATEADD(MINUTE,-60, ew.ShiftStartTime) AS ShiftStartTime
-		, DATEADD(MINUTE,-60, ew.ShiftEndTime) AS ShiftEndTime
-		, DATEADD(MINUTE,-60, ew.LastUpdated) AS LastUpdated
-		, IsTimeShift
-		, sc.Extension
-		,CASE WHEN ew.RefShiftId=190 THEN 'OFF'
-			WHEN ew.RefShiftId=192 THEN 'PH'
-			ELSE NULL
-			END AS ShiftOT
-    FROM EmployeeWorkingShift AS ew WITH (NOLOCK)
-    INNER JOIN [User] AS u WITH (NOLOCK) ON u.UserId=ew.EmployeeId
-    INNER JOIN EmployeeWorkingShiftPublish AS ewp WITH (NOLOCK) ON ew.ShiftDate BETWEEN ewp.FromDate AND ewp.ToDate AND ewp.SectionId=u.SectionId
-    LEFT JOIN EmployeeWorkingShiftColor AS sc ON ew.ShiftId= sc.ShiftId
-    WHERE ew.ShiftDate BETWEEN  @FromDate AND @ToDate AND ewp.IsPublished=1
+
+     SET NOCOUNT ON;
+     DECLARE @tblAllUser TABLE
+     (UserId   INT NOT NULL, 
+      IsActive BIT
+     );
+     INSERT INTO @tblAllUser
+     (UserId, 
+      IsActive
+     )
+            SELECT *
+            FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
+     SELECT u.EmployeeId, 
+            ew.ShiftDate, 
+            UPPER(sc.ShiftCode) AS ShiftCode, 
+            DATEADD(MINUTE, -60, ew.ShiftStartTime) AS ShiftStartTime, 
+            DATEADD(MINUTE, -60, ew.ShiftEndTime) AS ShiftEndTime, 
+            DATEADD(MINUTE, -60, ew.LastUpdated) AS LastUpdated, 
+            IsTimeShift, 
+            sc.Extension,
+            CASE
+                WHEN ew.RefShiftId = 190
+                THEN 'OFF'
+                WHEN ew.RefShiftId = 192
+                THEN 'PH'
+                ELSE NULL
+            END AS ShiftOT
+     FROM EmployeeWorkingShift AS ew WITH(NOLOCK)
+          INNER JOIN [User] AS u WITH(NOLOCK) ON u.UserId = ew.EmployeeId
+          INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
+          INNER JOIN EmployeeWorkingShiftPublish AS ewp WITH(NOLOCK) ON ew.ShiftDate BETWEEN ewp.FromDate AND ewp.ToDate
+                                                                        AND ewp.SectionId = u.SectionId
+          LEFT JOIN EmployeeWorkingShiftColor AS sc ON ew.ShiftId = sc.ShiftId
+     WHERE(ew.ShiftDate BETWEEN @FromDate AND @ToDate
+           AND ewp.IsPublished = 1)
+          AND us.IsActive = 1;
