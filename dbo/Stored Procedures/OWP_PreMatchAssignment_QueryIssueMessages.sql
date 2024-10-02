@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryIssueMessages] @ActorId         INT, 
                                                                   @PreMatchIssueId INT
@@ -17,6 +17,7 @@ Revisions:
 	20201202@Esther: Show message in the last 24 hours  - [Redmine: #145591]
 	20201201@Tyler: file upload  - [Redmine: #145591]
 	20210113@Mira: save message in chat board - [Redmine: #148266]
+	20241002@Mira: join with File Upload Old [Redmine: #211716]
 */
 
     BEGIN
@@ -37,16 +38,18 @@ Revisions:
                im.FileId,
                CASE
                    WHEN im.FileId IS NULL
-                        OR f.FileId IS NULL
+                        OR ISNULL(f.FileId, fo.FileId) IS NULL
                    THEN 0
                    ELSE 1
-               END AS 'IsFileAvailable',
-			   im.IsSaved,
-			   im.PreMatchIssueMessageId
+               END AS 'IsFileAvailable', 
+               im.IsSaved, 
+               im.PreMatchIssueMessageId
         FROM dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchIssue] AS i WITH(NOLOCK) ON im.PreMatchIssueId = i.PreMatchIssueId
              INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON u.UserId = im.UserId
              LEFT JOIN dbo.[FileUpload] AS f WITH(NOLOCK) ON im.FileId = f.FileId
+             LEFT JOIN dbo.[FileUpload_Old] AS fo WITH(NOLOCK) ON im.FileId = fo.FileId
+                                                                  AND f.FileId IS NULL
         WHERE i.PreMatchIssueId = @PreMatchIssueId
         ORDER BY CreatedDate ASC;
         SELECT DATEADD(HOUR, 12, GETDATE());

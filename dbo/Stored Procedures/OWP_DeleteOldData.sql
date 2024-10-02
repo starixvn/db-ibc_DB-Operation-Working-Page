@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_DeleteOldData] @Date DATETIME
 AS
@@ -16,6 +16,7 @@ AS
 	20201201@Tyler: delete file upload  - [Redmine: #145591]
 	20220329@Carlos.nguyen : Delete script unuse - [Redmine: #166030]
 	20220415@Luca.Duong: Archive new plan [Redmine: #171297]
+	20241002@Mira: Remove FileUpload delete [Redmine: #211716]
 */
 
     BEGIN
@@ -157,11 +158,6 @@ AS
         DELETE m
         FROM dbo.Assignment m
              INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
-
-        -- DELETE FileUpload
-        DELETE m
-        FROM dbo.FileUpload m
-        WHERE m.CreatedDate BETWEEN @FromDateTime AND @ToDateTime;
 
         -- DROP Temp Table
         DROP TABLE #MatchIds;

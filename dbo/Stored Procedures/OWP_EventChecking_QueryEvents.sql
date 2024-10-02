@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_EventChecking_QueryEvents] @ActorId   INT, 
                                                       @MarketKey INT
@@ -18,6 +18,7 @@ Revisions:
  20201119@Carlos.nguyen: Event Tickets enhancement - Phase 1 (Task: Query two last message) - [Redmine: #145568]
  20201123@Esther: Event Tickets enhancement - Phase 1 (Task: Add filter) - [Redmine: #145568]
  20201207@Mira: Checked is File available [Redmine: #145591]
+ 20241002@Mira: join with File Upload Old [Redmine: #211716]
 */
 
     BEGIN
@@ -173,15 +174,16 @@ Revisions:
 			   u.[Username] 'AccountName',
 			   im.FileId,
                CASE
-                   WHEN im.FileId IS NULL
-                        OR f.FileId IS NULL
-                   THEN 0
+                   WHEN COALESCE(im.FileId, f.FileId, fo.FileId) IS NULL 
+				   THEN 0
                    ELSE 1
                END AS 'IsFileAvailable'
         FROM dbo.[PreMatchIssue] AS p WITH(NOLOCK)
              INNER JOIN dbo.[PreMatchIssueMessage] AS im WITH(NOLOCK) ON im.PreMatchIssueId = p.PreMatchIssueId
              INNER JOIN dbo.[User] AS u ON u.UserId = im.UserId
              LEFT JOIN dbo.[FileUpload] AS f ON im.FileId = f.FileId
+			 LEFT JOIN dbo.[FileUpload_Old] AS fo WITH(NOLOCK) ON im.FileId = fo.FileId
+                                                              AND f.FileId IS NULL
         ORDER BY p.PreMatchIssueId DESC;
         IF @MarketKey = @earlyFilter
             BEGIN
