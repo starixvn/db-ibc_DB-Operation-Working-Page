@@ -19,7 +19,7 @@ Revisions:
         DECLARE @tblLeagueNames TABLE(LeagueName NVARCHAR(500));
         INSERT INTO @tblLeagueNames
                SELECT DISTINCT 
-                      val
+                      value
                FROM STRING_SPLIT(@LeagueNames, ',');
 
         -- get league ids

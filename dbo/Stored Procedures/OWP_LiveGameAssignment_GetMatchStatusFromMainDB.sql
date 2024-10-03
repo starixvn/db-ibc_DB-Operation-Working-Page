@@ -19,7 +19,7 @@ Revisions:
         DECLARE @tblAdminSiteIds TABLE(MatchId INT);
         INSERT INTO @tblAdminSiteIds
                SELECT DISTINCT 
-                      val
+                      value
                FROM STRING_SPLIT(@AdminSiteIds, ',');
 
         -- minor AdminSiteIds

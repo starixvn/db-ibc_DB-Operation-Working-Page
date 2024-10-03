@@ -21,7 +21,7 @@ Revisions:
         DECLARE @ou INT= 3;
         INSERT INTO @tblAdminSiteIds
                SELECT DISTINCT 
-                      val
+                      value
                FROM STRING_SPLIT(@AdminSiteMatchIds, ',');
 
         -- get OddStatus bettype HDP & OU
