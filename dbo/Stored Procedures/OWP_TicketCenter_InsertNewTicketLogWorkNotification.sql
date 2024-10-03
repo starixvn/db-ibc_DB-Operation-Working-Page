@@ -45,10 +45,10 @@ Revisions:
      )
             SELECT til.TicketId, 
                    til.AdminsiteId_New, 
-                   COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
-                   COALESCE(m.homeid, m14.homeid) AS HomeId, 
-                   COALESCE(m.awayid, m14.awayid) AS AwayId, 
-                   COALESCE(m.globalshowtime, m14.globalshowtime) AS EventDateTime, 
+                   m.leagueid AS LeagueId, 
+                   m.homeid AS HomeId, 
+                   m.awayid AS AwayId, 
+                   m.globalshowtime AS EventDateTime, 
                    til.[Subject_New]
             FROM TicketIssue AS til WITH(NOLOCK)
                  LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId_New = m.matchid

@@ -138,7 +138,7 @@ AS
                           OR (til.SubtypeId IS NULL
                               AND temp.SubTypeId IS NULL));
 
-        -- collect eventId info from match/match14
+        -- collect eventId info from match
         INSERT INTO #tblTicketLogWorkEvent
         (TicketId, 
          LeagueId, 
@@ -147,14 +147,12 @@ AS
          EventDateTime
         )
                SELECT t.TicketId, 
-                      COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
-                      COALESCE(m.homeid, m14.homeid) AS HomeId, 
-                      COALESCE(m.awayid, m14.awayid) AS AwayId,
+                      m.leagueid AS LeagueId, 
+                      m.homeid AS HomeId, 
+                      m.awayid AS AwayId,
                       CASE
                           WHEN m.globalshowtime IS NOT NULL
                           THEN DATEADD(HOUR, 12, m.globalshowtime)
-                          WHEN m14.globalshowtime IS NOT NULL
-                          THEN DATEADD(HOUR, 12, m14.globalshowtime)
                           ELSE NULL
                       END
                FROM #tblTicketLogWork t WITH(NOLOCK)
