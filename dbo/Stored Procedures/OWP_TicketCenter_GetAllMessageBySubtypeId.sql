@@ -13,12 +13,13 @@ AS
       
  Revisions:         
 	20240816@Liam.Pham: Get All message by subtype - [Redmine: #207945]
+	20241002@Mira: join with File Upload Old [Redmine: #211716]
 */
 
     BEGIN
         SET NOCOUNT ON;
-		DECLARE @GMT8Time DATETIME = DATEADD(HOUR, 8, CONVERT(DATETIME, GETUTCDATE()));
-        DECLARE @DateValid DATETIME = DATEDIFF(DAY, 2, @GMT8Time);
+        DECLARE @GMT8Time DATETIME= DATEADD(HOUR, 8, CONVERT(DATETIME, GETUTCDATE()));
+        DECLARE @DateValid DATETIME= DATEDIFF(DAY, 2, @GMT8Time);
         CREATE TABLE #tblTicketValid(TicketId INT);
         CREATE TABLE #tblTicketRecipient(TicketId INT);
         INSERT INTO #tblTicketValid
@@ -71,26 +72,26 @@ AS
                END AS QuoteUsername, 
                ti.CreatedDate AS QuoteCreatedDate,
                CASE
-                   WHEN f.Title LIKE '%.jpg'
-                        OR f.Title LIKE '%.jpeg'
-                        OR f.Title LIKE '%.png'
-                        OR f.Title LIKE '%.gif'
-                        OR f.Title LIKE '%.bmp'
-                   THEN f.SavedFileName
+                   WHEN ISNULL(f.Extension, fo.Extension) IN('jpg', 'jpeg', 'png', 'gif', 'bmp')
+                   THEN ISNULL(f.SavedFileName, fo.SavedFileName)
                    ELSE NULL
                END AS ImageFileName, 
                u.Extension, 
                tm.TicketId, 
-               fu.SavedFileName AS AvatarFileName
+               ISNULL(fu.SavedFileName, fuo.SavedFileName) AS AvatarFileName
         FROM TicketMessage AS tm WITH(NOLOCK)
              INNER JOIN #tblTicketRecipient tbl ON tm.TicketId = tbl.TicketId
              LEFT JOIN [User] AS u WITH(NOLOCK) ON tm.UserId = u.UserId
              LEFT JOIN [FileUpload] AS f WITH(NOLOCK) ON tm.FileId = f.FileId
+             LEFT JOIN [FileUpload_Old] AS fo WITH(NOLOCK) ON tm.FileId = fo.FileId
+                                                              AND f.FileId IS NULL
              LEFT JOIN TicketMessage AS ti WITH(NOLOCK) ON tm.QuoteMessageId = ti.Id
              LEFT JOIN [User] AS u2 WITH(NOLOCK) ON ti.UserId = u2.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = tm.UserId
              LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId
-		WHERE tm.CreatedDate > @DateValid
+             LEFT JOIN FileUpload_Old AS fuo WITH(NOLOCK) ON fuo.FileId = up.FileId
+                                                             AND fu.FileId IS NULL
+        WHERE tm.CreatedDate > @DateValid;
         DROP TABLE #tblTicketRecipient;
         DROP TABLE #tblTicketValid;
     END;

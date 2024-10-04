@@ -12,6 +12,7 @@ AS
  Revisions: 
 	20240523@Johnny: Init - [Redmine: #201603]
 	20240725@Mira: get nickname or username - [Redmine: #201603]
+	20241002@Mira: join with File Upload Old [Redmine: #211716]
 */
 
     BEGIN
@@ -24,10 +25,12 @@ AS
                mi.IconKey, 
                mi.CreatorId 'ReactUserId', 
                COALESCE(u.Nickname, u.Username) AS 'ReactUserName', 
-               fu.SavedFileName 'ReactAvatarName'
+               ISNULL(fu.SavedFileName, fuo.SavedFileName) 'ReactAvatarName'
         FROM @tblMessageId AS m
              INNER JOIN MessageIcon AS mi WITH(NOLOCK) ON m.Id = mi.MessageId
              LEFT JOIN [User] AS u WITH(NOLOCK) ON mi.CreatorId = u.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = mi.CreatorId
-             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
+             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId
+             LEFT JOIN FileUpload_Old AS fuo WITH(NOLOCK) ON fuo.FileId = up.FileId
+                                                             AND fu.FileId IS NULL;
     END;

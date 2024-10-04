@@ -17,6 +17,7 @@ AS
 	20230801@Liam: Get image file name - [Redmine: #191543]
 	20240522@Los: Get extension - [Redmine: #201603]
 	20240822@Mira: Change range time - [Redmine: #207945]
+	20241002@Mira: join with File Upload Old [Redmine: #211716]
 */
 
     BEGIN
@@ -63,18 +64,16 @@ AS
                       END AS Username, 
                       tm.QuoteMessageId,
                       CASE
-                          WHEN f.Title LIKE '%.jpg'
-                               OR f.Title LIKE '%.jpeg'
-                               OR f.Title LIKE '%.png'
-                               OR f.Title LIKE '%.gif'
-                               OR f.Title LIKE '%.bmp'
-                          THEN f.SavedFileName
+                          WHEN ISNULL(f.Extension, fo.Extension) IN('jpg', 'jpeg', 'png', 'gif', 'bmp')
+                          THEN ISNULL(f.SavedFileName, fo.SavedFileName)
                           ELSE NULL
                       END, 
                       u.Extension
                FROM TicketMessage AS tm WITH(NOLOCK)
                     LEFT JOIN [User] AS u WITH(NOLOCK) ON u.UserId = tm.UserId
                     LEFT JOIN [FileUpload] AS f WITH(NOLOCK) ON tm.FileId = f.FileId
+                    LEFT JOIN [FileUpload_Old] AS fo WITH(NOLOCK) ON tm.FileId = fo.FileId
+                                                                     AND f.FileId IS NULL
                WHERE tm.TicketId = @TicketId
                      AND tm.CreatedDate >= @FromDateTime;
 
@@ -97,12 +96,14 @@ AS
                ti.CreatedDate AS QuoteCreatedDate, 
                tm.ImageFileName, 
                tm.Extension, 
-               fu.SavedFileName 'AvatarFileName'
+               ISNULL(fu.SavedFileName, fuo.SavedFileName) AS AvatarFileName
         FROM #tblMessageDetail AS tm
              LEFT JOIN TicketMessage AS ti WITH(NOLOCK) ON tm.QuoteMessageId = ti.Id
              LEFT JOIN [User] AS u WITH(NOLOCK) ON ti.UserId = u.UserId
              LEFT JOIN UserProfile AS up WITH(NOLOCK) ON up.UserId = tm.UserId
-             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId;
+             LEFT JOIN FileUpload AS fu WITH(NOLOCK) ON fu.FileId = up.FileId
+             LEFT JOIN FileUpload_Old AS fuo WITH(NOLOCK) ON fuo.FileId = up.FileId
+                                                             AND fu.FileId IS NULL;
 
         -- Can show more message
         SELECT @MinMessageId = MIN(tm.Id)
