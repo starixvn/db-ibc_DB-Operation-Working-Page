@@ -12,6 +12,7 @@ AS
  Revisions:
     20242304@Liam: Get main match for LST - [Redmine: #203309]
 	20241308@Liam: Get maxbet for LST - [Redmine: #207942]
+	20240925@Johnny: get remark2 - [Redmine: #210649]
 */
 
     BEGIN
@@ -54,6 +55,8 @@ AS
 			   ep.NoOfHDP 'NoHDP' ,
 			   ep.SpreadHdp 'SpreadHDP',
 			   ep.SpreadOu 'SpreadOU',
+			   ep.LSTNote 'LstNoted',
+			   ep.Remark2 'Remark2LeagueManagement',
                im.IsTest AS IsTestMatch
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId

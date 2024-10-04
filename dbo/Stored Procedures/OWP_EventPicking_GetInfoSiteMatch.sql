@@ -17,6 +17,8 @@ AS
 	20240328@Johnny: reduce select match - [Redmine: #202638]
 	20240419@Mira: Save league, home, away blacklist column - [Redmine: #203309s]
 	20240422@Carlos.nguyen: init data league management - [Redmine: #202639]
+	20240925@Johnny: get remark2 - [Redmine: #210649]
+	20241001@Carlos.nguyen: init data league management - [Redmine: #210649]
 
 */
 
@@ -78,7 +80,12 @@ AS
                ep.SpreadHdp 'SpreadHdp', 
                ep.SpreadOu 'SpreadOu', 
                ep.NoOfHDP 'NoOfHDP',
-			   ep.LSTNote 'LstNote'
+			   ep.LSTNote 'LstNote',
+			   ep.Remark2 'Remark2LeagueManagement',
+			   CASE WHEN ep.InfositeMatchId IS NOT NULL
+			   THEN 1
+			   ELSE 0
+			   END 'IsSync'
         FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
@@ -88,3 +95,5 @@ AS
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';
     END;
+
+
