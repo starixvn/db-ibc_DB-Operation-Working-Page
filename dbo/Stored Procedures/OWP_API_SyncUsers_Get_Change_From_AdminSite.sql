@@ -7,7 +7,8 @@ CREATE PROCEDURE [dbo].[OWP_API_SyncUsers_Get_Change_From_AdminSite]
  DB: bodb_OWP    
     
  Revisions:
-	20190104@Kane.Le: Initial SP - [Redmine: #111840] 
+	20190104@Kane.Le: Initial SP - [Redmine: #111840]
+	20240925@Los: customer -> custInfo [Redmine: #209152]
 */
 	 
 AS

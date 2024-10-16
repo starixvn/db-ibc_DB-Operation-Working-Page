@@ -20,6 +20,7 @@ Revisions:
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 	20230807@Los: Get ticket event - [Redmine: #191778]
 	20240216@Mira: Refactor ticket center - [Redmine: #200671]
+	20240925@Los: remove join with match14 [Redmine: #209152]
 */
 
      SET NOCOUNT ON;

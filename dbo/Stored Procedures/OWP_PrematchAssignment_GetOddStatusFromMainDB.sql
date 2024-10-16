@@ -11,6 +11,7 @@ DB: bodb02
 
 Revisions:
 		20220321@Mira: Get odd status - [Redmine: #170097]
+	    20240925@Los: replace f_SplitString -> STRING_SPLIT [Redmine: #209152]
 */
 
     BEGIN

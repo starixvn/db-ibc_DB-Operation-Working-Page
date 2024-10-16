@@ -17,6 +17,7 @@ AS
 	20190513@Leo.Vo: do not assign closed account - [Redmine: #113333]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20200830@Jacob: Delete unused code - [Redmine: #137757]
+	20240925@Los: No UM [Redmine: #209152]
 */
 BEGIN
 	SET NOCOUNT ON

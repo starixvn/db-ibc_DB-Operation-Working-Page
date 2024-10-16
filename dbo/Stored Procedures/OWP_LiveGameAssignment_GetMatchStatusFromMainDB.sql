@@ -11,6 +11,7 @@ DB: bodb02
 
 Revisions:
 	20210810@Mira: Initial - [Redmine: #153498]
+	20240925@Los: replace f_SplitString -> STRING_SPLIT [Redmine: #209152]
 */
 
     BEGIN

@@ -18,6 +18,7 @@ Revisions:
 		• @ErrMsg: Error description.
 	20181214@Leo: restore SP
 	20190116@Leo: grant permission to wsv_nap - [Redmine: #108034]
+	20240925@Los: customer -> custInfo [Redmine: #209152]
 */
 BEGIN
 	SET NOCOUNT ON

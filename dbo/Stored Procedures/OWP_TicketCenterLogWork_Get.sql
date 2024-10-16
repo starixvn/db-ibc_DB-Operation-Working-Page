@@ -25,6 +25,7 @@ AS
 	20231016@Mira: tuning SP - [Redmine: #195524]
 	20240119@Mira: Correct SP - [Redmine: #123456]
 	20240131@Mira: Refactor get recipient - [Redmine: #123456]
+	20240925@Los: remove join with match14 [Redmine: #209152]
 */
 
     BEGIN

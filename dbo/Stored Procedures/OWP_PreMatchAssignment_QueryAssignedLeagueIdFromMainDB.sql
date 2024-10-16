@@ -11,6 +11,7 @@ DB: bodb02
 
 Revisions:
 	20220331@Mira: Get league ids - [Redmine: #170721]
+	20240925@Los: replace f_SplitString -> STRING_SPLIT [Redmine: #209152]
 */
 
     BEGIN

@@ -2,8 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_LAReports] @FromDate    DATETIME     = '2020-01-03', 
-                                      @ToDate      DATETIME     = '2020-01-05', 
-                                      @SiteId      INT, 
+                                      @ToDate      DATETIME     = '2020-01-05',  
                                       @ActiveUser  BIT, 
                                       @ResignUser  BIT, 
                                       @AllUserJson VARCHAR(MAX)
