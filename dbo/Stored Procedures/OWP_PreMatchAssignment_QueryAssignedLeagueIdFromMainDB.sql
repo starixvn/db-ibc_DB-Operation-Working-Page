@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="bodbAdminNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb02" executers="wsv_nap" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PreMatchAssignment_QueryAssignedLeagueIdFromMainDB] @LeagueNames NVARCHAR(MAX)
 AS
@@ -11,6 +11,7 @@ DB: bodb02
 
 Revisions:
 	20220331@Mira: Get league ids - [Redmine: #170721]
+	20240925@Los: replace f_SplitString -> STRING_SPLIT [Redmine: #209152]
 */
 
     BEGIN
@@ -19,8 +20,8 @@ Revisions:
         DECLARE @tblLeagueNames TABLE(LeagueName NVARCHAR(500));
         INSERT INTO @tblLeagueNames
                SELECT DISTINCT 
-                      val
-               FROM f_SplitString(@LeagueNames, ',') u OPTION(MAXRECURSION 0);
+                      value
+               FROM STRING_SPLIT(@LeagueNames, ',');
 
         -- get league ids
         SELECT DISTINCT 

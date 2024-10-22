@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" selecters="wsv_owp" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[fnc_GetCategoryByIds] (@CategoryId VARCHAR(2000) = '')
 RETURNS @tblCategory TABLE (
 	CategoryId INT

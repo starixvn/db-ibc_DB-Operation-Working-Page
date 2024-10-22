@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="wsv_nap" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb02" executers="wsv_nap" isFunction="0"></info>*/
 
 CREATE PROCEDURE [dbo].[OWP_OtherSport_GetAdminSiteLeagueId] @AdminSiteMatchId INT
 AS

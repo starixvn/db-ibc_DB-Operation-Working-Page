@@ -1,12 +1,12 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_Kpi_Get] @FromDate   DATETIME, 
                                     @ToDate     DATETIME, 
                                     @SectionIds VARCHAR(100) = NULL, 
-                                    @SiteId     INT, 
                                     @ActiveUser BIT, 
-                                    @ResignUser BIT
+                                    @ResignUser BIT,
+									@AllUserJson          VARCHAR(MAX)
 AS
 
 /*    
@@ -21,10 +21,21 @@ AS
 	20231005@Liam: Query by section - [Redmine: #195223]
 	20231225@Carlos.nguyen: hide resign account - [Redmine: #198234]
 	20230108@Carlos.nguyen: correct condition - [Redmine: #198234]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
 
      SET NOCOUNT ON;
      DECLARE @tempSection TABLE(SectionId SMALLINT);
+	 DECLARE @tblAllUser TABLE
+        (UserId   INT NOT NULL, 
+         IsActive BIT
+        );
+		INSERT INTO @tblAllUser
+        (UserId, 
+         IsActive
+        )
+               SELECT *
+               FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
      INSERT INTO @tempSection
             SELECT DISTINCT 
                    value
@@ -46,8 +57,7 @@ AS
      FROM dbo.LAReport a WITH(NOLOCK)
           INNER JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = a.UserId
           INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
-          INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
-                                                                                  AND us.SiteId = @SiteId
+          INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
           INNER JOIN @tempSection temp ON(u.SectionId = temp.SectionId)
                                          OR (u.SectionId IS NULL
                                              AND temp.SectionId = 0)

@@ -1,4 +1,4 @@
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 ALTER PROC [dbo].[OWP_OSAssignmentUpload_ExistsOSMatch] @OSMatches NVARCHAR(MAX)
 /*
 Created: 20220610@Luca

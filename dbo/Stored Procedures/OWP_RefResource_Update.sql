@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_RefResource_Update] @RefName VARCHAR(30)
 	,@ResourceId INT
 	,@Value NVARCHAR(50)

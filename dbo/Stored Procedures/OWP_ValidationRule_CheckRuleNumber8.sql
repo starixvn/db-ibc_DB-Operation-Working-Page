@@ -1,6 +1,5 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber8] @SessionId VARCHAR(50) = ''
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
+ALTER PROCEDURE [dbo].[OWP_ValidationRule_CheckRuleNumber8] @SessionId VARCHAR(50) = ''
 	,@OWPMatchId INT = NULL
 	,@Value NVARCHAR(4000) = NULL
 AS
@@ -18,6 +17,7 @@ AS
 	20190513@Leo.Vo: do not assign closed account - [Redmine: #113333]
 	20190521@Leo.Vo: Add Username value - [Feature: #113765]
 	20200830@Jacob: Delete unused code - [Redmine: #137757]
+	20240925@Los: No UM [Redmine: #209152]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -31,11 +31,7 @@ BEGIN
 		,@idoc INT
 		,@SiteId INT
 
-	SELECT @SiteId = SiteId
-	FROM DBPOL.NAP_UserControl.dbo.NAP_Sites WITH (NOLOCK)
-	WHERE SiteName = 'Operation Working Page'
-		AND IsActive = 1
-		AND Environment = 'LIVE'
+	SELECT @SiteId = 99
 
 	SELECT @RuleResultType = RuleResultType
 		,@Message = MessageFormat

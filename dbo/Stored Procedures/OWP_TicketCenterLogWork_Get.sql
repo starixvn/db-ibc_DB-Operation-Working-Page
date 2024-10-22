@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenterLogWork_Get] @ActorId        INT, 
                                                     @Keyword        NVARCHAR(255) = NULL, 
@@ -25,6 +25,7 @@ AS
 	20231016@Mira: tuning SP - [Redmine: #195524]
 	20240119@Mira: Correct SP - [Redmine: #123456]
 	20240131@Mira: Refactor get recipient - [Redmine: #123456]
+	20240925@Los: remove join with match14 [Redmine: #209152]
 */
 
     BEGIN
@@ -138,7 +139,7 @@ AS
                           OR (til.SubtypeId IS NULL
                               AND temp.SubTypeId IS NULL));
 
-        -- collect eventId info from match/match14
+        -- collect eventId info from match
         INSERT INTO #tblTicketLogWorkEvent
         (TicketId, 
          LeagueId, 
@@ -147,19 +148,16 @@ AS
          EventDateTime
         )
                SELECT t.TicketId, 
-                      COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
-                      COALESCE(m.homeid, m14.homeid) AS HomeId, 
-                      COALESCE(m.awayid, m14.awayid) AS AwayId,
+                      m.leagueid AS LeagueId, 
+                      m.homeid AS HomeId, 
+                      m.awayid AS AwayId,
                       CASE
                           WHEN m.globalshowtime IS NOT NULL
                           THEN DATEADD(HOUR, 12, m.globalshowtime)
-                          WHEN m14.globalshowtime IS NOT NULL
-                          THEN DATEADD(HOUR, 12, m14.globalshowtime)
                           ELSE NULL
                       END
                FROM #tblTicketLogWork t WITH(NOLOCK)
-                    LEFT JOIN [bodb02].[dbo].[match] m WITH(NOLOCK) ON t.AdminsiteId = m.matchid
-                    LEFT JOIN [bodb02].[dbo].[match14] m14 WITH(NOLOCK) ON t.AdminsiteId = m14.matchid;
+                    LEFT JOIN [bodb02].[dbo].[match] m WITH(NOLOCK) ON t.AdminsiteId = m.matchid;
 
         -- select and filter by keyword and Market key
         SELECT DISTINCT 

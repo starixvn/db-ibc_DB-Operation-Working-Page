@@ -1,5 +1,5 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" selecters="bodbOWPNet" isFunction="1"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" selecters="wsv_owp" isFunction="1"></info>*/
 CREATE FUNCTION [dbo].[fnc_GetAllAssigneeOfMatch] (
 	@OWPMatchId INT)
 RETURNS @User TABLE (UserId INT NOT NULL)

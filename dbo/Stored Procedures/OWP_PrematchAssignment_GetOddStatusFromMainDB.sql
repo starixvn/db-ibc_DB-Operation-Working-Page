@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="bodbAdminNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb02" executers="wsv_nap" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_PrematchAssignment_GetOddStatusFromMainDB] @AdminSiteMatchIds NVARCHAR(MAX)
 AS
@@ -11,6 +11,7 @@ DB: bodb02
 
 Revisions:
 		20220321@Mira: Get odd status - [Redmine: #170097]
+	    20240925@Los: replace f_SplitString -> STRING_SPLIT [Redmine: #209152]
 */
 
     BEGIN
@@ -21,8 +22,8 @@ Revisions:
         DECLARE @ou INT= 3;
         INSERT INTO @tblAdminSiteIds
                SELECT DISTINCT 
-                      val
-               FROM f_SplitString(@AdminSiteMatchIds, ',') u OPTION(MAXRECURSION 0);
+                      value
+               FROM STRING_SPLIT(@AdminSiteMatchIds, ',');
 
         -- get OddStatus bettype HDP & OU
         SELECT DISTINCT 

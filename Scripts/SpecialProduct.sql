@@ -7,7 +7,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 SET ANSI_PADDING ON
 GO
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 CREATE TABLE [dbo].[SpecialProduct](
 	[ProductId] [int] IDENTITY(1,1) NOT NULL,
 	[Maxbet_FTHDP] [money] NULL,

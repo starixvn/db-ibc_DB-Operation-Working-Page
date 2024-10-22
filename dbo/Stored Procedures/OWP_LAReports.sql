@@ -1,11 +1,11 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_LAReports] @FromDate   DATETIME = '2020-01-03', 
-                                      @ToDate     DATETIME = '2020-01-05', 
-                                      @SiteId     INT, 
-                                      @ActiveUser BIT, 
-                                      @ResignUser BIT
+ALTER PROCEDURE [dbo].[OWP_LAReports] @FromDate    DATETIME     = '2020-01-03', 
+                                      @ToDate      DATETIME     = '2020-01-05',  
+                                      @ActiveUser  BIT, 
+                                      @ResignUser  BIT, 
+                                      @AllUserJson VARCHAR(MAX)
 AS
 
 /*    
@@ -22,9 +22,20 @@ AS
 	20220920@Johnny: Change query LA Report - [Redmine:#177768]
 	20230511@Carlos.nguyen: new column - [Redmine: #187937]
 	20231225@Carlos.nguyen: hide resign account - [Redmine: #198234]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
 
      SET NOCOUNT ON;
+     DECLARE @tblAllUser TABLE
+     (UserId   INT NOT NULL, 
+      IsActive BIT
+     );
+     INSERT INTO @tblAllUser
+     (UserId, 
+      IsActive
+     )
+            SELECT *
+            FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
      SELECT a.UserId, 
             u.Username, 
             r.Value Section, 
@@ -61,18 +72,17 @@ AS
           LEFT JOIN dbo.RefResource r ON r.RefName = 'Section'
                                          AND u.SectionId = r.ResourceId
           INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
-          INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
-                                                                                  AND us.SiteId = @SiteId
+          INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
      WHERE((@ActiveUser = 1
-           AND ci.closed = 0
-           AND ci.reject = 0
-           AND ci.[Enabled] = 1
-           AND us.IsActive = 1)
-          OR (@ResignUser = 1
-              AND (ci.closed = 1
-                   OR ci.reject = 1
-                   OR ci.[Enabled] = 0
-                   OR us.IsActive = 0)))
+            AND ci.closed = 0
+            AND ci.reject = 0
+            AND ci.[Enabled] = 1
+            AND us.IsActive = 1)
+           OR (@ResignUser = 1
+               AND (ci.closed = 1
+                    OR ci.reject = 1
+                    OR ci.[Enabled] = 0
+                    OR us.IsActive = 0)))
           AND a.ReportDate BETWEEN @FromDate AND @ToDate
      GROUP BY a.UserId, 
               u.Username, 

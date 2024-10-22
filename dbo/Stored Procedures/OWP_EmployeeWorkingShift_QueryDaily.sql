@@ -1,14 +1,14 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryDaily] @Date                 DATE, 
-                                                            @User                 VARCHAR(2000) = '', 
+                                                            @User                 VARCHAR(2000) = '',  
                                                             @SectionId            VARCHAR(2000) = '', 
                                                             @DepartmentId         VARCHAR(2000) = '', 
                                                             @ShiftId              VARCHAR(MAX)  = '', 
                                                             @LocationCode         VARCHAR(2000) = '', 
-                                                            @ExcludeClosedAccount BIT           = 1, 
-                                                            @SiteId               INT
+                                                            @ExcludeClosedAccount BIT           = 1,
+															@AllUserJson          VARCHAR(MAX)
 AS
 
 /*      
@@ -31,11 +31,16 @@ AS
 	20200714@Tyler.Dang: Add department filter [Redmine: #137416]
 	20200713@Esther.Nguyen: Importing match in Neutral Stadium - [Redmine: #137417]
 	20220530@Johnny.Thai: Update sort default [Redmine: #173256]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @EventDateFrom DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '10:00:01'), @EventDateTo DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @Date), '11:59:59'), @QueryDateFrom DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00'), @QueryDateTo DATETIME= DATEADD(DAY, (DATEDIFF(DAY, 0, @Date) + 1), '11:59:59'), @DailyRemarkCategory INT= 2;
+        DECLARE @tblAllUser TABLE
+        (UserId   INT NOT NULL, 
+         IsActive BIT
+        );
         DECLARE @tblUser TABLE
         (UserId          INT, 
          SectionId       SMALLINT, 
@@ -62,6 +67,12 @@ AS
          EventDateTime  DATETIME, 
          AssignmentNote NVARCHAR(100)
         );
+        INSERT INTO @tblAllUser
+        (UserId, 
+         IsActive
+        )
+               SELECT *
+               FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
 
         -- Get Section filter
         INSERT INTO @tblSection
@@ -115,8 +126,7 @@ AS
                       u.IsSecondAccount
                FROM dbo.[User] AS u WITH(NOLOCK)
                     INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
-                    INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
-                                                                                            AND us.SiteId = @SiteId
+                    INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
                WHERE(@ExcludeClosedAccount = 0
                      OR (ci.closed = 0
                          AND ci.reject = 0

@@ -1,7 +1,6 @@
 ﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
-ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @SiteId INT
-	,@FromDate DATE
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
+ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly]@FromDate DATE
 	,@ToDate DATE
 	,@User VARCHAR(2000) = ''
 	,@SectionId VARCHAR(2000) = ''
@@ -9,7 +8,8 @@ ALTER PROCEDURE [dbo].[OWP_EmployeeWorkingShift_QueryWeekly] @SiteId INT
 	,@CategoryId VARCHAR(2000) = ''
 	,@LocationCode VARCHAR(2000) = ''
 	,@ExcludeClosedAccount BIT = 1
-	,@OrderUserId INT = NULL
+	,@OrderUserId INT = NULL,
+	@AllUserJson          VARCHAR(MAX)
 AS
 /*      
  Created: 20180312@leo.vo  
@@ -36,13 +36,17 @@ AS
 	 20191028@Leo.Vo: Get Modified By [Redmine: #122604]
 	 20200714@Tyler.Dang: Add department filter [Redmine: #137416]
 	 20220421@Carlos.nguyen: Include EmployeeId [Redmine: #171771]
+	 20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
 BEGIN
 	SET NOCOUNT ON;
 
 	DECLARE @Category_WEEKLY INT = 1
 	DECLARE @Category_DAILY INT = 2
-
+	DECLARE @tblAllUser TABLE
+        (UserId   INT NOT NULL, 
+         IsActive BIT
+        );
 	DECLARE @tblSection TABLE (
 		SectionId INT
 		,SectionName VARCHAR(50)
@@ -60,6 +64,14 @@ BEGIN
 	DECLARE @tblWorkingShiftLogAction TABLE (
 		ActionId INT
 	)
+
+	INSERT INTO @tblAllUser
+        (UserId, 
+         IsActive
+        )
+               SELECT *
+               FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
+
 	INSERT INTO @tblWorkingShiftLogAction (ActionId)
 	VALUES (74), (75), (76), (77), (78), (79), (84), (85), (87), (89)
 
@@ -111,8 +123,7 @@ BEGIN
 		,ISNULL(u.DepartmentId, 0)
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN bodb02.dbo.custInfo AS ci WITH (NOLOCK) ON u.UserId = ci.custid
-		INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH (NOLOCK) ON us.UserId = u.UserId
-		AND us.SiteId = @SiteId
+		INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
 	WHERE (
 			@ExcludeClosedAccount = 0
 			OR (

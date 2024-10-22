@@ -7,7 +7,7 @@ Revisions:
 	20220428@Johnny: Init SP - [Redmine: #171934]  	 
 */
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_User_GetSectionIdByUserId] @UserId INT
 AS

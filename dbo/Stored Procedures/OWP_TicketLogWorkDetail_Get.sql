@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketLogWorkDetail_Get] @TicketId INT
 AS
@@ -13,6 +13,7 @@ AS
 	20230602@Johnny: Get ticket Log Work detail - [Redmine: #185890]
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 	20230807@Los: Get ticket event - [Redmine: #191778]
+	20240925@Los: remove join with match14 [Redmine: #209152]
 */
 
     BEGIN
@@ -37,20 +38,17 @@ AS
         )
                SELECT til.TicketId, 
                       til.AdminsiteId_New AS AdminsiteId, 
-                      COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
-                      COALESCE(m.homeid, m14.homeid) AS HomeId, 
-                      COALESCE(m.awayid, m14.awayid) AS AwayId,
+                      m.leagueid AS LeagueId, 
+                      m.homeid AS HomeId, 
+                      m.awayid AS AwayId,
                       CASE
                           WHEN m.globalshowtime IS NOT NULL
                           THEN DATEADD(HOUR, 12, m.globalshowtime)
-                          WHEN m14.globalshowtime IS NOT NULL
-                          THEN DATEADD(HOUR, 12, m14.globalshowtime)
                           ELSE NULL
                       END AS EventDateTime, 
                       til.Subject_New AS [Subject]
                FROM TicketIssue AS til WITH(NOLOCK)
                     LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId_New = m.matchid
-                    LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId_New = m14.matchid
                WHERE til.TicketId = @TicketId;
         SELECT DISTINCT 
                CASE

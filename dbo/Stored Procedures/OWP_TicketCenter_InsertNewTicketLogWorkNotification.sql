@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_TicketCenter_InsertNewTicketLogWorkNotification] @ActorId             INT, 
                                                                              @IsImportant         BIT, 
@@ -20,6 +20,7 @@ Revisions:
 	20230703@Johnny: Get Ticket Log Work from bodb02 - [Redmine: #190284]
 	20230807@Los: Get ticket event - [Redmine: #191778]
 	20240216@Mira: Refactor ticket center - [Redmine: #200671]
+	20240925@Los: remove join with match14 [Redmine: #209152]
 */
 
      SET NOCOUNT ON;
@@ -45,14 +46,13 @@ Revisions:
      )
             SELECT til.TicketId, 
                    til.AdminsiteId_New, 
-                   COALESCE(m.leagueid, m14.leagueid) AS LeagueId, 
-                   COALESCE(m.homeid, m14.homeid) AS HomeId, 
-                   COALESCE(m.awayid, m14.awayid) AS AwayId, 
-                   COALESCE(m.globalshowtime, m14.globalshowtime) AS EventDateTime, 
+                   m.leagueid AS LeagueId, 
+                   m.homeid AS HomeId, 
+                   m.awayid AS AwayId, 
+                   m.globalshowtime AS EventDateTime, 
                    til.[Subject_New]
             FROM TicketIssue AS til WITH(NOLOCK)
                  LEFT JOIN [bodb02].[dbo].[match] AS m WITH(NOLOCK) ON til.AdminsiteId_New = m.matchid
-                 LEFT JOIN [bodb02].[dbo].[match14] AS m14 WITH(NOLOCK) ON til.AdminsiteId_New = m14.matchid
             WHERE til.TicketId = @TicketId;
      -- username
      DECLARE @actorName NVARCHAR(50);

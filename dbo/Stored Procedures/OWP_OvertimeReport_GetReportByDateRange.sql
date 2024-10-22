@@ -1,11 +1,11 @@
 
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_OvertimeReport_GetReportByDateRange] @TraderName NVARCHAR(30), 
-                                                                @Location   NVARCHAR(10), 
-                                                                @FromDate   DATE, 
-                                                                @ToDate     DATE, 
-                                                                @SiteId     INT
+ALTER PROCEDURE [dbo].[OWP_OvertimeReport_GetReportByDateRange] @TraderName  NVARCHAR(30), 
+                                                                @Location    NVARCHAR(10), 
+                                                                @FromDate    DATE, 
+                                                                @ToDate      DATE, 
+                                                                @AllUserJson VARCHAR(MAX)
 AS
 
 /*    
@@ -15,12 +15,23 @@ DB: bodb_OWP
 
 Revisions:
 	20211014@Mira: init sp - [Redmine: #162821]
+	20240925@Los: Remove NAP_UserControl [Redmine: #209152]
 */
 
     BEGIN
         SET NOCOUNT ON;
         DECLARE @SecionLiveTradingVN INT= 3;
         DECLARE @SecionLiveTradingPH INT= 28;
+        DECLARE @tblAllUser TABLE
+        (UserId   INT NOT NULL, 
+         IsActive BIT
+        );
+        INSERT INTO @tblAllUser
+        (UserId, 
+         IsActive
+        )
+               SELECT *
+               FROM OPENJSON(@AllUserJson) WITH(UserId INT, IsActive BIT);
         CREATE TABLE #tmpUserId
         (Location VARCHAR(10), 
          UserId   INT, 
@@ -39,8 +50,7 @@ Revisions:
                       u.[Username]
                FROM dbo.[User] u WITH(NOLOCK)
                     INNER JOIN bodb02.dbo.custInfo AS ci WITH(NOLOCK) ON u.UserId = ci.custid
-                    INNER JOIN DBPOL.NAP_UserControl.dbo.NAP_UserSite AS us WITH(NOLOCK) ON us.UserId = u.UserId
-                                                                                            AND us.SiteId = @SiteId
+                    INNER JOIN @tblAllUser AS us ON us.UserId = u.UserId
                WHERE u.SectionId IN(@SecionLiveTradingVN, @SecionLiveTradingPH)
                     AND (u.Username LIKE '%' + @TraderName + '%'
                          OR u.Nickname LIKE '%' + @TraderName + '%')

@@ -93,4 +93,4 @@ UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettin
 UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":2506,"HasTV":false,"TV":"(W.Day/W.Kend-None Peak)","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 2506 AND [FullConditionDescription] IS NULL
 UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":2507,"HasTV":false,"TV":"(W.Kend-Peak)","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 2507 AND [FullConditionDescription] IS NULL
 UPDATE [dbo].[NewLeagueSetting] SET [FullConditionDescription] =N'{"LeagueSettingId":2627,"HasTV":true,"TV":"TV","Rounds":[],"Divisions":[]}' WHERE [LeagueSettingId] = 2627 AND [FullConditionDescription] IS NULL
-/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/

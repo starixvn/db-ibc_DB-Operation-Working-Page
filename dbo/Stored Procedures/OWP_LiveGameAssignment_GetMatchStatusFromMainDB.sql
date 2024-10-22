@@ -1,5 +1,5 @@
 
-/*<info serverAlias="DBACC-bodb02" executers="bodbAdminNet" isFunction="0"></info>*/
+/*<info serverAlias="DBOWP-bodb02" executers="wsv_nap" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_LiveGameAssignment_GetMatchStatusFromMainDB] @AdminSiteIds VARCHAR(MAX)
 AS
@@ -11,6 +11,7 @@ DB: bodb02
 
 Revisions:
 	20210810@Mira: Initial - [Redmine: #153498]
+	20240925@Los: replace f_SplitString -> STRING_SPLIT [Redmine: #209152]
 */
 
     BEGIN
@@ -19,8 +20,8 @@ Revisions:
         DECLARE @tblAdminSiteIds TABLE(MatchId INT);
         INSERT INTO @tblAdminSiteIds
                SELECT DISTINCT 
-                      val
-               FROM f_SplitString(@AdminSiteIds, ',') u OPTION(MAXRECURSION 0);
+                      value
+               FROM STRING_SPLIT(@AdminSiteIds, ',');
 
         -- minor AdminSiteIds
         DECLARE @tblChildAdminSiteIds TABLE

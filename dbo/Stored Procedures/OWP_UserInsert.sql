@@ -1,4 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="bodbOWPNet,bodbAdminNet" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp,wsv_nap" isFunction="0"></info>*/
 CREATE PROCEDURE [dbo].[OWP_UserInsert] @UserId INT
 	,@ErrCode INT = 0 OUTPUT
 	,@ErrMsg NVARCHAR(200) = '' OUTPUT
@@ -17,7 +17,8 @@ Revisions:
 			> 0: Specific Error.
 		• @ErrMsg: Error description.
 	20181214@Leo: restore SP
-	20190116@Leo: grant permission to bodbAdminNet - [Redmine: #108034]
+	20190116@Leo: grant permission to wsv_nap - [Redmine: #108034]
+	20240925@Los: customer -> custInfo [Redmine: #209152]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -31,7 +32,7 @@ BEGIN
 			)
 	BEGIN
 		SELECT @username = username
-		FROM bodb02.dbo.Customer WITH (NOLOCK)
+		FROM bodb02.dbo.custInfo WITH (NOLOCK)
 		WHERE custid = @UserId
 
 		BEGIN TRY
