@@ -25,7 +25,6 @@ BEGIN
     WHERE epl.UpdateTypeId = 24 and
     CONVERT(DATETIME, epl.OldValue) BETWEEN @FromDateTime AND @ToDateTime
 
-
     -- Select InfoSiteMatch
     SELECT DISTINCT 
             im.InfoSiteMatchId, 
@@ -93,6 +92,16 @@ BEGIN
                                                                         AND us.ChildMatchId IS NULL
             LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
             LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId = im.InfoSiteMatchId
-    WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
-            AND im.LeagueName NOT LIKE '%Fantasy%';
+    WHERE im.LeagueName NOT LIKE '%Fantasy%';
+
+    SELECT DISTINCT 
+            el.InfositeId, 
+            eu.Id AS UpdateTypeId, 
+            eu.RAndDUpdate, 
+            el.AwayUpdated, 
+            el.HomeUpdated
+    FROM  @TempMatch tmp
+	INNER JOIN dbo.EventPickingLog AS el WITH(NOLOCK) ON tmp.InfoSiteMatchId = el.InfositeId
+    INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id
+    WHERE eu.Id NOT IN(14, 15, 25);
 END;
