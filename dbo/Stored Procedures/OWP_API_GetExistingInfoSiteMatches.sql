@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_API_GetExistingInfoSiteMatches] @Ids NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_API_GetExistingInfoSiteMatches] @Ids NVARCHAR(MAX)
 AS
 
 /*    
@@ -10,7 +10,8 @@ Task : Get InfoSiteMatch
 DB: bodb_OWP    
     
 Revisions:     
-  20240708@Johnny: initial SP - [Redmine: #201604]    
+  20240708@Johnny: initial SP - [Redmine: #201604]
+  20241106@Frankie: change update type - [Redmine: #212795]   
 */
 
     BEGIN
@@ -29,7 +30,7 @@ Revisions:
             m.EventDateTime, 
             m.TV, 
             m.IPTV, 
-            m.[Provider], 
+            m.[OtherProvider], 
             m.[Round], 
             m.[Remark], 
             m.HomeRemark, 
