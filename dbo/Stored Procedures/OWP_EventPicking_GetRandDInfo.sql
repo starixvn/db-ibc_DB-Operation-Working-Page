@@ -13,6 +13,7 @@ AS
     20230907@Liam: Get event picking log - [Redmine: #190039]
 	20231016@los: Export event picking [Redmine: #194448]
 	20240404@Liam: ignore round H-A/T - [Redmine: #202638]
+	20241106@Frankie: sort R&D column - [Redmine: #212795]
 */
 
     BEGIN
@@ -42,10 +43,12 @@ AS
                eu.Id AS UpdateTypeId, 
                eu.RAndDUpdate, 
                el.AwayUpdated, 
-               el.HomeUpdated
+               el.HomeUpdated,
+			   el.[Date]
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
              INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId
              INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id
         WHERE el.[Date] >= temp.ShowDate
-              AND eu.Id NOT IN(14, 15);
+              AND eu.Id NOT IN(14, 15)
+		ORDER BY el.[Date];
     END;
