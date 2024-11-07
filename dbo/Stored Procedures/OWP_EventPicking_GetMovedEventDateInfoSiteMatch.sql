@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20241028@Oliver: Event picking new - [Redmine: #212599]
+	20241107@Frankie: Sort R&D column - [Redmine: #212795]
 */
 
 BEGIN
@@ -99,9 +100,11 @@ BEGIN
             eu.Id AS UpdateTypeId, 
             eu.RAndDUpdate, 
             el.AwayUpdated, 
-            el.HomeUpdated
+            el.HomeUpdated,
+			el.[Date]
     FROM  @TempMatch tmp
 	INNER JOIN dbo.EventPickingLog AS el WITH(NOLOCK) ON tmp.InfoSiteMatchId = el.InfositeId
     INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id
-    WHERE eu.Id NOT IN(14, 15, 25);
+    WHERE eu.Id NOT IN(14, 15, 25)
+	ORDER BY el.[Date];
 END;
