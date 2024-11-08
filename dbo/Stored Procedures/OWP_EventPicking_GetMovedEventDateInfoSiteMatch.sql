@@ -18,8 +18,10 @@ BEGIN
     SET NOCOUNT ON;
     DECLARE @FromDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @Date), '12:00:00');
     DECLARE @ToDateTime DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @Date), '11:59:59');
-
+	DECLARE @CheckValue VARCHAR(5000)= 'Checked';  
+    DECLARE @InitValue VARCHAR(5000)= 'Initialize';  
     DECLARE @TempMatch TABLE (InfoSiteMatchId INT NOT NULL);
+
     INSERT INTO @TempMatch (InfoSiteMatchId )
     SELECT DISTINCT epl.InfositeId
     FROM dbo.EventPickingLog epl WITH (NOLOCK)
@@ -95,16 +97,29 @@ BEGIN
             LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId = im.InfoSiteMatchId
     WHERE im.LeagueName NOT LIKE '%Fantasy%';
 
+	-- Select R&D
+	DECLARE @TempTime TABLE (InfoSiteMatchId INT NOT NULL, ShowDate DATETIME);
+	INSERT INTO @TempTime (InfoSiteMatchId, ShowDate)  
+    SELECT el.InfositeId,   
+            MAX([date])  
+    FROM EventPickingLog el WITH(NOLOCK) 
+        INNER JOIN @TempMatch im ON el.InfositeId = im.InfoSiteMatchId  
+    WHERE(el.NewValue = @CheckValue  
+            OR el.OldValue = @InitValue)  
+    GROUP BY el.InfositeId;  
+
+
     SELECT DISTINCT 
-            el.InfositeId, 
-            eu.Id AS UpdateTypeId, 
-            eu.RAndDUpdate, 
-            el.AwayUpdated, 
-            el.HomeUpdated,
-			el.[Date]
-    FROM  @TempMatch tmp
-	INNER JOIN dbo.EventPickingLog AS el WITH(NOLOCK) ON tmp.InfoSiteMatchId = el.InfositeId
-    INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id
-    WHERE eu.Id NOT IN(14, 15, 25)
+        el.InfositeId, 
+        eu.Id AS UpdateTypeId, 
+        eu.RAndDUpdate, 
+        el.AwayUpdated, 
+        el.HomeUpdated,
+		el.[Date]
+    FROM dbo.EventPickingLog AS el WITH(NOLOCK)  
+        INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId  
+        INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id 
+    WHERE el.[Date] >= temp.ShowDate  
+        AND eu.Id NOT IN(14, 15, 25)  
 	ORDER BY el.[Date];
 END;
