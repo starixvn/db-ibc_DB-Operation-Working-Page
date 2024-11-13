@@ -35,6 +35,7 @@ AS
 	20240327@Mira: solve deadlock - [Redmine: #200841]
 	20240419@Mira: save league, home, away blacklist column - [Redmine: #203309]
 	20240423@Mira: save team round column, resolve blacklist - [Redmine: #204002]
+	20241113@Frankie: not change provider field after insert new match - [Redmine: #213590]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -400,7 +401,6 @@ BEGIN
 		  t.[ETPK] = s.[ETPK], 
 		  t.[IsLive] = s.[IsLive], 
 		  t.[MatchCode] = s.[MatchCode], 
-		  t.[Provider] = s.[Provider], 
 		  t.[OtherProvider] = s.[OtherProvider], 
 		  t.[Remark] = s.[Remark], 
 		  t.[ProviderUsed] = s.[ProviderUsed], 
