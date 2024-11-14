@@ -12,6 +12,7 @@ AS
  Revisions:
     20241028@Oliver: Event picking new - [Redmine: #212599]
 	20241107@Frankie: Sort R&D column - [Redmine: #212795]
+	20241114@Frankie: get provider info - [Redmine: #213590]
 */
 
 BEGIN
@@ -46,6 +47,7 @@ BEGIN
             im.IPTV, 
             im.Channel, 
             im.WB, 
+			im.Provider,
             im.OtherProvider, 
             im.Agent, 
             im.Venue, 

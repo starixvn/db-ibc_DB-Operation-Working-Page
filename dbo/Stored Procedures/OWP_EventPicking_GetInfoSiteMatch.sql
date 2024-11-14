@@ -19,6 +19,7 @@ AS
 	20240422@Carlos.nguyen: init data league management - [Redmine: #202639]
 	20240925@Johnny: get remark2 - [Redmine: #210649]
 	20241001@Carlos.nguyen: init data league management - [Redmine: #210649]
+	20241114@Frankie: get provider info - [Redmine: #213590]
 
 */
 
@@ -45,6 +46,7 @@ AS
                im.IPTV, 
                im.Channel, 
                im.WB, 
+			   im.Provider, 
                im.OtherProvider, 
                im.Agent, 
                im.Venue, 

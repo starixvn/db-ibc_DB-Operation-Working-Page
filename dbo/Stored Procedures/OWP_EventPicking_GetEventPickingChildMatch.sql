@@ -11,7 +11,7 @@ AS
  
  Revisions:
 	20230907@Liam: Get event picking child match - [Redmine: #207942]
-	
+	20241114@Frankie: get provider info - [Redmine: #213590]
 
 */
 
@@ -38,6 +38,7 @@ AS
                im.IPTV, 
                im.Channel, 
                im.WB, 
+			   im.Provider,
                im.OtherProvider, 
                im.Agent, 
                im.Venue, 
