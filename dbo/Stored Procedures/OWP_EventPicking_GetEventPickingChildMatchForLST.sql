@@ -11,6 +11,7 @@ AS
  
  Revisions:
 	20241308@Liam: Get event picking child match for LST - [Redmine: #207942]
+	20241114@Frankie: get iptv info - [Redmine: #213590]
 */
 
     BEGIN
@@ -21,6 +22,7 @@ AS
         -- Select InfoSiteMatch
         SELECT DISTINCT 
                im.EventDateTime, 
+			   im.Provider 'Agent',
                im.OtherProvider,
                CASE
                    WHEN im.IsNeutral = 1
@@ -35,7 +37,8 @@ AS
                im.Round, 
                im.ETPK, 
                im.TV, 
-               im.Channel, 
+               im.Channel,
+			   im.IPTV, 
                im.Website1, 
                im.Website2, 
                im.Website3, 

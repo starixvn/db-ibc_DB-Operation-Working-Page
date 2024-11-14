@@ -13,6 +13,7 @@ AS
     20242304@Liam: Get main match for LST - [Redmine: #203309]
 	20241308@Liam: Get maxbet for LST - [Redmine: #207942]
 	20240925@Johnny: get remark2 - [Redmine: #210649]
+	20241114@Frankie: get iptv info - [Redmine: #213590]
 */
 
     BEGIN
@@ -23,6 +24,7 @@ AS
         -- Select InfoSiteMatch
         SELECT DISTINCT 
                im.EventDateTime, 
+			   im.Provider 'Agent',
                im.OtherProvider,
                CASE
                    WHEN im.IsNeutral = 1
@@ -38,6 +40,7 @@ AS
                im.ETPK, 
                im.TV, 
                im.Channel, 
+			   im.IPTV,
                im.Website1, 
                im.Website2, 
                im.Website3, 
