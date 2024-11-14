@@ -401,6 +401,11 @@ BEGIN
 		  t.[ETPK] = s.[ETPK], 
 		  t.[IsLive] = s.[IsLive], 
 		  t.[MatchCode] = s.[MatchCode], 
+		  t.[Provider] = CASE 
+                      WHEN t.[Provider] IS NULL OR t.[Provider] = '' 
+                      THEN s.[Provider] 
+                      ELSE t.[Provider] 
+                   END,
 		  t.[OtherProvider] = s.[OtherProvider], 
 		  t.[Remark] = s.[Remark], 
 		  t.[ProviderUsed] = s.[ProviderUsed], 
