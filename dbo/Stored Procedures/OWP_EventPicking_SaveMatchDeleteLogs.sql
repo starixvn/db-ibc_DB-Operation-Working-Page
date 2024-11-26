@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20230907@Liam: save delete event picking log - [Redmine: #190039]
+	20241126@Frankie: adjust the auto uncheck - [Redmine: #214103]
 */
 
     BEGIN
@@ -87,9 +88,13 @@ AS
                       'Unchecked'
                FROM @DeleteMatchTemp t
                     INNER JOIN EventPickingConfirmed ec ON t.InfositeId = ec.InfositeId
+					INNER JOIN InfoSiteMatch im ON t.InfositeId = im.InfoSiteMatchId
+			   WHERE im.IsDeleted = 0
        
 	   -- delete match checked 
         DELETE e
         FROM EventPickingConfirmed e
-             INNER JOIN @DeleteMatchTemp t ON e.InfositeId = t.InfositeId;
+             INNER JOIN @DeleteMatchTemp t ON e.InfositeId = t.InfositeId
+			 INNER JOIN InfoSiteMatch im ON t.InfositeId = im.InfoSiteMatchId
+		WHERE im.IsDeleted = 0
     END;
