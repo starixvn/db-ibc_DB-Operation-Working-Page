@@ -8,12 +8,17 @@ Revisions:
     20241203@Frankie: Create new table LeagueCategoryHistory - [Redmine: #214351]
 */
 
+IF OBJECT_ID('LeagueCategoryHistory', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE LeagueCategoryHistory;
+END;
+
 CREATE TABLE LeagueCategoryHistory (
     Id INT IDENTITY PRIMARY KEY,
     OWPLeagueId INT NOT NULL,
-    LeagueCategoryId INT NOT NULL, 
-    EffectiveDate DATETIME NOT NULL,   
-    ExpiryDate DATETIME NULL   
+    CategoryId INT NOT NULL, 
+    StartDate DATETIME NOT NULL,   
+    EndDate DATETIME NULL   
 );
 
 GO
