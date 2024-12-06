@@ -13,10 +13,13 @@ DB: bodb_OWP
 Revisions:
    20200330@Tyler.Dang: Init [Redmine: #131598]
    20210831@Johnny.Thai: Remove CN88 - [Feature: #160666]
-
+   20241206@Frankie: Update League Categry - [Feature: #214351]
 */
 BEGIN
 	SET NOCOUNT ON
+
+	DECLARE @TimeZoneGMT8 INT = 8;
+	DECLARE @Today DATE = DATEADD(HOUR, @TimeZoneGMT8 - DATEDIFF(HOUR, GETUTCDATE(), GETDATE()), GETDATE());
 
 	CREATE TABLE #tblLeagueIds (
 		OWPLeagueId INT,
@@ -84,18 +87,26 @@ BEGIN
 		OrderValue
 	)
 	SELECT owpl.OWPLeagueId,
-		owpl.CategoryId,
+		lch.CategoryId ,
 		ref.Value,
 		owpl.OWPLeagueName,
 		owpl.IsActive,
 		owpl.IsBlackList,
 		'OrderValue' = CASE WHEN owpl.CategoryId IS NULL THEN 100 ELSE owpl.CategoryId END
 	FROM OWPLeague AS owpl WITH (NOLOCK)
+		LEFT JOIN LeagueCategoryHistory AS lch WITH (NOLOCK)
+			ON owpl.OWPLeagueId = lch.OWPLeagueId
+				AND @Today >= lch.StartDate
+				AND (@Today <= lch.EndDate OR lch.EndDate IS NULL)
 		LEFT JOIN RefResource AS ref WITH (NOLOCK)
-			ON ref.RefName='LeagueCategory' AND ref.ResourceId = owpl.CategoryId
+			ON ref.RefName='LeagueCategory' AND ref.ResourceId = lch.CategoryId
 	WHERE owpl.OWPLeagueName LIKE '%'+@League+'%'
-		AND (owpl.CategoryId=@LeagueGroupId OR @LeagueGroupId=-1 OR (@LeagueGroupId=0 AND owpl.CategoryId IS NULL))
-		AND owpl.IsActive=@IsActive
+		AND (
+			lch.CategoryId = @LeagueGroupId
+			OR @LeagueGroupId = -1
+			OR (@LeagueGroupId = 0 AND lch.CategoryId IS NULL)
+		)
+		AND owpl.IsActive=1
 		AND SUBSTRING(owpl.OWPLeagueName,CHARINDEX('-', owpl.OWPLeagueName)+2, LEN(owpl.OWPLeagueName))
 			 NOT IN (SELECT mb.MinorBettypeName FROM MinorBettype AS mb WITH (NOLOCK))
 
