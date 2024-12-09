@@ -26,6 +26,7 @@ Revisions:
  20230607@Mira: get LeagueId for InfositeMatch - [Redmine: #186299]
  20231026@los: sync round - [Redmine: #193810]
  20231219@Liam: Get League Group - [Redmine: #198232]
+ 20241209@Frankie : Update League Category - [Feature: #214351]
 */
 
     BEGIN
@@ -340,8 +341,11 @@ Revisions:
                rr.[Order] AS LeagueGroupOrder
         FROM @tblDayShiftTable AS l
              LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId
-             LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
-                                                         AND rr.RefName = 'LeagueCategory';
+             LEFT JOIN dbo.LeagueCategoryHistory AS lch WITH (NOLOCK) ON l.LeagueId = lch.OWPLeagueId
+																		AND @EventDate >= lch.StartDate
+																		AND (@EventDate <= lch.EndDate OR lch.EndDate IS NULL)
+             LEFT JOIN RefResource AS rr WITH(NOLOCK) ON rr.ResourceId = lch.CategoryId
+                                                         AND rr.RefName = 'LeagueCategory'
 
         -- Query InfoSiteMatches --
         SELECT m.InfoSiteMatchId, 
