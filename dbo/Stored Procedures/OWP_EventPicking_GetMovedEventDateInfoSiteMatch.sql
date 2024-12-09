@@ -13,6 +13,7 @@ AS
     20241028@Oliver: Event picking new - [Redmine: #212599]
 	20241107@Frankie: Sort R&D column - [Redmine: #212795]
 	20241114@Frankie: get provider info - [Redmine: #213590]
+	20241209@Frankie : Update League Category - [Feature: #214351]
 */
 
 BEGIN
@@ -36,6 +37,7 @@ BEGIN
             im.EventDateTime, 
             im.OWPLeagueId, 
             im.LeagueName, 
+			rr.value 'LeagueGroup',
             l.IsBlackList,
             CASE
                 WHEN im.IsNeutral = 1
@@ -97,6 +99,11 @@ BEGIN
                                                                         AND us.ChildMatchId IS NULL
             LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
             LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId = im.InfoSiteMatchId
+			LEFT JOIN dbo.LeagueCategoryHistory AS lch WITH (NOLOCK) ON im.OWPLeagueId = lch.OWPLeagueId
+																		AND im.EventDateTime >= lch.StartDate
+																		AND (im.EventDateTime <= lch.EndDate OR lch.EndDate IS NULL)
+			LEFT JOIN RefResource AS rr WITH(NOLOCK) ON rr.ResourceId = lch.CategoryId
+														AND rr.RefName = 'LeagueCategory'
     WHERE im.LeagueName NOT LIKE '%Fantasy%';
 
 	-- Select R&D
