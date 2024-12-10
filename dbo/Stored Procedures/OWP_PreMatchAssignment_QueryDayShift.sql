@@ -312,7 +312,10 @@ Revisions:
 
         -- Result
         --	Query leagues --
-        SELECT PreMatchLeagueId, 
+        SELECT leaguesInfo.*
+			,rr.[Order] AS LeagueGroupOrder
+		FROM (
+			SELECT PreMatchLeagueId, 
                LeagueId, 
                LeagueName, 
                MatchCount, 
@@ -337,14 +340,11 @@ Revisions:
                n.PreMatchNoteId, 
                n.HasNotes, 
                l.IsDeleted, 
-               rr.[Value] AS LeagueGroup, 
-               rr.[Order] AS LeagueGroupOrder
-        FROM @tblDayShiftTable AS l
-             LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId
-             LEFT JOIN dbo.LeagueCategoryHistory AS lch WITH (NOLOCK) ON l.LeagueId = lch.OWPLeagueId
-																		AND @EventDate >= lch.StartDate
-																		AND (@EventDate <= lch.EndDate OR lch.EndDate IS NULL)
-             LEFT JOIN RefResource AS rr WITH(NOLOCK) ON rr.ResourceId = lch.CategoryId
+               [dbo].[fnc_GetLeagueGroupByDate] (@EventDate, l.LeagueId) AS LeagueGroup
+			FROM @tblDayShiftTable AS l
+				 LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId
+		) AS leaguesInfo
+			LEFT JOIN RefResource AS rr WITH(NOLOCK) ON rr.Value = leaguesInfo.LeagueGroup
                                                          AND rr.RefName = 'LeagueCategory'
 
         -- Query InfoSiteMatches --

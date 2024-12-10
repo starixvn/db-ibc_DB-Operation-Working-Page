@@ -256,7 +256,7 @@ AS
             ml.EventDateTime, 
             ml.KickOffTime, 
             ml.OtherTime, 
-            rr.[Value] AS LeagueGroup, 
+            [dbo].[fnc_GetLeagueGroupByDate] (ml.EventDate, l.OWPLeagueId) AS LeagueGroup, 
             l.OWPLeagueName AS League, 
             (CASE
                  WHEN ml.IsNeutral = 1
@@ -337,11 +337,6 @@ AS
           INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
           INNER JOIN dbo.OWPTeam AS a WITH(NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
           INNER JOIN dbo.OWPMatch AS ma WITH(NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
-          LEFT JOIN dbo.LeagueCategoryHistory AS lch WITH (NOLOCK) ON l.OWPLeagueId = lch.OWPLeagueId 
-																	AND ml.EventDate >= lch.StartDate
-																	AND (ml.EventDate <= lch.EndDate OR lch.EndDate IS NULL)
-          LEFT JOIN RefResource AS rr WITH(NOLOCK) ON rr.ResourceId = lch.CategoryId
-													AND rr.RefName = 'LeagueCategory'
           LEFT JOIN @tblAdminSiteIdShouldShowAbsenceIcon AS ai ON ml.MatchId = ai.Matchid
           LEFT JOIN #tblNoOfHDPResource AS ref ON ml.NoOfHDPId = ref.Id
           LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId

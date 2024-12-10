@@ -88,7 +88,7 @@ BEGIN
 	)
 	SELECT owpl.OWPLeagueId,
 		lch.CategoryId ,
-		ref.Value,
+		[dbo].[fnc_GetLeagueGroupByDate] (@Today, owpl.OWPLeagueId),
 		owpl.OWPLeagueName,
 		owpl.IsActive,
 		owpl.IsBlackList,
@@ -98,8 +98,6 @@ BEGIN
 			ON owpl.OWPLeagueId = lch.OWPLeagueId
 				AND @Today >= lch.StartDate
 				AND (@Today <= lch.EndDate OR lch.EndDate IS NULL)
-		LEFT JOIN RefResource AS ref WITH (NOLOCK)
-			ON ref.RefName='LeagueCategory' AND ref.ResourceId = lch.CategoryId
 	WHERE owpl.OWPLeagueName LIKE '%'+@League+'%'
 		AND (
 			lch.CategoryId = @LeagueGroupId

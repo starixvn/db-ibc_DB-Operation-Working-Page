@@ -27,7 +27,7 @@ AS
                im.EventDateTime, 
                im.OWPLeagueId, 
                im.LeagueName, 
-			   rr.value 'LeagueGroup',
+			   [dbo].[fnc_GetLeagueGroupByDate] (im.EventDateTime, im.OWPLeagueId) AS LeagueGroup,
                l.IsBlackList,
                CASE
                    WHEN im.IsNeutral = 1
@@ -83,11 +83,6 @@ AS
              LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
                                                                           AND us.ChildMatchId IS NULL
              LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
-			 LEFT JOIN dbo.LeagueCategoryHistory AS lch WITH (NOLOCK) ON im.OWPLeagueId = lch.OWPLeagueId
-																		AND im.EventDateTime >= lch.StartDate
-																		AND (im.EventDateTime <= lch.EndDate OR lch.EndDate IS NULL)
-			 LEFT JOIN RefResource AS rr WITH(NOLOCK) ON rr.ResourceId = lch.CategoryId
-														AND rr.RefName = 'LeagueCategory'
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';
     END;
