@@ -380,24 +380,12 @@ BEGIN
         n.HasNotes, 
         m.IsLive, 
         m.OWPLeagueId 'LeagueId', 
-        m.TeamRound
+        m.TeamRound,		
+        m.IsTest
     FROM dbo.[InfoSiteMatch] AS m WITH(NOLOCK)
         INNER JOIN @tblDayShiftTable AS l ON l.LeagueId = m.OWPLeagueId
         LEFT JOIN @tblMatchNotes AS n ON n.InfoSiteMatchId = m.InfoSiteMatchId
     WHERE m.EventDateTime BETWEEN @EventFromDateTime AND @EventToDateTime
         AND m.ParentId IS NULL
     ORDER BY m.EventDateTime ASC;
-
-	SELECT a.PreMatchLeagueId
-		,a.Bettype
-		,a.AssignmentType
-		,a.UserId
-		,a.IsTakeOver
-		,a.AssignBySystem
-	FROM dbo.PreMatchAssignment AS a WITH (NOLOCK)
-	WHERE EXISTS (
-		SELECT 1
-		FROM @tblDayShiftTable AS tmp
-		WHERE a.PreMatchLeagueId = tmp.PreMatchLeagueId
-		)
 END;
