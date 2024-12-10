@@ -1,14 +1,13 @@
-﻿
-/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
+﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_API_PushInfoSiteMatch] @XML NVARCHAR(MAX)
 AS
 /*    
- Created: 20181030@Leo.Vo
- Task : Push InfoSite match
- DB: bodb_OWP    
+Created: 20181030@Leo.Vo
+Task : Push InfoSite match
+DB: bodb_OWP    
     
- Revisions:
+Revisions:
 	20181030@Leo.Vo: Initial SP - [Redmine: #103598]
 	20181127@Leo.Vo: Distinct LeagueName before inserting - [Redmine: #103598]
 	20181129@Leo.Vo: Not sync Agent - [Redmine: #105574]
@@ -36,6 +35,7 @@ AS
 	20240419@Mira: save league, home, away blacklist column - [Redmine: #203309]
 	20240423@Mira: save team round column, resolve blacklist - [Redmine: #204002]
 	20241113@Frankie: not change provider field after insert new match - [Redmine: #213590]
+	20241125@Tim: sync MatchStatus, HomeBadRanking, AwayBadRanking, HomeDowngrade, AwayDowngrade, RoundConfirm - [Redmine: #214095]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -101,6 +101,12 @@ BEGIN
 		,[IsLeagueBlackList] BIT
 		,[IsHomeBlackList] BIT
 		,[IsAwayBlackList] BIT
+		,IsHomeBadRanking BIT
+		,IsAwayBadRanking BIT
+		,IsHomeDowngrade BIT
+		,IsAwayDowngrade BIT
+		,MatchStatus TINYINT
+		,RoundConfirm VARCHAR(3)
 		)
 
 	INSERT INTO #tblInfoSiteMatch (
@@ -141,6 +147,12 @@ BEGIN
 		,[IsLeagueBlackList]
 		,[IsHomeBlackList]
 		,[IsAwayBlackList]
+		,IsHomeBadRanking
+		,IsAwayBadRanking
+		,IsHomeDowngrade
+		,IsAwayDowngrade
+		,MatchStatus
+		,RoundConfirm
 		)
 	SELECT [InfoSiteMatchId]
 	    ,[AdminSiteMatchId]
@@ -179,45 +191,57 @@ BEGIN
 		,[IsLeagueBlackList]
 		,[IsHomeBlackList]
 		,[IsAwayBlackList]
+		,IsHomeBadRanking
+		,IsAwayBadRanking
+		,IsHomeDowngrade
+		,IsAwayDowngrade
+		,MatchStatus
+		,RoundConfirm
 	FROM OPENXML(@idoc, '/Root/Event', 1) WITH (
-			 [InfoSiteMatchId] [int]
-			,[AdminSiteMatchId] [int]
-			,[IsLive] BIT
-			,[EventDateTime] [datetime]
-			,[UpdatedTime] [datetime]
-			,[LeagueName] [nvarchar](500)
-			,[HomeName] [nvarchar](200)
-			,[AwayName] [nvarchar](200)
-			,[Round] [nvarchar](2000)
-			,[TeamRound] [nvarchar](2000)
-			,[Division] [nvarchar](2000)
-			,[Agent] [nvarchar](2000)
-			,[Venue] [nvarchar](100)
-			,[LocalTV] [nvarchar](2000)
-			,[LiveTV] [nvarchar](100)
-			,[WatchBet] [nvarchar](100)
-			,[Website1] [nvarchar](1000)
-			,[Website2] [nvarchar](1000)
-			,[Website3] [nvarchar](1000)
-			,[Website4] [nvarchar](1000)
-			,[IsNeutral] BIT
-			,[Iptv][nvarchar](2000)
-			,[ETPK][nvarchar](2000)
-			,[MatchCode][nvarchar](50) 
-			,[Provider][nvarchar](2000) 
-			,[OtherProvider][nvarchar](2000) 
-			,[Remark] NVARCHAR(2000)
-			,[ProviderUsed][nvarchar](2000)
-			,[ProviderTV][nvarchar](200)
-		    ,[IsTest] BIT
-		    ,[Remark2] [nvarchar](2000)
-		    ,[HomeRemark] [nvarchar](2000)
-		    ,[AwayRemark] [nvarchar](2000)
-			,[TotalRound] [nvarchar](2000)
-			,[IsLeagueBlackList] BIT
-			,[IsHomeBlackList] BIT
-			,[IsAwayBlackList] BIT
-			)
+		[InfoSiteMatchId] [int]
+		,[AdminSiteMatchId] [int]
+		,[IsLive] BIT
+		,[EventDateTime] [datetime]
+		,[UpdatedTime] [datetime]
+		,[LeagueName] [nvarchar](500)
+		,[HomeName] [nvarchar](200)
+		,[AwayName] [nvarchar](200)
+		,[Round] [nvarchar](2000)
+		,[TeamRound] [nvarchar](2000)
+		,[Division] [nvarchar](2000)
+		,[Agent] [nvarchar](2000)
+		,[Venue] [nvarchar](100)
+		,[LocalTV] [nvarchar](2000)
+		,[LiveTV] [nvarchar](100)
+		,[WatchBet] [nvarchar](100)
+		,[Website1] [nvarchar](1000)
+		,[Website2] [nvarchar](1000)
+		,[Website3] [nvarchar](1000)
+		,[Website4] [nvarchar](1000)
+		,[IsNeutral] BIT
+		,[Iptv][nvarchar](2000)
+		,[ETPK][nvarchar](2000)
+		,[MatchCode][nvarchar](50) 
+		,[Provider][nvarchar](2000) 
+		,[OtherProvider][nvarchar](2000) 
+		,[Remark] NVARCHAR(2000)
+		,[ProviderUsed][nvarchar](2000)
+		,[ProviderTV][nvarchar](200)
+		,[IsTest] BIT
+		,[Remark2] [nvarchar](2000)
+		,[HomeRemark] [nvarchar](2000)
+		,[AwayRemark] [nvarchar](2000)
+		,[TotalRound] [nvarchar](2000)
+		,[IsLeagueBlackList] BIT
+		,[IsHomeBlackList] BIT
+		,[IsAwayBlackList] BIT
+		,IsHomeBadRanking BIT
+		,IsAwayBadRanking BIT
+		,IsHomeDowngrade BIT
+		,IsAwayDowngrade BIT
+		,MatchStatus TINYINT
+		,RoundConfirm VARCHAR(3)
+		)
 
 	EXEC sp_xml_removedocument @idoc
 
@@ -238,7 +262,7 @@ BEGIN
 	UPDATE im
 	SET im.OWPLeagueId = l.OWPLeagueId
 	FROM #tblInfoSiteMatch AS im
-	INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON im.LeagueName = l.OWPLeagueName
+		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON im.LeagueName = l.OWPLeagueName
 
 	-- insert new team
 	INSERT INTO dbo.OWPTeam (OWPTeamName)
@@ -247,8 +271,7 @@ BEGIN
 		SELECT im.HomeName AS TeamName
 		FROM #tblInfoSiteMatch AS im
 		
-		UNION
-		
+		UNION		
 		SELECT im.AwayName AS TeamName
 		FROM #tblInfoSiteMatch AS im
 		) AS im
@@ -262,13 +285,13 @@ BEGIN
 	UPDATE im
 	SET im.OWPHomeId = t.OWPTeamId
 	FROM #tblInfoSiteMatch AS im
-	INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.HomeName = t.OWPTeamName
+		INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.HomeName = t.OWPTeamName
 
 	-- update OWPAwayId
 	UPDATE im
 	SET im.OWPAwayId = t.OWPTeamId
 	FROM #tblInfoSiteMatch AS im
-	INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.AwayName = t.OWPTeamName
+		INNER JOIN dbo.OWPTeam AS t WITH (NOLOCK) ON im.AwayName = t.OWPTeamName
 
 	-- insert new TV
 	TRUNCATE TABLE #tblTextList
@@ -281,7 +304,7 @@ BEGIN
 	SELECT im.InfoSiteMatchId
 		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(2000))
 	FROM #tblInfoSiteMatch AS im
-	CROSS APPLY dbo.fnc_SplitStrings(im.TV, ',') AS d
+		CROSS APPLY dbo.fnc_SplitStrings(im.TV, ',') AS d
 	WHERE im.TV <> ''
 		AND RTRIM(LTRIM(d.val)) <> ''
 
@@ -308,7 +331,7 @@ BEGIN
 	UPDATE tl
 	SET tl.Id = tv.TVId
 	FROM #tblDistinctTextList AS tl
-	INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tl.[Text] = tv.TVCode
+		INNER JOIN dbo.Television AS tv WITH (NOLOCK) ON tl.[Text] = tv.TVCode
 
 	UPDATE im
 	SET im.TVIds = STUFF((
@@ -330,7 +353,7 @@ BEGIN
 	SELECT im.InfoSiteMatchId
 		,CAST(RTRIM(LTRIM(d.val)) AS NVARCHAR(2000))
 	FROM #tblInfoSiteMatch AS im
-	CROSS APPLY dbo.fnc_SplitStrings(im.Agent, ',') AS d
+		CROSS APPLY dbo.fnc_SplitStrings(im.Agent, ',') AS d
 	WHERE im.Agent <> ''
 		AND RTRIM(LTRIM(d.val)) <> ''
 
@@ -370,147 +393,164 @@ BEGIN
 
 	-- Update
 	UPDATE t
-	  SET 
-		  t.[InfoSiteMatchId] = s.[InfoSiteMatchId], 
-		  t.[AdminSiteMatchId] = s.[AdminSiteMatchId], 
-		  t.[EventDateTime] = s.[EventDateTime], 
-		  t.[UpdatedTime] = s.[UpdatedTime], 
-		  t.[LeagueName] = s.[LeagueName], 
-		  t.[HomeName] = s.[HomeName], 
-		  t.[AwayName] = s.[AwayName], 
-		  t.[Round] = s.[Round], 
-		  t.[TeamRound] = s.[TeamRound],
-		  t.[Division] = s.[Division], 
-		  t.[Agent] = s.[Agent], 
-		  t.[Venue] = s.[Venue], 
-		  t.[TV] = s.[TV], 
-		  t.[Channel] = s.[Channel], 
-		  t.[WB] = s.[WB], 
-		  t.[Website1] = s.[Website1], 
-		  t.[Website2] = s.[Website2], 
-		  t.[Website3] = s.[Website3], 
-		  t.[Website4] = s.[Website4], 
-		  t.[OWPLeagueId] = s.[OWPLeagueId], 
-		  t.[OWPHomeId] = s.[OWPHomeId], 
-		  t.[OWPAwayId] = s.[OWPAwayId], 
-		  t.[TVIds] = s.[TVIds], 
-		  t.[AgentIds] = s.[AgentIds], 
-		  t.[IsDeleted] = 0, 
-		  t.[IsNeutral] = s.[IsNeutral], 
-		  t.[IPTV] = s.[IPTV], 
-		  t.[ETPK] = s.[ETPK], 
-		  t.[IsLive] = s.[IsLive], 
-		  t.[MatchCode] = s.[MatchCode], 
-		  t.[Provider] = CASE 
-                      WHEN t.[Provider] IS NULL OR t.[Provider] = '' 
-                      THEN s.[Provider] 
-                      ELSE t.[Provider] 
-                   END,
-		  t.[OtherProvider] = s.[OtherProvider], 
-		  t.[Remark] = s.[Remark], 
-		  t.[ProviderUsed] = s.[ProviderUsed], 
-		  t.[ProviderTV] = s.[ProviderTV], 
-		  t.[IsTest] = s.[IsTest], 
-		  t.[Remark2] = s.[Remark2], 
-		  t.[HomeRemark] = s.[HomeRemark], 
-		  t.[AwayRemark] = s.[AwayRemark], 
-		  t.[TotalRound] = s.[TotalRound], 
-		  t.[IsLeagueBlackList] = s.[IsLeagueBlackList],
-		  t.[IsHomeBlackList] = s.[IsHomeBlackList],
-		  t.[IsAwayBlackList] = s.[IsAwayBlackList]
-	FROM dbo.InfoSiteMatch AS t
+	SET t.[InfoSiteMatchId] = s.[InfoSiteMatchId], 
+		t.[AdminSiteMatchId] = s.[AdminSiteMatchId], 
+		t.[EventDateTime] = s.[EventDateTime], 
+		t.[UpdatedTime] = s.[UpdatedTime], 
+		t.[LeagueName] = s.[LeagueName], 
+		t.[HomeName] = s.[HomeName], 
+		t.[AwayName] = s.[AwayName], 
+		t.[Round] = s.[Round], 
+		t.[TeamRound] = s.[TeamRound],
+		t.[Division] = s.[Division], 
+		t.[Agent] = s.[Agent], 
+		t.[Venue] = s.[Venue], 
+		t.[TV] = s.[TV], 
+		t.[Channel] = s.[Channel], 
+		t.[WB] = s.[WB], 
+		t.[Website1] = s.[Website1], 
+		t.[Website2] = s.[Website2], 
+		t.[Website3] = s.[Website3], 
+		t.[Website4] = s.[Website4], 
+		t.[OWPLeagueId] = s.[OWPLeagueId], 
+		t.[OWPHomeId] = s.[OWPHomeId], 
+		t.[OWPAwayId] = s.[OWPAwayId], 
+		t.[TVIds] = s.[TVIds], 
+		t.[AgentIds] = s.[AgentIds], 
+		t.[IsDeleted] = 0, 
+		t.[IsNeutral] = s.[IsNeutral], 
+		t.[IPTV] = s.[IPTV], 
+		t.[ETPK] = s.[ETPK], 
+		t.[IsLive] = s.[IsLive], 
+		t.[MatchCode] = s.[MatchCode], 
+		t.[Provider] = CASE 
+				WHEN t.[Provider] IS NULL OR t.[Provider] = '' 
+				THEN s.[Provider] 
+				ELSE t.[Provider] 
+			END,
+		t.[OtherProvider] = s.[OtherProvider], 
+		t.[Remark] = s.[Remark], 
+		t.[ProviderUsed] = s.[ProviderUsed], 
+		t.[ProviderTV] = s.[ProviderTV], 
+		t.[IsTest] = s.[IsTest], 
+		t.[Remark2] = s.[Remark2], 
+		t.[HomeRemark] = s.[HomeRemark], 
+		t.[AwayRemark] = s.[AwayRemark], 
+		t.[TotalRound] = s.[TotalRound], 
+		t.[IsLeagueBlackList] = s.[IsLeagueBlackList],
+		t.[IsHomeBlackList] = s.[IsHomeBlackList],
+		t.[IsAwayBlackList] = s.[IsAwayBlackList],
+		t.MatchStatus = s.MatchStatus,
+		t.IsHomeBadRanking = s.IsHomeBadRanking,
+		t.IsAwayBadRanking = s.IsAwayBadRanking,
+		t.IsHomeDowngrade = s.IsHomeDowngrade,
+		t.IsAwayDowngrade = s.IsAwayDowngrade,
+		t.RoundConfirm = s.RoundConfirm
+	FROM dbo.InfoSiteMatch AS t WITH (ROWLOCK, UPDLOCK)
 		 JOIN #tblInfoSiteMatch AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId];
 
 	-- insert
-	INSERT INTO dbo.InfoSiteMatch
-	([InfoSiteMatchId], 
-	 [AdminSiteMatchId], 
-	 [EventDateTime], 
-	 [UpdatedTime], 
-	 [LeagueName], 
-	 [HomeName], 
-	 [AwayName], 
-	 [Round], 
-	 [Division], 
-	 [Agent], 
-	 [Venue], 
-	 [TV], 
-	 [Channel], 
-	 [WB], 
-	 [Website1], 
-	 [Website2], 
-	 [Website3], 
-	 [Website4], 
-	 [OWPLeagueId], 
-	 [OWPHomeId], 
-	 [OWPAwayId], 
-	 [TVIds], 
-	 [AgentIds], 
-	 [IsDeleted], 
-	 [IsNeutral], 
-	 [IPTV], 
-	 [ETPK], 
-	 [IsLive], 
-	 [MatchCode], 
-	 [Provider], 
-	 [OtherProvider], 
-	 [Remark], 
-	 [ProviderUsed], 
-	 [ProviderTV], 
-	 [IsTest], 
-	 [Remark2], 
-	 [HomeRemark], 
-	 [AwayRemark], 
-	 [TotalRound], 
-	 [IsLeagueBlackList],
-	 [IsHomeBlackList],
-	 [IsAwayBlackList]
+	INSERT INTO dbo.InfoSiteMatch (
+		[InfoSiteMatchId], 
+		[AdminSiteMatchId], 
+		[EventDateTime], 
+		[UpdatedTime], 
+		[LeagueName], 
+		[HomeName], 
+		[AwayName], 
+		[Round], 
+		[Division], 
+		[Agent], 
+		[Venue], 
+		[TV], 
+		[Channel], 
+		[WB], 
+		[Website1], 
+		[Website2], 
+		[Website3], 
+		[Website4], 
+		[OWPLeagueId], 
+		[OWPHomeId], 
+		[OWPAwayId], 
+		[TVIds], 
+		[AgentIds], 
+		[IsDeleted], 
+		[IsNeutral], 
+		[IPTV], 
+		[ETPK], 
+		[IsLive], 
+		[MatchCode], 
+		[Provider], 
+		[OtherProvider], 
+		[Remark], 
+		[ProviderUsed], 
+		[ProviderTV], 
+		[IsTest], 
+		[Remark2], 
+		[HomeRemark], 
+		[AwayRemark], 
+		[TotalRound], 
+		[IsLeagueBlackList],
+		[IsHomeBlackList],
+		[IsAwayBlackList],
+		IsHomeBadRanking,
+		IsAwayBadRanking,
+		IsHomeDowngrade,
+		IsAwayDowngrade,
+		MatchStatus,
+		RoundConfirm
 	)
-		   SELECT s.[InfoSiteMatchId], 
-				  s.[AdminSiteMatchId], 
-				  s.[EventDateTime], 
-				  s.[UpdatedTime], 
-				  s.[LeagueName], 
-				  s.[HomeName], 
-				  s.[AwayName], 
-				  s.[Round], 
-				  s.[Division], 
-				  s.[Agent], 
-				  s.[Venue], 
-				  s.[TV], 
-				  s.[Channel], 
-				  s.[WB], 
-				  s.[Website1], 
-				  s.[Website2], 
-				  s.[Website3], 
-				  s.[Website4], 
-				  s.[OWPLeagueId], 
-				  s.[OWPHomeId], 
-				  s.[OWPAwayId], 
-				  s.[TVIds], 
-				  s.[AgentIds], 
-				  0, 
-				  s.[IsNeutral], 
-				  s.[IPTV], 
-				  s.[ETPK], 
-				  s.[IsLive], 
-				  s.[MatchCode], 
-				  s.[Provider], 
-				  s.[OtherProvider], 
-				  s.[Remark], 
-				  s.[ProviderUsed], 
-				  s.[ProviderTV], 
-				  s.[IsTest], 
-				  s.[Remark2], 
-				  s.[HomeRemark], 
-				  s.[AwayRemark], 
-				  s.[TotalRound], 
-				  s.[IsLeagueBlackList],
-				  s.[IsHomeBlackList],
-				  s.[IsAwayBlackList]
-		   FROM #tblInfoSiteMatch AS s
-				LEFT JOIN dbo.InfoSiteMatch AS t ON s.[InfoSiteMatchId] = t.[InfoSiteMatchId]
-		   WHERE t.[InfoSiteMatchId] IS NULL;
+	SELECT s.[InfoSiteMatchId], 
+		s.[AdminSiteMatchId], 
+		s.[EventDateTime], 
+		s.[UpdatedTime], 
+		s.[LeagueName], 
+		s.[HomeName], 
+		s.[AwayName], 
+		s.[Round], 
+		s.[Division], 
+		s.[Agent], 
+		s.[Venue], 
+		s.[TV], 
+		s.[Channel], 
+		s.[WB], 
+		s.[Website1], 
+		s.[Website2], 
+		s.[Website3], 
+		s.[Website4], 
+		s.[OWPLeagueId], 
+		s.[OWPHomeId], 
+		s.[OWPAwayId], 
+		s.[TVIds], 
+		s.[AgentIds], 
+		0, 
+		s.[IsNeutral], 
+		s.[IPTV], 
+		s.[ETPK], 
+		s.[IsLive], 
+		s.[MatchCode], 
+		s.[Provider], 
+		s.[OtherProvider], 
+		s.[Remark], 
+		s.[ProviderUsed], 
+		s.[ProviderTV], 
+		s.[IsTest], 
+		s.[Remark2], 
+		s.[HomeRemark], 
+		s.[AwayRemark], 
+		s.[TotalRound], 
+		s.[IsLeagueBlackList],
+		s.[IsHomeBlackList],
+		s.[IsAwayBlackList],
+		s.IsHomeBadRanking,
+		s.IsAwayBadRanking,
+		s.IsHomeDowngrade,
+		s.IsAwayDowngrade,
+		s.MatchStatus,
+		s.RoundConfirm
+	FROM #tblInfoSiteMatch AS s
+		LEFT JOIN dbo.InfoSiteMatch AS t WITH (NOLOCK) ON s.[InfoSiteMatchId] = t.[InfoSiteMatchId]
+	WHERE t.[InfoSiteMatchId] IS NULL;
 
     -- Drop table	
 	DROP TABLE #tblInfoSiteMatch
