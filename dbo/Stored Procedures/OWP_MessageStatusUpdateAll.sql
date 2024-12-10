@@ -11,6 +11,7 @@ DB: bodb_OWP
 Revisions:
 	20181009@Raymond.Le: New structure of event assignment - [Redmine: #92868]
     20241203@Tim: prevent deadlocked
+	20241210@Tim: enhance performance
 */
 BEGIN
 	SET NOCOUNT ON
@@ -25,13 +26,13 @@ BEGIN
 	SELECT MessageUserId
 	FROM dbo.MessageUser AS mu WITH (NOLOCK)
 		INNER JOIN dbo.[Message] AS m WITH (NOLOCK) ON mu.MessageId = m.MessageId
-	WHERE mu.UserId = @UserId AND m.IsWatcher = @IsWatcher
-
-	DECLARE  @batchSize INT = 1000
+	WHERE mu.UserId = @UserId AND m.IsWatcher = @IsWatcher AND IsViewed <> @IsViewed
+		
+	DECLARE @batchSize INT = 2000
 
 	WHILE (1=1)
 	BEGIN	
-		UPDATE TOP (@batchSize) c WITH (ROWLOCK)
+		UPDATE TOP (@batchSize) c  
 		SET c.IsUpdate = 1
 		OUTPUT DELETED.MessageUserId INTO #tempForUpdate(MessageUserId)
 		FROM #updMessageUser c 
@@ -46,7 +47,5 @@ BEGIN
 			INNER JOIN #tempForUpdate AS m ON mu.MessageUserId = m.MessageUserId
 	
 		TRUNCATE TABLE #tempForUpdate
-
-		WAITFOR DELAY '00:00:00.100'
 	END 
 END
