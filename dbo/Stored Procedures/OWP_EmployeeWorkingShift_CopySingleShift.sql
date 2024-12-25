@@ -17,6 +17,7 @@ Revisions:
 	20190520@Kane.Le: Refactor SP [Redmine: #112737]
 	20190531@Leo.Vo: Refactor SP [Redmine: #114442]
 	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
+	20241224@Frankie: Fix PRIMARY KEY Violation - [Redmine: #215704]	
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -50,7 +51,12 @@ BEGIN
 		,@ShiftEndTime = st.ShiftEndTime
 	FROM dbo.fnc_GetShiftTime(@ShiftDate, @ShiftId) AS st
 
-	IF @OldShiftId IS NULL
+	IF NOT EXISTS (
+		SELECT 1 
+		FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
+		WHERE EmployeeId = @UserId 
+		  AND ShiftDate = @ShiftDate
+	)
 	BEGIN
 		INSERT INTO dbo.EmployeeWorkingShift (
 			EmployeeId

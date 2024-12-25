@@ -21,7 +21,8 @@ Revisions:
 	20190515@Kane.Le: Change follow assign shift in next week - [Redmine: #112737]
 	20190520@Leo.Vo: Write log - [Redmine: #113763]
 	20190524@Leo.Vo: Refactor code - [Redmine: #114047]
-	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]	
+	20210608@Carlos.nguyen: Insert lastupdate => API sync Working Shifts to HRM - [Redmine: #156338]
+	20241224@Frankie: Fix PRIMARY KEY Violation - [Redmine: #215704]		
 */
 BEGIN
 	SET NOCOUNT ON;
@@ -65,7 +66,12 @@ BEGIN
 		,@ShiftEndTime = ShiftEndTime
 	FROM dbo.fnc_GetShiftTime(@ShiftDate, @ShiftId)
 
-	IF @OldShiftId IS NOT NULL
+	IF EXISTS (
+		SELECT 1 
+		FROM dbo.EmployeeWorkingShift WITH (NOLOCK)
+		WHERE EmployeeId = @EmployeeId 
+		  AND ShiftDate = @ShiftDate
+	)
 	BEGIN
 		UPDATE dbo.EmployeeWorkingShift WITH (ROWLOCK)
 		SET ShiftId = @ShiftId
