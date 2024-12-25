@@ -29,11 +29,7 @@ Revisions:
                mm.ParentMatchId, 
                l.OWPLeagueName, 
                m.EventDateTime,
-               CASE
-                   WHEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId) IS NOT NULL
-                   THEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId)
-                   ELSE 'Unknown'
-               END AS LeagueCategory,
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory,
                CASE
                    WHEN CHARINDEX('SABA', l.OWPLeagueName) > 0
                    THEN 1
@@ -57,11 +53,7 @@ Revisions:
                mm.ParentMatchId, 
                l.OWPLeagueName, 
                m.EventDateTime,
-               CASE
-                   WHEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId) IS NOT NULL
-                   THEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId)
-                   ELSE 'Unknown'
-               END AS LeagueCategory,
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory,
                CASE
                    WHEN CHARINDEX('SABA', l.OWPLeagueName) > 0
                    THEN 1
@@ -81,11 +73,7 @@ Revisions:
         -- Query old main match
         SELECT DISTINCT 
                m.OWPMatchId,
-               CASE
-                   WHEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId) IS NOT NULL
-                   THEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId)
-                   ELSE 'Unknown'
-               END AS LeagueCategory
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory
         FROM dbo.OWPMatch_Old m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch_Old mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
@@ -97,11 +85,7 @@ Revisions:
         UNION
         SELECT DISTINCT 
                m.OWPMatchId,
-               CASE
-                   WHEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId) IS NOT NULL
-                   THEN [dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId)
-                   ELSE 'Unknown'
-               END AS LeagueCategory
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory
         FROM dbo.OWPMatch m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
