@@ -19,6 +19,7 @@ Revisions:
 	20241001@Carlos.nguyen: init data league management - [Redmine: #210649]
 	20241114@Frankie: get provider info - [Redmine: #213590]
 	20241126@Tim: get MatchStatus, RoundConfirm, IsHomeBadRanking, IsAwayBadRanking, IsHomeDowngrade, IsAwayDowngrade - [Redmine: #214095]
+	20241209@Frankie : Update League Category - [Feature: #214351]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -31,6 +32,7 @@ BEGIN
 		,im.EventDateTime
 		,im.OWPLeagueId
 		,im.LeagueName
+		,[dbo].[fnc_GetLeagueGroupByDate] (im.EventDateTime, im.OWPLeagueId) AS LeagueGroup
 		,l.IsBlackList
 		,CASE
 			WHEN im.IsNeutral = 1 THEN im.HomeName + ' (N)'

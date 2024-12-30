@@ -13,6 +13,7 @@ Revisions:
 	20220401@Tyler: Init SP - [Redmine: #170737]
 	20220422@Tyler: Fix ToDate - [Redmine: #171867]
 	20220811@Mira: Get data old and new - [Redmine: #176575]
+	20241210@Frankie: Update League Group - [Redmine: #214351]
 */
 
     BEGIN
@@ -28,12 +29,7 @@ Revisions:
                mm.ParentMatchId, 
                l.OWPLeagueName, 
                m.EventDateTime,
-               CASE
-                   WHEN l.CategoryId IS NOT NULL
-                        AND l.CategoryId > 0
-                   THEN rr.[Value]
-                   ELSE 'Unknown'
-               END AS LeagueCategory,
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory,
                CASE
                    WHEN CHARINDEX('SABA', l.OWPLeagueName) > 0
                    THEN 1
@@ -42,8 +38,6 @@ Revisions:
         FROM dbo.OWPMatch_Old m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch_Old mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON rr.ResourceId = l.CategoryId
-                                                          AND rr.RefName = 'LeagueCategory'
              INNER JOIN dbo.Assignment_Old a WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
              INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
@@ -59,12 +53,7 @@ Revisions:
                mm.ParentMatchId, 
                l.OWPLeagueName, 
                m.EventDateTime,
-               CASE
-                   WHEN l.CategoryId IS NOT NULL
-                        AND l.CategoryId > 0
-                   THEN rr.[Value]
-                   ELSE 'Unknown'
-               END AS LeagueCategory,
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory,
                CASE
                    WHEN CHARINDEX('SABA', l.OWPLeagueName) > 0
                    THEN 1
@@ -73,8 +62,6 @@ Revisions:
         FROM dbo.OWPMatch m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON rr.ResourceId = l.CategoryId
-                                                          AND rr.RefName = 'LeagueCategory'
              INNER JOIN dbo.Assignment a WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
              INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
@@ -86,17 +73,10 @@ Revisions:
         -- Query old main match
         SELECT DISTINCT 
                m.OWPMatchId,
-               CASE
-                   WHEN l.CategoryId IS NOT NULL
-                        AND l.CategoryId > 0
-                   THEN rr.[Value]
-                   ELSE 'Unknown'
-               END AS LeagueCategory
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory
         FROM dbo.OWPMatch_Old m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch_Old mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON rr.ResourceId = l.CategoryId
-                                                          AND rr.RefName = 'LeagueCategory'
              INNER JOIN dbo.MatchInfo_Old mi WITH(NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
               AND mm.MinorBettypeId IS NULL
@@ -105,17 +85,10 @@ Revisions:
         UNION
         SELECT DISTINCT 
                m.OWPMatchId,
-               CASE
-                   WHEN l.CategoryId IS NOT NULL
-                        AND l.CategoryId > 0
-                   THEN rr.[Value]
-                   ELSE 'Unknown'
-               END AS LeagueCategory
+			   ISNULL([dbo].[fnc_GetLeagueGroupByDate] (m.EventDateTime, l.OWPLeagueId), 'Unknown') AS LeagueCategory
         FROM dbo.OWPMatch m WITH(NOLOCK)
              LEFT JOIN dbo.MinorMatch mm WITH(NOLOCK) ON m.OWPMatchId = mm.MinorMatchId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.RefResource rr WITH(NOLOCK) ON rr.ResourceId = l.CategoryId
-                                                          AND rr.RefName = 'LeagueCategory'
              INNER JOIN dbo.MatchInfo mi WITH(NOLOCK) ON mi.OWPMatchId = m.OWPMatchId
         WHERE mi.MatchStatus = 'Live'
               AND mm.MinorBettypeId IS NULL

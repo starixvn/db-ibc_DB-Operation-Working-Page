@@ -33,6 +33,7 @@ AS
     20230815@Liam:  Assigned AIO bettype - [Redmine: #191226]
 	20231026@los: sync round - [Redmine: #193810]
 	20231116@Mira: get off VR - [Redmine: #194500]
+	20241207@Frankie : Update League Category - [Feature: #214351]
 */
 
      SET NOCOUNT ON;
@@ -255,7 +256,7 @@ AS
             ml.EventDateTime, 
             ml.KickOffTime, 
             ml.OtherTime, 
-            rr.[Value] AS LeagueGroup, 
+            [dbo].[fnc_GetLeagueGroupByDate] (ml.EventDate, l.OWPLeagueId) AS LeagueGroup, 
             l.OWPLeagueName AS League, 
             (CASE
                  WHEN ml.IsNeutral = 1
@@ -336,8 +337,6 @@ AS
           INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
           INNER JOIN dbo.OWPTeam AS a WITH(NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
           INNER JOIN dbo.OWPMatch AS ma WITH(NOLOCK) ON ml.ParentMatchId = ma.OWPMatchId
-          LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
-                                                      AND rr.RefName = 'LeagueCategory'
           LEFT JOIN @tblAdminSiteIdShouldShowAbsenceIcon AS ai ON ml.MatchId = ai.Matchid
           LEFT JOIN #tblNoOfHDPResource AS ref ON ml.NoOfHDPId = ref.Id
           LEFT JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON ml.InfoSiteMatchId = im.InfoSiteMatchId

@@ -26,6 +26,7 @@ Revisions:
  20230607@Mira: get LeagueId for InfositeMatch - [Redmine: #186299]
  20231026@los: sync round - [Redmine: #193810]
  20231219@Liam: Get League Group - [Redmine: #198232]
+ 20241209@Frankie : Update League Category - [Feature: #214351]
 */
 
     BEGIN
@@ -311,7 +312,10 @@ Revisions:
 
         -- Result
         --	Query leagues --
-        SELECT PreMatchLeagueId, 
+        SELECT leaguesInfo.*
+			,rr.[Order] AS LeagueGroupOrder
+		FROM (
+			SELECT PreMatchLeagueId, 
                LeagueId, 
                LeagueName, 
                MatchCount, 
@@ -336,12 +340,12 @@ Revisions:
                n.PreMatchNoteId, 
                n.HasNotes, 
                l.IsDeleted, 
-               rr.[Value] AS LeagueGroup, 
-               rr.[Order] AS LeagueGroupOrder
-        FROM @tblDayShiftTable AS l
-             LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId
-             LEFT JOIN RefResource AS rr WITH(NOLOCK) ON l.CategoryId = rr.ResourceId
-                                                         AND rr.RefName = 'LeagueCategory';
+               [dbo].[fnc_GetLeagueGroupByDate] (@EventDate, l.LeagueId) AS LeagueGroup
+			FROM @tblDayShiftTable AS l
+				 LEFT JOIN @tblLeagueNotes AS n ON n.OWPLeagueId = l.LeagueId
+		) AS leaguesInfo
+			LEFT JOIN RefResource AS rr WITH(NOLOCK) ON rr.Value = leaguesInfo.LeagueGroup
+                                                         AND rr.RefName = 'LeagueCategory'
 
         -- Query InfoSiteMatches --
         SELECT m.InfoSiteMatchId, 

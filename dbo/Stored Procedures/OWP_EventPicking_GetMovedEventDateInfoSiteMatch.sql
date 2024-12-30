@@ -13,6 +13,7 @@ AS
     20241028@Oliver: Event picking new - [Redmine: #212599]
 	20241107@Frankie: Sort R&D column - [Redmine: #212795]
 	20241114@Frankie: get provider info - [Redmine: #213590]
+	20241209@Frankie : Update League Category - [Feature: #214351]
 */
 
 BEGIN
@@ -36,6 +37,7 @@ BEGIN
             im.EventDateTime, 
             im.OWPLeagueId, 
             im.LeagueName, 
+			[dbo].[fnc_GetLeagueGroupByDate] (im.EventDateTime, im.OWPLeagueId) AS LeagueGroup,
             l.IsBlackList,
             CASE
                 WHEN im.IsNeutral = 1

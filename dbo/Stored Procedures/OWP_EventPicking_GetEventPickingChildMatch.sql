@@ -12,7 +12,7 @@ AS
  Revisions:
 	20230907@Liam: Get event picking child match - [Redmine: #207942]
 	20241114@Frankie: get provider info - [Redmine: #213590]
-
+	20241209@Frankie : Update League Category - [Feature: #214351]
 */
 
     BEGIN
@@ -27,6 +27,7 @@ AS
                im.EventDateTime, 
                im.OWPLeagueId, 
                im.LeagueName, 
+			   [dbo].[fnc_GetLeagueGroupByDate] (im.EventDateTime, im.OWPLeagueId) AS LeagueGroup,
                l.IsBlackList,
                CASE
                    WHEN im.IsNeutral = 1
