@@ -81,6 +81,7 @@ BEGIN
         ,m.ParentMatchId
         ,m.AdminSiteMatchId
         ,m.InfoSiteMatchId
+        ,m.MinorBettypeId
         ,l.OWPLeagueName AS 'League'
         ,(
             SELECT STRING_AGG(p.ProviderName, ', ')
