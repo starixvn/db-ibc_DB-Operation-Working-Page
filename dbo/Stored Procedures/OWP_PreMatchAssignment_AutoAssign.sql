@@ -27,23 +27,56 @@ BEGIN
 		,AssignmentType TINYINT
 		)
 
+    CREATE TABLE #tblDeletedAssignment (
+		RowNumber INT IDENTITY PRIMARY KEY CLUSTERED
+		,PreMatchLeagueId INT
+		,UserId INT
+		,Username NVARCHAR(30)
+		,Bettype INT
+		,IsTakeOver BIT
+		,AssignmentType TINYINT
+		)
+
 	INSERT INTO #tblAssignment (PreMatchLeagueId, UserId, Username, Bettype, IsTakeOver, AssignmentType)
 	SELECT PreMatchLeagueId, UserId, Username, Bettype, IsTakeOver, AssignmentType
 	FROM OPENJSON(@Assignments) WITH (PreMatchLeagueId INT, UserId INT, Username NVARCHAR(30), Bettype INT, IsTakeOver BIT, AssignmentType TINYINT)
 
+    INSERT INTO #tblDeletedAssignment (PreMatchLeagueId, UserId, Username, Bettype, IsTakeOver, AssignmentType)
+    SELECT a.PreMatchLeagueId, a.UserId, u.Username, a.Bettype, a.IsTakeOver, a.AssignmentType
+    FROM dbo.PreMatchAssignment AS a WITH (NOLOCK)
+        INNER JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
+        LEFT JOIN #tblAssignment AS adel ON a.PreMatchLeagueId = adel.PreMatchLeagueId
+        AND a.Bettype = adel.Bettype
+        AND a.IsTakeOver = adel.IsTakeOver
+        AND a.AssignmentType = adel.AssignmentType
+    WHERE adel.PreMatchLeagueId IS NULL
+        AND EXISTS (
+            SELECT 1
+            FROM #tblAssignment AS tmpa
+            WHERE a.PreMatchLeagueId = tmpa.PreMatchLeagueId
+        )
+
 	SELECT @TotalRow = COUNT(1)
 	FROM #tblAssignment
+	DECLARE @preMatchLeagueId INT = 0
+		,@userId INT = 0
+		,@bettype INT = 0
+		,@isTakeOver BIT = 0
+		,@assignmentType TINYINT = 0
+		,@preMatchIssueId INT = 0
+		,@newUsername NVARCHAR(30) = ''
+		,@oldUsername NVARCHAR(30) = ''
 
 	WHILE @RowNumber <= @TotalRow
 	BEGIN
-		DECLARE @preMatchLeagueId INT = 0
-			,@userId INT = 0
-			,@bettype INT = 0
-			,@isTakeOver BIT = 0
-			,@assignmentType TINYINT = 0
-			,@preMatchIssueId INT = 0
-			,@newUsername NVARCHAR(30) = ''
-			,@oldUsername NVARCHAR(30) = ''
+        SELECT @preMatchLeagueId = 0
+			,@userId = 0
+			,@bettype = 0
+			,@isTakeOver = 0
+			,@assignmentType = 0
+			,@preMatchIssueId = 0
+			,@newUsername = ''
+			,@oldUsername = ''
 
 		SELECT @preMatchLeagueId = PreMatchLeagueId
 			,@userId = UserId
@@ -88,5 +121,48 @@ BEGIN
 		SET @RowNumber = @RowNumber + 1
 	END
 
+    SELECT @TotalRow = COUNT(1)
+	FROM #tblDeletedAssignment
+
+    SET @RowNumber = 1
+
+	WHILE @RowNumber <= @TotalRow
+	BEGIN
+		SELECT @preMatchLeagueId = 0
+			,@userId = 0
+			,@bettype = 0
+			,@isTakeOver = 0
+			,@assignmentType = 0
+			,@preMatchIssueId = 0
+			,@newUsername = ''
+			,@oldUsername = ''
+
+		SELECT @preMatchLeagueId = PreMatchLeagueId
+			,@userId = UserId
+			,@bettype = Bettype
+			,@isTakeOver = IsTakeOver
+			,@assignmentType = AssignmentType
+            ,@oldUsername = Username
+		FROM #tblDeletedAssignment
+		WHERE RowNumber = @RowNumber
+
+		SELECT @preMatchIssueId = i.PreMatchIssueId
+        FROM dbo.PreMatchIssue AS i WITH(NOLOCK)
+             INNER JOIN dbo.PreMatchLeague AS l WITH(NOLOCK) ON i.OWPLeagueId = l.OWPLeagueId
+        WHERE l.PreMatchLeagueId = @PreMatchLeagueId
+
+		EXEC dbo.OWP_PreMatchAssignment_InsertUpdateDeleteAssignment @ActorId = @ActorId
+            ,@PreMatchLeagueId = @PreMatchLeagueId
+            ,@NewValue = ''
+            ,@OldValue = @oldUsername
+            ,@Bettype = @bettype
+            ,@IsTakeOver = @isTakeOver
+            ,@PreMatchIssueId = @preMatchIssueId
+			,@AssignmentType = @assignmentType
+			,@AssignBySystem = 1
+
+		SET @RowNumber = @RowNumber + 1
+	END
+
 	DROP TABLE #tblAssignment
-END;
+END
