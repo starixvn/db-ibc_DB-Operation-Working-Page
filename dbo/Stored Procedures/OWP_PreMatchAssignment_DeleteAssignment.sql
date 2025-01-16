@@ -64,7 +64,7 @@ BEGIN
 
     -- delete from receiving isssue message
     DELETE r
-    FROM [dbo].[PreMatchIssueReceiver] AS r
+    FROM [dbo].[PreMatchIssueReceiver] AS r WITH(ROWLOCK)
     WHERE @PreMatchIssueId IS NOT NULL
         AND r.PreMatchIssueId = @PreMatchIssueId
         AND r.UserId = @userId
@@ -83,7 +83,7 @@ BEGIN
 					AND l.EventDate = EventDate
 			);
     DELETE r
-    FROM [dbo].[PreMatchIssueReceiver] AS r
+    FROM [dbo].[PreMatchIssueReceiver] AS r WITH(ROWLOCK)
         INNER JOIN #tblMatchIssues AS i ON i.PreMatchIssueId = r.PreMatchIssueId
     WHERE r.UserId = @userId
         AND r.UserId NOT IN
@@ -94,7 +94,8 @@ BEGIN
 			);
 
     -- delete asssignment
-    DELETE FROM dbo.[PreMatchAssignment]
+    DELETE
+    FROM dbo.[PreMatchAssignment] WITH(ROWLOCK)
     WHERE PreMatchLeagueId = @PreMatchLeagueId
 		AND Bettype = @Bettype
 		AND IsTakeOver = @IsTakeOver

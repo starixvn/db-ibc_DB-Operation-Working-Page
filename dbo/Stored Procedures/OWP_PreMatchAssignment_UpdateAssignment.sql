@@ -71,7 +71,7 @@ BEGIN
 
     -- delete from receiving isssue message
     DELETE r
-    FROM [dbo].[PreMatchIssueReceiver] AS r
+    FROM [dbo].[PreMatchIssueReceiver] AS r WITH(ROWLOCK)
     WHERE @PreMatchIssueId IS NOT NULL
         AND r.PreMatchIssueId = @PreMatchIssueId
         AND r.UserId = @userId
@@ -91,7 +91,7 @@ BEGIN
 			);
 
     DELETE r
-    FROM [dbo].[PreMatchIssueReceiver] AS r
+    FROM [dbo].[PreMatchIssueReceiver] AS r WITH(ROWLOCK)
         INNER JOIN #tblMatchIssues AS i ON i.PreMatchIssueId = r.PreMatchIssueId
     WHERE r.UserId = @userId
         AND r.UserId NOT IN
