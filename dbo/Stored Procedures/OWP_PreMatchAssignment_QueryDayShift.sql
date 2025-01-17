@@ -27,6 +27,7 @@ Revisions:
     20231219@Liam: Get League Group - [Redmine: #198232]
     20241209@Frankie : Update League Category - [Feature: #214351]
     20241108@Tim: auto assign - [Redmine: #205720]
+	20250117@Tim: hotfix - league group sorting not working - [Redmine: #217030]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -335,6 +336,7 @@ BEGIN
     -- Result
     --    Query leagues --
     SELECT *
+        ,rr.[Order] AS LeagueGroupOrder
     FROM (
         SELECT PreMatchLeagueId,
             LeagueId,
