@@ -13,6 +13,7 @@ AS
 	20230907@Liam: Get event picking child match - [Redmine: #207942]
 	20241114@Frankie: get provider info - [Redmine: #213590]
 	20241209@Frankie : Update League Category - [Feature: #214351]
+	20250113@Frankie : get RoundConfirm - [Feature: #213482]
 */
 
     BEGIN
@@ -43,7 +44,8 @@ AS
                im.OtherProvider, 
                im.Agent, 
                im.Venue, 
-               im.Round, 
+               im.Round,
+			   im.RoundConfirm, 
                im.Division, 
                im.ETPK, 
                im.Remark, 

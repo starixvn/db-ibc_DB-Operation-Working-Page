@@ -14,6 +14,7 @@ AS
 	20241107@Frankie: Sort R&D column - [Redmine: #212795]
 	20241114@Frankie: get provider info - [Redmine: #213590]
 	20241209@Frankie : Update League Category - [Feature: #214351]
+	20250113@Frankie : get RoundConfirm - [Feature: #213482]
 */
 
 BEGIN
@@ -91,7 +92,13 @@ BEGIN
             THEN 1
             ELSE 0
             END 'IsSync',
-            1 as IsMovedEventDate
+            1 as IsMovedEventDate,
+			im.MatchStatus AS 'InfoSiteMatchStatus',
+			im.RoundConfirm,
+			im.IsHomeBadRanking,
+			im.IsAwayBadRanking,
+			im.IsHomeDowngrade,
+			im.IsAwayDowngrade
     FROM @TempMatch AS tmp 
             INNER JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON tmp.InfoSiteMatchId = im.InfoSiteMatchId
             LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId

@@ -11,6 +11,7 @@ Revisions:
     20240708@Johnny: initial SP - [Redmine: #201604]
     20241106@Frankie: change update type - [Redmine: #212795]
     20241127@Tim: get Remark2, MatchStatus [Redmine: #214095]
+	20250113@Frankie: get more update type [Redmine: #213482]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -37,6 +38,18 @@ BEGIN
         m.AwayRemark,
         m.Division,
         m.MatchStatus,
+		m.RoundConfirm,
+		m.AdminSiteMatchId AS AdminSiteId,
+		m.Website1,
+		m.Website2,
+		m.Website3,
+		m.Website4,
+		m.WB as WatchBet,
+		m.Channel,
+		m.Agent,
+		m.Venue,
+		m.ETPK,
+		m.IsNeutral,
         CASE
 			WHEN ec.InfositeId IS NULL
 			THEN 0
