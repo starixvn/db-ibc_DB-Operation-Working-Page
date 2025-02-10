@@ -15,6 +15,7 @@ AS
 	20241114@Frankie: get provider info - [Redmine: #213590]
 	20241209@Frankie : Update League Category - [Feature: #214351]
 	20250113@Frankie : get RoundConfirm - [Feature: #213482]
+	20250210@Frankie : get ispostponed - [Feature: #216746]
 */
 
 BEGIN
@@ -98,7 +99,8 @@ BEGIN
 			im.IsHomeBadRanking,
 			im.IsAwayBadRanking,
 			im.IsHomeDowngrade,
-			im.IsAwayDowngrade
+			im.IsAwayDowngrade,
+			im.IsPostponed
     FROM @TempMatch AS tmp 
             INNER JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON tmp.InfoSiteMatchId = im.InfoSiteMatchId
             LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
