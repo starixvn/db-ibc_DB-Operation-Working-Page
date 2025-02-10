@@ -2,7 +2,7 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_ProviderVerification_Query] @EventDate DATE,
-@IsMisMatch BIT
+@OnlyShowIsMismatchEvent BIT
 AS
 
 /*
@@ -93,10 +93,12 @@ AS
                
             FROM dbo.OWPMatch AS om WITH(NOLOCK)
                  INNER JOIN dbo.MatchInfo AS mi WITH(NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
-				 LEFT JOIN dbo.MinorMatch AS mm WITH(NOLOCK) on om.OWPMatchId = mm.MinorMatchId
+				 LEFT JOIN dbo.MinorMatch AS mm WITH(NOLOCK) ON om.OWPMatchId = mm.MinorMatchId
+				 LEFT JOIN dbo.ProviderVerification AS pv WITH (NOLOCK) ON pv.OWPMatchId= om.OWPMatchId
             WHERE om.EventDateTime BETWEEN @FromDate AND @ToDate
                   AND mi.IsSelected = 1 
 				  AND mm.MinorBettypeId IS NULL
+				  AND (@OnlyShowIsMismatchEvent = 0 OR pv.IsMismatchEvent=@OnlyShowIsMismatchEvent)
 
      -- Return Matches info
      SELECT ml.OWPMatchId, 
