@@ -14,6 +14,16 @@ AS
 */
 
      SET NOCOUNT ON;
-     INSERT INTO LogMonitoring(CreatedDate,[Action],
-[Payload])
-VALUES(@CreatedDate,@Action,@Payload)
+     INSERT INTO AdminsiteProviderMatch
+     (CreatedDate, 
+      MatchId, 
+      ProviderMatchId, 
+      ProviderId, 
+      Provider
+     )
+            SELECT CreatedDate, 
+                   MatchId, 
+                   ProviderMatchId, 
+                   ProviderId, 
+                   Provider
+            FROM OPENJSON(@ProviderMatchIdJson) WITH(CreatedDate DATE, MatchId INT, ProviderMatchId INT, ProviderId INT, Provider VARCHAR(50));
