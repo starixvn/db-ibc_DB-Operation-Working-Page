@@ -14,6 +14,7 @@ AS
 	20240405@Johnny: Initial SP - [Feature: #202819]
 	20250210@Los: Remove unuse column - [Feature: #213719]
 	20250213@Frankie: Change column Provider to LSTBookProvider - [Feature: #213719]
+	20250213@Frankie: Get info ProviderMatchId from admin site - [Feature: #213719]
 */
 
      SET NOCOUNT ON;
@@ -145,6 +146,11 @@ AS
      FROM MatchAgentConfirm AS mac WITH(NOLOCK)
           INNER JOIN #owpMatchListByDate AS ml WITH(NOLOCK) ON ml.OWPMatchId = mac.OWPMatchId
           LEFT JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = mac.AgentId;
+
+	 SELECT m.OWPMatchId,
+			apm.ProviderMatchId
+	 FROM AdminsiteProviderMatch AS apm WITH(NOLOCK)
+			INNER JOIN OWPMatch AS m WITH(NOLOCK) ON m.MatchId = apm.MatchId	
    
      DROP TABLE #owpMatchListByDate;
      DROP TABLE #tblMatchOfferResource;
