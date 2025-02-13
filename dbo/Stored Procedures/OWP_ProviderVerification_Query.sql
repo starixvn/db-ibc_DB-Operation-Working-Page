@@ -13,6 +13,7 @@ AS
  Revisions:
 	20240405@Johnny: Initial SP - [Feature: #202819]
 	20250210@Los: Remove unuse column - [Feature: #213719]
+	20250213@Frankie: Change column Provider to LSTBookProvider - [Feature: #213719]
 */
 
      SET NOCOUNT ON;
@@ -122,14 +123,7 @@ AS
          FROM dbo.[Provider] AS rs WITH(NOLOCK)
               INNER JOIN dbo.MatchProvider AS mp WITH(NOLOCK) ON rs.ProviderId = mp.ProviderId
          WHERE mp.OWPMatchId = ml.OWPMatchId FOR XML PATH('')
-     ), 1, 2, '') AS [Provider], 
-            STUFF(
-     (
-         SELECT ', ' + rs.OtherProviderName
-         FROM dbo.OtherProvider AS rs WITH(NOLOCK)
-              INNER JOIN dbo.MatchOtherProvider AS mot WITH(NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
-         WHERE mot.OWPMatchId = ml.OWPMatchId FOR XML PATH('')
-     ), 1, 2, '') AS OtherProvider
+     ), 1, 2, '') AS [LstBookProvider]
      FROM #owpMatchListByDate AS ml WITH(NOLOCK)
           INNER JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
           INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
