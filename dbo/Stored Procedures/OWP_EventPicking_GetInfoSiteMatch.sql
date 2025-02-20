@@ -20,6 +20,7 @@ Revisions:
 	20241114@Frankie: get provider info - [Redmine: #213590]
 	20241126@Tim: get MatchStatus, RoundConfirm, IsHomeBadRanking, IsAwayBadRanking, IsHomeDowngrade, IsAwayDowngrade - [Redmine: #214095]
 	20241209@Frankie : Update League Category - [Feature: #214351]
+	20250210@Frankie : get ispostponed - [Feature: #216746]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -89,6 +90,7 @@ BEGIN
 		,im.IsAwayBadRanking
 		,im.IsHomeDowngrade
 		,im.IsAwayDowngrade
+		,im.IsPostponed
     FROM dbo.InfoSiteMatch AS im WITH(NOLOCK)
         LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
         LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId

@@ -36,6 +36,7 @@ Revisions:
 	20240423@Mira: save team round column, resolve blacklist - [Redmine: #204002]
 	20241113@Frankie: not change provider field after insert new match - [Redmine: #213590]
 	20241125@Tim: sync MatchStatus, HomeBadRanking, AwayBadRanking, HomeDowngrade, AwayDowngrade, RoundConfirm - [Redmine: #214095]
+	20250210@Frankie: sync IsPostponed - [Redmine: #216746]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -105,6 +106,7 @@ BEGIN
 		,IsAwayBadRanking BIT
 		,IsHomeDowngrade BIT
 		,IsAwayDowngrade BIT
+		,IsPostponed BIT
 		,MatchStatus TINYINT
 		,RoundConfirm VARCHAR(3)
 		)
@@ -151,6 +153,7 @@ BEGIN
 		,IsAwayBadRanking
 		,IsHomeDowngrade
 		,IsAwayDowngrade
+		,IsPostponed
 		,MatchStatus
 		,RoundConfirm
 		)
@@ -195,6 +198,7 @@ BEGIN
 		,IsAwayBadRanking
 		,IsHomeDowngrade
 		,IsAwayDowngrade
+		,IsPostponed
 		,MatchStatus
 		,RoundConfirm
 	FROM OPENXML(@idoc, '/Root/Event', 1) WITH (
@@ -239,6 +243,7 @@ BEGIN
 		,IsAwayBadRanking BIT
 		,IsHomeDowngrade BIT
 		,IsAwayDowngrade BIT
+		,IsPostponed BIT
 		,MatchStatus TINYINT
 		,RoundConfirm VARCHAR(3)
 		)
@@ -445,6 +450,7 @@ BEGIN
 		t.IsAwayBadRanking = s.IsAwayBadRanking,
 		t.IsHomeDowngrade = s.IsHomeDowngrade,
 		t.IsAwayDowngrade = s.IsAwayDowngrade,
+		t.IsPostponed = s.IsPostponed,
 		t.RoundConfirm = s.RoundConfirm
 	FROM dbo.InfoSiteMatch AS t WITH (ROWLOCK, UPDLOCK)
 		 JOIN #tblInfoSiteMatch AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId];
@@ -497,6 +503,7 @@ BEGIN
 		IsAwayBadRanking,
 		IsHomeDowngrade,
 		IsAwayDowngrade,
+		IsPostponed,
 		MatchStatus,
 		RoundConfirm
 	)
@@ -546,6 +553,7 @@ BEGIN
 		s.IsAwayBadRanking,
 		s.IsHomeDowngrade,
 		s.IsAwayDowngrade,
+		s.IsPostponed,
 		s.MatchStatus,
 		s.RoundConfirm
 	FROM #tblInfoSiteMatch AS s

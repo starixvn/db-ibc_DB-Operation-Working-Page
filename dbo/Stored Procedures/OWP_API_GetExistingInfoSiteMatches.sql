@@ -12,6 +12,7 @@ Revisions:
     20241106@Frankie: change update type - [Redmine: #212795]
     20241127@Tim: get Remark2, MatchStatus [Redmine: #214095]
 	20250113@Frankie: get more update type [Redmine: #213482]
+	20250210@Frankie: get IsPostponed [Redmine: #216746]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -50,6 +51,7 @@ BEGIN
 		m.Venue,
 		m.ETPK,
 		m.IsNeutral,
+		m.IsPostponed,
         CASE
 			WHEN ec.InfositeId IS NULL
 			THEN 0
