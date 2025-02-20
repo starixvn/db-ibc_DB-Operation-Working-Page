@@ -21,6 +21,7 @@ Revisions:
 	20241126@Tim: get MatchStatus, RoundConfirm, IsHomeBadRanking, IsAwayBadRanking, IsHomeDowngrade, IsAwayDowngrade - [Redmine: #214095]
 	20241209@Frankie : Update League Category - [Feature: #214351]
 	20250210@Frankie : get ispostponed - [Feature: #216746]
+	20250220@Los : exclude IDOL CHAMPIONSHIP (Including Penalty Shoot-out Results)  - [Feature: #217894]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -98,5 +99,6 @@ BEGIN
         LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
         LEFT JOIN dbo.EventPicking AS ep WITH(NOLOCK) ON ep.InfositeMatchId = im.InfoSiteMatchId
     WHERE im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime
-        AND im.LeagueName NOT LIKE '%Fantasy%';
+        AND im.LeagueName NOT LIKE '%Fantasy%'
+		AND im.LeagueName <> 'IDOL CHAMPIONSHIP (Including Penalty Shoot-out Results)';
 END
