@@ -14,6 +14,7 @@ AS
 	20231016@los: Export event picking [Redmine: #194448]
 	20240404@Liam: ignore round H-A/T - [Redmine: #202638]
 	20241106@Frankie: sort R&D column - [Redmine: #212795]
+	20241106@Frankie: get old and new value when change - [Redmine: #216746]
 */
 
     BEGIN
@@ -44,7 +45,9 @@ AS
                eu.RAndDUpdate, 
                el.AwayUpdated, 
                el.HomeUpdated,
-			   el.[Date]
+			   el.[Date],
+			   el.[OldValue],
+			   el.[NewValue]
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
              INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId
              INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id
