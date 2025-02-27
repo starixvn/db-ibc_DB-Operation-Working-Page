@@ -22,7 +22,7 @@ AS
 
         INSERT INTO @IgnoreUpdateTypeIds (UpdateTypeId)
         SELECT Id
-        FROM dbo.[EventPickingUpdateType]
+        FROM dbo.[EventPickingUpdateType] WITH(NOLOCK)
         WHERE RAndDUpdate IN ('Update Round (H-A/T)', 
 			'Cancel Round (H-A/T)', 
 			'Update Web1', 
