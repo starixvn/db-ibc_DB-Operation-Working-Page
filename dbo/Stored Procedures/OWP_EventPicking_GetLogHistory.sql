@@ -12,17 +12,38 @@ AS
  Revisions:
     20230908@Los: Get event picking log history - [Redmine: #190039]
 	20240404@Liam: ignore round H-A/T - [Redmine: #202638]
+	20250226@Frankie: ignore round Web1-4, Link - [Redmine: #217894]
 */
 
     BEGIN
         SET NOCOUNT ON;
-     
-        SELECT el.[Date], 
-               el.OldValue, 
+
+		DECLARE @IgnoreUpdateTypeIds TABLE (UpdateTypeId INT);
+
+        INSERT INTO @IgnoreUpdateTypeIds (UpdateTypeId)
+        SELECT Id
+        FROM dbo.[EventPickingUpdateType] WITH(NOLOCK)
+        WHERE RAndDUpdate IN ('Update Round (H-A/T)', 
+			'Cancel Round (H-A/T)', 
+			'Update Web1', 
+			'Cancel Web1', 
+			'Update Web2', 
+			'Cancel Web2', 
+			'Update Web3', 
+			'Cancel Web3', 
+			'Update Web4', 
+			'Cancel Web4', 
+			'Update Link', 
+			'Cancel Link'
+		);
+
+        SELECT el.[Date],
+               el.OldValue,
                el.NewValue,
-			   el.[Action],
-			   el.ModifiedBy
+               el.[Action],
+               el.ModifiedBy
         FROM dbo.EventPickingLog AS el WITH(NOLOCK)
-        WHERE el.InfositeId = @InfoSiteMatchId  and el.UpdateTypeId NOT IN(14, 15)
-		ORDER BY el.[Date] DESC
+        WHERE el.InfositeId = @InfoSiteMatchId 
+          AND el.UpdateTypeId NOT IN (SELECT UpdateTypeId FROM @IgnoreUpdateTypeIds)
+        ORDER BY el.[Date] DESC;
     END;

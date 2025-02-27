@@ -16,7 +16,8 @@ AS
 	20241209@Frankie : Update League Category - [Feature: #214351]
 	20250113@Frankie : get RoundConfirm - [Feature: #213482]
 	20250210@Frankie : get ispostponed - [Feature: #216746]
-	20241106@Frankie: get old and new value when change - [Redmine: #216746]
+	20250225@Frankie: get old and new value when change - [Redmine: #216746]
+	20250218@Frankie: get info 'Group' table update type - [Redmine: #217894]
 */
 
 BEGIN
@@ -127,11 +128,12 @@ BEGIN
         el.InfositeId, 
         eu.Id AS UpdateTypeId, 
         eu.RAndDUpdate, 
+	eu.[Group],
         el.AwayUpdated, 
         el.HomeUpdated,
-		el.[Date],
-		el.[OldValue],
-		el.[NewValue]
+	el.[Date],
+	el.[OldValue],
+	el.[NewValue]
     FROM dbo.EventPickingLog AS el WITH(NOLOCK)  
         INNER JOIN @TempTime temp ON el.InfositeId = temp.InfoSiteMatchId  
         INNER JOIN EventPickingUpDateType eu WITH(NOLOCK) ON el.UpdateTypeId = eu.Id 
