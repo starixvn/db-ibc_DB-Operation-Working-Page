@@ -251,6 +251,11 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
+	-- remove data older than 1 month
+	DECLARE @DeletedDate DATETIME= DATEADD(DAY, -31, CAST(GETDATE() AS DATE)); 
+	DELETE #tblInfoSiteMatch 
+	WHERE EventDateTime < @DeletedDate
+
 	CREATE CLUSTERED INDEX IX_tbl#tblInfoSiteMatch_InfoSiteMatchId
 	ON #tblInfoSiteMatch(InfoSiteMatchId ASC)
 
