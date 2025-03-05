@@ -37,6 +37,7 @@ Revisions:
 	20241113@Frankie: not change provider field after insert new match - [Redmine: #213590]
 	20241125@Tim: sync MatchStatus, HomeBadRanking, AwayBadRanking, HomeDowngrade, AwayDowngrade, RoundConfirm - [Redmine: #214095]
 	20250210@Frankie: sync IsPostponed - [Redmine: #216746]
+	20250302@Frankie: change condition change provider [Redmine: #218237]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -250,6 +251,11 @@ BEGIN
 
 	EXEC sp_xml_removedocument @idoc
 
+	-- remove data older than 1 month
+	DECLARE @DeletedDate DATETIME= DATEADD(DAY, -31, CAST(GETDATE() AS DATE)); 
+	DELETE #tblInfoSiteMatch 
+	WHERE EventDateTime < @DeletedDate
+
 	CREATE CLUSTERED INDEX IX_tbl#tblInfoSiteMatch_InfoSiteMatchId
 	ON #tblInfoSiteMatch(InfoSiteMatchId ASC)
 
@@ -428,11 +434,7 @@ BEGIN
 		t.[ETPK] = s.[ETPK], 
 		t.[IsLive] = s.[IsLive], 
 		t.[MatchCode] = s.[MatchCode], 
-		t.[Provider] = CASE 
-				WHEN t.[Provider] IS NULL OR t.[Provider] = '' 
-				THEN s.[Provider] 
-				ELSE t.[Provider] 
-			END,
+		t.[Provider] = s.[Provider],
 		t.[OtherProvider] = s.[OtherProvider], 
 		t.[Remark] = s.[Remark], 
 		t.[ProviderUsed] = s.[ProviderUsed], 

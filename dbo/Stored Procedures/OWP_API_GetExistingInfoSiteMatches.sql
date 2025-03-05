@@ -13,6 +13,7 @@ Revisions:
     20241127@Tim: get Remark2, MatchStatus [Redmine: #214095]
 	20250113@Frankie: get more update type [Redmine: #213482]
 	20250210@Frankie: get IsPostponed [Redmine: #216746]
+	20250302@Frankie: get Provider,TotalRound [Redmine: #218237]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -31,8 +32,10 @@ BEGIN
         m.EventDateTime,
         m.TV,
         m.IPTV,
+		m.[Provider],
         m.[OtherProvider],
         m.[Round],
+		m.[TotalRound],
         m.[Remark],
         m.Remark2,
         m.HomeRemark,
