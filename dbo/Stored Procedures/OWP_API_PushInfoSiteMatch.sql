@@ -38,6 +38,7 @@ Revisions:
 	20241125@Tim: sync MatchStatus, HomeBadRanking, AwayBadRanking, HomeDowngrade, AwayDowngrade, RoundConfirm - [Redmine: #214095]
 	20250210@Frankie: sync IsPostponed - [Redmine: #216746]
 	20250302@Frankie: change condition change provider [Redmine: #218237]
+	20250312@Frankie: Add column 'LastStatus' table InfoSiteMatch [Redmine: #219537]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -108,6 +109,7 @@ BEGIN
 		,IsHomeDowngrade BIT
 		,IsAwayDowngrade BIT
 		,IsPostponed BIT
+		,LastStatus NVARCHAR(20)
 		,MatchStatus TINYINT
 		,RoundConfirm VARCHAR(3)
 		)
@@ -155,6 +157,7 @@ BEGIN
 		,IsHomeDowngrade
 		,IsAwayDowngrade
 		,IsPostponed
+		,LastStatus
 		,MatchStatus
 		,RoundConfirm
 		)
@@ -200,6 +203,7 @@ BEGIN
 		,IsHomeDowngrade
 		,IsAwayDowngrade
 		,IsPostponed
+		,LastStatus
 		,MatchStatus
 		,RoundConfirm
 	FROM OPENXML(@idoc, '/Root/Event', 1) WITH (
@@ -245,6 +249,7 @@ BEGIN
 		,IsHomeDowngrade BIT
 		,IsAwayDowngrade BIT
 		,IsPostponed BIT
+		,LastStatus NVARCHAR(20)
 		,MatchStatus TINYINT
 		,RoundConfirm VARCHAR(3)
 		)
@@ -453,6 +458,7 @@ BEGIN
 		t.IsHomeDowngrade = s.IsHomeDowngrade,
 		t.IsAwayDowngrade = s.IsAwayDowngrade,
 		t.IsPostponed = s.IsPostponed,
+		t.LastStatus = s.LastStatus,
 		t.RoundConfirm = s.RoundConfirm
 	FROM dbo.InfoSiteMatch AS t WITH (ROWLOCK, UPDLOCK)
 		 JOIN #tblInfoSiteMatch AS s ON t.[InfoSiteMatchId] = s.[InfoSiteMatchId];
@@ -506,6 +512,7 @@ BEGIN
 		IsHomeDowngrade,
 		IsAwayDowngrade,
 		IsPostponed,
+		LastStatus,
 		MatchStatus,
 		RoundConfirm
 	)
@@ -556,6 +563,7 @@ BEGIN
 		s.IsHomeDowngrade,
 		s.IsAwayDowngrade,
 		s.IsPostponed,
+		s.LastStatus,
 		s.MatchStatus,
 		s.RoundConfirm
 	FROM #tblInfoSiteMatch AS s

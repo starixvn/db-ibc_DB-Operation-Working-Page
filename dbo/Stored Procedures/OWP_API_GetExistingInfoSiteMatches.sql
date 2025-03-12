@@ -14,6 +14,7 @@ Revisions:
 	20250113@Frankie: get more update type [Redmine: #213482]
 	20250210@Frankie: get IsPostponed [Redmine: #216746]
 	20250302@Frankie: get Provider,TotalRound [Redmine: #218237]
+	20250312@Frankie: Add column 'LastStatus' table InfoSiteMatch [Redmine: #219537]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -55,6 +56,7 @@ BEGIN
 		m.ETPK,
 		m.IsNeutral,
 		m.IsPostponed,
+		m.LastStatus,
         CASE
 			WHEN ec.InfositeId IS NULL
 			THEN 0
