@@ -17,6 +17,7 @@ AS
 	20220329@Carlos.nguyen : Delete script unuse - [Redmine: #166030]
 	20220415@Luca.Duong: Archive new plan [Redmine: #171297]
 	20241002@Mira: Remove FileUpload delete [Redmine: #211716]
+	20250318@Los: Remove InfoSiteLogs, AdminSiteLogs, OWPLogs delete [Redmine: #220578]
 */
 
     BEGIN
@@ -158,6 +159,22 @@ AS
         DELETE m
         FROM dbo.Assignment m
              INNER JOIN #MatchIds i ON m.OWPMatchId = i.Id;
+		
+		-- DELETE InfoSiteLogs
+		DELETE m
+		FROM dbo.InfoSiteLogs m
+		WHERE m.CreatedDate BETWEEN @FromDateTime AND @ToDateTime;
+
+		-- DELETE AdminSiteLogs
+		DELETE m
+		FROM dbo.AdminSiteLogs m
+		WHERE m.CreatedDate BETWEEN @FromDateTime AND @ToDateTime;
+
+
+		-- DELETE OWPLogs
+		DELETE m
+		FROM dbo.OWPLogs m
+		WHERE m.CreatedDate BETWEEN @FromDateTime AND @ToDateTime;
 
         -- DROP Temp Table
         DROP TABLE #MatchIds;
