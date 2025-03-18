@@ -10,60 +10,57 @@ DB: bodb_OWP
   
 Revisions:
 	20200407@Tyler.Dang: Init - [Redmine: #131923]   
+	20250317@Frankie: enable change league group - [Redmine: #219096]   
 */
 BEGIN
-	-- SET NOCOUNT ON added to prevent extra result sets from
-	-- interfering with SELECT statements.
 	SET NOCOUNT ON;
 
-    -- Insert statements for procedure here
-	DECLARE @StartRun DATETIME
-		,@EndRun DATETIME
-		,@Duration INT
-		,@LogData NVARCHAR(MAX)
-		,@LogDataOld NVARCHAR(MAX)
-		,@Xml XML
+	-- Select the most recent history record for the given OWPLeagueId
+    SELECT TOP 1
+        Id,
+        OWPLeagueId,
+        CategoryId,
+        StartDate,
+        EndDate
+    INTO #lastHistory
+    FROM [dbo].[LeagueCategoryHistory] WITH(NOLOCK)
+    WHERE OWPLeagueId = @OWPLeagueId
+    ORDER BY StartDate DESC;
 
-		-- Log  
-		SET @StartRun = GETDATE()
-		SET @Xml = (
-				SELECT OWPLeagueId AS '@lid'
-					,CategoryId AS '@ci'
-				FROM dbo.OWPLeague WITH (NOLOCK)
-				WHERE OWPLeagueId = @OWPLeagueId
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @LogDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
+    -- Get the current date
+    DECLARE @today DATE = CAST(GETDATE() AS DATE);
 
-		-- update 
-		UPDATE league WITH (UPDLOCK, ROWLOCK)
-		SET league.CategoryId = @LeagueGroupId
-		FROM dbo.OWPLeague AS league
-		WHERE league.OWPLeagueId = @OWPLeagueId
+    -- Case 1: No existing history record found
+    IF NOT EXISTS (SELECT 1 FROM #lastHistory)
+    BEGIN
+        -- Insert a new history record with the current date as StartDate
+        INSERT INTO [dbo].[LeagueCategoryHistory] (OWPLeagueId, CategoryId, StartDate, EndDate)
+        VALUES (@OWPLeagueId, @LeagueGroupId, @today, NULL);
+    END;
+    ELSE
+    BEGIN
+        -- Case 2: Existing history record found with StartDate < today
+        IF (SELECT StartDate FROM #lastHistory) < @today
+        BEGIN
+            -- Update the EndDate of the existing record to yesterday
+            UPDATE [dbo].[LeagueCategoryHistory] WITH (UPDLOCK, ROWLOCK)
+            SET EndDate = DATEADD(day, -1, @today)
+            WHERE Id = (SELECT Id FROM #lastHistory);
 
-		-- For write log  
-		SET @Xml = (
-				SELECT OWPLeagueId AS '@lid'
-					,CategoryId AS '@ci'
-				FROM dbo.OWPLeague WITH (NOLOCK)
-				WHERE OWPLeagueId = @OWPLeagueId
-				FOR XML PATH('z')
-					,ROOT('r')
-				)
-		SET @LogData = REPLACE(CONVERT(NVARCHAR(MAX), @Xml), '" />', '"/"')
-		SET @EndRun = GETDATE()
-		SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun)
+            -- Insert a new history record with the current date as StartDate
+            INSERT INTO [dbo].[LeagueCategoryHistory] (OWPLeagueId, CategoryId, StartDate, EndDate)
+            VALUES (@OWPLeagueId, @LeagueGroupId, @today, NULL);
+        END;
+        ELSE
+        BEGIN
+            -- Case 3: Existing history record found with StartDate = today
+            -- Update the CategoryId of the existing record
+            UPDATE [dbo].[LeagueCategoryHistory] WITH (UPDLOCK, ROWLOCK)
+            SET CategoryId = @LeagueGroupId
+            WHERE Id = (SELECT Id FROM #lastHistory);
+        END;
+    END;
 
-		IF ISNULL(@LogData, '') <> ''
-			OR ISNULL(@LogDataOld, '') <> ''
-		BEGIN
-			EXEC dbo.OWP_WriteLog @CreatorId = @ActorId
-				,@SPName = 'OWP_OWPLeague_UpdateGroup'
-				,@LoggedDate = @StartRun
-				,@Duration = @Duration
-				,@ObjectId = @OWPLeagueId
-				,@Data = @LogData
-				,@DataOld = @LogDataOld
-		END
+    -- Drop the temporary table
+    DROP TABLE #lastHistory;
 END
