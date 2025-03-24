@@ -21,7 +21,7 @@ AS
 	 FROM [User] AS u WITH (NOLOCk) 
 	 INNER JOIN Assignment AS a WITH (NOLOCK) ON u.UserId=a.UserId
 	 INNER JOIN MinorMatch AS mm WITH (NOLOCK) ON a.OWPMatchId=mm.MinorMatchId
-	 WHERE a.OWPMatchId=@ParentId
+	 WHERE mm.ParentMatchId=@ParentId
 	 UNION  
 	 SELECT u.UserId 'RecipientId',
 		u.Username,
