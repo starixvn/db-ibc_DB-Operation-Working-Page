@@ -14,10 +14,10 @@ AS
 */
 
      SET NOCOUNT ON;
-     SELECT u.UserId 'RecipientId',
+     SELECT DISTINCT u.UserId 'RecipientId',
 		u.Username,
 		u.Nickname,
-		1 'recipientType'
+		1 'RecipientType'
 	 FROM [User] AS u WITH (NOLOCk) 
 	 INNER JOIN Assignment AS a WITH (NOLOCK) ON u.UserId=a.UserId
 	 INNER JOIN MinorMatch AS mm WITH (NOLOCK) ON a.OWPMatchId=mm.MinorMatchId
