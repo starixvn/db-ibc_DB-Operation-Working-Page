@@ -12,6 +12,8 @@ DB: bodb_OWP
 
 Revisions:
 	20240404@Mira: Get provider main matches by date - [Redmine: #202819]
+    20250321@Lilac: Update provider main matches by date, add col MatchId - [Redmine: #213719]
+
 */
 
     BEGIN
