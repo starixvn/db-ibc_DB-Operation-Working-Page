@@ -1,8 +1,10 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-
 ALTER PROCEDURE [dbo].[OWP_ProviderVerification_Query] @EventDate DATE,
-@OnlyShowIsMismatchEvent BIT
+@OnlyShowIsMismatchEvent BIT,
+@ConfirmProvider NVARCHAR(1000) = NULL,
+@LstBookProvider NVARCHAR(1000) = NULL
+
 AS
 
 /*
@@ -13,8 +15,7 @@ AS
  Revisions:
 	20240405@Johnny: Initial SP - [Feature: #202819]
 	20250210@Los: Remove unuse column - [Feature: #213719]
-	20250213@Frankie: Change column Provider to LSTBookProvider - [Feature: #213719]
-	20250213@Frankie: Get info ProviderMatchId from admin site - [Feature: #213719]
+	20250307@Lilac: Add filter Confirm Provider, LST Book Provider - [Feature #213719]
 */
 
      SET NOCOUNT ON;
@@ -23,6 +24,7 @@ AS
      DECLARE @BettypeHDP INT= 1,
 	 @BettypeOverUnder INT= 3,
 	 @MatchStatusText NVARCHAR(100);
+
      DECLARE @tblRefResourceMatchStatus TABLE
      (Id    INT NOT NULL, 
       Value NVARCHAR(50) NOT NULL
@@ -36,6 +38,7 @@ AS
             FROM dbo.RefResource WITH(NOLOCK)
             WHERE RefName = 'MatchStatus'
                   AND ResourceId IN(1, 2, 3, 4, 5, 6, 7);
+
      CREATE TABLE #tblMatchOfferResource
      (Id    INT NOT NULL, 
       Value NVARCHAR(50) NOT NULL
@@ -60,8 +63,7 @@ AS
       OWPAwayId      INT, 
       MatchStatus    NVARCHAR(15),
       IsNeutral      BIT, 
-      AgentEst       NVARCHAR(2000), 
-      RemarkEst      NVARCHAR(2000), 
+      Remark		 NVARCHAR(2000), 
       RemarkBy       NVARCHAR(2000)
      );
      INSERT INTO #owpMatchListByDate
@@ -75,11 +77,10 @@ AS
       OWPAwayId, 
       MatchStatus, 
       IsNeutral, 
-      AgentEst, 
-      RemarkEst, 
+      Remark, 
       RemarkBy
      )
-            SELECT om.OWPMatchId, 
+            SELECT DISTINCT om.OWPMatchId, 
                    om.MatchNo, 
                    om.EventDate, 
                    om.EventDateTime, 
@@ -89,25 +90,35 @@ AS
                    om.OWPAwayId, 
                    dbo.OWP_GetCurrentMatchStatus(om.EventDate, om.KickOffTime, mi.MatchStatus),
                    om.IsNeutral, 
-                   mi.Agent_EST, 
-                   mi.Remark_EST, 
-                   mi.RemarkBy
+				   pv.Remark,
+				   pv.RemarkBy
                
             FROM dbo.OWPMatch AS om WITH(NOLOCK)
                  INNER JOIN dbo.MatchInfo AS mi WITH(NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 				 LEFT JOIN dbo.MinorMatch AS mm WITH(NOLOCK) ON om.OWPMatchId = mm.MinorMatchId
 				 LEFT JOIN dbo.ProviderVerification AS pv WITH (NOLOCK) ON pv.OWPMatchId= om.OWPMatchId
+				 LEFT JOIN dbo.MatchAgentConfirm AS ma WITH (NOLOCK) ON ma.OWPMatchId= om.OWPMatchId
+				 LEFT JOIN dbo.MatchProvider AS mp WITH (NOLOCK) ON mp.OWPMatchId= om.OWPMatchId
+
             WHERE om.EventDateTime BETWEEN @FromDate AND @ToDate
                   AND mi.IsSelected = 1 
 				  AND mm.MinorBettypeId IS NULL
 				  AND (@OnlyShowIsMismatchEvent = 0 OR pv.IsMismatchEvent=@OnlyShowIsMismatchEvent)
+				  AND (@ConfirmProvider IS NULL
+                      OR ma.AgentId IN
+						( SELECT val FROM dbo.fnc_SplitStrings(@ConfirmProvider, ','))
+					  )
+				AND (@LstBookProvider IS NULL
+                OR mp.ProviderId IN
+				( SELECT val FROM dbo.fnc_SplitStrings(@LstBookProvider, ','))
+				)
 
      -- Return Matches info
-     SELECT ml.OWPMatchId, 
+     SELECT  ml.OWPMatchId, 
             ml.MatchNo, 
 			ml.MatchStatus,
             ml.EventDateTime, 
-            ml.KickOffTime, 
+            ml.KickOffTime AS KoTime, 
             l.OWPLeagueName AS League, 
             (CASE
                  WHEN ml.IsNeutral = 1
@@ -115,8 +126,7 @@ AS
                  ELSE h.OWPTeamName
              END) AS Home, 
             a.OWPTeamName AS Away, 
-            ml.AgentEst, 
-            ml.RemarkEst, 
+            ml.Remark, 
             ml.RemarkBy, 
             STUFF(
      (
@@ -124,7 +134,14 @@ AS
          FROM dbo.[Provider] AS rs WITH(NOLOCK)
               INNER JOIN dbo.MatchProvider AS mp WITH(NOLOCK) ON rs.ProviderId = mp.ProviderId
          WHERE mp.OWPMatchId = ml.OWPMatchId FOR XML PATH('')
-     ), 1, 2, '') AS [LstBookProvider]
+     ), 1, 2, '') AS LstBookProvider, 
+            STUFF(
+     (
+         SELECT ', ' + rs.OtherProviderName
+         FROM dbo.OtherProvider AS rs WITH(NOLOCK)
+              INNER JOIN dbo.MatchOtherProvider AS mot WITH(NOLOCK) ON rs.OtherProviderId = mot.OtherProviderId
+         WHERE mot.OWPMatchId = ml.OWPMatchId FOR XML PATH('')
+     ), 1, 2, '') AS OtherProvider
      FROM #owpMatchListByDate AS ml WITH(NOLOCK)
           INNER JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
           INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
@@ -145,12 +162,16 @@ AS
             ao.AgentName
      FROM MatchAgentConfirm AS mac WITH(NOLOCK)
           INNER JOIN #owpMatchListByDate AS ml WITH(NOLOCK) ON ml.OWPMatchId = mac.OWPMatchId
-          LEFT JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = mac.AgentId;
+          LEFT JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = mac.AgentId
+	 WHERE mac.AgentId IS NOT NULL 
+	 AND mac.AgentId <> 0;
 
 	 SELECT m.OWPMatchId,
 			apm.ProviderMatchId
 	 FROM AdminsiteProviderMatch AS apm WITH(NOLOCK)
-			INNER JOIN OWPMatch AS m WITH(NOLOCK) ON m.MatchId = apm.MatchId	
-   
+			INNER JOIN OWPMatch AS m WITH(NOLOCK) ON m.MatchId = apm.MatchId
+	WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
+  
      DROP TABLE #owpMatchListByDate;
      DROP TABLE #tblMatchOfferResource;
+

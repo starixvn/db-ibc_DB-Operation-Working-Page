@@ -1,6 +1,5 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-
 ALTER PROCEDURE [dbo].[OWP_ProviderVerification_SaveAgentConfirm] @OwpMatchId    INT, 
                                                                   @ActorId       INT, 
                                                                   @AgentSelected NVARCHAR(255) = NULL
@@ -13,19 +12,14 @@ DB: bodb_OWP
 
 Revisions:
 	20240404@Liam: save agent confirm - [Redmine: #202819]
+	20250321@Lilac: write log save agent confirm - [Redmine: #213719]
 */
 
     BEGIN
-        DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX), @ActionName NVARCHAR(MAX);
-        SET @StartRun = GETDATE();
-        SET @ActionName = '';
-        SET @XmlLogOld =
-        (
-            SELECT STRING_AGG(ao.AgentName, ',') '@agentConfirm'
-            FROM MatchAgentConfirm mc WITH(NOLOCK)
-                 INNER JOIN AgentOption ao WITH(NOLOCK) ON mc.AgentId = ao.AgentId
-            WHERE OWPMatchId = @OwpMatchId FOR XML PATH('z'), ROOT('r')
-        );
+		DECLARE @Now DATETIME = DATEADD(HOUR, 12, GETDATE());
+		DECLARE @LogTable TABLE (LogMessage NVARCHAR(MAX));
+		DECLARE @LogString NVARCHAR(MAX) = '';
+       
         IF EXISTS
         (
             SELECT 1
@@ -55,33 +49,29 @@ Revisions:
         WHERE OWPMatchId = @OwpMatchId;
 
         --- insert current confirm
-        INSERT INTO MatchAgentConfirm
-        (OWPMatchId, 
-         AgentId
-        )
-               SELECT @OwpMatchId, 
-                      value
-               FROM STRING_SPLIT(@AgentSelected, ',');
+		
+	    INSERT INTO MatchAgentConfirm (OWPMatchId, AgentId)
+			OUTPUT 
+				'{ "OWPMatchId": ' + CAST(inserted.OWPMatchId AS NVARCHAR) +
+				', "AgentId": ' + COALESCE(CAST(inserted.AgentId AS NVARCHAR), '"NULL"') + ' }'
+			INTO @LogTable (LogMessage)
+		SELECT @OwpMatchId, 
+                value
+        FROM STRING_SPLIT(@AgentSelected, ',');
 
-        --Write log
-        SET @XmlLogNew =
-        (
-            SELECT STRING_AGG(ao.AgentName, ',') '@agentConfirm'
-            FROM MatchAgentConfirm mc WITH(NOLOCK)
-                 INNER JOIN AgentOption ao WITH(NOLOCK) ON mc.AgentId = ao.AgentId
-            WHERE OWPMatchId = @OwpMatchId FOR XML PATH('z'), ROOT('r')
-        );
+		SELECT @LogString = 
+			'{ "CreatorId": ' + CAST(@ActorId AS NVARCHAR) + ', "Data": ' +
+			CASE 
+				WHEN COUNT(*) = 0 THEN '[]' 
+				ELSE '[' + STRING_AGG(LogMessage, ', ') + ']' 
+			END + '}'
+		FROM @LogTable;
 
-        SET @LogNew = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogNew), '" />', '"/"');
-        SET @LogOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlLogOld), '" />', '"/"');
-        SET @EndRun = GETDATE();
-        SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
-        EXEC dbo.OWP_WriteLog 
-             @CreatorId = @ActorId, 
-             @SPName = 'OWP_ProviderVerification_SaveAgentConfirm', 
-             @ObjectId = @OwpMatchId, 
-             @LoggedDate = @StartRun, 
-             @Duration = @Duration, 
-             @Data = @LogNew, 
-             @DataOld = @LogOld;
+
+		EXEC dbo.OWP_InternalSystem_WriteLog 
+		@CreatedDate = @Now, 
+		@Action = 'ProviderVerification-SaveAgentConfirm', 
+		@Payload = @LogString;
+
+       
     END;
