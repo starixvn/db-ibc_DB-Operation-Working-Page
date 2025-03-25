@@ -38,14 +38,14 @@ BEGIN
         SELECT 1 FROM ProviderVerification pv WHERE pv.OWPMatchId = tr.Id
     );
 
-	UPDATE pv
+	UPDATE pv WITH(ROWLOCK)
     SET pv.IsMismatchEvent = 1
 	OUTPUT '{OWPMatchId: ' + CAST(inserted.OWPMatchId AS NVARCHAR) + ', IsMismatchEvent: true}, ' 
        INTO @PayloadTable (LogMessage)
     FROM ProviderVerification pv
     INNER JOIN @tblRefResourceMatchId tr ON pv.OWPMatchId = tr.Id;
 
-	UPDATE pv
+	UPDATE pv WITH(ROWLOCK)
     SET pv.IsMismatchEvent = 0
 	OUTPUT '{OWPMatchId: ' + CAST(inserted.OWPMatchId AS NVARCHAR) + ', IsMismatchEvent: false}, ' 
        INTO @PayloadTable (LogMessage)

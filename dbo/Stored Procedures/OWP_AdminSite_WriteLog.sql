@@ -13,6 +13,8 @@ AS
 
  Revisions:
 	20250210@Los: Write log - [Feature: #217894]
+     20250325@Lilac: Change data type for @CreatedDate - [Feature: #213719]
+
 */
 
      SET NOCOUNT ON;

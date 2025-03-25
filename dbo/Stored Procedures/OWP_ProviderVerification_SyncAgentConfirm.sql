@@ -31,7 +31,7 @@ Revisions:
 		FROM OPENJSON(@AgentConfirms) 
 		WITH (OWPMatchId INT, MatchId INT, Agent NVARCHAR(255));
 
-		DELETE t
+		DELETE t WITH(ROWLOCK)
 		FROM dbo.MatchAgentConfirm t
 		INNER JOIN #tblAgentConfirm a ON t.OWPMatchId = a.OWPMatchId;
 

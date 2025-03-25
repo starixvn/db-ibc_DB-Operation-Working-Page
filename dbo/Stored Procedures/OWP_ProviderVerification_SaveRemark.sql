@@ -32,7 +32,7 @@ Revisions:
             WHERE p.OWPMatchId = @OwpMatchId
         )
             BEGIN
-                UPDATE ProviderVerification
+                UPDATE ProviderVerification WITH(ROWLOCK)
                   SET 
                       Remark = @Remark
                 WHERE OWPMatchId = @OwpMatchId;

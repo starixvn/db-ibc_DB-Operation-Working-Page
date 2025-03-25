@@ -27,7 +27,7 @@ Revisions:
             WHERE p.OWPMatchId = @OwpMatchId
         )
             BEGIN
-                UPDATE ProviderVerification
+                UPDATE ProviderVerification WITH(ROWLOCK)
                   SET 
                       IsConfirmManual = 1
                 WHERE OWPMatchId = @OwpMatchId;
@@ -45,7 +45,7 @@ Revisions:
         END;
 
         --- delete previous confirm
-        DELETE FROM MatchAgentConfirm
+        DELETE FROM MatchAgentConfirm WITH(ROWLOCK)
         WHERE OWPMatchId = @OwpMatchId;
 
         --- insert current confirm
