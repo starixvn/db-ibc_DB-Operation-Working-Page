@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_InternalSystem_WriteLog] @CreatedDate DATE,
+CREATE PROCEDURE [dbo].[OWP_InternalSystem_WriteLog] @CreatedDate DATETIME,
 @Action VARCHAR(255),
 @Payload NVARCHAR(MAX)
 AS
@@ -13,6 +13,7 @@ AS
 
  Revisions:
 	20250210@Los: Write log - [Feature: #217894]
+     20250325@Lilac: Change data type for @CreatedDate - [Feature: #213719]
 */
 
      SET NOCOUNT ON;

@@ -1,6 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
+
 ALTER PROCEDURE [dbo].[OWP_ProviderVerification_GetMainMatchesByDate] @EventDate DATE
 AS
 
@@ -11,6 +12,8 @@ DB: bodb_OWP
 
 Revisions:
 	20240404@Mira: Get provider main matches by date - [Redmine: #202819]
+    20250321@Lilac: Update provider main matches by date, add col MatchId - [Redmine: #213719]
+
 */
 
     BEGIN
@@ -19,9 +22,16 @@ Revisions:
         DECLARE @EventToDateTime DATETIME= DATEADD(HOUR, 36, CONVERT(DATETIME, @EventDate));
 
         -- Result
-        SELECT m.OWPMatchId, 
+        SELECT m.OWPMatchId,
+			   m.MatchId,
                i.MatchStatus, 
-               ISNULL(i.Agent_EST, '') AS [Provider],
+			   STUFF(
+				 (
+					 SELECT ', ' + rs.ProviderName
+					 FROM dbo.[Provider] AS rs WITH(NOLOCK)
+						  INNER JOIN dbo.MatchProvider AS mp WITH(NOLOCK) ON rs.ProviderId = mp.ProviderId
+					 WHERE mp.OWPMatchId = m.OWPMatchId FOR XML PATH('')
+				 ), 1, 2, '') AS [Provider],
                CASE
                    WHEN l.OWPLeagueName LIKE '%SABA %'
                    THEN 1
@@ -35,4 +45,5 @@ Revisions:
               AND mm.MinorBettypeId IS NULL
               AND i.IsSelected = 1
               AND l.OWPLeagueName NOT LIKE '%Fantasy%';
+
     END;
