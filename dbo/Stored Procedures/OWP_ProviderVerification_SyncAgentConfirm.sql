@@ -11,6 +11,7 @@ DB: bodb_OWP
 Revisions:
 	20240404@Mira: Sync agent confirm - [Redmine: #202819]
 	20240321@Lilac.Nguyen: Update Sync agent confirm with data sync Adminsite - [Redmine: #213719]
+	20240326@Lilac.Nguyen: fix duplicate insert into table MatchAgentConfirm - [Redmine: #213719]
 
 */
 
@@ -41,7 +42,7 @@ Revisions:
 				', "MatchId": ' + CAST(inserted.MatchId AS NVARCHAR) + 
 				', "AgentId": ' + COALESCE(CAST(inserted.AgentId AS NVARCHAR), 'NULL') + ' }'
 			INTO @LogTable (LogMessage)
-		SELECT 
+		SELECT DISTINCT
 			t.OWPMatchId,
 			t.MatchId,
 			COALESCE(
