@@ -1,0 +1,46 @@
+/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
+/*
+Created: 222385@frankie
+Task : Correct log
+DB: bodb_OWP	
+
+Revisions:
+	20250403@Frankie:Correct log - [Redmine: #222385]
+*/
+
+UPDATE dbo.InfoSiteMatch
+SET EventDateTime = CASE InfoSiteMatchId
+    WHEN 6827964 THEN '2025-04-23 23:00:00'
+    WHEN 7862068 THEN '2025-05-30 15:00:00'
+    WHEN 6835772 THEN '2025-04-16 20:00:00'
+    WHEN 7483138 THEN '2025-04-16 21:30:00'
+    WHEN 7447470 THEN '2025-06-15 14:00:00'
+    WHEN 6652069 THEN '2025-04-16 22:00:00'
+    WHEN 7531652 THEN '2025-07-20 14:00:00'
+    WHEN 7527240 THEN '2025-07-20 13:00:00'
+    WHEN 6633797 THEN '2025-04-13 12:00:00'
+    ELSE EventDateTime
+END
+WHERE InfoSiteMatchId IN (
+    6827964,
+    7862068,
+    6835772,
+    7483138,
+    7447470,
+    6652069,
+    7531652,
+    7527240,
+    6633797
+);
+
+UPDATE dbo.EventPickingLog 
+SET
+    NewValue = OldValue,
+    OldValue = NewValue
+WHERE
+    id IN (
+        3260906, 3264129, 3264059, 3264133, 3264131, 3260905, 3262400,
+        3260977, 3264125, 3264123, 3323655, 3264122, 3339079, 3264055,
+        3260904, 3264130, 3263797, 3262399, 3261086, 3264135, 3264121,
+        3264127, 3264093, 3264064
+    );
