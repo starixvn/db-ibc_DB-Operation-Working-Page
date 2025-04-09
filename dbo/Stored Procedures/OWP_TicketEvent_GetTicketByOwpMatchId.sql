@@ -39,7 +39,8 @@ AS
                    THEN u.Username
                    ELSE u.Nickname
                END AS LatestUsername, 
-               tm.CreatedDate AS LatestCreatedDate, 
+               tm.CreatedDate AS LatestCreatedDate,
+               m.EventDateTime AS EventDate,
                tm.[Message] AS LatestMessage, 
                reader.IsRead, 
                ts.SubtypeId, 
