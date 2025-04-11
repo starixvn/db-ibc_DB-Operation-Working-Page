@@ -24,11 +24,11 @@ AS
         VALUES(@OwpMatchId);
         INSERT INTO #tblOwpMatch(OWPMatchId)
                SELECT mm.ParentMatchId
-               FROM MinorMatch AS mm
+               FROM MinorMatch AS mm WITH(NOLOCK)
                WHERE mm.MinorMatchId = @OwpMatchId;
         INSERT INTO #tblOwpMatch(OWPMatchId)
                SELECT mm.MinorMatchId
-               FROM MinorMatch AS mm
+               FROM MinorMatch AS mm WITH(NOLOCK)
                     INNER JOIN #tblOwpMatch AS r ON mm.ParentMatchId = r.OWPMatchId;
 
 		-- select Latest comment ticket
