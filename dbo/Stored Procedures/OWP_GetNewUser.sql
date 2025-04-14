@@ -19,7 +19,8 @@ Revisions:
         SELECT CASE WHEN Username IS NULL
 		THEN Nickname
 		ELSE Username
-		END 'Username'
+		END 'UserName',
+		UserId
 		FROM [User]
 		WHERE IsNewUser=1;
 
