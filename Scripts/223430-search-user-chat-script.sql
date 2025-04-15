@@ -8,5 +8,7 @@ Revisions:
 	20250414@Los:search-user-chat-script - [Redmine: #223430]
 */
 
-ALTER TABLE [User]
-ADD IsNewUser BIT;
+
+ALTER TABLE  [User]
+ADD ChatUserId VARCHAR(100)
+
