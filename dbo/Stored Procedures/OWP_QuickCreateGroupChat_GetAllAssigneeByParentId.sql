@@ -11,21 +11,22 @@ AS
     
  Revisions:
 	20250319@Los: Query all assignee by parent Id - [Redmine: #217783]	
+	20250408@Los: Identify Main and Child Match Chat Groups - [Redmine: #221727]	
 */
 
      SET NOCOUNT ON;
-     SELECT DISTINCT u.UserId 'RecipientId',
-		u.Username,
-		u.Nickname,
-		1 'RecipientType'
+     SELECT DISTINCT u.UserId 'recipientId',
+		u.Username  'userName',
+		u.Nickname 'nickName',
+		1 'recipientType'
 	 FROM [User] AS u WITH (NOLOCk) 
 	 INNER JOIN Assignment AS a WITH (NOLOCK) ON u.UserId=a.UserId
 	 INNER JOIN MinorMatch AS mm WITH (NOLOCK) ON a.OWPMatchId=mm.MinorMatchId
 	 WHERE mm.ParentMatchId=@ParentId
 	 UNION  
-	 SELECT u.UserId 'RecipientId',
-		u.Username,
-		u.Nickname,
+	 SELECT u.UserId 'recipientId',
+		u.Username  'userName',
+		u.Nickname 'nickName',
 		1 'recipientType'
 	 FROM [User] AS u WITH (NOLOCk) 
 	 INNER JOIN Assignment AS a WITH (NOLOCK) ON u.UserId=a.UserId
