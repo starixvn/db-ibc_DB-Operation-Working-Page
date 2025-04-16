@@ -2,8 +2,8 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp,wsv_nap" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_UserInsert] @UserId  INT, 
-                                        @ErrCode INT           = 0 OUTPUT, 
-                                        @ErrMsg  NVARCHAR(200) = '' OUTPUT
+                                       @ErrCode INT           = 0 OUTPUT, 
+                                       @ErrMsg  NVARCHAR(200) = '' OUTPUT
 AS
 
 /*
@@ -22,7 +22,6 @@ Revisions:
 	20181214@Leo: restore SP
 	20190116@Leo: grant permission to wsv_nap - [Redmine: #108034]
 	20240925@Los: customer -> custInfo [Redmine: #209152]
-	20250414@Los: mark new user - [Redmine: #223430]
 */
 
     BEGIN
@@ -41,13 +40,11 @@ Revisions:
                 BEGIN TRY
                     INSERT INTO dbo.[User]
                     (UserId, 
-                     Username, 
-                     IsNewUser
+                     Username
                     )
                     VALUES
                     (@UserId, 
-                     @username, 
-                     1
+                     @username
                     );
         END TRY
                 BEGIN CATCH
