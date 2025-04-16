@@ -22,9 +22,5 @@ Revisions:
 		END 'UserName',
 		UserId
 		FROM [User]
-		WHERE IsNewUser=1;
-
-		UPDATE [User]
-		SET IsNewUser=0
-		WHERE IsNewUser=1;
+		WHERE ChatUserId IS NULL;
     END;
