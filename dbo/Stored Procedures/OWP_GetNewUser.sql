@@ -21,6 +21,6 @@ Revisions:
 		ELSE Username
 		END 'UserName',
 		UserId
-		FROM [User]
+		FROM [User] WITH (NOLOCK)
 		WHERE ChatUserId IS NULL;
     END;

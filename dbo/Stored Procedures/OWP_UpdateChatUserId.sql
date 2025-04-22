@@ -19,6 +19,6 @@ Revisions:
         UPDATE u
           SET 
               u.ChatUserId = c.ChatUserId
-        FROM [User] AS u
+        FROM [User] AS u WITH (NOLOCK)
              INNER JOIN OPENJSON(@UserJson) WITH(UserId INT, ChatUserId VARCHAR(50)) AS c ON u.UserId = c.UserId;
     END;
