@@ -1,7 +1,8 @@
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-ALTER PROCEDURE [dbo].[OWP_TraderApi_GetTraderByAdminsiteMatchIds] @MatchesJson NVARCHAR(MAX)
+ALTER PROCEDURE [dbo].[OWP_TraderApi_GetTraderByAdminsiteMatchIds] @MatchesJson NVARCHAR(MAX), 
+    @FromDate DATETIME = NULL,
+    @ToDate DATETIME = NULL
 AS
 
 /*
@@ -12,6 +13,7 @@ DB: bodb_OWP
 Revisions:
 	20240911@Mira: Get trader corresponding matchid and subtype [Redmine: #209390]
 	20240930@Mira: Get more AIO trader [Redmine: #211426]
+	20250423@Lilac: Add time range FromDate, ToDate [Redmine: #223837]
 */
 
     BEGIN
@@ -20,8 +22,17 @@ Revisions:
         DECLARE @HT1x2 INT= 15;
         DECLARE @NoOfCorners INT= -3, @TotalBooking INT= -6;
         DECLARE @AIO INT= -89, @AllInOneTotalBookings INT= -189, @AllInOneCorners INT= -289;
-        DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00');
-        DECLARE @ToDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, -2, @FromDate), '11:59:59');
+		DECLARE @Now DATETIME = DATEADD(HOUR, 12, GETDATE());
+		DECLARE @PayloadLog NVARCHAR(MAX);
+		DECLARE @OutputJson NVARCHAR(MAX);
+
+		SET @FromDate = DATEADD(HOUR, 12, ISNULL(@FromDate, CAST(GETDATE() AS DATETIME)));
+		SET @ToDate = DATEADD(SECOND, -1, DATEADD(DAY, 2, 
+               CASE 
+                   WHEN @ToDate IS NOT NULL THEN DATEADD(HOUR, 12, @ToDate) 
+                   ELSE @FromDate 
+               END));
+
         CREATE TABLE #Matches
         (MatchId          INT NOT NULL, 
          ParentId         INT, 
@@ -70,6 +81,15 @@ Revisions:
              INNER JOIN OWPMatch special WITH(NOLOCK) ON mm.MinorMatchId = special.OWPMatchId
                                                          AND m.MinorBettypeId = mm.MinorBettypeId;
 
+		CREATE TABLE #Output
+		(
+			MatchId INT,
+			UserId INT,
+			Bettype INT,
+			MinorBettypeId INT,
+			OWPMatchId INT
+		);
+		INSERT INTO #Output
         -- get AIO trader of main match
         SELECT DISTINCT 
                m.MatchId, 
@@ -78,7 +98,7 @@ Revisions:
                minor.MinorBettypeId, 
                minor.MinorMatchId 'OWPMatchId'
         FROM #Matches m
-             INNER JOIN MinorMatch AS minor ON minor.ParentMatchId = m.OWPParentMatchId
+             INNER JOIN MinorMatch AS minor WITH(NOLOCK) ON minor.ParentMatchId = m.OWPParentMatchId
                                                AND m.IsMainMatch = 1
              LEFT JOIN Assignment a WITH(NOLOCK) ON a.OWPMatchId = minor.MinorMatchId
         WHERE minor.MinorBettypeId = -89
@@ -91,7 +111,7 @@ Revisions:
                m.MinorBettypeId, 
                minor1.MinorMatchId 'OWPMatchId'
         FROM #Matches m
-             INNER JOIN MinorMatch AS minor1 ON minor1.ParentMatchId = m.OWPParentMatchId
+             INNER JOIN MinorMatch AS minor1 WITH(NOLOCK) ON minor1.ParentMatchId = m.OWPParentMatchId
              LEFT JOIN Assignment a WITH(NOLOCK) ON a.OWPMatchId = minor1.MinorMatchId
         WHERE(m.MinorBettypeId = @NoOfCorners
               AND minor1.MinorBettypeId = @AllInOneCorners)
@@ -109,6 +129,30 @@ Revisions:
              LEFT JOIN Assignment a WITH(NOLOCK) ON a.OWPMatchId = m.OWPMatchId
                                                     AND (a.Bettype IS NULL
                                                          OR a.Bettype IN(@FT1x2, @HT1x2));
+
+		SELECT MatchId, UserId, Bettype, MinorBettypeId, OWPMatchId FROM #Output;
+
+		SELECT @OutputJson = (
+        SELECT MatchId, UserId, Bettype, MinorBettypeId, OWPMatchId
+			FROM #Output
+			FOR JSON PATH
+		);
+
+		SET @PayloadLog = 
+			N'{ "Input": { ' +
+			N'"FromDate": "' + CONVERT(NVARCHAR, @FromDate) + '", ' +
+			N'"ToDate": "' + CONVERT(NVARCHAR, @ToDate) + '", ' +
+			N'"MatchesJson": ' + ISNULL(@MatchesJson, 'null') +
+			N' }, "Output": ' + ISNULL(@OutputJson, 'null') +
+			N' }';
+
+
+		EXEC dbo.OWP_AdminSite_WriteLog 
+			@CreatedDate = @Now, 
+			@Action = 'OWP_TraderApi_GetTraderByAdminsiteMatchIds', 
+			@Payload = @PayloadLog
+
         -- drop table  
         DROP TABLE #Matches;
+		DROP TABLE #Output;
     END;
