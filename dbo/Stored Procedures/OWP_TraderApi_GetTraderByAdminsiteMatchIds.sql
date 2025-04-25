@@ -26,12 +26,19 @@ Revisions:
 		DECLARE @PayloadLog NVARCHAR(MAX);
 		DECLARE @OutputJson NVARCHAR(MAX);
 
-		SET @FromDate = DATEADD(HOUR, 12, ISNULL(@FromDate, CAST(GETDATE() AS DATETIME)));
-		SET @ToDate = DATEADD(SECOND, -1, DATEADD(DAY, 2, 
-               CASE 
-                   WHEN @ToDate IS NOT NULL THEN DATEADD(HOUR, 12, @ToDate) 
-                   ELSE @FromDate 
-               END));
+        SET @FromDate = 
+			CASE 
+				WHEN @FromDate IS NULL 
+					THEN DATEADD(DAY, DATEDIFF(DAY, 0, GETDATE()), '12:00:00')
+				ELSE DATEADD(DAY, DATEDIFF(DAY, 0, @FromDate), '12:00:00')
+			END;
+
+        SET @ToDate = 
+            CASE 
+                WHEN @ToDate IS NULL 
+                    THEN DATEADD(DAY, DATEDIFF(DAY, -2, @FromDate), '11:59:59')
+                ELSE DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59')
+            END;
 
         CREATE TABLE #Matches
         (MatchId          INT NOT NULL, 
