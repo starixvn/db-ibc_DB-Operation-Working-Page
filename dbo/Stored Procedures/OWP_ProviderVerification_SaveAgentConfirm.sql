@@ -13,12 +13,13 @@ DB: bodb_OWP
 Revisions:
 	20240404@Liam: save agent confirm - [Redmine: #202819]
 	20250321@Lilac: write log save agent confirm - [Redmine: #213719]
+	20250515@Lilac: refactor write log save agent confirm - [Redmine: #213719]
 */
 
     BEGIN
 		DECLARE @Now DATETIME = DATEADD(HOUR, 12, GETDATE());
-		DECLARE @LogTable TABLE (LogMessage NVARCHAR(MAX));
 		DECLARE @LogString NVARCHAR(MAX) = '';
+		DECLARE @AgentIdTable TABLE (AgentId INT);
        
         IF EXISTS
         (
@@ -51,22 +52,39 @@ Revisions:
         --- insert current confirm
 		
 	    INSERT INTO MatchAgentConfirm (OWPMatchId, AgentId)
-			OUTPUT 
-				'{ "OWPMatchId": ' + CAST(inserted.OWPMatchId AS NVARCHAR) +
-				', "AgentId": ' + COALESCE(CAST(inserted.AgentId AS NVARCHAR), '"NULL"') + ' }'
-			INTO @LogTable (LogMessage)
 		SELECT @OwpMatchId, 
                 value
         FROM STRING_SPLIT(@AgentSelected, ',');
 
+		 DECLARE @TrimmedAgent NVARCHAR(255) = LTRIM(RTRIM(@AgentSelected));
+
+		IF @TrimmedAgent IS NULL OR @TrimmedAgent = ''
+		BEGIN
+			INSERT INTO @AgentIdTable (AgentId)
+			VALUES (NULL);
+		END
+		ELSE
+		BEGIN
+			-- Insert valid agent IDs
+			INSERT INTO @AgentIdTable (AgentId)
+			SELECT TRY_CAST(value AS INT)
+			FROM STRING_SPLIT(@TrimmedAgent, ',')
+			WHERE TRY_CAST(value AS INT) IS NOT NULL;
+		END
+
+
 		SELECT @LogString = 
 			'{ "CreatorId": ' + CAST(@ActorId AS NVARCHAR) + ', "Data": ' +
-			CASE 
-				WHEN COUNT(*) = 0 THEN '[]' 
-				ELSE '[' + STRING_AGG(LogMessage, ', ') + ']' 
-			END + '}'
-		FROM @LogTable;
-
+			ISNULL('[' + STRING_AGG(
+				'{ "OWPMatchId": ' + CAST(@OwpMatchId AS NVARCHAR) +
+				', "AgentId": ' + 
+					CASE 
+						WHEN AgentId IS NULL THEN 'null' 
+						ELSE CAST(AgentId AS NVARCHAR) 
+					END +
+				' }', ', '), '[]') +
+			'}'
+		FROM @AgentIdTable;
 
 		EXEC dbo.OWP_InternalSystem_WriteLog 
 		@CreatedDate = @Now, 
@@ -75,3 +93,5 @@ Revisions:
 
        
     END;
+
+
