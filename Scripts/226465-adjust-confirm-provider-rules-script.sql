@@ -15,3 +15,4 @@ INNER JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = t.OWPMatchId
 INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
 LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
 WHERE i.MatchStatus LIKE 'Cancel' AND l.OWPLeagueName LIKE '%SABA %'
+AND m.EventDate BETWEEN '2025-05-01' AND '2025-05-19' AND t.AgentId <> 12
