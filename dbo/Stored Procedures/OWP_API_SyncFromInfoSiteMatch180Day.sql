@@ -131,7 +131,7 @@ BEGIN
 		im.OWPLeagueId=tblim.OWPLeagueId,
 		im.OWPHomeId=tblim.OWPHomeId,
 		im.OWPAwayId=tblim.OWPAwayId
-	FROM InfoSiteMatch AS im
+	FROM InfoSiteMatch AS im WITH(ROWLOCK)
 	INNER JOIN #tblInfoSiteMatch AS tblim WITH (NOLOCK) ON tblim.MatchId=im.InfoSiteMatchId
 	
 	-- 6.2 insert new infosite match
