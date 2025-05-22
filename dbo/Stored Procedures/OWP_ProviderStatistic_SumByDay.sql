@@ -36,8 +36,7 @@ Revisions:
                FROM dbo.OWPMatch AS om WITH(NOLOCK)
                     INNER JOIN dbo.MatchAgentConfirm AS ma WITH(NOLOCK) ON ma.OWPMatchId = om.OWPMatchId
                     INNER JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = ma.AgentId
-               WHERE ao.AgentId NOT IN(7, 12)
-                    AND om.EventDateTime BETWEEN @FromDate AND @ToDate
+               WHERE om.EventDateTime BETWEEN @TimeStart AND @TimeEnd
                UNION ALL
                SELECT CASE
                           WHEN CAST(om_old.EventDateTime AS TIME) < '12:00:00'
@@ -48,8 +47,7 @@ Revisions:
                FROM dbo.OWPMatch_Old AS om_old WITH(NOLOCK)
                     INNER JOIN dbo.MatchAgentConfirm AS ma WITH(NOLOCK) ON ma.OWPMatchId = om_old.OWPMatchId
                     INNER JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = ma.AgentId
-               WHERE ao.AgentId NOT IN(7, 12)
-                    AND om_old.EventDateTime BETWEEN @FromDate AND @ToDate;
+               WHERE om_old.EventDateTime BETWEEN @TimeStart AND @TimeEnd;
 
         --AgentId=1 => '_365Gv'
         --AgentId=2 => 'Betrada'
