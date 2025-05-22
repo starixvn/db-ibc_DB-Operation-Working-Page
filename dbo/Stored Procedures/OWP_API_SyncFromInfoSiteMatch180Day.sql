@@ -20,6 +20,7 @@ AS
 	=> This enhance to fix agent.split object not set reference in case event upload
 	20210128@CarlosNguyen: Sync MatchCode - [Redmine: #149347]
 	20220224@tyler: upgrade XML package - [Redmine: #168050]   
+	20250522@Frankie: Not update KO time - [Redmine: #228288]   
 */
 BEGIN
 	SET NOCOUNT ON
@@ -123,15 +124,14 @@ BEGIN
 	-- 6.1 update match info exists
 	-- Update exists infosite match
 	UPDATE im
-	SET im.EventDateTime= tblim.KOTime,
-		im.LeagueName=tblim.LeagueName,
+	SET im.LeagueName=tblim.LeagueName,
 		im.HomeName=tblim.HomeName,
 		im.AwayName=tblim.AwayName,
 		im.AdminSiteMatchId=tblim.AdminSiteId,
 		im.OWPLeagueId=tblim.OWPLeagueId,
 		im.OWPHomeId=tblim.OWPHomeId,
 		im.OWPAwayId=tblim.OWPAwayId
-	FROM InfoSiteMatch AS im
+	FROM InfoSiteMatch AS im WITH(ROWLOCK)
 	INNER JOIN #tblInfoSiteMatch AS tblim WITH (NOLOCK) ON tblim.MatchId=im.InfoSiteMatchId
 	
 	-- 6.2 insert new infosite match
