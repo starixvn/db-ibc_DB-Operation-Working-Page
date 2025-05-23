@@ -1,4 +1,4 @@
-CREATE PROCEDURE [dbo].[OWP_ProviderStatistic_SumByLeague] @FromDate DATETIME,
+ALTER PROCEDURE [dbo].[OWP_ProviderStatistic_SumByLeague] @FromDate DATETIME,
 @ToDate DATETIME
 AS
 
@@ -27,7 +27,17 @@ Revisions:
 		SELECT OWPMatchId, OWPLeagueId 
 		FROM OWPMatch_OLD
 		WHERE EventDateTime BETWEEN @FromDate AND @ToDate
-	)
+		),
+
+	    CombinedMatchInfo AS (
+        SELECT DISTINCT OWPMatchId
+        FROM MatchInfo
+
+        UNION
+
+        SELECT DISTINCT OWPMatchId
+        FROM MatchInfo_Old
+		)
 
 		SELECT DISTINCT
 			l.OWPLeagueId,
@@ -38,7 +48,7 @@ Revisions:
 		FROM CombinedMatch AS o
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) 
 			ON o.OWPLeagueId = l.OWPLeagueId
-		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) 
+		INNER JOIN CombinedMatchInfo AS mi WITH (NOLOCK) 
 			ON o.OWPMatchId = mi.OWPMatchId
 		INNER JOIN dbo.MatchAgentConfirm AS ma WITH (NOLOCK) 
 			ON ma.OWPMatchId = o.OWPMatchId
