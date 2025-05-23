@@ -1,6 +1,6 @@
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_ProviderVerification_GetLSTBookOptions] @EventDate DATE
+ALTER PROCEDURE [dbo].[OWP_ProviderVerification_GetLSTBookOptions] @EventDate DATE
 AS
 
 /*
@@ -10,6 +10,7 @@ DB: bodb_OWP
 
 Revisions:
 	20250318@Lilac: Get lst book provider option - [Redmine: #213719]
+	20250523@Lilac: Get lst book provider 2 table current and old - [Redmine: #213719]
 */
 
      DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00');
@@ -20,8 +21,20 @@ Revisions:
 
 		SELECT DISTINCT
 			rs.ProviderId AS LSTBookId,
-			rs.ProviderName AS LSTBookName
+			rs.ProviderName AS LSTBookName,
+			om.OWPMatchId
 		FROM dbo.OWPMatch AS om WITH(NOLOCK)
+		LEFT JOIN dbo.MatchProvider AS mp WITH(NOLOCK) ON om.OWPMatchId = mp.OWPMatchId
+		INNER JOIN dbo.[Provider] AS rs WITH(NOLOCK) ON rs.ProviderId = mp.ProviderId
+		WHERE om.EventDateTime BETWEEN @FromDate AND @ToDate
+
+		UNION
+
+		SELECT DISTINCT
+			rs.ProviderId AS LSTBookId,
+			rs.ProviderName AS LSTBookName,
+			om.OWPMatchId
+		FROM dbo.OWPMatch_Old AS om WITH(NOLOCK)
 		LEFT JOIN dbo.MatchProvider AS mp WITH(NOLOCK) ON om.OWPMatchId = mp.OWPMatchId
 		INNER JOIN dbo.[Provider] AS rs WITH(NOLOCK) ON rs.ProviderId = mp.ProviderId
 		WHERE om.EventDateTime BETWEEN @FromDate AND @ToDate;
