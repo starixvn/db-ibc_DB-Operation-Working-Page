@@ -7,7 +7,7 @@ AS
 
 /*
 Created:20250516@Los
-Task : User Management
+Task : Provider statistics
 DB: bodb_OWP
 
 Revisions:
@@ -21,44 +21,37 @@ Revisions:
         DECLARE @TimeEnd DATETIME= DATEADD(DAY, DATEDIFF(DAY, -1, @ToDate), '11:59:59');
         DECLARE @tempProviderStatistic TABLE
         (EventDate DATE NOT NULL, 
-         AgentId   INT NOT NULL
+         AgentId   INT NOT NULL,
+		 OWPMatchId INT NOT NULL
         );
         INSERT INTO @tempProviderStatistic
         (EventDate, 
-         AgentId
+         AgentId, 
+		 OWPMatchId
         )
-               SELECT CASE
+               SELECT DISTINCT CASE
                           WHEN CAST(om.EventDateTime AS TIME) < '12:00:00'
                           THEN CAST(DATEADD(DAY, -1, om.EventDateTime) AS DATE)
                           ELSE CAST(om.EventDateTime AS DATE)
                       END, 
-                      ao.AgentId
+                      ao.AgentId,
+					  om.OWPMatchId
                FROM dbo.OWPMatch AS om WITH(NOLOCK)
                     INNER JOIN dbo.MatchAgentConfirm AS ma WITH(NOLOCK) ON ma.OWPMatchId = om.OWPMatchId
                     INNER JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = ma.AgentId
                WHERE om.EventDateTime BETWEEN @TimeStart AND @TimeEnd
-               UNION ALL
-               SELECT CASE
+               UNION
+               SELECT DISTINCT CASE
                           WHEN CAST(om_old.EventDateTime AS TIME) < '12:00:00'
                           THEN CAST(DATEADD(DAY, -1, om_old.EventDateTime) AS DATE)
                           ELSE CAST(om_old.EventDateTime AS DATE)
                       END, 
-                      ao.AgentId
+                      ao.AgentId,
+					  om_old.OWPMatchId
                FROM dbo.OWPMatch_Old AS om_old WITH(NOLOCK)
                     INNER JOIN dbo.MatchAgentConfirm AS ma WITH(NOLOCK) ON ma.OWPMatchId = om_old.OWPMatchId
                     INNER JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = ma.AgentId
                WHERE om_old.EventDateTime BETWEEN @TimeStart AND @TimeEnd;
-
-        --AgentId=1 => '_365Gv'
-        --AgentId=2 => 'Betrada'
-        --AgentId=3 => 'Bg'
-        --AgentId=4 => 'Fc'
-        --AgentId=5 => 'Img'
-        --AgentId=6 => 'Rb2'
-        --AgentId=8 => 'Rts'
-        --AgentId=9 => 'Slr'
-        --AgentId=10=>  'Woo'
-        --AgentId=11=>  'Streaming'
 
         SELECT AgentId, 
                EventDate, 
