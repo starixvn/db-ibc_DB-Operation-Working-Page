@@ -22,24 +22,24 @@ Revisions:
 
 		WITH CombinedMatch AS (
 		SELECT OWPMatchId, OWPLeagueId 
-		FROM OWPMatch
+		FROM OWPMatch WITH (NOLOCK)
 		WHERE EventDateTime BETWEEN @FromDate AND @ToDate
 
 		UNION
 
 		SELECT OWPMatchId, OWPLeagueId 
-		FROM OWPMatch_OLD
+		FROM OWPMatch_OLD WITH (NOLOCK)
 		WHERE EventDateTime BETWEEN @FromDate AND @ToDate
 		),
 
 	    CombinedMatchInfo AS (
         SELECT DISTINCT OWPMatchId
-        FROM MatchInfo
+        FROM MatchInfo WITH (NOLOCK)
 
         UNION
 
         SELECT DISTINCT OWPMatchId
-        FROM MatchInfo_Old
+        FROM MatchInfo_Old WITH (NOLOCK)
 		)
 
 		SELECT DISTINCT
@@ -48,7 +48,7 @@ Revisions:
 			ma.AgentId,
 			o.OWPMatchId,
 			COUNT(CASE WHEN ma.AgentId IS NOT NULL THEN 1 END) AS [Count]
-		FROM CombinedMatch AS o
+		FROM CombinedMatch AS o	WITH (NOLOCK)
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) 
 			ON o.OWPLeagueId = l.OWPLeagueId
 		INNER JOIN CombinedMatchInfo AS mi WITH (NOLOCK) 
