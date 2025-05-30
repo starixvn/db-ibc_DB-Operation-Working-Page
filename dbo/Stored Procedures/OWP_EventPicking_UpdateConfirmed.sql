@@ -1,4 +1,3 @@
-
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 CREATE PROCEDURE [dbo].[OWP_EventPicking_UpdateConfirmed] @InfoSiteMatchIds VARCHAR(MAX), 
@@ -24,7 +23,7 @@ AS
                SELECT DISTINCT 
                       val
                FROM fnc_SplitStrings(@InfoSiteMatchIds, ',') u OPTION(MAXRECURSION 0);
-        DELETE c
+        DELETE c WITH (ROWLOCK)
         FROM EventPickingConfirmed c
              LEFT JOIN @tempMatch m ON c.InfositeId = m.InfoSiteMatchId
         WHERE m.InfoSiteMatchId IS NOT NULL;
@@ -36,7 +35,7 @@ AS
                        FROM @tempMatch m
 					   WHERE NOT EXISTS (
 							SELECT 1
-							FROM EventPickingLog
+							FROM EventPickingLog WITH (NOLOCK)
 							WHERE [InfositeId] = m.InfoSiteMatchId
 								AND [UpdateTypeId] IS NOT NULL
 								AND [Date] > @ConfirmedAt
