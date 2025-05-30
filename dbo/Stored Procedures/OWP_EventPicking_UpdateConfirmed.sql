@@ -3,7 +3,8 @@
 
 CREATE PROCEDURE [dbo].[OWP_EventPicking_UpdateConfirmed] @InfoSiteMatchIds VARCHAR(MAX), 
                                                           @ModifiedBy       VARCHAR(255), 
-                                                          @Confirmed        BIT
+                                                          @Confirmed        BIT,
+														  @ConfirmedAt		DATETIME
 AS
 
 /*      
@@ -13,11 +14,11 @@ AS
  
  Revisions:
     20230908@Los: Update confirmed - [Redmine: #190039]
+    20250530@Frankie: handle check time - [Redmine: #227875]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        DECLARE @GMT8 DATETIME= DATEADD(hh, 12, GETDATE());
         DECLARE @tempMatch TABLE(InfoSiteMatchId INT);
         INSERT INTO @tempMatch
                SELECT DISTINCT 
@@ -32,7 +33,14 @@ AS
             BEGIN
                 INSERT INTO EventPickingConfirmed
                        SELECT m.InfoSiteMatchId
-                       FROM @tempMatch m;
+                       FROM @tempMatch m
+					   WHERE NOT EXISTS (
+							SELECT 1
+							FROM EventPickingLog
+							WHERE [InfositeId] = m.InfoSiteMatchId
+								AND [UpdateTypeId] IS NOT NULL
+								AND [Date] > @ConfirmedAt
+					);
         END;
         INSERT INTO EventPickingLog
         ([Date], 
@@ -42,19 +50,19 @@ AS
          OldValue, 
          NewValue
         )
-               SELECT @GMT8, 
-                      t.InfoSiteMatchId, 
-                      @ModifiedBy, 
-                      'Update the <strong>Checking Status</strong>',
-                      CASE @Confirmed
-                          WHEN 1
-                          THEN 'Unchecked'
-                          ELSE 'Checked'
-                      END,
-                      CASE @Confirmed
-                          WHEN 1
-                          THEN 'Checked'
-                          ELSE 'Unchecked'
-                      END
-               FROM @tempMatch AS t;
+			SELECT @ConfirmedAt, 
+					t.InfoSiteMatchId, 
+					@ModifiedBy, 
+					'Update the <strong>Checking Status</strong>',
+					CASE @Confirmed
+						WHEN 1
+						THEN 'Unchecked'
+						ELSE 'Checked'
+					END,
+					CASE @Confirmed
+						WHEN 1
+						THEN 'Checked'
+						ELSE 'Unchecked'
+					END
+			FROM @tempMatch AS t	
     END;
