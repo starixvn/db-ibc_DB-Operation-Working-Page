@@ -76,7 +76,7 @@ Revisions:
 		LEFT JOIN AdminsiteProviderMatch ap WITH(NOLOCK) ON ap.MatchId = t.MatchId
 		LEFT JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = t.OWPMatchId
 		LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
-		WHERE i.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
+		WHERE i.MatchStatus NOT IN ('Cancel')
 		  AND ap.ProviderId IS NOT NULL
 
 		UNION

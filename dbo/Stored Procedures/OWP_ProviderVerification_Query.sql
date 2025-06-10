@@ -193,7 +193,8 @@ BEGIN
 
     SELECT
         m.OWPMatchId,
-        apm.ProviderMatchId
+        apm.ProviderMatchId,
+		apm.[Provider] AS InhouseProvierName
     FROM AdminsiteProviderMatch AS apm WITH(NOLOCK)
     INNER JOIN OWPMatch AS m WITH(NOLOCK) ON m.MatchId = apm.MatchId
     WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
@@ -202,7 +203,8 @@ BEGIN
 
 	SELECT
 		m.OWPMatchId,
-		apm.ProviderMatchId
+		apm.ProviderMatchId,
+		apm.[Provider] AS InhouseProvierName
     FROM AdminsiteProviderMatch AS apm WITH(NOLOCK)
     INNER JOIN OWPMatch_Old AS m WITH(NOLOCK) ON m.MatchId = apm.MatchId
     WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;
