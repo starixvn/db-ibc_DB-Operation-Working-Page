@@ -13,7 +13,6 @@ DB: bodb_OWP
 Revisions:
 	20240404@Mira: Get provider main matches by date - [Redmine: #202819]
     20250321@Lilac: Update provider main matches by date, add col MatchId - [Redmine: #213719]
-	20250610@Lilac.Nguyen: change confirm provider rule - [Redmine: #227452]
 
 */
 
@@ -37,13 +36,7 @@ Revisions:
                    WHEN l.OWPLeagueName LIKE '%SABA %'
                    THEN 1
                    ELSE 0
-               END IsSaba,
-			   	STUFF((
-				SELECT ', ' + rs.ProviderName
-					FROM dbo.[Provider] AS rs WITH(NOLOCK)
-					INNER JOIN dbo.MatchProvider AS mp WITH(NOLOCK) ON rs.ProviderId = mp.ProviderId
-					WHERE mp.OWPMatchId = m.OWPMatchId
-					FOR XML PATH(''), TYPE).value('.', 'NVARCHAR(MAX)'), 1, 2, '') AS LstBookProvider
+               END IsSaba
         FROM dbo.OWPMatch m WITH(NOLOCK)
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
              LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
