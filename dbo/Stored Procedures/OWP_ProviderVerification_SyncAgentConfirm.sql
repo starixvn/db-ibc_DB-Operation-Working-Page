@@ -45,21 +45,7 @@ Revisions:
 				', "AgentId": ' + COALESCE(CAST(inserted.AgentId AS NVARCHAR), 'NULL') + ' }'
 			INTO @LogTable (LogMessage)
 
-		-- 1. Match is Cancel or (Postponed/Suspended without Provider)
-		SELECT DISTINCT
-			t.OWPMatchId,
-			t.MatchId,
-			12 AS AgentId --Cancel
-		FROM #tblAgentConfirm t
-		LEFT JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = t.OWPMatchId
-		LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
-		LEFT JOIN AdminsiteProviderMatch ap WITH(NOLOCK) ON ap.MatchId = t.MatchId
-		WHERE i.MatchStatus = 'Cancel'
-		   OR (i.MatchStatus IN ('Postponed', 'Suspended') AND ap.MatchId IS NULL)
-
-		UNION
-
-		-- 2. ProviderId get from Inhouse Provider
+		-- ProviderId get from Inhouse Provider
 		SELECT DISTINCT
 			t.OWPMatchId,
 			t.MatchId,
@@ -81,7 +67,7 @@ Revisions:
 
 		UNION
 
-		-- 3. ProviderId get from LST Book Provider
+		-- ProviderId get from LST Book Provider
 		SELECT DISTINCT
 			t.OWPMatchId,
 			t.MatchId,
@@ -90,8 +76,7 @@ Revisions:
 		LEFT JOIN AgentOption a WITH(NOLOCK) ON a.AgentName = t.Agent
 		LEFT JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = t.OWPMatchId
 		LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
-		WHERE i.MatchStatus NOT IN ('Cancel', 'Postponed', 'Suspended')
-		  AND a.AgentId IS NOT NULL;
+		WHERE a.AgentId IS NOT NULL;
 
 		SELECT @LogString = 
 		'[' + 
