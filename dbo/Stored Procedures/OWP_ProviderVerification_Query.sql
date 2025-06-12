@@ -18,6 +18,7 @@ AS
 	20250210@Los: Remove unuse column - [Feature: #213719]
 	20250307@Lilac: Add filter Confirm Provider, LST Book Provider - [Feature #213719]
 	20250523@Lilac: Get data from 2 table current and old - [Feature #213719]
+	20250610@Lilac.Nguyen: change confirm provider rule - [Redmine: #227452]
 */
 
 BEGIN
@@ -193,7 +194,8 @@ BEGIN
 
     SELECT
         m.OWPMatchId,
-        apm.ProviderMatchId
+        apm.ProviderMatchId,
+		apm.[Provider] AS InhouseProviderName
     FROM AdminsiteProviderMatch AS apm WITH(NOLOCK)
     INNER JOIN OWPMatch AS m WITH(NOLOCK) ON m.MatchId = apm.MatchId
     WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate
@@ -202,7 +204,8 @@ BEGIN
 
 	SELECT
 		m.OWPMatchId,
-		apm.ProviderMatchId
+		apm.ProviderMatchId,
+		apm.[Provider] AS InhouseProviderName
     FROM AdminsiteProviderMatch AS apm WITH(NOLOCK)
     INNER JOIN OWPMatch_Old AS m WITH(NOLOCK) ON m.MatchId = apm.MatchId
     WHERE m.EventDateTime BETWEEN @FromDate AND @ToDate;

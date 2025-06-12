@@ -13,6 +13,7 @@ Revisions:
 	20250321@Lilac.Nguyen: Update Sync agent confirm with data sync Adminsite - [Redmine: #213719]
 	20250326@Lilac.Nguyen: fix duplicate insert into table MatchAgentConfirm - [Redmine: #213719]
 	20250515@Lilac.Nguyen: change confirm provider rule - [Redmine: #226465]
+	20250610@Lilac.Nguyen: change confirm provider rule - [Redmine: #227452]
 
 */
 
@@ -43,28 +44,39 @@ Revisions:
 				', "MatchId": ' + CAST(inserted.MatchId AS NVARCHAR) + 
 				', "AgentId": ' + COALESCE(CAST(inserted.AgentId AS NVARCHAR), 'NULL') + ' }'
 			INTO @LogTable (LogMessage)
+
+		-- ProviderId get from Inhouse Provider
 		SELECT DISTINCT
 			t.OWPMatchId,
-			t.MatchId,			
-			COALESCE(
-			CASE 
-				WHEN i.MatchStatus IN ('Cancel', 'Postponed', 'Suspended') THEN 12	-- Cancel
-				WHEN ap.ProviderId = 3 THEN 1    -- 365GV
-				WHEN ap.ProviderId = 15 THEN 5   -- IMG
-				WHEN ap.ProviderId = 17 THEN 6   -- RB2
-				WHEN ap.ProviderId = 18 THEN 8   -- RTS
-				WHEN ap.ProviderId = 19 THEN 3   -- BG
-				WHEN ap.ProviderId = 20 THEN 2   -- Betradar
+			t.MatchId,
+			CASE ap.ProviderId
+				WHEN 3 THEN 1     -- 365GV
+				WHEN 15 THEN 5    -- IMG
+				WHEN 17 THEN 6    -- RB2
+				WHEN 18 THEN 8    -- RTS
+				WHEN 19 THEN 3    -- BG
+				WHEN 20 THEN 2    -- Betradar
 				ELSE ap.ProviderId
-			END,
-			a.AgentId
-		) AS AgentId
+			END AS AgentId
+		FROM #tblAgentConfirm t
+		LEFT JOIN AdminsiteProviderMatch ap WITH(NOLOCK) ON ap.MatchId = t.MatchId
+		LEFT JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = t.OWPMatchId
+		LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
+		WHERE i.MatchStatus NOT IN ('Cancel')
+		  AND ap.ProviderId IS NOT NULL
 
+		UNION
+
+		-- ProviderId get from LST Book Provider
+		SELECT DISTINCT
+			t.OWPMatchId,
+			t.MatchId,
+			a.AgentId
 		FROM #tblAgentConfirm t
 		LEFT JOIN AgentOption a WITH(NOLOCK) ON a.AgentName = t.Agent
-		LEFT JOIN AdminsiteProviderMatch AS ap WITH(NOLOCK) ON ap.MatchId = t.MatchId
 		LEFT JOIN dbo.OWPMatch m WITH(NOLOCK) ON m.OWPMatchId = t.OWPMatchId
-        LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId;
+		LEFT JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
+		WHERE a.AgentId IS NOT NULL;
 
 		SELECT @LogString = 
 		'[' + 
