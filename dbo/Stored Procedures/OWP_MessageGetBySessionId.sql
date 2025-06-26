@@ -9,6 +9,7 @@ DB: bodb_OWP
 Revisions:
     20170725@Tim.Trinh: message for match cancelled
 	20180831@Leo: New structure of event assignment, replace in JS - [Redmine: #92868]
+	20250626@Los: Ignore userId invalid - [Redmine: #230191]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -45,11 +46,12 @@ BEGIN
 	FROM dbo.[User] AS u WITH (NOLOCK)
 		INNER JOIN #tblUserMessage AS mu WITH (NOLOCK) ON u.UserId = mu.UserId
 
-	SELECT UserId
-		,IsImportant
-		,MessageContent
-		,MessageType
-	FROM #tblUserMessage WITH (NOLOCK)
+	SELECT u.UserId
+		,mu.IsImportant
+		,mu.MessageContent
+		,mu.MessageType
+	FROM dbo.[User] AS u WITH (NOLOCK)
+		INNER JOIN #tblUserMessage AS mu WITH (NOLOCK) ON u.UserId = mu.UserId
 
 	DROP TABLE #tblUserMessage
 END
