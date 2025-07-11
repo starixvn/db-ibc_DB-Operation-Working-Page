@@ -6,12 +6,12 @@ CREATE PROCEDURE [dbo].[OWP_UserSetting_GetByUserKey]
 AS
 
 /*
-Created: 20250710@Hank.nguyen
+Created: 20250710@Hank.Nguyen
 Task : Get user setting by userId and key
 DB: bodb_OWP
 
 Revisions:
-	20250710@Hank.nguyen: Get user setting by userId and key [Redmine: #232270]
+	20250710@Hank.Nguyen: Get user setting by userId and key [Redmine: #232270]
 */
 
     BEGIN
