@@ -34,34 +34,33 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
+		DECLARE @OWPLeagueId INT = NULL;
         DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @LogSettingData NVARCHAR(MAX), @XmlSettingNew XML, @LogInfoData NVARCHAR(MAX), @XmlInfoNew XML;
         SET @StartRun = GETDATE();
 
         /*Insert or update league*/
 
-        IF EXISTS
-        (
-            SELECT 1
+       IF EXISTS (SELECT 1 FROM OWPLeague WITH(NOLOCK) WHERE OWPLeagueName = @League)
+        BEGIN
+            -- Update existing league
+            UPDATE OWPLeague
+            SET New_CategoryId = @LeagueGroupId
+            WHERE OWPLeagueName = @League;
+            
+            SELECT @OWPLeagueId = OWPLeagueId
             FROM OWPLeague WITH(NOLOCK)
-            WHERE OWPLeagueName = @League
-        )
-            BEGIN
-                UPDATE OWPLeague
-                  SET 
-                      New_CategoryId = @LeagueGroupId
-                WHERE OWPLeagueName = @League;
-        END;
-            ELSE
-            BEGIN
-                INSERT INTO OWPLeague
-                (OWPLeagueName, 
-                 New_CategoryId
-                )
-                VALUES
-                (@League, 
-                 @LeagueGroupId
-                );
-        END;
+            WHERE OWPLeagueName = @League;
+        END
+        ELSE
+        BEGIN
+            -- Insert new league
+            INSERT INTO OWPLeague (OWPLeagueName, New_CategoryId)
+            VALUES (@League, @LeagueGroupId);
+            
+            SELECT @OWPLeagueId = SCOPE_IDENTITY();
+        END
+
+
         INSERT INTO LeagueManagementSetting
         ([OWPLeagueId], 
          [Spread_HDP], 
@@ -99,6 +98,8 @@ AS
                FROM OWPLeague AS owpl WITH(NOLOCK)
                WHERE owpl.OWPLeagueName = @League;
         SELECT @LeagueSettingId = @@IDENTITY;
+
+		EXEC dbo.OWP_OWPLeague_UpdateGroup @ActorId, @OWPLeagueId, @LeagueGroupId
 
         -- log new league setting 
         SET @XmlSettingNew =

@@ -30,6 +30,7 @@ AS
  Revisions:
     20240429@Liam: Get new league Setting detail   - [Redmine: #202639]
 	20240707@Liam: Correct maxbet setting - [Redmine: #207941]
+	20250711@Hank: Update League Group into CategoryHistory - [Redmine: #232603]
 
 */
 
@@ -63,10 +64,12 @@ AS
             WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
         );
         SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
-        UPDATE OWPLeague
-          SET 
-              New_CategoryId = @LeagueGroupId
-        WHERE OWPLeagueId = @OWPLeagueId;
+
+        IF NOT EXISTS (SELECT 1 FROM LeagueCategoryHistory where OWPLeagueId = @OWPLeagueId AND CategoryId = @LeagueGroupId AND EndDate IS NULL)
+		BEGIN
+			EXEC dbo.OWP_OWPLeague_UpdateGroup @ActorId, @OWPLeagueId, @LeagueGroupId
+		END
+
         UPDATE LeagueManagementSetting
           SET 
               MaxbetWD_HDP = @MaxbetWD_HDP_Value, 
