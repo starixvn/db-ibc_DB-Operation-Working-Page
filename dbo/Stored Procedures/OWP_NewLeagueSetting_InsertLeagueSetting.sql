@@ -43,7 +43,7 @@ AS
        IF EXISTS (SELECT 1 FROM OWPLeague WITH(NOLOCK) WHERE OWPLeagueName = @League)
         BEGIN
             -- Update existing league
-            UPDATE OWPLeague
+            UPDATE OWPLeague WITH(ROWLOCK)
             SET New_CategoryId = @LeagueGroupId
             WHERE OWPLeagueName = @League;
             
