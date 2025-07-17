@@ -13,11 +13,30 @@ AS
  Revisions:
     20240429@Liam: Get new league Settings  - [Redmine: #202639]
     20240802@Mira: Order setting by league  - [Redmine: #207941]
+	20250711@Los: Get new league category  - [Redmine: #232603]
 */
 
     BEGIN
         SET NOCOUNT ON;
-        SELECT l.Id 'LeagueSettingId', 
+        CREATE TABLE #LatestLeague
+        (CategoryId  INT, 
+         OwpLeagueId INT
+        );
+        INSERT INTO #LatestLeague
+        (CategoryId, 
+         OwpLeagueId
+        )
+               SELECT h.CategoryId, 
+                      h.OWPLeagueId
+               FROM LeagueCategoryHistory h WITH(NOLOCK)
+               WHERE h.Id =
+               (
+                   SELECT MAX(id)
+                   FROM LeagueCategoryHistory h2 WITH(NOLOCK)
+                   WHERE h.OWPLeagueId = h2.OWPLeagueId
+               );
+        SELECT  
+               l.Id 'LeagueSettingId', 
                l.OWPLeagueId, 
                o.OWPLeagueName 'League', 
                l.[FullConditionDescription], 
@@ -36,12 +55,13 @@ AS
                l.[Remark2], 
                l.[Comment], 
                o.OWPLeagueName, 
-               o.New_CategoryId 'LeagueGroupId', 
+               ll.CategoryId 'LeagueGroupId', 
                rr.Value 'LeagueGroup'
         FROM LeagueManagementSetting l WITH(NOLOCK)
              INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
-             LEFT JOIN RefResource rr WITH(NOLOCK) ON rr.RefName = 'NewLeagueCategory'
-                                                      AND o.New_CategoryId = rr.ResourceId
+             LEFT JOIN #LatestLeague ll ON l.OWPLeagueId = ll.OwpLeagueId
+             LEFT JOIN RefResource rr WITH(NOLOCK) ON ll.CategoryId = rr.ResourceId
+                                                      AND rr.RefName = 'LeagueCategory'
         WHERE(@IsEqualLeague = 0
               AND o.OWPLeagueName LIKE '%' + @League + '%')
              OR (@IsEqualLeague = 1
