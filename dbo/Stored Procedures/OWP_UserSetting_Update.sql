@@ -8,12 +8,12 @@ CREATE PROCEDURE [dbo].[OWP_UserSetting_Update]
 AS
 
 /*
-Created: 20250710@Hank.nguyen
+Created: 20250710@Hank.Nguyen
 Task : Update user setting 
 DB: bodb_OWP
 
 Revisions:
-	20250710@Hank.nguyen: Update user setting [Redmine: #232270]
+	20250710@Hank.Nguyen: Update user setting [Redmine: #232270]
 */
 
     BEGIN
