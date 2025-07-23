@@ -3556,4 +3556,8 @@ values
 (3528, 'Others4', 'BRAZIL COPA GOVERNO DO ESTADO DE SERGIPE', '', '', '', '', '', 'Base on H/A setting', '', 'Base on H/A setting', ''),
 (3529, 'Others4', 'COSTA RICA RECOPA', '', '', '', '', '', 'Base on H/A setting', '', 'Base on H/A setting', '');
 
-select * from #tempLeagueSettings
+select * from #tempLeagueSettings;
+
+
+DROP TABLE IF EXISTS #tempLeagueSettings;
+
