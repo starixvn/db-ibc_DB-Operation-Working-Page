@@ -1,11 +1,11 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 /*
-Created: 20250115@Assistant
+Created: 20250723@Hank
 Task : Backup LeagueManagementSetting table data
 DB: bodb_OWP
 
 Revisions:
-	20250115@Assistant: Backup LeagueManagementSetting data - [Redmine: #233199]
+	20250723@Hank: Backup LeagueManagementSetting data - [Redmine: #233199]
 */
 
 -- Create backup table
