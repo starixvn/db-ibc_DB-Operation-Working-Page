@@ -15,6 +15,7 @@ Revisions:
 	20250210@Frankie: get IsPostponed [Redmine: #216746]
 	20250302@Frankie: get Provider,TotalRound [Redmine: #218237]
 	20250312@Frankie: Add column 'LastStatus' table InfoSiteMatch [Redmine: #219537]
+    20250729@Frankie: get info downgrade, bad ranking [Redmine: #233951]
 */
 BEGIN
     SET NOCOUNT ON;
@@ -55,6 +56,10 @@ BEGIN
 		m.Venue,
 		m.ETPK,
 		m.IsNeutral,
+        m.[IsHomeBadRanking],
+		m.[IsAwayBadRanking],
+		m.[IsHomeDowngrade],
+		m.[IsAwayDowngrade],
 		m.IsPostponed,
 		m.LastStatus,
         CASE
