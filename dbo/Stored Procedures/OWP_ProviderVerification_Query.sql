@@ -270,7 +270,7 @@ BEGIN
     INNER JOIN dbo.OWPTeam AS h WITH(NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
     INNER JOIN dbo.OWPTeam AS a WITH(NOLOCK) ON ml.OWPAwayId = a.OWPTeamId
 	LEFT JOIN #tblMaxBet AS mb WITH(NOLOCK) ON ml.OWPMatchId = mb.OWPMatchId
-    WHERE l.OWPLeagueName NOT LIKE '%FANTASY%'
+    WHERE l.OWPLeagueName NOT LIKE '%FANTASY%' AND l.OWPLeagueName NOT LIKE '%TESTING%'
         AND ml.MatchStatus IN (
             SELECT [Value] FROM @tblRefResourceMatchStatus
         )
