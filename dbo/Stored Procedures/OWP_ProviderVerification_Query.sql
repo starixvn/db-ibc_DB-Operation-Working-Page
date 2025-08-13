@@ -248,7 +248,7 @@ BEGIN
     FROM #tblMaxBet AS mb
     WHERE mb.IsMatchSetting = 0;
 
-    SELECT
+    SELECT DISTINCT
         ml.OWPMatchId,
         ml.MatchNo,
         ml.MatchStatus,
@@ -274,7 +274,7 @@ BEGIN
         AND ml.MatchStatus IN (
             SELECT [Value] FROM @tblRefResourceMatchStatus
         )
-    ORDER BY ml.MatchNo, ml.EventDateTime, ml.KickOffTime, l.OWPLeagueName, h.OWPTeamName;
+    ORDER BY ml.MatchNo, ml.EventDateTime, KoTime, League, Home;
 
     SELECT
         mac.OWPMatchId,
