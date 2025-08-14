@@ -1,3 +1,4 @@
+-- Set all notification settings to False except NotificationSettingId = 1
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 /*
 Created: 20250815@Hank.nguyen
