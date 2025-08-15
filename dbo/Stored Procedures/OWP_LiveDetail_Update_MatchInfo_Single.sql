@@ -39,6 +39,7 @@ Revisions:
 	20191118@Leo.Vo: Update InfositeMatch only main match - [Redmine: #123167]
 	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
 	20200723@Esther.Nguyen: Build Home name (N) - [Redmine: #137417]
+	020250814@Los: Remove watcher - [Redmine: 235398]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -222,10 +223,6 @@ BEGIN
 	CREATE TABLE #tblAssigneeRecevingNotification (
 		UserId INT
 	)
-	
-	CREATE TABLE #tblWatcher (
-		UserId INT
-	)
 		
 	IF @IsMatchInTimeRange = 1
 	BEGIN
@@ -343,52 +340,6 @@ BEGIN
 				,msn.UserId
 				,@SessionId
 			INTO dbo.MessageUser(MessageId, UserId, SessionId);
-			
-			INSERT INTO #tblWatcher (UserId)
-			SELECT DISTINCT u.UserId
-			FROM dbo.[User] AS u WITH (NOLOCK)
-			WHERE EXISTS (
-				SELECT 1
-				FROM #tblAssignee AS a
-				INNER JOIN dbo.[User] AS u2 ON a.UserId = u2.UserId
-				WHERE u2.SectionId = u.SectionId
-			) AND NOT EXISTS (
-				SELECT 1
-				FROM #tblAssigneeRecevingNotification AS a
-				WHERE u.UserId = a.UserId
-			)
-			
-			MERGE dbo.[Message] AS ms
-			USING (
-				SELECT a.UserId
-					,m.MessageContent
-					,m.MessageTypeId
-				FROM @tblMessage AS m
-				CROSS JOIN #tblWatcher AS a
-				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyWatcherMatchInfoUpdatedId
-				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-					AND nsm.UserId = a.UserId
-				) AS msn ON 1 = 0
-			WHEN NOT MATCHED THEN
-					INSERT (
-						MessageContent
-						,CreatedBy
-						,IsImportant
-						,MessageType
-						,IsWatcher
-						)
-					VALUES (
-						msn.MessageContent
-						,@ActorId
-						,0
-						,msn.MessageTypeId
-						,1
-						)
-			OUTPUT inserted.MessageId
-				,msn.UserId
-				,@SessionId
-			INTO dbo.MessageUser(MessageId, UserId, SessionId);
-		
 		END
 	END
 	
@@ -396,5 +347,4 @@ BEGIN
 	
 	DROP TABLE #tblAssigneeRecevingNotification
 	
-	DROP TABLE #tblWatcher
 END

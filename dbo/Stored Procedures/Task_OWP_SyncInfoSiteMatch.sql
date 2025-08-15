@@ -43,12 +43,12 @@ AS
 	20230926@Mira: Correct with no lock - [Redmine: #193811]
 	20231026@los: sync round - [Redmine: #193810]
 	20240327@Mira: solve deadlock - [Redmine: #200841]
+	020250814@Los: Remove watcher - [Redmine: 235398]
 */
 BEGIN
 	SET NOCOUNT ON;
 	
 	DECLARE @AssigneeMatchInfoNotificationSettingId INT = 5
-		,@WatcherMatchInfoNotificationSettingId INT = 9
 		,@Specific15Mins INT = - 1
 		,@Specific10Mins INT = - 2
 		,@Specific15MinsNoOfCorners INT = - 5
@@ -854,71 +854,6 @@ BEGIN
 	OUTPUT m.UserId
 		,m.OWPMatchId
 	INTO #tblAssigneeReceiver(UserId, OWPMatchId);
-
-	-- insert Message watcher
-	DELETE #tblMessage;
-
-	MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-	USING #tblMessageTemplate AS m
-		ON 1 = 0
-	WHEN NOT MATCHED
-		THEN
-			INSERT (
-				MessageContent
-				,CreatedBy
-				,IsImportant
-				,MessageType
-				,IsWatcher
-				)
-			VALUES (
-				m.MessageContent
-				,@CreatedBy
-				,0
-				,m.MessageTypeId
-				,1
-				)
-	OUTPUT m.OWPMatchId
-		,inserted.MessageId
-		,inserted.MessageType
-	INTO #tblMessage(OWPMatchId, [MessageId], MessageTypeId);
-
-	INSERT INTO #tblUserInSectionOfAssignee (
-		UserId
-		,OWPMatchId
-		)
-	SELECT u2.UserId
-		,ass1.OWPMatchId
-	FROM #tblAssignee AS ass1
-	INNER JOIN dbo.[User] AS u1 WITH (NOLOCK) ON ass1.UserId = u1.UserId
-	INNER JOIN dbo.[User] AS u2 WITH (NOLOCK) ON u1.SectionId = u2.SectionId
-	WHERE NOT EXISTS (
-			SELECT 1
-			FROM #tblAssigneeReceiver AS ass2
-			WHERE u2.UserId = ass2.UserId
-				AND ass1.OWPMatchId = ass2.OWPMatchId
-			);
-
-	-- insert MessageUser watcher
-	INSERT INTO dbo.MessageUser (
-		MessageId
-		,UserId
-		,SessionId
-		)
-	SELECT m.MessageId
-		,ns.UserId
-		,@SessionId
-	FROM #tblMessage AS m
-	INNER JOIN #tblUserInSectionOfAssignee AS u ON m.OWPMatchId = u.OWPMatchId
-	INNER JOIN dbo.fnc_GetWatcherToSendMessage(@WatcherMatchInfoNotificationSettingId) AS ns ON u.UserId = ns.UserId;
-
-	IF EXISTS (
-			SELECT 1
-			FROM #tblMessage
-			)
-	BEGIN
-		INSERT INTO dbo.NotificationQueue (SessionId)
-		SELECT @SessionId;
-	END;
 
 	DROP TABLE #tblMessageTemplate;
 
