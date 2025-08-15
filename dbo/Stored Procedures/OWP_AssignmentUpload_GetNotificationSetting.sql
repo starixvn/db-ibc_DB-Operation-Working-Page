@@ -23,4 +23,4 @@ Revisions:
      FROM dbo.NotificationSettingMapping AS nm WITH(NOLOCK)
           LEFT JOIN dbo.NotificationSetting AS ns WITH(NOLOCK) ON ns.NotificationSettingId = nm.NotificationSettingId
      WHERE ns.NotificationSettingId IS NOT NULL AND ISNULL(nm.Value, ns.DefaultValue) = 'False';
-
+     
