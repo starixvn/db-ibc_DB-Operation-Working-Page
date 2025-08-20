@@ -21,9 +21,15 @@ Revisions:
   20181012@Leo.Vo: Notify assignee - [Redmine: #102867]
   20190213@Kane.Le: remove createdDate vs CreatedBy table MessageUser - [Redmine: #108723]
   20190307@Kane.Le: return MessageId - [Redmine: #109560]
+  20250820@Hank.Nguyen: Only insert message if @IsWatcher is 0 - [Redmine: #235398]
 */
 BEGIN
 	SET NOCOUNT ON
+
+	IF @IsWatcher = 1
+	BEGIN
+		RETURN
+	END
 
 	DECLARE @MessageId INT = 0
 
