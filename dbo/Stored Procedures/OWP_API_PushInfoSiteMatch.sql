@@ -39,6 +39,7 @@ Revisions:
 	20250210@Frankie: sync IsPostponed - [Redmine: #216746]
 	20250302@Frankie: change condition change provider [Redmine: #218237]
 	20250312@Frankie: Add column 'LastStatus' table InfoSiteMatch [Redmine: #219537]
+	20250825@Frankie: sync isblacklist for league [Redmine: #234901]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -273,6 +274,16 @@ BEGIN
 			FROM dbo.OWPLeague AS l WITH (NOLOCK)
 			WHERE im.LeagueName = l.OWPLeagueName
 			)
+
+	-- update black list for league
+
+	UPDATE l
+	SET l.IsBlackList = temp.IsLeagueBlackList
+	FROM dbo.OWPLeague AS l
+	INNER JOIN (
+		SELECT DISTINCT LeagueName, IsLeagueBlackList
+		FROM #tblInfoSiteMatch
+	) AS temp ON l.OWPLeagueName = temp.LeagueName;
 
 	-- update OWPLeagueId
 	UPDATE im
