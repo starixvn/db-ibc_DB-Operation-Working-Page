@@ -19,7 +19,8 @@ ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_UpdateLeagueSetting] @LeagueSettingI
                                                                  @LstNote                  NVARCHAR(2000) = NULL, 
                                                                  @Remark2                  NVARCHAR(2000) = NULL, 
                                                                  @Comment                  NVARCHAR(2000) = NULL, 
-                                                                 @FullConditionDescription NVARCHAR(2000) = NULL
+                                                                 @FullConditionDescription NVARCHAR(2000) = NULL, 
+                                                                 @NoOfferLive              BIT
 AS
 
 /*      
@@ -31,6 +32,7 @@ AS
     20240429@Liam: Get new league Setting detail   - [Redmine: #202639]
 	20240707@Liam: Correct maxbet setting - [Redmine: #207941]
 	20250711@Hank: Update League Group into CategoryHistory - [Redmine: #232603]
+	20250821@Los: Update NoOfferLive, BlackList - [Redmine: #234901]
 
 */
 
@@ -64,12 +66,24 @@ AS
             WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
         );
         SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
-
-        IF NOT EXISTS (SELECT 1 FROM LeagueCategoryHistory where OWPLeagueId = @OWPLeagueId AND CategoryId = @LeagueGroupId AND EndDate IS NULL)
-		BEGIN
-			EXEC dbo.OWP_OWPLeague_UpdateGroup @ActorId, @OWPLeagueId, @LeagueGroupId
-		END
-
+        IF NOT EXISTS
+        (
+            SELECT 1
+            FROM LeagueCategoryHistory
+            WHERE OWPLeagueId = @OWPLeagueId
+                  AND CategoryId = @LeagueGroupId
+                  AND EndDate IS NULL
+        )
+            BEGIN
+                EXEC dbo.OWP_OWPLeague_UpdateGroup 
+                     @ActorId, 
+                     @OWPLeagueId, 
+                     @LeagueGroupId;
+        END;
+        UPDATE OWPLeague
+          SET 
+              NoOfferLive = @NoOfferLive
+        WHERE OWPLeagueId = @OWPLeagueId;
         UPDATE LeagueManagementSetting
           SET 
               MaxbetWD_HDP = @MaxbetWD_HDP_Value, 

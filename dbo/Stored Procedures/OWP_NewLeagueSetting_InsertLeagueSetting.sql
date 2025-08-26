@@ -19,7 +19,8 @@ ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_InsertLeagueSetting] @LeagueSettingI
                                                                  @LstNote                  NVARCHAR(2000) = NULL, 
                                                                  @Remark2                  NVARCHAR(2000) = NULL, 
                                                                  @Comment                  NVARCHAR(2000) = NULL, 
-                                                                 @FullConditionDescription NVARCHAR(2000) = NULL
+                                                                 @FullConditionDescription NVARCHAR(2000) = NULL,
+																 @NoOfferLive              BIT
 AS
 
 /*      
@@ -29,6 +30,7 @@ AS
  
  Revisions:
     20240801@Los: Insert league setting   - [Redmine: #207941]
+	20250821@Los: Update NoOfferLive, BlackList - [Redmine: #234901]
 
 */
 
@@ -54,8 +56,8 @@ AS
         ELSE
         BEGIN
             -- Insert new league
-            INSERT INTO OWPLeague (OWPLeagueName, New_CategoryId)
-            VALUES (@League, @LeagueGroupId);
+            INSERT INTO OWPLeague (OWPLeagueName, New_CategoryId, NoOfferLive)
+            VALUES (@League, @LeagueGroupId, @NoOfferLive);
             
             SELECT @OWPLeagueId = SCOPE_IDENTITY();
         END

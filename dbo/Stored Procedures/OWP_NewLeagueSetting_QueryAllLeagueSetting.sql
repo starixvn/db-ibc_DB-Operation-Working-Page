@@ -14,6 +14,7 @@ AS
     20240429@Liam: Get new league Settings  - [Redmine: #202639]
     20240802@Mira: Order setting by league  - [Redmine: #207941]
 	20250711@Los: Get new league category  - [Redmine: #232603]
+    20250822@Hank: Get league more short league, isblacklist, noofferlive- [Redmine: #234901]
 */
 
     BEGIN
@@ -39,6 +40,9 @@ AS
                l.Id 'LeagueSettingId', 
                l.OWPLeagueId, 
                o.OWPLeagueName 'League', 
+			   ISNULL(o.IsBlackList, 0) as IsBlackList,
+			   ISNULL(o.NoOfferLive, 0) as NoOfferLive,
+			   o.ShortLeague,
                l.[FullConditionDescription], 
                l.[Spread_HDP] 'Spread_HDP_Value', 
                l.[Spread_OU] 'Spread_OU_Value', 
