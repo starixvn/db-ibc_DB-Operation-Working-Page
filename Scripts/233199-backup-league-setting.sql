@@ -8,6 +8,17 @@ Revisions:
 	20250723@Hank: Backup LeagueManagementSetting data - [Redmine: #233199]
 */
 
+-- Drop backup table if exists
+IF OBJECT_ID('dbo.LeagueManagementSetting_Backup', 'U') IS NOT NULL
+BEGIN
+    DROP TABLE [dbo].[LeagueManagementSetting_Backup];
+    PRINT 'Existing backup table dropped.';
+END
+
+GO 
+
+TRUNCATE TABLE [dbo].[LeagueManagementSetting];
+
 -- Create backup table
 CREATE TABLE [dbo].[LeagueManagementSetting_Backup](
 	[Id] [int] IDENTITY(1,1) NOT NULL,

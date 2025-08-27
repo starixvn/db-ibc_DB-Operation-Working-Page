@@ -25,7 +25,7 @@ Revisions:
         (LeagueGroup              NVARCHAR(200), 
          LeagueGroupId            INT, 
          League                   NVARCHAR(200) NOT NULL, 
-         ShortLeague              NVARCHAR(200), 
+         ShortLeague                NVARCHAR(200),
          LeagueId                 INT, 
          FullConditionDescription NVARCHAR(MAX), 
          Spread_HDP_Value         MONEY NULL, 
@@ -48,7 +48,7 @@ Revisions:
         INSERT INTO #tblLeague
         (LeagueGroup, 
          League, 
-         ShortLeague, 
+         ShortLeague,
          FullConditionDescription, 
          Spread_HDP_Value, 
          Spread_OU_Value, 
@@ -69,7 +69,7 @@ Revisions:
         )
                SELECT [LeagueGroup], 
                       [League], 
-                      [ShortLeague], 
+                      [ShortLeague],
                       [FullConditionDescription], 
                       [Spread_HDP_Value], 
                       [Spread_OU_Value], 
@@ -88,6 +88,7 @@ Revisions:
                       Remark2WD, 
                       Remark2WK
                FROM OPENXML(@idoc, '/Root/LeagueSettingInfo', 1) WITH([LeagueGroup] NVARCHAR(200), [League] NVARCHAR(200), [ShortLeague] NVARCHAR(200), [FullConditionDescription] NVARCHAR(MAX), [Spread_HDP_Value] MONEY, [Spread_OU_Value] MONEY, [Spread_Note] NVARCHAR(2000), [MaxbetWD_HDP_Value] MONEY, [MaxbetWD_HDP_Note] NVARCHAR(2000), [WD_NoOfHDP_Value] NVARCHAR(2000), [WD_NoOfHDP_Note] NVARCHAR(2000), [MaxbetWK_HDP_Value] MONEY, [MaxbetWK_HDP_Note] NVARCHAR(2000), [WK_NoOfHDP_Value] NVARCHAR(2000), [WK_NoOfHDP_Note] NVARCHAR(2000), [LstNote] NVARCHAR(2000), [Remark2] NVARCHAR(2000), [Comment] NVARCHAR(MAX), Remark2WD NVARCHAR(2000), Remark2WK NVARCHAR(2000));
+               [ShortLeague] NVARCHAR(200),
         EXEC sp_xml_removedocument 
              @idoc;
 
@@ -103,6 +104,13 @@ Revisions:
                    FROM dbo.OWPLeague AS l WITH(NOLOCK)
                    WHERE im.League = l.OWPLeagueName
                );
+		select * from #tblLeague;
+        -- update newLeagueShortName
+        UPDATE owpl
+          SET 
+              owpl.ShortLeague = tbll.ShortLeague
+        FROM OWPLeague AS owpl WITH(NOLOCK)
+             INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
         -- Update NoOfferLive, BlackList
         UPDATE owpl
@@ -127,6 +135,8 @@ Revisions:
         FROM OWPLeague AS owpl WITH(NOLOCK)
              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
+       
+
         -- update LeagueId
         UPDATE tbll
           SET 
@@ -134,6 +144,35 @@ Revisions:
         FROM #tblLeague AS tbll
              INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
+
+                  -- Update LeagueCategoryHistory table
+         -- First, set EndDate for existing records where CategoryId is changing
+         UPDATE lch
+           SET 
+               lch.CategoryId = ref.[ResourceId]
+         FROM dbo.LeagueCategoryHistory AS lch WITH(NOLOCK)
+              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.LeagueId = lch.OWPLeagueId
+              INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value] AND ref.RefName='NewLeagueCategory'
+         WHERE lch.EndDate IS NULL 
+               AND lch.CategoryId != ref.[ResourceId];
+
+        -- Insert new records for leagues with changed CategoryId
+        INSERT INTO dbo.LeagueCategoryHistory(OWPLeagueId, CategoryId, StartDate)
+        SELECT DISTINCT
+               tbll.LeagueId,
+               ref.[ResourceId],
+               GETDATE()
+        FROM #tblLeague AS tbll
+             INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value] AND ref.RefName='LeagueCategory'
+        WHERE NOT EXISTS
+        (
+            SELECT 1
+            FROM dbo.LeagueCategoryHistory AS lch WITH(NOLOCK)
+            WHERE lch.OWPLeagueId = tbll.LeagueId
+                  AND lch.CategoryId = ref.[ResourceId]
+                  AND lch.EndDate IS NULL
+        );
+        
         -- Insert new league setting
 
         INSERT INTO LeagueManagementSetting
