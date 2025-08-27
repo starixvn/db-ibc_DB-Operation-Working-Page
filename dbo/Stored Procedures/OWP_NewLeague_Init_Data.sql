@@ -114,7 +114,6 @@ Revisions:
 
         -- Update NoOfferLive, BlackList
         UPDATE owpl
-          SET 
               owpl.NoOfferLive = CASE
                                      WHEN tbll.LSTNote LIKE '%\[No Offer Live\]%' ESCAPE '\'
                                      THEN 1
@@ -129,13 +128,7 @@ Revisions:
              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
         -- Update ShortLeague
-        UPDATE owpl
-          SET 
               owpl.ShortLeague = tbll.ShortLeague
-        FROM OWPLeague AS owpl WITH(NOLOCK)
-             INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
-
-       
 
         -- update LeagueId
         UPDATE tbll
@@ -145,34 +138,6 @@ Revisions:
              INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
 
-                  -- Update LeagueCategoryHistory table
-         -- First, set EndDate for existing records where CategoryId is changing
-         UPDATE lch
-           SET 
-               lch.CategoryId = ref.[ResourceId]
-         FROM dbo.LeagueCategoryHistory AS lch WITH(NOLOCK)
-              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.LeagueId = lch.OWPLeagueId
-              INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value] AND ref.RefName='NewLeagueCategory'
-         WHERE lch.EndDate IS NULL 
-               AND lch.CategoryId != ref.[ResourceId];
-
-        -- Insert new records for leagues with changed CategoryId
-        INSERT INTO dbo.LeagueCategoryHistory(OWPLeagueId, CategoryId, StartDate)
-        SELECT DISTINCT
-               tbll.LeagueId,
-               ref.[ResourceId],
-               GETDATE()
-        FROM #tblLeague AS tbll
-             INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value] AND ref.RefName='LeagueCategory'
-        WHERE NOT EXISTS
-        (
-            SELECT 1
-            FROM dbo.LeagueCategoryHistory AS lch WITH(NOLOCK)
-            WHERE lch.OWPLeagueId = tbll.LeagueId
-                  AND lch.CategoryId = ref.[ResourceId]
-                  AND lch.EndDate IS NULL
-        );
-        
         -- Insert new league setting
 
         INSERT INTO LeagueManagementSetting
