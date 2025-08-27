@@ -15,6 +15,7 @@ AS
     20240802@Mira: Order setting by league  - [Redmine: #207941]
 	20250711@Los: Get new league category  - [Redmine: #232603]
     20250822@Hank: Get league more short league, isblacklist, noofferlive- [Redmine: #234901]
+    20250827@Frankie: init data league management setting - [Redmine: #233199]
 */
 
     BEGIN
@@ -61,9 +62,9 @@ AS
                o.OWPLeagueName, 
                ll.CategoryId 'LeagueGroupId', 
                rr.Value 'LeagueGroup'
-        FROM LeagueManagementSetting l WITH(NOLOCK)
-             INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
-             LEFT JOIN #LatestLeague ll ON l.OWPLeagueId = ll.OwpLeagueId
+        FROM OWPLeague o WITH(NOLOCK)
+             LEFT JOIN LeagueManagementSetting l WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
+             LEFT JOIN #LatestLeague ll ON o.OWPLeagueId = ll.OwpLeagueId
              LEFT JOIN RefResource rr WITH(NOLOCK) ON ll.CategoryId = rr.ResourceId
                                                       AND rr.RefName = 'LeagueCategory'
         WHERE(@IsEqualLeague = 0
