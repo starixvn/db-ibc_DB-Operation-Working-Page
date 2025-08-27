@@ -3537,3 +3537,6 @@ select * from #tempLeagueSettings;
 
 DROP TABLE IF EXISTS #tempLeagueSettings;
 
+ALTER TABLE LeagueManagementSetting
+ADD Remark2WD NVARCHAR(2000),
+Remark2WK NVARCHAR(2000)
