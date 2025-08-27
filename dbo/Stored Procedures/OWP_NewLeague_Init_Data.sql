@@ -11,6 +11,7 @@ DB: bodb_OWP
 
 Revisions:
 	20240424@Los: Init league - [Redmine: #202639]
+	20250723@Los: Init LeagueManagementSetting table - [Redmine: #233199]
 */
 
     BEGIN
@@ -30,14 +31,16 @@ Revisions:
          Spread_Note              NVARCHAR(2000) NULL, 
          MaxbetWD_HDP_Value       MONEY NULL, 
          MaxbetWD_HDP_Note        NVARCHAR(2000) NULL, 
-         WD_NoOfHDP_Value   NVARCHAR(2000) NULL, 
-         WD_NoOfHDP_Note    NVARCHAR(2000) NULL, 
+         WD_NoOfHDP_Value         NVARCHAR(2000) NULL, 
+         WD_NoOfHDP_Note          NVARCHAR(2000) NULL, 
          MaxbetWK_HDP_Value       MONEY NULL, 
          MaxbetWK_HDP_Note        NVARCHAR(2000) NULL, 
-         WK_NoOfHDP_Value   NVARCHAR(2000) NULL, 
-         WK_NoOfHDP_Note    NVARCHAR(2000) NULL, 
+         WK_NoOfHDP_Value         NVARCHAR(2000) NULL, 
+         WK_NoOfHDP_Note          NVARCHAR(2000) NULL, 
          LSTNote                  NVARCHAR(2000) NULL, 
          Remark2                  NVARCHAR(2000) NULL, 
+         Remark2WD                NVARCHAR(2000) NULL, 
+         Remark2WK                NVARCHAR(2000) NULL, 
          Comment                  NVARCHAR(MAX),
         );
         INSERT INTO #tblLeague
@@ -57,7 +60,9 @@ Revisions:
          WK_NoOfHDP_Note, 
          LSTNote, 
          Remark2, 
-         Comment
+         Comment, 
+         Remark2WD, 
+         Remark2WK
         )
                SELECT [LeagueGroup], 
                       [League], 
@@ -75,25 +80,10 @@ Revisions:
                       [WK_NoOfHDP_Note], 
                       [LSTNote], 
                       [Remark2], 
-                      [Comment]
-               FROM OPENXML(@idoc, '/Root/LeagueSettingInfo', 1) WITH(
-			   [LeagueGroup] NVARCHAR(200),
-			   [League] NVARCHAR(200),
-			   [FullConditionDescription] NVARCHAR(MAX), 
-			   [Spread_HDP_Value] MONEY,
-			   [Spread_OU_Value] MONEY,
-			   [Spread_Note] NVARCHAR(2000),
-			   [MaxbetWD_HDP_Value] MONEY,
-			   [MaxbetWD_HDP_Note] NVARCHAR(2000),
-			   [WD_NoOfHDP_Value] NVARCHAR(2000),
-			   [WD_NoOfHDP_Note] NVARCHAR(2000),
-			   [MaxbetWK_HDP_Value] MONEY, 
-			   [MaxbetWK_HDP_Note] NVARCHAR(2000),
-			   [WK_NoOfHDP_Value] NVARCHAR(2000),
-			   [WK_NoOfHDP_Note] NVARCHAR(2000),
-			   [LstNote] NVARCHAR(2000),
-			   [Remark2] NVARCHAR(2000),
-			   [Comment] NVARCHAR(MAX));
+                      [Comment], 
+                      Remark2WD, 
+                      Remark2WK
+               FROM OPENXML(@idoc, '/Root/LeagueSettingInfo', 1) WITH([LeagueGroup] NVARCHAR(200), [League] NVARCHAR(200), [FullConditionDescription] NVARCHAR(MAX), [Spread_HDP_Value] MONEY, [Spread_OU_Value] MONEY, [Spread_Note] NVARCHAR(2000), [MaxbetWD_HDP_Value] MONEY, [MaxbetWD_HDP_Note] NVARCHAR(2000), [WD_NoOfHDP_Value] NVARCHAR(2000), [WD_NoOfHDP_Note] NVARCHAR(2000), [MaxbetWK_HDP_Value] MONEY, [MaxbetWK_HDP_Note] NVARCHAR(2000), [WK_NoOfHDP_Value] NVARCHAR(2000), [WK_NoOfHDP_Note] NVARCHAR(2000), [LstNote] NVARCHAR(2000), [Remark2] NVARCHAR(2000), [Comment] NVARCHAR(MAX), Remark2WD NVARCHAR(2000), Remark2WK NVARCHAR(2000));
         EXEC sp_xml_removedocument 
              @idoc;
 
@@ -103,28 +93,23 @@ Revisions:
         (Id       INT IDENTITY(1, 1), 
          Category NVARCHAR(200)
         );
-
-		DECLARE @temResourceId INT;
-
-		SELECT @temResourceId=MAX(ref.ResourceId)
-		FROM RefResource AS ref WITH(NOLOCK)
-		WHERE ref.RefName='NewLeagueCategory'
-
-
+        DECLARE @temResourceId INT;
+        SELECT @temResourceId = MAX(ref.ResourceId)
+        FROM RefResource AS ref WITH(NOLOCK)
+        WHERE ref.RefName = 'NewLeagueCategory';
         INSERT INTO @tblLeagueCategory
                SELECT DISTINCT 
                       LeagueGroup
                FROM #tblLeague
                WHERE(LeagueGroup IS NOT NULL
                      AND TRIM(LeagueGroup) <> '');
-
         INSERT INTO RefResource
         (RefName, 
          ResourceId, 
          [Value]
         )
                SELECT 'NewLeagueCategory', 
-                      ISNULL(@temResourceId,0) + l.Id, 
+                      ISNULL(@temResourceId, 0) + l.Id, 
                       TRIM(l.Category)
                FROM @tblLeagueCategory AS l
                WHERE NOT EXISTS
@@ -154,7 +139,7 @@ Revisions:
               tbll.LeagueGroupId = ref.[ResourceId]
         FROM #tblLeague AS tbll
              INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value]
-		WHERE ref.RefName='NewLeagueCategory';
+        WHERE ref.RefName = 'NewLeagueCategory';
         UPDATE owpl
           SET 
               owpl.New_CategoryId = tbll.LeagueGroupId
@@ -168,62 +153,62 @@ Revisions:
         FROM #tblLeague AS tbll
              INNER JOIN OWPLeague AS owpl WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
-		-- Insert new league setting
+        -- Insert new league setting
 
-		INSERT INTO LeagueManagementSetting(
-			[OWPLeagueId],
-			[FullConditionDescription],
-			[Spread_HDP],
-			[Spread_OU],
-			[Spread_Note],
-			[MaxbetWD_HDP],
-			[MaxbetWD_HDP_Note],
-			[WD_NoOfHDP],
-			[WD_NoOfHDP_Note],
-			[MaxbetWK_HDP],
-			[MaxbetWK_HDP_Note],
-			[WK_NoOfHDP] ,
-			[WK_NoOfHDP_Note],
-			[LSTNote],
-			[Remark2],
-			[Comment]
-		)
-
-		SELECT tbll.LeagueId,
-			tbll.FullConditionDescription,
-			CASE
-                       WHEN tbll.Spread_HDP_value = ''
-                       THEN NULL
-                       ELSE tbll.Spread_HDP_value
-                   END,
-				   CASE
-                       WHEN tbll.[Spread_OU_value] = ''
-                       THEN NULL
-                       ELSE tbll.[Spread_OU_value]
-                   END,
-			
-			tbll.[Spread_Note],
-			 CASE
-                       WHEN tbll.[MaxbetWD_HDP_value] = ''
-                       THEN NULL
-                       ELSE tbll.[MaxbetWD_HDP_value]
-                   END
-			,
-			tbll.[MaxbetWD_HDP_Note],
-			tbll.[WD_NoOfHDP_value],
-			tbll.[WD_NoOfHDP_Note],
-			 CASE
-                       WHEN tbll.[MaxbetWK_HDP_value] = ''
-                       THEN NULL
-                       ELSE tbll.[MaxbetWK_HDP_value]
-                   END
-			,
-			tbll.[MaxbetWK_HDP_Note],
-			tbll.[WK_NoOfHDP_value] ,
-			tbll.[WK_NoOfHDP_Note],
-			tbll.[LSTNote],
-			tbll.[Remark2],
-			tbll.[Comment]
-		FROM #tblLeague AS tbll
+        INSERT INTO LeagueManagementSetting
+        ([OWPLeagueId], 
+         [FullConditionDescription], 
+         [Spread_HDP], 
+         [Spread_OU], 
+         [Spread_Note], 
+         [MaxbetWD_HDP], 
+         [MaxbetWD_HDP_Note], 
+         [WD_NoOfHDP], 
+         [WD_NoOfHDP_Note], 
+         [MaxbetWK_HDP], 
+         [MaxbetWK_HDP_Note], 
+         [WK_NoOfHDP], 
+         [WK_NoOfHDP_Note], 
+         [LSTNote], 
+         [Remark2], 
+         [Comment], 
+         Remark2WD, 
+         Remark2WK
+        )
+               SELECT tbll.LeagueId, 
+                      tbll.FullConditionDescription,
+                      CASE
+                          WHEN tbll.Spread_HDP_value = ''
+                          THEN NULL
+                          ELSE tbll.Spread_HDP_value
+                      END,
+                      CASE
+                          WHEN tbll.[Spread_OU_value] = ''
+                          THEN NULL
+                          ELSE tbll.[Spread_OU_value]
+                      END, 
+                      tbll.[Spread_Note],
+                      CASE
+                          WHEN tbll.[MaxbetWD_HDP_value] = ''
+                          THEN NULL
+                          ELSE tbll.[MaxbetWD_HDP_value]
+                      END, 
+                      tbll.[MaxbetWD_HDP_Note], 
+                      tbll.[WD_NoOfHDP_value], 
+                      tbll.[WD_NoOfHDP_Note],
+                      CASE
+                          WHEN tbll.[MaxbetWK_HDP_value] = ''
+                          THEN NULL
+                          ELSE tbll.[MaxbetWK_HDP_value]
+                      END, 
+                      tbll.[MaxbetWK_HDP_Note], 
+                      tbll.[WK_NoOfHDP_value], 
+                      tbll.[WK_NoOfHDP_Note], 
+                      tbll.[LSTNote], 
+                      tbll.[Remark2], 
+                      tbll.[Comment], 
+                      tbll.Remark2WD, 
+                      tbll.Remark2WK
+               FROM #tblLeague AS tbll;
         DROP TABLE #tblLeague;
     END;
