@@ -105,8 +105,22 @@ Revisions:
                    WHERE im.League = l.OWPLeagueName
                );
 
-         -- update newLeagueShortName
+        -- Update NoOfferLive, BlackList
         UPDATE owpl
+          SET 
+              owpl.NoOfferLive = CASE
+                                     WHEN tbll.LSTNote LIKE '%\[No Offer Live\]%' ESCAPE '\'
+                                     THEN 1
+                                     ELSE 0
+                                 END, 
+              owpl.IsBlackList = CASE
+                                     WHEN tbll.LSTNote LIKE '%Blacklist%'
+                                     THEN 1
+                                     ELSE 0
+                                 END
+        FROM OWPLeague AS owpl WITH(NOLOCK)
+             INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
+
           SET 
               owpl.ShortLeague = tbll.ShortLeague
         FROM OWPLeague AS owpl WITH(NOLOCK)
