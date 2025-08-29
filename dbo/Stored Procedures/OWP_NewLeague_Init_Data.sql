@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20240424@Los: Init league - [Redmine: #202639]
 	20250723@Los: Init LeagueManagementSetting table - [Redmine: #233199]
+    20250829@Hank: update new league short name - [Redmine: #233199]
 */
 
     BEGIN
@@ -23,7 +24,8 @@ Revisions:
         CREATE TABLE #tblLeague
         (LeagueGroup              NVARCHAR(200), 
          LeagueGroupId            INT, 
-         League                   NVARCHAR(200) NOT NULL, 
+         League                   NVARCHAR(200) NOT NULL,
+         ShortLeague                NVARCHAR(200),
          LeagueId                 INT, 
          FullConditionDescription NVARCHAR(MAX), 
          Spread_HDP_Value         MONEY NULL, 
@@ -46,6 +48,7 @@ Revisions:
         INSERT INTO #tblLeague
         (LeagueGroup, 
          League, 
+         ShortLeague,
          FullConditionDescription, 
          Spread_HDP_Value, 
          Spread_OU_Value, 
@@ -66,6 +69,7 @@ Revisions:
         )
                SELECT [LeagueGroup], 
                       [League], 
+                      [ShortLeague],
                       [FullConditionDescription], 
                       [Spread_HDP_Value], 
                       [Spread_OU_Value], 
@@ -87,38 +91,6 @@ Revisions:
         EXEC sp_xml_removedocument 
              @idoc;
 
-        --/*Init new league category*/
-
-        DECLARE @tblLeagueCategory TABLE
-        (Id       INT IDENTITY(1, 1), 
-         Category NVARCHAR(200)
-        );
-        DECLARE @temResourceId INT;
-        SELECT @temResourceId = MAX(ref.ResourceId)
-        FROM RefResource AS ref WITH(NOLOCK)
-        WHERE ref.RefName = 'NewLeagueCategory';
-        INSERT INTO @tblLeagueCategory
-               SELECT DISTINCT 
-                      LeagueGroup
-               FROM #tblLeague
-               WHERE(LeagueGroup IS NOT NULL
-                     AND TRIM(LeagueGroup) <> '');
-        INSERT INTO RefResource
-        (RefName, 
-         ResourceId, 
-         [Value]
-        )
-               SELECT 'NewLeagueCategory', 
-                      ISNULL(@temResourceId, 0) + l.Id, 
-                      TRIM(l.Category)
-               FROM @tblLeagueCategory AS l
-               WHERE NOT EXISTS
-               (
-                   SELECT 1
-                   FROM dbo.RefResource AS ref WITH(NOLOCK)
-                   WHERE ref.[Value] = TRIM(l.Category)
-                         AND ref.RefName = 'NewLeagueCategory'
-               );
 
         /*Init league name*/
 
@@ -133,6 +105,13 @@ Revisions:
                    WHERE im.League = l.OWPLeagueName
                );
 
+         -- update newLeagueShortName
+        UPDATE owpl
+          SET 
+              owpl.ShortLeague = tbll.ShortLeague
+        FROM OWPLeague AS owpl WITH(NOLOCK)
+             INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
+
         -- Update NoOfferLive, BlackList
         UPDATE owpl
           SET 
@@ -146,19 +125,6 @@ Revisions:
                                      THEN 1
                                      ELSE 0
                                  END
-        FROM OWPLeague AS owpl WITH(NOLOCK)
-             INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
-
-        -- update newLeagueCatogory
-        UPDATE tbll
-          SET 
-              tbll.LeagueGroupId = ref.[ResourceId]
-        FROM #tblLeague AS tbll
-             INNER JOIN dbo.RefResource AS ref WITH(NOLOCK) ON tbll.LeagueGroup = ref.[Value]
-        WHERE ref.RefName = 'NewLeagueCategory';
-        UPDATE owpl
-          SET 
-              owpl.New_CategoryId = tbll.LeagueGroupId
         FROM OWPLeague AS owpl WITH(NOLOCK)
              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
