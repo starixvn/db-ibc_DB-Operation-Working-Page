@@ -24,8 +24,8 @@ Revisions:
         CREATE TABLE #tblLeague
         (LeagueGroup              NVARCHAR(200), 
          LeagueGroupId            INT, 
-         League                   NVARCHAR(200) NOT NULL,
-         ShortLeague                NVARCHAR(200),
+         League                   NVARCHAR(200) NOT NULL, 
+         ShortLeague              NVARCHAR(200), 
          LeagueId                 INT, 
          FullConditionDescription NVARCHAR(MAX), 
          Spread_HDP_Value         MONEY NULL, 
@@ -48,7 +48,7 @@ Revisions:
         INSERT INTO #tblLeague
         (LeagueGroup, 
          League, 
-         ShortLeague,
+         ShortLeague, 
          FullConditionDescription, 
          Spread_HDP_Value, 
          Spread_OU_Value, 
@@ -69,7 +69,7 @@ Revisions:
         )
                SELECT [LeagueGroup], 
                       [League], 
-                      [ShortLeague],
+                      [ShortLeague], 
                       [FullConditionDescription], 
                       [Spread_HDP_Value], 
                       [Spread_OU_Value], 
@@ -90,7 +90,6 @@ Revisions:
                FROM OPENXML(@idoc, '/Root/LeagueSettingInfo', 1) WITH([LeagueGroup] NVARCHAR(200), [League] NVARCHAR(200), [ShortLeague] NVARCHAR(200), [FullConditionDescription] NVARCHAR(MAX), [Spread_HDP_Value] MONEY, [Spread_OU_Value] MONEY, [Spread_Note] NVARCHAR(2000), [MaxbetWD_HDP_Value] MONEY, [MaxbetWD_HDP_Note] NVARCHAR(2000), [WD_NoOfHDP_Value] NVARCHAR(2000), [WD_NoOfHDP_Note] NVARCHAR(2000), [MaxbetWK_HDP_Value] MONEY, [MaxbetWK_HDP_Note] NVARCHAR(2000), [WK_NoOfHDP_Value] NVARCHAR(2000), [WK_NoOfHDP_Note] NVARCHAR(2000), [LstNote] NVARCHAR(2000), [Remark2] NVARCHAR(2000), [Comment] NVARCHAR(MAX), Remark2WD NVARCHAR(2000), Remark2WK NVARCHAR(2000));
         EXEC sp_xml_removedocument 
              @idoc;
-
 
         /*Init league name*/
 
@@ -121,25 +120,10 @@ Revisions:
         FROM OWPLeague AS owpl WITH(NOLOCK)
              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
+        -- Update ShortLeague
         UPDATE owpl
           SET 
               owpl.ShortLeague = tbll.ShortLeague
-        FROM OWPLeague AS owpl WITH(NOLOCK)
-             INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
-
-        -- Update NoOfferLive, BlackList
-        UPDATE owpl
-          SET 
-              owpl.NoOfferLive = CASE
-                                     WHEN tbll.LSTNote LIKE '%[[No Offer Live]]%'
-                                     THEN 1
-                                     ELSE 0
-                                 END, 
-              owpl.IsBlackList = CASE
-                                     WHEN tbll.LSTNote LIKE '%Blacklist%'
-                                     THEN 1
-                                     ELSE 0
-                                 END
         FROM OWPLeague AS owpl WITH(NOLOCK)
              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
