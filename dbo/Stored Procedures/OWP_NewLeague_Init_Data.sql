@@ -121,6 +121,7 @@ Revisions:
         FROM OWPLeague AS owpl WITH(NOLOCK)
              INNER JOIN #tblLeague AS tbll WITH(NOLOCK) ON tbll.League = owpl.OWPLeagueName;
 
+        UPDATE owpl
           SET 
               owpl.ShortLeague = tbll.ShortLeague
         FROM OWPLeague AS owpl WITH(NOLOCK)
