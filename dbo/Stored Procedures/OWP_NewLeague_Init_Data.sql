@@ -87,7 +87,7 @@ Revisions:
                       [Comment], 
                       Remark2WD, 
                       Remark2WK
-               FROM OPENXML(@idoc, '/Root/LeagueSettingInfo', 1) WITH([LeagueGroup] NVARCHAR(200), [League] NVARCHAR(200), [FullConditionDescription] NVARCHAR(MAX), [Spread_HDP_Value] MONEY, [Spread_OU_Value] MONEY, [Spread_Note] NVARCHAR(2000), [MaxbetWD_HDP_Value] MONEY, [MaxbetWD_HDP_Note] NVARCHAR(2000), [WD_NoOfHDP_Value] NVARCHAR(2000), [WD_NoOfHDP_Note] NVARCHAR(2000), [MaxbetWK_HDP_Value] MONEY, [MaxbetWK_HDP_Note] NVARCHAR(2000), [WK_NoOfHDP_Value] NVARCHAR(2000), [WK_NoOfHDP_Note] NVARCHAR(2000), [LstNote] NVARCHAR(2000), [Remark2] NVARCHAR(2000), [Comment] NVARCHAR(MAX), Remark2WD NVARCHAR(2000), Remark2WK NVARCHAR(2000));
+               FROM OPENXML(@idoc, '/Root/LeagueSettingInfo', 1) WITH([LeagueGroup] NVARCHAR(200), [League] NVARCHAR(200), [ShortLeague] NVARCHAR(200), [FullConditionDescription] NVARCHAR(MAX), [Spread_HDP_Value] MONEY, [Spread_OU_Value] MONEY, [Spread_Note] NVARCHAR(2000), [MaxbetWD_HDP_Value] MONEY, [MaxbetWD_HDP_Note] NVARCHAR(2000), [WD_NoOfHDP_Value] NVARCHAR(2000), [WD_NoOfHDP_Note] NVARCHAR(2000), [MaxbetWK_HDP_Value] MONEY, [MaxbetWK_HDP_Note] NVARCHAR(2000), [WK_NoOfHDP_Value] NVARCHAR(2000), [WK_NoOfHDP_Note] NVARCHAR(2000), [LstNote] NVARCHAR(2000), [Remark2] NVARCHAR(2000), [Comment] NVARCHAR(MAX), Remark2WD NVARCHAR(2000), Remark2WK NVARCHAR(2000));
         EXEC sp_xml_removedocument 
              @idoc;
 
