@@ -1,13 +1,4 @@
-﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-/*
-Created: 20250723@Hank
-Task : Get data init LeagueManagementSetting table
-DB: bodb_OWP
-
-Revisions:
-	20250723@Hank: Get data init LeagueManagementSetting table - [Redmine: #233199]
-*/
-
+﻿
 DROP TABLE IF EXISTS #tempLeagueSettings;
 CREATE TABLE #tempLeagueSettings (
     num INT,
