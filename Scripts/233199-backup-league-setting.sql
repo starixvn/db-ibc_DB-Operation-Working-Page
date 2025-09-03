@@ -6,6 +6,7 @@ DB: bodb_OWP
 
 Revisions:
 	20250723@Hank: Backup LeagueManagementSetting data - [Redmine: #233199]
+	20250903@Hank: Update script to not truncate table - [Redmine: #233199]
 */
 
 -- Drop backup table if exists
@@ -16,8 +17,6 @@ BEGIN
 END
 
 GO 
-
-TRUNCATE TABLE [dbo].[LeagueManagementSetting];
 
 -- Create backup table
 CREATE TABLE [dbo].[LeagueManagementSetting_Backup](
@@ -81,15 +80,6 @@ SELECT
 	[Comment]
 FROM [dbo].[LeagueManagementSetting] WITH (NOLOCK);
 
--- Verify backup count
-SELECT 
-	'Original Table Count' AS TableName, 
-	COUNT(*) AS RecordCount 
-FROM [dbo].[LeagueManagementSetting] WITH (NOLOCK)
-UNION ALL
-SELECT 
-	'Backup Table Count' AS TableName, 
-	COUNT(*) AS RecordCount 
-FROM [dbo].[LeagueManagementSetting_Backup] WITH (NOLOCK);
+GO 
 
-PRINT 'Backup completed successfully. Backup table: LeagueManagementSetting_Backup_233199';
+TRUNCATE TABLE [dbo].[LeagueManagementSetting];
