@@ -15,7 +15,7 @@ AS
     20240802@Mira: Order setting by league  - [Redmine: #207941]
 	20250711@Los: Get new league category  - [Redmine: #232603]
     20250822@Hank: Get league more short league, isblacklist, noofferlive- [Redmine: #234901]
-	20250822@Los: Get Remark2WD,Remark2WK - [Redmine: #237794]
+	20250822@Los: Get Remark2WD,Remark2WK - [Redmine: #237822]
 */
 
     BEGIN
