@@ -15,6 +15,7 @@ AS
     20240802@Mira: Order setting by league  - [Redmine: #207941]
 	20250711@Los: Get new league category  - [Redmine: #232603]
     20250822@Hank: Get league more short league, isblacklist, noofferlive- [Redmine: #234901]
+	20250822@Los: Get Remark2WD,Remark2WK - [Redmine: #237822]
 */
 
     BEGIN
@@ -36,13 +37,12 @@ AS
                    FROM LeagueCategoryHistory h2 WITH(NOLOCK)
                    WHERE h.OWPLeagueId = h2.OWPLeagueId
                );
-        SELECT  
-               l.Id 'LeagueSettingId', 
+        SELECT l.Id 'LeagueSettingId', 
                l.OWPLeagueId, 
                o.OWPLeagueName 'League', 
-			   ISNULL(o.IsBlackList, 0) as IsBlackList,
-			   ISNULL(o.NoOfferLive, 0) as NoOfferLive,
-			   o.ShortLeague,
+               ISNULL(o.IsBlackList, 0) AS IsBlackList, 
+               ISNULL(o.NoOfferLive, 0) AS NoOfferLive, 
+               o.ShortLeague, 
                l.[FullConditionDescription], 
                l.[Spread_HDP] 'Spread_HDP_Value', 
                l.[Spread_OU] 'Spread_OU_Value', 
@@ -60,7 +60,9 @@ AS
                l.[Comment], 
                o.OWPLeagueName, 
                ll.CategoryId 'LeagueGroupId', 
-               rr.Value 'LeagueGroup'
+               rr.Value 'LeagueGroup', 
+               Remark2WD, 
+               Remark2WK
         FROM LeagueManagementSetting l WITH(NOLOCK)
              INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
              LEFT JOIN #LatestLeague ll ON l.OWPLeagueId = ll.OwpLeagueId
