@@ -12,6 +12,7 @@ AS
  Revisions:
     20221102@Mira: Event picking new - [Redmine: #179302]
 	20240328@Johnny: reduce select match - [Redmine: #202638]
+	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
 */
 
     BEGIN
@@ -28,10 +29,10 @@ AS
                a.OWPTeamName 'AwayName', 
                m.SubType, 
                m.MinorBettypeId, 
-               EventDateTime,
-               CASE
-                   WHEN us.Id IS NULL
-                   THEN 0
+               EventDateTime, 
+			    CASE
+                   WHEN ofM.Id IS NULL
+                   THEN l.NoOfferLive
                    ELSE 1
                END AS 'IsNoOffer', 
                m.ChildMatchId
@@ -39,8 +40,8 @@ AS
              INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = m.ParentInfoSiteMatchId
-                                                                          AND us.ChildMatchId = m.ChildMatchId
+             LEFT JOIN dbo.EventPickingNoOfferMatch AS ofM WITH(NOLOCK) ON ofM.InfoSiteMatchId = m.ParentInfoSiteMatchId
+                                                                          AND ofM.ChildMatchId = m.ChildMatchId
         WHERE 
 		(
 			m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime

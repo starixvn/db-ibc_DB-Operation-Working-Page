@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_GetEventPickingChildMatch] @Date DATE
+ALTER PROCEDURE [dbo].[OWP_EventPicking_GetEventPickingChildMatch] @Date DATE
 AS
 
 /*      
@@ -14,6 +14,7 @@ AS
 	20241114@Frankie: get provider info - [Redmine: #213590]
 	20241209@Frankie : Update League Category - [Feature: #214351]
 	20250113@Frankie : get RoundConfirm - [Feature: #213482]
+	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
 */
 
     BEGIN
@@ -57,12 +58,12 @@ AS
                im.Website2, 
                im.Website3, 
                im.Website4,
-               CASE
-                   WHEN us.Id IS NULL
-                   THEN 0
+                CASE
+                   WHEN ofM.Id IS NULL
+                   THEN l.NoOfferLive
                    ELSE 1
                END AS 'IsNoOffer', 
-               us.ChildMatchId, 
+               ofM.ChildMatchId, 
                im.IsTest AS IsTestMatch,
                CASE
                    WHEN ec.InfositeId IS NULL
@@ -82,8 +83,8 @@ AS
         FROM EventPickingChildMatch epc WITH(NOLOCK)
              INNER JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON epc.ParentId = im.InfoSiteMatchId
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
-             LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
-                                                                          AND us.ChildMatchId IS NULL
+             LEFT JOIN dbo.EventPickingNoOfferMatch AS ofM WITH(NOLOCK) ON ofM.InfoSiteMatchId = im.InfoSiteMatchId
+                                                                          AND ofM.ChildMatchId IS NULL
              LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';
