@@ -58,12 +58,12 @@ AS
                im.Website2, 
                im.Website3, 
                im.Website4,
-                CASE
-                   WHEN ofM.Id IS NULL
+               CASE
+                   WHEN us.Id IS NULL
                    THEN l.NoOfferLive
-                   ELSE 1
+                   ELSE us.[IsNoOffer]
                END AS 'IsNoOffer', 
-               ofM.ChildMatchId, 
+               us.ChildMatchId, 
                im.IsTest AS IsTestMatch,
                CASE
                    WHEN ec.InfositeId IS NULL
@@ -83,8 +83,8 @@ AS
         FROM EventPickingChildMatch epc WITH(NOLOCK)
              INNER JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON epc.ParentId = im.InfoSiteMatchId
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId
-             LEFT JOIN dbo.EventPickingNoOfferMatch AS ofM WITH(NOLOCK) ON ofM.InfoSiteMatchId = im.InfoSiteMatchId
-                                                                          AND ofM.ChildMatchId IS NULL
+             LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = im.InfoSiteMatchId
+                                                                          AND us.ChildMatchId IS NULL
              LEFT JOIN dbo.EventPickingConfirmed AS ec WITH(NOLOCK) ON im.InfoSiteMatchId = ec.InfositeId
         WHERE(im.EventDateTime BETWEEN @FromDateTime AND @ToDateTime)
              AND im.LeagueName NOT LIKE '%Fantasy%';

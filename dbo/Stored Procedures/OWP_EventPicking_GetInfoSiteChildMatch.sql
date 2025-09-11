@@ -29,19 +29,19 @@ AS
                a.OWPTeamName 'AwayName', 
                m.SubType, 
                m.MinorBettypeId, 
-               EventDateTime, 
-			    CASE
-                   WHEN ofM.Id IS NULL
+               EventDateTime,
+              CASE
+                   WHEN us.Id IS NULL
                    THEN l.NoOfferLive
-                   ELSE 1
+                   ELSE us.[IsNoOffer]
                END AS 'IsNoOffer', 
                m.ChildMatchId
         FROM InfoSiteChildMatch m WITH(NOLOCK)
              INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
              INNER JOIN dbo.OWPTeam a WITH(NOLOCK) ON m.OWPAwayId = a.OWPTeamId
              INNER JOIN dbo.OWPLeague l WITH(NOLOCK) ON m.OWPLeagueId = l.OWPLeagueId
-             LEFT JOIN dbo.EventPickingNoOfferMatch AS ofM WITH(NOLOCK) ON ofM.InfoSiteMatchId = m.ParentInfoSiteMatchId
-                                                                          AND ofM.ChildMatchId = m.ChildMatchId
+             LEFT JOIN dbo.EventPickingNoOfferMatch AS us WITH(NOLOCK) ON us.InfoSiteMatchId = m.ParentInfoSiteMatchId
+                                                                          AND us.ChildMatchId = m.ChildMatchId
         WHERE 
 		(
 			m.EventDateTime BETWEEN @FromDateTime AND @ToDateTime

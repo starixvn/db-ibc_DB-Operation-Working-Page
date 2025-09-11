@@ -68,7 +68,7 @@ Revisions:
                CASE
                    WHEN ofM.Id IS NULL
                    THEN l.NoOfferLive
-                   ELSE 1
+                   ELSE ofM.[IsNoOffer]
                END AS 'IsNoOffer', 
                ofM.ChildMatchId, 
                im.IsTest AS IsTestMatch,
