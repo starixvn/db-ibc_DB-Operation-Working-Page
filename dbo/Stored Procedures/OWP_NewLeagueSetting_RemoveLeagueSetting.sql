@@ -20,7 +20,7 @@ AS
  
  Revisions:
     20240801@Los: Remove league setting   - [Redmine: #207941]
-
+    20250916@Frankkie: Update NoOfferLive Setting when delete all setting table LeagueManagementSetting - [Redmine: #236469]
 */
 
     BEGIN
@@ -55,9 +55,26 @@ AS
         );
 		SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
 
-        DELETE
+		DECLARE @OWPLeagueId INT;
+
+		-- Lấy OWPLeagueId trước khi xoá
+		SELECT @OWPLeagueId = OWPLeagueId
 		FROM LeagueManagementSetting
-		WHERE Id=@LeagueSettingId
+		WHERE Id = @LeagueSettingId;
+
+		-- Xoá row
+		DELETE FROM LeagueManagementSetting
+		WHERE Id = @LeagueSettingId;
+
+		-- Update nếu không còn row nào khác tham chiếu OWPLeagueId
+		UPDATE OWPLeague
+		SET NoOfferLive = 0
+		WHERE OWPLeagueId = @OWPLeagueId
+		  AND NOT EXISTS (
+				SELECT 1
+				FROM LeagueManagementSetting
+				WHERE OWPLeagueId = @OWPLeagueId
+			  );
 
 		SET @EndRun = GETDATE();
         SET @Duration = DATEDIFF(MILLISECOND, @StartRun, @EndRun);
