@@ -55,9 +55,48 @@ BEGIN
                 GETDATE());
 
 	--write log
-
-	select * from #Temp
 	DECLARE @NowUTC8 DATETIME = DATEADD(HOUR, 8, GETUTCDATE());
+
+	--1.uncheck if checking
+	DELETE pc
+	FROM [dbo].[EventPickingConfirmed] AS pc
+	INNER JOIN #Temp AS t ON pc.InfositeId = t.InfoSiteMatchId
+	CROSS APPLY (
+		SELECT TOP 1 l.NewValue
+		FROM dbo.[EventPickingLog] AS l
+		WHERE l.InfositeId = t.InfoSiteMatchId
+		ORDER BY l.[Date] DESC
+	) AS lastLog
+	WHERE lastLog.NewValue = 'Checked';
+
+	INSERT INTO EventPickingLog
+	(
+		[Date], 
+		InfositeId, 
+		[UpdateTypeId],
+		ModifiedBy, 
+		[Action], 
+		OldValue, 
+		NewValue
+	)
+	SELECT 
+		@NowUTC8, 
+		t.InfoSiteMatchId, 
+		NULL,
+		'System',
+		'Update the <strong>Checking Status</strong>',
+		'Checked',
+		'Unchecked'
+	FROM #Temp AS t
+	CROSS APPLY (
+		SELECT TOP 1 l.NewValue
+		FROM dbo.[EventPickingLog] AS l
+		WHERE l.InfositeId = t.InfoSiteMatchId
+		ORDER BY l.[Date] DESC
+	) AS lastLog
+	WHERE lastLog.NewValue = 'Checked';
+
+	--2. add log
 	INSERT INTO EventPickingLog
 	(
 		[Date], 
