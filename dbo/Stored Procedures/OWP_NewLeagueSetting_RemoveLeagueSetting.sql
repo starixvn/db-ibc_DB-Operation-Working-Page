@@ -59,20 +59,20 @@ AS
 
 		-- Lấy OWPLeagueId trước khi xoá
 		SELECT @OWPLeagueId = OWPLeagueId
-		FROM LeagueManagementSetting
+		FROM LeagueManagementSetting WITH(NOLOCK)
 		WHERE Id = @LeagueSettingId;
 
 		-- Xoá row
-		DELETE FROM LeagueManagementSetting
+		DELETE FROM LeagueManagementSetting WITH(ROWLOCK)
 		WHERE Id = @LeagueSettingId;
 
 		-- Update nếu không còn row nào khác tham chiếu OWPLeagueId
-		UPDATE OWPLeague
+		UPDATE OWPLeague WITH(ROWLOCK)
 		SET NoOfferLive = 0
 		WHERE OWPLeagueId = @OWPLeagueId
 		  AND NOT EXISTS (
 				SELECT 1
-				FROM LeagueManagementSetting
+				FROM LeagueManagementSetting WITH(NOLOCK)
 				WHERE OWPLeagueId = @OWPLeagueId
 			  );
 

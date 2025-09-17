@@ -62,8 +62,8 @@ BEGIN
 	FROM [dbo].[EventPickingConfirmed] AS pc
 	INNER JOIN #Temp AS t ON pc.InfositeId = t.InfoSiteMatchId
 	CROSS APPLY (
-		SELECT TOP 1 l.NewValue
-		FROM dbo.[EventPickingLog] AS l
+		SELECT TOP 1 l.NewValue 
+		FROM dbo.[EventPickingLog] AS l WITH(NOLOCK)
 		WHERE l.InfositeId = t.InfoSiteMatchId
 		ORDER BY l.[Date] DESC
 	) AS lastLog
@@ -90,7 +90,7 @@ BEGIN
 	FROM #Temp AS t
 	CROSS APPLY (
 		SELECT TOP 1 l.NewValue
-		FROM dbo.[EventPickingLog] AS l
+		FROM dbo.[EventPickingLog] AS l WITH(NOLOCK)
 		WHERE l.InfositeId = t.InfoSiteMatchId
 		ORDER BY l.[Date] DESC
 	) AS lastLog
@@ -111,7 +111,7 @@ BEGIN
 		@NowUTC8, 
 		t.InfoSiteMatchId, 
 		63,
-		(SELECT [Username] FROM dbo.[User] WHERE [UserId] = @ActorId),
+		(SELECT [Username] FROM dbo.[User] WITH(NOLOCK) WHERE [UserId] = @ActorId),
 		'Update the <strong>Match Offer</strong>',
 		CASE t.IsNoOffer WHEN 1 THEN 'Offer' ELSE 'No Offer' END,
 		CASE t.IsNoOffer WHEN 1 THEN 'No Offer' ELSE 'Offer' END
