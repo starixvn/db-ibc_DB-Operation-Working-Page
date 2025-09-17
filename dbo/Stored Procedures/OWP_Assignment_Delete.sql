@@ -361,31 +361,6 @@ BEGIN
 			) AS r
 		LEFT JOIN dbo.[User] AS mem WITH (NOLOCK) ON r.SectionId = mem.SectionId AND mem.SectionId IS NOT NULL
 
-		--
-		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-		USING (
-			SELECT ia.MessageContent
-				,ia.AssignmentId
-			FROM #tblInsertedAssigneeMessageChangeAssignment AS ia
-			) AS msn ON 1 = 0
-		WHEN NOT MATCHED THEN
-				INSERT (
-					MessageContent
-					,CreatedBy
-					,IsImportant
-					,MessageType
-					,IsWatcher
-					)
-				VALUES (
-					msn.MessageContent
-					,@ActorId
-					,0
-					,@MessageChangeOfAssignmentId
-					,1
-					)
-		OUTPUT inserted.MessageId
-			,msn.AssignmentId
-		INTO #tblInsertedWatcherMessageChangeAssignment([MessageId], AssignmentId);
 
 		-- get list users received watcher message change assignment
 		INSERT INTO dbo.MessageUser(

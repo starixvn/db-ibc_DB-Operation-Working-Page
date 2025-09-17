@@ -463,21 +463,6 @@ BEGIN
 			FROM #tblWatcherReceivingNotification
 			)
 		BEGIN
-			INSERT INTO dbo.[Message] (
-				MessageContent
-				,CreatedBy
-				,IsImportant
-				,MessageType
-				,IsWatcher
-				)
-			OUTPUT inserted.MessageId
-			INTO #tblWatcherMessageIds (MessageId)
-			SELECT m.MessageContent
-				,@ActorId
-				,0
-				,m.MessageTypeId
-				,1
-			FROM #tblMessage AS m
 			
 			INSERT INTO dbo.MessageUser (
 				MessageId

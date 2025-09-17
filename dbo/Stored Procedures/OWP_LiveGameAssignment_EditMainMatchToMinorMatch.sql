@@ -771,28 +771,6 @@ BEGIN
 				FROM #tblAssigneeMessage AS ur
 				WHERE ur.UserId = w.UserId
 			)) AS ass
-		
-		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-		USING #tblWatcherMessage AS m ON 1 = 0
-		WHEN NOT MATCHED THEN
-				INSERT (
-					MessageContent
-					,CreatedBy
-					,IsImportant
-					,MessageType
-					,IsWatcher
-					)
-				VALUES (
-					m.MessageContent
-					,@ActorId
-					,0
-					,m.MessageTypeId
-					,1
-					)
-		OUTPUT inserted.MessageId
-			,m.UserId
-			,@SessionId
-		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 	END
 	
 	IF @ParentMatchIsInTimeRange = 1
@@ -912,28 +890,6 @@ BEGIN
 				FROM #tblAssigneeMessage AS ur
 				WHERE ur.UserId = w.UserId
 			)) AS ass
-		
-		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-		USING #tblWatcherMessage AS m ON 1 = 0
-		WHEN NOT MATCHED THEN
-				INSERT (
-					MessageContent
-					,CreatedBy
-					,IsImportant
-					,MessageType
-					,IsWatcher
-					)
-				VALUES (
-					m.MessageContent
-					,@ActorId
-					,0
-					,m.MessageTypeId
-					,1
-					)
-		OUTPUT inserted.MessageId
-			,m.UserId
-			,@SessionId
-		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 		
 		
 		PRINT 'send message to parent match assignee to know about new match setting'
@@ -1058,28 +1014,6 @@ BEGIN
 				FROM #tblAssigneeMessage AS ur
 				WHERE ur.UserId = w.UserId
 			)) AS ass
-		
-		MERGE dbo.[Message] WITH (ROWLOCK) AS ms
-		USING #tblWatcherMessage AS m ON 1 = 0
-		WHEN NOT MATCHED THEN
-				INSERT (
-					MessageContent
-					,CreatedBy
-					,IsImportant
-					,MessageType
-					,IsWatcher
-					)
-				VALUES (
-					m.MessageContent
-					,@ActorId
-					,0
-					,m.MessageTypeId
-					,1
-					)
-		OUTPUT inserted.MessageId
-			,m.UserId
-			,@SessionId
-		INTO dbo.MessageUser([MessageId], [UserId], [SessionId]);
 	END
 	
 	SELECT @ErrCode = 0

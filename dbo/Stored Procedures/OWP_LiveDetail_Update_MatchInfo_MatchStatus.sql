@@ -265,39 +265,6 @@ Revisions:
                                    FROM #tblAssigneeRecevingNotification AS a
                                    WHERE u.UserId = a.UserId
                                );
-                        MERGE dbo.[Message] AS ms
-                        USING
-                        (
-                            SELECT a.UserId, 
-                                   m.MessageContent, 
-                                   m.MessageTypeId
-                            FROM #tblMessage AS m
-                                 CROSS JOIN #tblWatcher AS a
-                                 LEFT JOIN dbo.NotificationSetting AS ns WITH(NOLOCK) ON ns.NotificationSettingId = @NotifyWatcherMatchInfoUpdatedId
-                                 LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH(NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-                                                                                                 AND nsm.UserId = a.UserId
-                        ) AS msn
-                        ON 1 = 0
-                            WHEN NOT MATCHED
-                            THEN
-                              INSERT(MessageContent, 
-                                     CreatedBy, 
-                                     IsImportant, 
-                                     MessageType, 
-                                     IsWatcher)
-                              VALUES
-                        (msn.MessageContent, 
-                         @ActorId, 
-                         0, 
-                         msn.MessageTypeId, 
-                         1
-                        )
-                        OUTPUT inserted.MessageId, 
-                               msn.UserId, 
-                               @SessionId
-                               INTO dbo.MessageUser(MessageId, 
-                                                    UserId, 
-                                                    SessionId);
                 END;
         END;
         DROP TABLE #tblMessage;

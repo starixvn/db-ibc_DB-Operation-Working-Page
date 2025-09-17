@@ -12,6 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200604@Mira: New structure of Assignment Uploading - [Redmine: #129397]
+	20250120@Assistant: Only insert message if IsWatcher is 0 - [Redmine: #235398]
 	
 */
 
@@ -38,7 +39,8 @@ Revisions:
                    MessageType, 
                    IsWatcher, 
                    ReceivedUserIdList
-            FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX));
+            FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX))
+            WHERE IsWatcher = 0;
      EXEC sp_xml_removedocument 
           @idoc;
 
