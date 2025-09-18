@@ -9,4 +9,4 @@ Revisions:
 */
 ALTER TABLE dbo.EventPickingNoOfferMatch
 ADD [IsNoOffer] BIT,
-[IsManual] BIT;
+UpdatedDate DATETIME
