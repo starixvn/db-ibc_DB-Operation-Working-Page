@@ -1,7 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_GetEventPickingChildMatch] @Date DATE
+ALTER PROCEDURE [dbo].[OWP_EventPicking_GetEventPickingChildMatch] @Date DATE
 AS
 
 /*      
@@ -14,6 +14,7 @@ AS
 	20241114@Frankie: get provider info - [Redmine: #213590]
 	20241209@Frankie : Update League Category - [Feature: #214351]
 	20250113@Frankie : get RoundConfirm - [Feature: #213482]
+	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
 */
 
     BEGIN
@@ -59,8 +60,8 @@ AS
                im.Website4,
                CASE
                    WHEN us.Id IS NULL
-                   THEN 0
-                   ELSE 1
+                   THEN l.NoOfferLive
+                   ELSE us.[IsNoOffer]
                END AS 'IsNoOffer', 
                us.ChildMatchId, 
                im.IsTest AS IsTestMatch,

@@ -12,6 +12,7 @@ AS
  Revisions:
     20221102@Mira: Event picking new - [Redmine: #179302]
 	20240328@Johnny: reduce select match - [Redmine: #202638]
+	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
 */
 
     BEGIN
@@ -29,10 +30,10 @@ AS
                m.SubType, 
                m.MinorBettypeId, 
                EventDateTime,
-               CASE
+              CASE
                    WHEN us.Id IS NULL
-                   THEN 0
-                   ELSE 1
+                   THEN l.NoOfferLive
+                   ELSE us.[IsNoOffer]
                END AS 'IsNoOffer', 
                m.ChildMatchId
         FROM InfoSiteChildMatch m WITH(NOLOCK)
