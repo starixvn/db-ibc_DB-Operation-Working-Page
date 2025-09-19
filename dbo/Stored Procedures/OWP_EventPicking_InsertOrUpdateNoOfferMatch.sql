@@ -48,11 +48,12 @@ BEGIN
         UPDATE SET 
             t.IsNoOffer   = s.IsNoOffer,
             t.UpdatedDate = GETDATE()
-    WHEN NOT MATCHED THEN
-        INSERT (InfoSiteMatchId, ChildMatchId, CreatedDate)
-        VALUES (s.InfoSiteMatchId,
-                CASE WHEN s.ChildMatchId = 0 THEN NULL ELSE s.ChildMatchId END,
-                GETDATE());
+	WHEN NOT MATCHED THEN
+		INSERT (InfoSiteMatchId, ChildMatchId, IsNoOffer, CreatedDate)
+		VALUES (s.InfoSiteMatchId,
+				CASE WHEN s.ChildMatchId = 0 THEN NULL ELSE s.ChildMatchId END,
+				s.IsNoOffer,
+				GETDATE());
 
 	--write log
 	DECLARE @NowUTC8 DATETIME = DATEADD(HOUR, 8, GETUTCDATE());
