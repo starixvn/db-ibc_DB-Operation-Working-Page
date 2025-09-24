@@ -13,10 +13,8 @@ CREATE TABLE LeagueSettingLog(
 CreatedDate DATETIME NOT NULL,
 ModifiedBy NVARCHAR(255),
 SettingId INT NOT NULL,
-[Field] VARCHAR (200),
-[Action] VARCHAR(255),
-OldValue NVARCHAR(MAX),
-NewValue NVARCHAR(MAX),
+[Action] VARCHAR(200),
+Content NVARCHAR(MAX),
 )
 
 CREATE NONCLUSTERED INDEX IX_LeagueSettingLog_SettingId
