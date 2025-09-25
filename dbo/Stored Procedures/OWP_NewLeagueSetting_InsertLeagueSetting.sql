@@ -20,7 +20,8 @@ ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_InsertLeagueSetting] @LeagueSettingI
                                                                  @Remark2                  NVARCHAR(2000) = NULL, 
                                                                  @Comment                  NVARCHAR(2000) = NULL, 
                                                                  @FullConditionDescription NVARCHAR(2000) = NULL,
-																 @NoOfferLive              BIT
+																 @NoOfferLive              BIT,
+                                                                 @LogData                  NVARCHAR(MAX) = NULL
 AS
 
 /*      
@@ -139,4 +140,15 @@ AS
              @ObjectId = @LeagueSettingId, 
              @Data = @LogSettingData, 
              @DataOld = NULL;
+
+         IF @LogData IS NOT NULL
+         BEGIN
+             DECLARE @LogDate DATETIME = GETDATE();
+             EXEC dbo.OWP_LeagueManagement_InsertLog 
+                @SettingId = @LeagueSettingId,
+                @ModifiedBy = CAST(@ActorId AS VARCHAR(255)),
+                @CreatedDate = @LogDate,
+                @Action = 'Created',
+                @Content = @LogData;
+         END
     END;
