@@ -143,7 +143,7 @@ AS
 
          IF @LogData IS NOT NULL
          BEGIN
-             DECLARE @LogDate DATETIME = GETDATE();
+             DECLARE @LogDate DATETIME = DATEADD(HOUR, 8, GETUTCDATE());
              EXEC dbo.OWP_LeagueManagement_InsertLog 
                 @SettingId = @LeagueSettingId,
                 @ModifiedBy = CAST(@ActorId AS VARCHAR(255)),
