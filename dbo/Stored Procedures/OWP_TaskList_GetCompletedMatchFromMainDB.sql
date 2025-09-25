@@ -12,6 +12,7 @@ DB: bodb02
 Revisions:
 	20230526@Mira: Refactor task list - [Redmine: #188624]
 	20240930@Los: Hide completed main match by check all child match completed - [Redmine: #210700]
+    20250925@Frankie: Hide Completed Matches for SABA game - PENALTY SHOOTOUTS - [Redmine: #236985]
 */
 
     BEGIN
@@ -42,7 +43,8 @@ Revisions:
         FROM [match] AS m WITH(NOLOCK)
              INNER JOIN @tblMatchInfo AS a ON m.ParentID = a.matchId
 			 INNER JOIN match_remark AS mr WITH(NOLOCK) ON mr.matchid=m.matchid
-        WHERE a.league = 'SABA ELITE FRIENDLY Virtual PES 23 - PENALTY SHOOTOUTS'
+        WHERE a.league like '%SABA%' 
+            AND a.league like '%PENALTY SHOOTOUTS%'
 		GROUP BY m.ParentID
         HAVING COUNT(*) = SUM(CASE
                                   WHEN mr.confirmFT = 0
