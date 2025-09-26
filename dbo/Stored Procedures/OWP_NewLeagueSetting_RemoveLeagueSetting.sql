@@ -9,7 +9,8 @@ GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_RemoveLeagueSetting] @LeagueSettingId          INT, 
-                                                                 @ActorId                  INT
+                                                                 @ActorId              INT,
+                                                                 @LogData              NVARCHAR(MAX) = NULL
                                                                 
 AS
 
@@ -87,4 +88,16 @@ AS
              @ObjectId = @LeagueSettingId, 
              @Data = NULL,
              @DataOld = @LogSettingDataOld;
+
+         IF @LogData IS NOT NULL
+         BEGIN
+			DECLARE @LogDate DATETIME = DATEADD(HOUR, 8, GETUTCDATE());
+
+            EXEC dbo.OWP_LeagueManagement_InsertLog 
+                @SettingId = @LeagueSettingId,
+                @ModifiedBy = @ActorId,
+                @CreatedDate = @LogDate,
+                @Action = 'Deleted',
+                @Content = @LogData;
+         END
     END;
