@@ -20,9 +20,7 @@ Revisions:
                ModifiedBy, 
                SettingId, 
                [Action], 
-               [Field], 
-               OldValue, 
-               NewValue
+               Content
         FROM LeagueSettingLog
         WHERE SettingId = @SettingId;
     END;

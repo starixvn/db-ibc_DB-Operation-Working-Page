@@ -11,6 +11,7 @@ AS
  
  Revisions:
     20240429@Liam: Get new league Setting detail   - [Redmine: #202639]
+    20250926@Hank: Add IsBlackList, NoOfferLive, ShortLeague, Remark2WD, Remark2WK - [Redmine: #236027]
 
 */
 
@@ -19,6 +20,9 @@ AS
         SELECT l.Id 'LeagueSettingId', 
                l.OWPLeagueId, 
                o.OWPLeagueName 'League', 
+               ISNULL(o.IsBlackList, 0) AS IsBlackList, 
+               ISNULL(o.NoOfferLive, 0) AS NoOfferLive,
+               o.ShortLeague,
                l.[FullConditionDescription], 
                l.[Spread_HDP] 'Spread_HDP_Value', 
                l.[Spread_OU] 'Spread_OU_Value', 
@@ -36,7 +40,9 @@ AS
                l.[Comment], 
                o.OWPLeagueName, 
                o.New_CategoryId 'LeagueGroupId', 
-               rr.Value 'LeagueGroup'
+               rr.Value 'LeagueGroup',
+               Remark2WD, 
+               Remark2WK
         FROM LeagueManagementSetting l WITH(NOLOCK)
              INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
              INNER JOIN RefResource rr WITH(NOLOCK) ON rr.RefName = 'NewLeagueCategory'
