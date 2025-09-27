@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20250707@Frankie: Initial - [Redmine: #230948]
 	20250729@Los: Get No.Hdp - [Redmine: #233921]
+    20250927@Frankie: Add history log when system created setting- [Redmine: #236027]
 */
 
     BEGIN
@@ -30,7 +31,8 @@ Revisions:
          Spread_HDP   MONEY, 
          Spread_OU    MONEY, 
          WD_NoOfHDP   NVARCHAR(100),
-         WK_NoOfHDP   NVARCHAR(100)
+         WK_NoOfHDP   NVARCHAR(100),
+		 LogDataJson  VARCHAR(MAX),
         );
         DECLARE @idoc INT;
         EXEC sp_xml_preparedocument 
@@ -51,47 +53,64 @@ Revisions:
                       Spread_HDP, 
                       Spread_OU, 
                       WD_NoOfHDP, 
-                      WK_NoOfHDP
-               FROM OPENXML(@idoc, '/Root/LeagueSetting', 1) WITH(OWPLeagueId INT, HasTV BIT, MaxbetWD_1H MONEY, MaxbetWD_HDP MONEY, MaxbetWD_OU MONEY, MaxbetWK_1H MONEY, MaxbetWK_HDP MONEY, MaxbetWK_OU MONEY, Spread_1HHDP MONEY, Spread_1HOU MONEY, Spread_HDP MONEY, Spread_OU MONEY, WD_NoOfHDP NVARCHAR(100), WK_NoOfHDP NVARCHAR(100));
+                      WK_NoOfHDP,
+					  LogDataJson
+               FROM OPENXML(@idoc, '/Root/LeagueSetting', 1) WITH(OWPLeagueId INT, HasTV BIT, MaxbetWD_1H MONEY, MaxbetWD_HDP MONEY, MaxbetWD_OU MONEY, MaxbetWK_1H MONEY, MaxbetWK_HDP MONEY, MaxbetWK_OU MONEY, Spread_1HHDP MONEY, Spread_1HOU MONEY, Spread_HDP MONEY, Spread_OU MONEY, WD_NoOfHDP NVARCHAR(100), WK_NoOfHDP NVARCHAR(100),LogDataJson NVARCHAR(MAX));
         EXEC sp_xml_removedocument 
              @idoc;
 
         -- INSERT League Setting
-        INSERT INTO dbo.LeagueManagementSetting
-        (OWPLeagueId, 
-         MaxbetWD_HDP, 
-         MaxbetWK_HDP, 
-         Spread_HDP, 
-         Spread_OU, 
-         WD_NoOfHDP, 
-         WK_NoOfHDP
-        )
-               SELECT DISTINCT 
-                      OWPLeagueId,
-                      CASE
-                          WHEN MaxbetWD_HDP = ''
-                          THEN NULL
-                          ELSE MaxbetWD_HDP
-                      END,
-                      CASE
-                          WHEN MaxbetWK_HDP = ''
-                          THEN NULL
-                          ELSE MaxbetWK_HDP
-                      END,
-                      CASE
-                          WHEN Spread_HDP = ''
-                          THEN NULL
-                          ELSE Spread_HDP
-                      END,
-                      CASE
-                          WHEN Spread_OU = ''
-                          THEN NULL
-                          ELSE Spread_OU
-                      END, 
-                      WD_NoOfHDP, 
-                      WK_NoOfHDP
-               FROM #tmpTable;
+		DECLARE @Log TABLE
+		(
+			LogDataJson VARCHAR(MAX),
+			NewSettingId INT
+		);
 
-        -- DROP tmpTable
+		MERGE dbo.LeagueManagementSetting AS target
+		USING #tmpTable AS src
+			ON 1 = 0   -- để luôn insert
+		WHEN NOT MATCHED THEN
+			INSERT (
+				OWPLeagueId, 
+				MaxbetWD_HDP, 
+				MaxbetWK_HDP, 
+				Spread_HDP, 
+				Spread_OU, 
+				WD_NoOfHDP, 
+				WK_NoOfHDP
+			)
+			VALUES (
+				src.OWPLeagueId,
+				CASE WHEN src.MaxbetWD_HDP = '' THEN NULL ELSE src.MaxbetWD_HDP END,
+				CASE WHEN src.MaxbetWK_HDP = '' THEN NULL ELSE src.MaxbetWK_HDP END,
+				CASE WHEN src.Spread_HDP   = '' THEN NULL ELSE src.Spread_HDP   END,
+				CASE WHEN src.Spread_OU    = '' THEN NULL ELSE src.Spread_OU    END, 
+				src.WD_NoOfHDP, 
+				src.WK_NoOfHDP
+			)
+            OUTPUT 
+                src.LogDataJson,       
+                inserted.Id
+            INTO @Log (LogDataJson, NewSettingId);
+
+		-- INSERT Log
+		DECLARE @LogDate DATETIME = DATEADD(HOUR, 8, GETUTCDATE());
+
+		INSERT INTO [LeagueSettingLog]
+		(
+			[CreatedDate], 
+			[ModifiedBy], 
+			[SettingId], 
+			[Action], 
+			[Content]
+		)
+		SELECT 
+			@LogDate,              -- CreatedDate
+			'SYSTEM',              -- ModifiedBy
+			NewSettingId,          -- SettingId lấy từ @Log
+			'Created the setting', -- Action
+			LogDataJson            -- Content
+		FROM @Log;
+
         DROP TABLE #tmpTable;
     END;
