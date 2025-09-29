@@ -92,10 +92,14 @@ AS
          IF @LogData IS NOT NULL
          BEGIN
 			DECLARE @LogDate DATETIME = DATEADD(HOUR, 8, GETUTCDATE());
-
+            DECLARE @Username NVARCHAR(255); 
+            SELECT TOP 1 @Username = u.Username
+			FROM dbo.[User] AS u WITH(NOLOCK) 
+			WHERE u.UserId = @ActorId;
+            
             EXEC dbo.OWP_LeagueManagement_InsertLog 
                 @SettingId = @LeagueSettingId,
-                @ModifiedBy = @ActorId,
+                @ModifiedBy = @Username,
                 @CreatedDate = @LogDate,
                 @Action = 'Deleted',
                 @Content = @LogData;
