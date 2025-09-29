@@ -22,5 +22,6 @@ Revisions:
                [Action], 
                Content
         FROM LeagueSettingLog
-        WHERE SettingId = @SettingId;
+        WHERE SettingId = @SettingId
+        ORDER BY CreatedDate DESC;
     END;
