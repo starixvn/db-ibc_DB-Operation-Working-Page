@@ -18,6 +18,7 @@ DB: bodb_OWP
 Revisions:
 	20190820@Leo.Vo: Initial SP - [Redmine: #120496]
 	20220921@Johnny.Thai: Move Live Detail net core - [Redmine: #177807]
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 
     BEGIN

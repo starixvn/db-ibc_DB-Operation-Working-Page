@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveDetail_Update_MatchInfo_Deselect] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_LiveDetail_Update_MatchInfo_Deselect] @ActorId INT
 	,@SessionId VARCHAR(50)
 	,@OWPMatchId INT
 AS
@@ -12,6 +12,7 @@ DB: bodb_OWP#
 Revisions:
 	20190920@Leo.Vo: InitialSP - [Redmine: #120496]
 	20191217@Leo.Vo: Change Market column - [Redmine: #124448]
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 BEGIN
 	SET NOCOUNT ON

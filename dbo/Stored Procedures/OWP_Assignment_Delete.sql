@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_Assignment_Delete] @ActorId INT
+ALTER PROCEDURE [dbo].[OWP_Assignment_Delete] @ActorId INT
 	,@SessionId NVARCHAR(50)
 	,@AssignmentId INT
 	,@ErrCode INT = 0 OUTPUT
@@ -22,6 +22,7 @@ Revisions:
 	20190704@Leo.Vo: Change message template - [Feature: #115459]
 	20200514@Tyler.Dang: Remove Same for OtherAssignment DWS - [Feature: #132709]
 	20200714@Esther.Nguyen: Add (N) for Home Name - [Feature: #137417]
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 BEGIN
 	SET NOCOUNT ON

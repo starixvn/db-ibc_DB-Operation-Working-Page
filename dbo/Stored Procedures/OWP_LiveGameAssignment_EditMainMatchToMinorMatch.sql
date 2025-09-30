@@ -1,6 +1,6 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
-CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_EditMainMatchToMinorMatch] @OWPMatchId INT
+ALTER PROCEDURE [dbo].[OWP_LiveGameAssignment_EditMainMatchToMinorMatch] @OWPMatchId INT
 	,@MinorBettypeId INT
 	,@ParentMatchId INT
 	,@LeagueName NVARCHAR(500)
@@ -22,6 +22,7 @@ AS
 	20190927@Kane.Le: Update message MatchNo - [Feature: #120415]
 	20191021@Kane.Le: Fix MinorBettypeId IS NULL - [Feature: #120415]
 	20210906@Luca.Duong: Remove cn88 - [Feature: #160666]
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 BEGIN
 	SET NOCOUNT ON

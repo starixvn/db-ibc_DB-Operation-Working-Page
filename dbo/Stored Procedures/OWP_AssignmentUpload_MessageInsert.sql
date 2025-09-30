@@ -13,7 +13,7 @@ DB: bodb_OWP
 Revisions:
 	20200604@Mira: New structure of Assignment Uploading - [Redmine: #129397]
 	20250120@Assistant: Only insert message if IsWatcher is 0 - [Redmine: #235398]
-	
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 
      SET NOCOUNT ON;

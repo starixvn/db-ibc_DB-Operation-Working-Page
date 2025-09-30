@@ -33,6 +33,7 @@ Revisions:
 	20191117@Carlos: Fix phone notification - [Feature: #123167]
 	20200723@Esther.Nguyen: Build Home name (N) - [Feature: #137417]
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 BEGIN
 	SET NOCOUNT ON
