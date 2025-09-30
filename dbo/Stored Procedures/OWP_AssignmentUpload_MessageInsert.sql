@@ -40,8 +40,8 @@ Revisions:
                    IsWatcher, 
                    ReceivedUserIdList
             FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX))
-            WHERE IsWatcher = 0;
-     EXEC sp_xml_removedocument 
+            WHERE IsWatcher = 0 OR IsWatcher = 'False';
+     EXEC sp_xml_removedocument
           @idoc;
 
      -- insert message
