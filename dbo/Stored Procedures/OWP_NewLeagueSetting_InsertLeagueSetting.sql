@@ -139,5 +139,4 @@ AS
              @ObjectId = @LeagueSettingId, 
              @Data = @LogSettingData, 
              @DataOld = NULL;
-
     END;

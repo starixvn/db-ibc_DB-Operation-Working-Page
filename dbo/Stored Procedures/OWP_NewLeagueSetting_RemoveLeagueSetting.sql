@@ -9,7 +9,7 @@ GO
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_RemoveLeagueSetting] @LeagueSettingId          INT, 
-                                                                 @ActorId              INT
+                                                                 @ActorId                  INT
                                                                 
 AS
 
@@ -87,13 +87,4 @@ AS
              @ObjectId = @LeagueSettingId, 
              @Data = NULL,
              @DataOld = @LogSettingDataOld;
-
-         IF @LogData IS NOT NULL
-         BEGIN
-			DECLARE @LogDate DATETIME = DATEADD(HOUR, 8, GETUTCDATE());
-            DECLARE @Username NVARCHAR(255); 
-            SELECT TOP 1 @Username = u.Username
-			FROM dbo.[User] AS u WITH(NOLOCK) 
-			WHERE u.UserId = @ActorId;
-         END
     END;
