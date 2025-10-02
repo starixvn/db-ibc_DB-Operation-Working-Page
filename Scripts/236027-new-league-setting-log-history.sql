@@ -9,7 +9,7 @@ Revisions:
 	
 */
 CREATE TABLE LeagueSettingLog(
-[Id] [INT] IDENTITY(1, 1) NOT NULL,
+[Id] [INT] IDENTITY(1, 1) PRIMARY KEY,
 CreatedDate DATETIME NOT NULL,
 ModifiedBy NVARCHAR(255),
 SettingId INT NOT NULL,
