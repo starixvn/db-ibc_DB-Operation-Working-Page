@@ -14,6 +14,7 @@ Revisions:
 	20250326@Lilac.Nguyen: fix duplicate insert into table MatchAgentConfirm - [Redmine: #213719]
 	20250515@Lilac.Nguyen: change confirm provider rule - [Redmine: #226465]
 	20250610@Lilac.Nguyen: change confirm provider rule - [Redmine: #227452]
+	20251002@Los: add new provider betrada2 - [Redmine: #240187]
 
 */
 
@@ -29,7 +30,7 @@ Revisions:
 			Agent NVARCHAR(255)
 		);
 
-		INSERT INTO #tblAgentConfirm
+		INSERT INTO #tblAgentConfirm(OWPMatchId, MatchId, Agent)
 		SELECT DISTINCT OWPMatchId, MatchId, Agent
 		FROM OPENJSON(@AgentConfirms) 
 		WITH (OWPMatchId INT, MatchId INT, Agent NVARCHAR(255));
@@ -56,6 +57,7 @@ Revisions:
 				WHEN 18 THEN 8    -- RTS
 				WHEN 19 THEN 3    -- BG
 				WHEN 20 THEN 2    -- Betradar
+				WHEN 202 THEN 13    -- Betradar2
 				ELSE ap.ProviderId
 			END AS AgentId
 		FROM #tblAgentConfirm t
