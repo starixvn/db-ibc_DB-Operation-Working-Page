@@ -33,6 +33,7 @@ Revisions:
 	20191117@Carlos: Fix phone notification - [Feature: #123167]
 	20200723@Esther.Nguyen: Build Home name (N) - [Feature: #137417]
 	20200728@carlos.Nguyen: Update data Streaming sync from InfoSite - [Redmine: #137755]
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -473,38 +474,6 @@ BEGIN
 					WHERE u.UserId = a.UserId
 					)
 
-			MERGE dbo.[Message] AS ms
-			USING (
-				SELECT a.UserId
-					,m.MessageContent
-					,m.MessageTypeId
-				FROM @tblMessage AS m
-				CROSS JOIN #tblWatcher AS a
-				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyWatcherProviderInfoUpdatedId
-				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-					AND nsm.UserId = a.UserId
-				) AS msn
-				ON 1 = 0
-			WHEN NOT MATCHED
-				THEN
-					INSERT (
-						MessageContent
-						,CreatedBy
-						,IsImportant
-						,MessageType
-						,IsWatcher
-						)
-					VALUES (
-						msn.MessageContent
-						,@ActorId
-						,0
-						,msn.MessageTypeId
-						,1
-						)
-			OUTPUT inserted.MessageId
-				,msn.UserId
-				,@SessionId
-			INTO dbo.MessageUser(MessageId, UserId, SessionId);
 		END
 
 		-- send message notification for match info
@@ -610,39 +579,6 @@ BEGIN
 					FROM #tblAssigneeRecevingNotification AS a
 					WHERE u.UserId = a.UserId
 					)
-
-			MERGE dbo.[Message] AS ms
-			USING (
-				SELECT a.UserId
-					,m.MessageContent
-					,m.MessageTypeId
-				FROM @tblMessage AS m
-				CROSS JOIN #tblWatcher AS a
-				LEFT JOIN dbo.NotificationSetting AS ns WITH (NOLOCK) ON ns.NotificationSettingId = @NotifyWatcherMatchInfoUpdatedId
-				LEFT JOIN dbo.NotificationSettingMapping AS nsm WITH (NOLOCK) ON ns.NotificationSettingId = nsm.NotificationSettingId
-					AND nsm.UserId = a.UserId
-				) AS msn
-				ON 1 = 0
-			WHEN NOT MATCHED
-				THEN
-					INSERT (
-						MessageContent
-						,CreatedBy
-						,IsImportant
-						,MessageType
-						,IsWatcher
-						)
-					VALUES (
-						msn.MessageContent
-						,@ActorId
-						,0
-						,msn.MessageTypeId
-						,1
-						)
-			OUTPUT inserted.MessageId
-				,msn.UserId
-				,@SessionId
-			INTO dbo.MessageUser(MessageId, UserId, SessionId);
 		END
 	END
 

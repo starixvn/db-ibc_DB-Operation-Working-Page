@@ -12,7 +12,7 @@ DB: bodb_OWP
 
 Revisions:
 	20200604@Mira: New structure of Assignment Uploading - [Redmine: #129397]
-	
+	20250930@Hank: Remove insert watcher message - [Redmine: #236509]
 */
 
      SET NOCOUNT ON;
@@ -38,8 +38,9 @@ Revisions:
                    MessageType, 
                    IsWatcher, 
                    ReceivedUserIdList
-            FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX));
-     EXEC sp_xml_removedocument 
+            FROM OPENXML(@idoc, '/Root/MessageModel', 1) WITH(MessageContent NVARCHAR(MAX), IsImportant BIT, MessageType TINYINT, IsWatcher BIT, ReceivedUserIdList NVARCHAR(MAX))
+            WHERE IsWatcher = 0 OR IsWatcher = 'False';
+     EXEC sp_xml_removedocument
           @idoc;
 
      -- insert message
