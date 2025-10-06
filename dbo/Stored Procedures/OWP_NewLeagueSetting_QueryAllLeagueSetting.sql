@@ -16,6 +16,7 @@ AS
 	20250711@Los: Get new league category  - [Redmine: #232603]
     20250822@Hank: Get league more short league, isblacklist, noofferlive- [Redmine: #234901]
 	20250822@Los: Get Remark2WD,Remark2WK - [Redmine: #237822]
+	20251002@Los: Remove Remark2WD,Remark2WK - [Redmine: #240366]
 */
 
     BEGIN
@@ -60,9 +61,7 @@ AS
                l.[Comment], 
                o.OWPLeagueName, 
                ll.CategoryId 'LeagueGroupId', 
-               rr.Value 'LeagueGroup', 
-               Remark2WD, 
-               Remark2WK
+               rr.Value 'LeagueGroup'
         FROM LeagueManagementSetting l WITH(NOLOCK)
              INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
              LEFT JOIN #LatestLeague ll ON l.OWPLeagueId = ll.OwpLeagueId
