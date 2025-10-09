@@ -20,6 +20,7 @@ Revisions:
 	20200128@Mira: Saba match validation rule - [Redmine: 149472]
 	20240131@Los: Fix not save other time at 12AM - [Redmine: 200529]
 	20240401@los: insert AgentEst, RemarkEst, RemarkBy - [Redmine: #202819]
+	20251009@Los: add two column AIO BT, SOP - [Redmine: #238851]
 */
 
      SET NOCOUNT ON;
@@ -61,13 +62,54 @@ Revisions:
       AwayId          INT, 
       LeagueId        INT, 
       OWPMatchId      INT, 
-      ETPK            NVARCHAR(2000)
+      ETPK            NVARCHAR(2000), 
+      AIOBT           NVARCHAR(2000), 
+      SOP             NVARCHAR(MAX)
      );
      DECLARE @idoc INT;
      EXEC sp_xml_preparedocument 
           @idoc OUTPUT, 
           @Assignments;
      INSERT INTO #tmpTable
+     (MinorBettypeId, 
+      HashKey, 
+      IsSaba, 
+      InfoSiteMatchId, 
+      AdminSiteId, 
+      League, 
+      Home, 
+      Away, 
+      EventDate, 
+      MatchNo, 
+      OtherTime, 
+      KickOffTime, 
+      Channel, 
+      IPTV, 
+      Division, 
+      MatchOffer, 
+      MatchStatus, 
+      NoHDP, 
+      Phone, 
+      Remark, 
+      AgentEst, 
+      RemarkEst, 
+      RemarkBy, 
+      [Round], 
+      WB, 
+      Website1, 
+      Website2, 
+      Website3, 
+      Website4, 
+      ParentHashKey, 
+      IsNeutral, 
+      HomeId, 
+      AwayId, 
+      LeagueId, 
+      OWPMatchId, 
+      EtPk, 
+      AIOBT, 
+      SOP
+     )
             SELECT DISTINCT 
                    ISNULL(MinorBettypeId, 0), 
                    HashKey, 
@@ -104,8 +146,10 @@ Revisions:
                    0, 
                    0, 
                    0, 
-                   EtPk
-            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), IsSaba BIT, InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime NVARCHAR(7), KickOffTime TIME(7), Channel NVARCHAR(100), IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), AgentEst NVARCHAR(2000), RemarkEst NVARCHAR(2000), RemarkBy NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT, EtPk NVARCHAR(2000))
+                   EtPk, 
+                   AIOBT, 
+                   SOP
+            FROM OPENXML(@idoc, '/Root/AssignmentModel', 1) WITH(HashKey VARCHAR(200), IsSaba BIT, InfoSiteMatchId INT, AdminSiteId INT, League NVARCHAR(500), Home NVARCHAR(200), Away NVARCHAR(200), EventDate DATETIME, MatchNo VARCHAR(50), OtherTime NVARCHAR(7), KickOffTime TIME(7), Channel NVARCHAR(100), IPTV NVARCHAR(100), Division NVARCHAR(2000), MatchOffer NVARCHAR(100), MatchStatus VARCHAR(15), NoHDP VARCHAR(50), Phone NVARCHAR(200), Remark NVARCHAR(2000), AgentEst NVARCHAR(2000), RemarkEst NVARCHAR(2000), RemarkBy NVARCHAR(2000), [Round] NVARCHAR(2000), WB NVARCHAR(100), Website1 NVARCHAR(1000), Website2 NVARCHAR(1000), Website3 NVARCHAR(1000), Website4 NVARCHAR(1000), MinorBettypeId INT, ParentHashKey VARCHAR(200), IsNeutral BIT, EtPk NVARCHAR(2000), AIOBT NVARCHAR(2000), SOP NVARCHAR(MAX))
             ORDER BY ISNULL(MinorBettypeId, 0) DESC;
      EXEC sp_xml_removedocument 
           @idoc;
@@ -243,7 +287,9 @@ Revisions:
            i.[IsSelected] = 1, 
            i.[SelectedBy] = @UserId, 
            i.IsSelectedUpdatedDate = GETDATE(), 
-           i.ETPK = m.ETPK
+           i.ETPK = m.ETPK, 
+           i.AIOBT = m.AIOBT, 
+           i.SOP = m.SOP
      FROM #tmpTable AS m
           INNER JOIN dbo.MatchInfo i WITH(NOLOCK) ON m.OWPMatchId = i.OWPMatchId
           LEFT JOIN dbo.RefResource r WITH(NOLOCK) ON r.RefName = 'NoOfHDP'
