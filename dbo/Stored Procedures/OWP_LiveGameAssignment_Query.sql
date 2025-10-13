@@ -34,6 +34,7 @@ AS
 	20231026@los: sync round - [Redmine: #193810]
 	20231116@Mira: get off VR - [Redmine: #194500]
 	20241207@Frankie : Update League Category - [Feature: #214351]
+	20251009@Los: add two column AIO BT, SOP - [Redmine: #238851]
 */
 
      SET NOCOUNT ON;
