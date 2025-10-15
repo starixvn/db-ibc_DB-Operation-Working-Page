@@ -34,6 +34,7 @@ AS
 	20231026@los: sync round - [Redmine: #193810]
 	20231116@Mira: get off VR - [Redmine: #194500]
 	20241207@Frankie : Update League Category - [Feature: #214351]
+	20251009@Los: add two column AIO BT, SOP - [Redmine: #238851]
 */
 
      SET NOCOUNT ON;
@@ -117,6 +118,8 @@ AS
       Website2         NVARCHAR(1000), 
       Website3         NVARCHAR(1000), 
       Website4         NVARCHAR(1000), 
+      AIOBT            NVARCHAR(200),
+      SOP              NVARCHAR(200),
       MatchStatus      NVARCHAR(15), 
       IsMinorMatch     BIT, 
       MinorBettypeId   INT, 
@@ -150,6 +153,8 @@ AS
       Website2, 
       Website3, 
       Website4, 
+      AIOBT,
+      SOP,
       MatchStatus, 
       IsMinorMatch, 
       MinorBettypeId, 
@@ -182,6 +187,8 @@ AS
                    mi.Website2, 
                    mi.Website3, 
                    mi.Website4, 
+                   mi.AIOBT,
+                   mi.SOP,
                    dbo.OWP_GetCurrentMatchStatus(om.EventDate, om.KickOffTime, mi.MatchStatus),
                    CASE
                        WHEN minor.MinorMatchId IS NULL
@@ -311,6 +318,8 @@ AS
             ml.Website2, 
             ml.Website3, 
             ml.Website4, 
+            ml.AIOBT,
+            ml.SOP,
             ml.MatchStatus, 
             ml.IsMinorMatch, 
             ml.MinorBettypeId, 

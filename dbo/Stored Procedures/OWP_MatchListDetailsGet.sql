@@ -32,6 +32,7 @@ AS;
 	20231026@los: sync round - [Redmine: #193810]
 	20231116@Mira: get off VR - [Redmine: #194500]
 	20240401@los: get AgentEst, RemarkEst, RemarkBy - [Redmine: #202819]
+	20251013@los: Get SPO, AIO BT - [Redmine: #238851]
 */
 BEGIN
 	SET NOCOUNT ON
@@ -119,7 +120,9 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,InfoSiteMatchId INT
 		,IsNeutral BIT
 		,IsLive           BIT
-		,ParentInfoSiteId INT 
+		,ParentInfoSiteId INT
+		,AIOBT NVARCHAR(2000)
+		,SOP NVARCHAR(MAX)
 		)
 
 	INSERT INTO #owpMatchListByDate (
@@ -157,6 +160,8 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,IsNeutral
 		,IsLive
 		,ParentInfoSiteId
+		,AIOBT
+		,SOP
 		)
 	SELECT om.OWPMatchId
 		,om.MatchNo
@@ -206,6 +211,8 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
             THEN om.InfoSiteMatchId
             ELSE mp.InfoSiteMatchId
             END
+		,mi.AIOBT
+		,mi.SOP
 	FROM dbo.OWPMatch AS om WITH (NOLOCK)
 		INNER JOIN dbo.MatchInfo AS mi WITH (NOLOCK) ON om.OWPMatchId = mi.OWPMatchId
 		LEFT JOIN dbo.MinorMatch AS minor WITH (NOLOCK) ON om.OWPMatchId = minor.MinorMatchId
@@ -293,6 +300,8 @@ DECLARE @FromDate DATETIME= DATEADD(DAY, DATEDIFF(DAY, 0, @EventDate), '12:00:00
 		,ml.IsLive 
 		,imn.AdminSiteMatchId 'ParentAdminSiteId'
 		,ma.TeamRound
+		,ml.AIOBT
+		,ml.SOP
 	FROM #owpMatchListByDate AS ml WITH (NOLOCK)
 		INNER JOIN dbo.OWPLeague AS l WITH (NOLOCK) ON ml.OWPLeagueId = l.OWPLeagueId
 		INNER JOIN dbo.OWPTeam AS h WITH (NOLOCK) ON ml.OWPHomeId = h.OWPTeamId
