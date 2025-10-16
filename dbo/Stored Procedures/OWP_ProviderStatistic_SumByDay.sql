@@ -11,7 +11,8 @@ Task : Provider statistics
 DB: bodb_OWP
 
 Revisions:
-	:20250516@Los: Sum provider statistic - [Redmine: #225395]
+	20250516@Los: Sum provider statistic - [Redmine: #225395]
+    20251016@Los.Nguyen: Ignore league Fantasy + Testing - [Redmine: #241854]
 	
 */
 
@@ -39,7 +40,9 @@ Revisions:
                FROM dbo.OWPMatch AS om WITH(NOLOCK)
                     INNER JOIN dbo.MatchAgentConfirm AS ma WITH(NOLOCK) ON ma.OWPMatchId = om.OWPMatchId
                     INNER JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = ma.AgentId
+                    INNER JOIN OWPLeague AS l WITH(NOLOCK) ON om.OWPLeagueId = l.OWPLeagueId
                WHERE om.EventDateTime BETWEEN @TimeStart AND @TimeEnd
+               AND l.OWPLeagueName NOT LIKE '%FANTASY%' AND l.OWPLeagueName NOT LIKE '%TESTING%'
                UNION
                SELECT DISTINCT CASE
                           WHEN CAST(om_old.EventDateTime AS TIME) < '12:00:00'
@@ -51,7 +54,9 @@ Revisions:
                FROM dbo.OWPMatch_Old AS om_old WITH(NOLOCK)
                     INNER JOIN dbo.MatchAgentConfirm AS ma WITH(NOLOCK) ON ma.OWPMatchId = om_old.OWPMatchId
                     INNER JOIN AgentOption AS ao WITH(NOLOCK) ON ao.AgentId = ma.AgentId
-               WHERE om_old.EventDateTime BETWEEN @TimeStart AND @TimeEnd;
+                    INNER JOIN OWPLeague AS l WITH(NOLOCK) ON om_old.OWPLeagueId = l.OWPLeagueId
+               WHERE om_old.EventDateTime BETWEEN @TimeStart AND @TimeEnd
+                AND l.OWPLeagueName NOT LIKE '%FANTASY%' AND l.OWPLeagueName NOT LIKE '%TESTING%';
 
         SELECT AgentId, 
                EventDate, 
