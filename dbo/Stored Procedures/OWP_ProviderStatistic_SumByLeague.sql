@@ -11,8 +11,8 @@ Task : Provider statistics
 DB: bodb_OWP
 
 Revisions:
-	:20250516@Lilac.Nguyen: Sum provider statistic by league - [Redmine: #225395]
-	
+	20250516@Lilac.Nguyen: Sum provider statistic by league - [Redmine: #225395]
+	20251016@Los.Nguyen: Ignore league Fantasy + Testing - [Redmine: #241854]
 */
 
     BEGIN
@@ -57,7 +57,7 @@ Revisions:
 			ON ma.OWPMatchId = o.OWPMatchId
 		LEFT JOIN dbo.AgentOption AS ao WITH (NOLOCK) 
 			ON ao.AgentId = ma.AgentId
-		
+		WHERE l.OWPLeagueName NOT LIKE '%FANTASY%' AND l.OWPLeagueName NOT LIKE '%TESTING%'
 		GROUP BY 
 			l.OWPLeagueId,
 			l.OWPLeagueName,
