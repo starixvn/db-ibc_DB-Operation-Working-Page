@@ -78,7 +78,7 @@ AS
 			   epc.Id 'ChildMatchId',
 			   epc.MinorBettypeId ,
                epc.MaxbetHdp 'MaxbetHdp', 
-			   epc.MaxbetOU 'MaxbetOU', 
+			   epc.MaxbetOU 'MaxbetOu', 
                epc.SpreadHdp 'SpreadHdp', 
                epc.SpreadOu 'SpreadOu', 
                epc.NoOfHDP 'NoOfHDP'
