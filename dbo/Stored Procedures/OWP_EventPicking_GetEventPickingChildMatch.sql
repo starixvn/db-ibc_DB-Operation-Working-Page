@@ -15,6 +15,7 @@ AS
 	20241209@Frankie : Update League Category - [Feature: #214351]
 	20250113@Frankie : get RoundConfirm - [Feature: #213482]
 	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
+	20251022@Hank: Insert MaxbetOU into EventPickingChildMatch - [Redmine: #238985]
 */
 
     BEGIN
@@ -77,6 +78,7 @@ AS
 			   epc.Id 'ChildMatchId',
 			   epc.MinorBettypeId ,
                epc.MaxbetHdp 'MaxbetHdp', 
+			   epc.MaxbetOU 'MaxbetOU', 
                epc.SpreadHdp 'SpreadHdp', 
                epc.SpreadOu 'SpreadOu', 
                epc.NoOfHDP 'NoOfHDP'
