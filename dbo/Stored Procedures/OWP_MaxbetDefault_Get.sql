@@ -12,6 +12,7 @@ DB: bodb_OWP
 Revisions:
 	20220822@Mira: SP get maxbet default value - [Redmine: #176781]
 	20220915@Mira: add condition het last update - [Redmine: #176781]
+    20251020@Los: Get spread value - [Redmine: #241435]
 */
 
     BEGIN
@@ -32,6 +33,12 @@ Revisions:
                TotalBooking_1H_HDP, 
                TotalBooking_1H_OU, 
                NextBooking_FT_HDP, 
+               NoOfCorner_FT_Spread_HDP,
+	           NoOfCorner_FT_Spread_OU,
+	           NextCorner_FT_Spread_HDP,
+	           TotalBooking_FT_Spread_HDP,
+	           TotalBooking_FT_Spread_OU,
+	           NextBooking_FT_Spread_HDP,
                rrm.Value 'SecondAccept_Main', 
                rrc.Value 'SecondAccept_Corner', 
                rrt.Value 'SecondAccept_TotalBooking', 
@@ -48,7 +55,7 @@ Revisions:
                                                               AND rrf.RefName = 'MatchOffer'
              OUTER APPLY
         (
-            SELECT TOP 1 *
+            SELECT TOP 1 u.Username
             FROM dbo.UserLog ul
                  LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ul.CreatorId
             WHERE ul.ObjectId = ms.FT_HDP
