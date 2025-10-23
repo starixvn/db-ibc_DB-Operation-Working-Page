@@ -55,7 +55,7 @@ Revisions:
                                                               AND rrf.RefName = 'MatchOffer'
              OUTER APPLY
         (
-            SELECT TOP 1 *
+            SELECT TOP 1 u.Username
             FROM dbo.UserLog ul
                  LEFT JOIN dbo.[User] u WITH(NOLOCK) ON u.UserId = ul.CreatorId
             WHERE ul.ObjectId = ms.FT_HDP
