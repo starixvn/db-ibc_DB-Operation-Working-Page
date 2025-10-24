@@ -12,4 +12,8 @@ use bodb_OWP
 go
 
 ALTER TABLE  EventPickingChildMatch
-ADD MaxbetOU MONEY NULL
+ADD MaxbetOU MONEY NULL;
+
+
+ALTER TABLE  EventPicking
+ADD MaxbetOu MONEY NULL;
