@@ -51,7 +51,8 @@ AS
         (
             SELECT e.InfoSiteMatchId, 
                    e.MaxbetHdp, 
-                   e.NoOfHDP, 
+				   e.MaxbetOu,
+                   e.NoOfHDP,
                    e.SpreadHdp, 
                    e.SpreadOu,
 				   e.LSTNote,
@@ -64,6 +65,7 @@ AS
         UPDATE e
           SET 
               MaxbetHdp = temp.MaxbetHdp, 
+			  MaxbetOu = temp.MaxbetOu,
               SpreadHdp = temp.SpreadHdp, 
               SpreadOu = temp.SpreadOu, 
               NoOfHDP = temp.NoOfHDP,
@@ -74,6 +76,7 @@ AS
         INSERT INTO EventPicking
         (InfositeMatchId, 
          MaxbetHdp, 
+		 MaxbetOu,
          SpreadHdp, 
          SpreadOu, 
          NoOfHDP,
@@ -82,6 +85,7 @@ AS
         )
                SELECT temp.InfositeMatchId, 
                       temp.MaxbetHdp, 
+					  temp.MaxbetOu,
                       temp.SpreadHdp, 
                       temp.SpreadOu, 
                       temp.NoOfHDP,
@@ -96,6 +100,7 @@ AS
         (
             SELECT t.InfoSiteMatchId, 
                    t.MaxbetHdp, 
+				   t.MaxbetOu,
                    t.NoOfHDP, 
                    t.SpreadHdp, 
                    t.SpreadOu,

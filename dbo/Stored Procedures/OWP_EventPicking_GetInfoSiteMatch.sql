@@ -25,6 +25,7 @@ Revisions:
 	20250210@Frankie : get ispostponed - [Feature: #216746]
 	20250220@Los : exclude IDOL CHAMPIONSHIP (Including Penalty Shoot-out Results)  - [Feature: #217894]
 	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
+	20251024@Hank: get MaxbetOu - [Redmine: #238985]
 */
 
     BEGIN
@@ -82,6 +83,7 @@ Revisions:
                im.IsHomeBlackList, 
                im.IsAwayBlackList, 
                ep.MaxbetHdp 'MaxbetHdp', 
+               ep.MaxbetOu 'MaxbetOu', 
                ep.SpreadHdp 'SpreadHdp', 
                ep.SpreadOu 'SpreadOu', 
                ep.NoOfHDP 'NoOfHDP', 
