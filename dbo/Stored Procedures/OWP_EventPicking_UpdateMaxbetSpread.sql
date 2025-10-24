@@ -23,6 +23,7 @@ AS
          SpreadOu        MONEY, 
          SpreadHdp       MONEY, 
          MaxbetHdp       MONEY, 
+         MaxbetOu        MONEY,
          NoOfHDP         NVARCHAR(2000),
 		 LstNote		 NVARCHAR(2000),
 		 Remark2		 NVARCHAR(2000)
@@ -32,6 +33,7 @@ AS
          SpreadOu, 
          SpreadHdp, 
          MaxbetHdp, 
+         MaxbetOu,
          NoOfHDP,
 		 LstNote,
 		 Remark2
@@ -40,10 +42,11 @@ AS
                       NULLIF(SpreadOu, ''), 
                       NULLIF(SpreadHdp, ''), 
                       NULLIF(MaxbetHdp, ''), 
+					  NULLIF(MaxbetOu, ''), 
 					  NoOfHDP,
 					  LstNote,
 					  Remark2LeagueManagement
-              FROM OPENJSON(@TargetJson) WITH(InfoSiteMatchId INT, SpreadOu NVARCHAR(2000), SpreadHdp NVARCHAR(2000), MaxbetHdp NVARCHAR(2000), NoOfHDP NVARCHAR(2000), LstNote NVARCHAR(2000), Remark2LeagueManagement NVARCHAR(2000));
+              FROM OPENJSON(@TargetJson) WITH(InfoSiteMatchId INT, SpreadOu NVARCHAR(2000), SpreadHdp NVARCHAR(2000), MaxbetHdp NVARCHAR(2000), MaxbetOu NVARCHAR(2000), NoOfHDP NVARCHAR(2000), LstNote NVARCHAR(2000), Remark2LeagueManagement NVARCHAR(2000));
       
         DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX), @ActionName NVARCHAR(MAX);
         SET @StartRun = GETDATE();
