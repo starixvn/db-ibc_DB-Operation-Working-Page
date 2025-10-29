@@ -12,7 +12,7 @@ AS
  
  Revisions:
     20240809@Johnny: Init sp  - [Redmine: #207942]
-    20251023@Assistant: Modified to use XML model handling for ChildMatchModel - [Redmine: #238985]
+    20251023@Hank: Modified to use XML model handling for ChildMatchModel - [Redmine: #238985]
 
 */
 
