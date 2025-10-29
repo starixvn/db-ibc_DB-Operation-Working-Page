@@ -1,8 +1,7 @@
 
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_EventPicking_AddSpecialProduct]	@ParentId       VARCHAR(MAX), 
-															@MinorBettypeId VARCHAR(MAX), 
+ALTER PROCEDURE [dbo].[OWP_EventPicking_AddSpecialProduct]	@ChildMatches XML, 
 															@ActorId        INT
 AS
 
@@ -13,61 +12,94 @@ AS
  
  Revisions:
     20240809@Johnny: Init sp  - [Redmine: #207942]
+    20251023@Hank: Modified to use XML model handling for ChildMatchModel - [Redmine: #238985]
 
 */
 
     BEGIN
         SET NOCOUNT ON;
 
-		DECLARE @parentIdWithMinorBettypeId TABLE
-		(
-		 ParentMatchId  INT, 
-         MinorBettypeId INT
-		);
-		
+        DECLARE @idoc INT
+
+        EXEC sp_xml_preparedocument @idoc OUTPUT, @ChildMatches
+
+        CREATE TABLE #tblChildMatchData (
+            ParentId       INT, 
+            MinorBettypeId INT, 
+            NoOfHDP        NVARCHAR(50), 
+            MaxbetHdp      MONEY, 
+            MaxbetOu       MONEY,
+            SpreadHdp      MONEY, 
+            SpreadOu       MONEY
+        )
+
+        INSERT INTO #tblChildMatchData (
+            ParentId,
+            MinorBettypeId,
+            NoOfHDP,
+            MaxbetHdp,
+            MaxbetOu,
+            SpreadHdp,
+            SpreadOu
+        )
+        SELECT 
+            ParentId,
+            MinorBettypeId,
+            NULLIF(NoOfHDP, '') AS NoOfHDP,
+            NULLIF(MaxbetHdp, '') AS MaxbetHdp,
+            NULLIF(MaxbetOu, '') AS MaxbetOu,
+            NULLIF(SpreadHdp, '') AS SpreadHdp,
+            NULLIF(SpreadOu, '') AS SpreadOu
+        FROM OPENXML(@idoc, '/Root/SpecialProductMaxbetSpread', 1) WITH (
+            ParentId       INT,
+            MinorBettypeId INT,
+            NoOfHDP        NVARCHAR(50),
+            MaxbetHdp      MONEY,
+            MaxbetOu       MONEY,
+            SpreadHdp      MONEY,
+            SpreadOu       MONEY
+        )
+
+        EXEC sp_xml_removedocument @idoc
+
         DECLARE @tempAdd TABLE
         (Id             INT IDENTITY(1, 1), 
-         ParentMatchId  INT, 
+         ParentId       INT, 
          MinorBettypeId INT, 
          NoOfHDP        MONEY, 
-         MaxbetHDP      MONEY, 
-         SpreadHDP      MONEY, 
-         SpreadOU       MONEY
+         MaxbetHdp      MONEY, 
+         MaxbetOu       MONEY,
+         SpreadHdp      MONEY, 
+         SpreadOu       MONEY
         );
 
-		INSERT INTO @parentIdWithMinorBettypeId (ParentMatchId, MinorBettypeId)
-		SELECT p.[value], m.[value]
-		FROM STRING_SPLIT(@ParentId, ',') AS p
-		CROSS JOIN STRING_SPLIT(@MinorBettypeId, ',') AS m;
-
-		INSERT INTO @tempAdd(ParentMatchId, MinorBettypeId, NoOfHDP, MaxbetHDP, SpreadHDP, SpreadOU)
-		SELECT pa.ParentMatchId,
-			   pa.MinorBettypeId,
-			   NULL,
-			   NULL,
-			   NULL,
-			   NULL
-		FROM   @parentIdWithMinorBettypeId AS pa
-		WHERE  pa.ParentMatchId IN (SELECT e.ParentId FROM EventPickingChildMatch e WITH(NOLOCK)) 
-		AND    pa.MinorBettypeId NOT IN(SELECT e.MinorBettypeId FROM EventPickingChildMatch e WITH(NOLOCK) WHERE e.ParentId = pa.ParentMatchId)
-		UNION
-		SELECT pa.ParentMatchId,
-			   pa.MinorBettypeId,
-			   NULL,
-			   NULL,
-			   NULL,
-			   NULL
-		FROM   @parentIdWithMinorBettypeId AS pa
-		LEFT   JOIN EventPickingChildMatch AS e WITH(NOLOCK) ON pa.ParentMatchId != e.ParentId
-		WHERE  pa.ParentMatchId NOT IN (SELECT e.ParentId FROM EventPickingChildMatch e WITH(NOLOCK))
-		INSERT INTO EventPickingChildMatch(ParentId, MinorBettypeId, NoOfHDP, MaxbetHDP, SpreadHDP, SpreadOU)
-		SELECT ParentMatchId,
-			   MinorBettypeId,
-			   NoOfHDP,
-			   MaxbetHDP,
-			   SpreadHDP,
-			   SpreadOU
-		FROM   @tempAdd
+		INSERT INTO @tempAdd(ParentId, MinorBettypeId, NoOfHDP, MaxbetHdp, MaxbetOu, SpreadHdp, SpreadOu)
+		SELECT 
+			cmd.ParentId,
+			cmd.MinorBettypeId,
+			cmd.NoOfHDP,
+			cmd.MaxbetHdp,
+			cmd.MaxbetOu,
+			cmd.SpreadHdp,
+			cmd.SpreadOu
+		FROM #tblChildMatchData AS cmd
+		WHERE NOT EXISTS (
+			SELECT 1 
+			FROM EventPickingChildMatch e WITH(NOLOCK) 
+			WHERE e.ParentId = cmd.ParentId 
+			AND e.MinorBettypeId = cmd.MinorBettypeId
+		)
+		
+        -- Insert data into main table
+        INSERT INTO EventPickingChildMatch(ParentId, MinorBettypeId, NoOfHDP, MaxbetHDP, MaxbetOU, SpreadHDP, SpreadOU)
+        SELECT ParentId,
+               MinorBettypeId,
+               NoOfHDP,
+               MaxbetHdp,
+               MaxbetOu,
+               SpreadHdp,
+               SpreadOu
+        FROM   @tempAdd
 		-- Log the operation
 		DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @LogSettingDataOld NVARCHAR(MAX), @XmlSettingOld XML, @XmlSettingNew XML, @LogInfoDataOld NVARCHAR(MAX), @LogInfoData NVARCHAR(MAX), @XmlInfoOld XML, @XmlInfoNew XML;
         SET @StartRun = GETDATE();
@@ -79,14 +111,15 @@ AS
             BEGIN
                 SET @XmlSettingOld =
                 (
-                    SELECT l.ParentMatchId, 
+                    SELECT l.ParentId, 
                            l.MinorBettypeId, 
                            l.NoOfHDP, 
-                           l.MaxbetHDP, 
-                           l.SpreadHDP, 
-                           l.SpreadOU
+                           l.MaxbetHdp, 
+                           l.MaxbetOu,
+                           l.SpreadHdp, 
+                           l.SpreadOu
                     FROM @tempAdd AS l
-                    WHERE Id = @LoopCounter FOR XML PATH('z'), ROOT('r')
+                    WHERE Id = @LoopCounter FOR XML PATH('SpecialProductMaxbetSpread'), ROOT('SpecialProductMaxbetSpreads')
                 );
                 SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
                 SET @EndRun = GETDATE();
@@ -101,4 +134,7 @@ AS
                      @DataOld = NULL;
                 SET @LoopCounter = @LoopCounter + 1;
             END;
+            
+        -- Clean up temp table
+        DROP TABLE #tblChildMatchData
     END;

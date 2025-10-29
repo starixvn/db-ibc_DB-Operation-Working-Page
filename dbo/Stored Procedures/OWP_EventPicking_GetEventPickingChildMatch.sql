@@ -15,6 +15,8 @@ AS
 	20241209@Frankie : Update League Category - [Feature: #214351]
 	20250113@Frankie : get RoundConfirm - [Feature: #213482]
 	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
+	20251022@Hank: Insert MaxbetOU into EventPickingChildMatch - [Redmine: #238985]
+    20251028@Frankie: Get field IsSync - [Redmine: #238985]
 */
 
     BEGIN
@@ -77,9 +79,19 @@ AS
 			   epc.Id 'ChildMatchId',
 			   epc.MinorBettypeId ,
                epc.MaxbetHdp 'MaxbetHdp', 
+			   epc.MaxbetOU 'MaxbetOu', 
                epc.SpreadHdp 'SpreadHdp', 
                epc.SpreadOu 'SpreadOu', 
-               epc.NoOfHDP 'NoOfHDP'
+               epc.NoOfHDP 'NoOfHDP',
+               CASE
+				   WHEN epc.MaxbetHdp IS NULL
+						AND epc.MaxbetOU IS NULL
+						AND epc.SpreadHdp IS NULL
+						AND epc.SpreadOu IS NULL
+						AND epc.NoOfHDP IS NULL
+				   THEN 0
+				   ELSE 1
+			   END AS IsSync
         FROM EventPickingChildMatch epc WITH(NOLOCK)
              INNER JOIN dbo.InfoSiteMatch AS im WITH(NOLOCK) ON epc.ParentId = im.InfoSiteMatchId
              LEFT JOIN dbo.OWPLeague AS l WITH(NOLOCK) ON l.OWPLeagueId = im.OWPLeagueId

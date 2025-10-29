@@ -11,7 +11,7 @@ ALTER PROCEDURE [dbo].[OWP_EventPicking_SpecialProduct_UpdateMaxbetSpread] @Targ
  
  Revisions:
     20240813@Los: update events   - [Redmine: #207942]
-
+    20251023@Frankie : add field maxbetou- [Feature: #238985]
 */
 
 AS
@@ -24,6 +24,7 @@ AS
          SpreadOu        MONEY, 
          SpreadHdp       MONEY, 
          MaxbetHdp       MONEY, 
+		 MaxbetOu		 MONEY, 
          NoOfHDP         NVARCHAR(2000)
         );
         INSERT INTO #tbltemp
@@ -32,6 +33,7 @@ AS
          SpreadOu, 
          SpreadHdp, 
          MaxbetHdp, 
+		 MaxbetOu,
          NoOfHDP
         )
                SELECT ParentId,
@@ -39,8 +41,9 @@ AS
                       NULLIF(SpreadOu, ''), 
                       NULLIF(SpreadHdp, ''), 
                       NULLIF(MaxbetHdp, ''), 
+					  NULLIF(MaxbetOu, ''), 
 					  NoOfHDP
-              FROM OPENJSON(@TargetJson) WITH(ParentId INT, MinorBettypeId INT, SpreadOu NVARCHAR(2000), SpreadHdp NVARCHAR(2000), MaxbetHdp NVARCHAR(2000), NoOfHDP NVARCHAR(2000));
+              FROM OPENJSON(@TargetJson) WITH(ParentId INT, MinorBettypeId INT, SpreadOu NVARCHAR(2000), SpreadHdp NVARCHAR(2000), MaxbetHdp NVARCHAR(2000), MaxbetOu NVARCHAR(2000), NoOfHDP NVARCHAR(2000));
       
         DECLARE @StartRun DATETIME, @EndRun DATETIME, @Duration INT, @XmlLogOld XML, @XmlLogNew XML, @LogOld NVARCHAR(MAX), @LogNew NVARCHAR(MAX), @ActionName NVARCHAR(MAX);
         SET @StartRun = GETDATE();
@@ -49,6 +52,7 @@ AS
             SELECT e.ParentId 'ParentMatchId',
 			e.MinorBettypeId,
                    e.MaxbetHdp, 
+				   e.MaxbetOu, 
                    e.NoOfHDP, 
                    e.SpreadHdp, 
                    e.SpreadOu
@@ -60,6 +64,7 @@ AS
         UPDATE e
           SET 
               MaxbetHdp = temp.MaxbetHdp, 
+			  MaxbetOu = temp.MaxbetOu, 
               SpreadHdp = temp.SpreadHdp, 
               SpreadOu = temp.SpreadOu, 
               NoOfHDP = temp.NoOfHDP
@@ -73,6 +78,7 @@ AS
             SELECT t.ParentId 'ParentMatchId',
 			t.MinorBettypeId,
                    t.MaxbetHdp, 
+				   t.MaxbetOu, 
                    t.NoOfHDP, 
                    t.SpreadHdp, 
                    t.SpreadOu
