@@ -1,8 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_GetAssignments_ByMatch] @OwpMatchId INT, 
-                                                     @MatchStatusIds NVARCHAR(100) = NULL
+CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_GetAssignments_ByMatch] @InfoSiteMatchId INT
 AS
 
 /*
@@ -15,6 +14,8 @@ AS
 */
 
      SET NOCOUNT ON;
+
+     -- Return assignments for main match only (exclude minor matches)
      SELECT a.AssignmentId, 
             a.OWPMatchId, 
             a.Bettype,
@@ -22,6 +23,7 @@ AS
             u.Username, 
             u.Nickname, 
             a.AssignmentNote
-     FROM dbo.Assignment AS a
-     INNER JOIN dbp.[User] u ON a.UserId = u.UserId
-     WHERE a.OWPMatchId = @OwpMatchId
+     FROM dbo.Assignment AS a WITH(NOLOCK)
+          INNER JOIN dbo.OWPMatch AS om WITH(NOLOCK) ON a.OWPMatchId = om.OWPMatchId
+          LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
+     WHERE om.InfoSiteMatchId = @InfoSiteMatchId;
