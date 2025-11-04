@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_GetAssignment_ByMatch] @OwpMatchId INT      DATE, 
+CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_GetAssignments_ByMatch] @OwpMatchId INT, 
                                                      @MatchStatusIds NVARCHAR(100) = NULL
 AS
 
