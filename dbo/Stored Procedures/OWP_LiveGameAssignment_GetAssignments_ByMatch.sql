@@ -1,7 +1,7 @@
 ﻿
 /*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
-CREATE PROCEDURE [dbo].[OWP_LiveGameAssignment_GetAssignments_ByMatch] @InfoSiteMatchId INT
+ALTER PROCEDURE [dbo].[OWP_LiveGameAssignment_GetAssignments_ByMatch] @AdminSiteMatchId INT
 AS
 
 /*
@@ -26,4 +26,4 @@ AS
      FROM dbo.Assignment AS a WITH(NOLOCK)
           INNER JOIN dbo.OWPMatch AS om WITH(NOLOCK) ON a.OWPMatchId = om.OWPMatchId
           LEFT JOIN dbo.[User] AS u WITH(NOLOCK) ON a.UserId = u.UserId
-     WHERE om.InfoSiteMatchId = @InfoSiteMatchId;
+     WHERE om.MatchId = @AdminSiteMatchId;
