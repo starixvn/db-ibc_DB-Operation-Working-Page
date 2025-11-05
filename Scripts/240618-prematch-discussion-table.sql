@@ -24,17 +24,17 @@ CREATE TABLE PreMatchDiscussionInfo (
 	DiscussionId INT NOT NULL,
 	AdminSiteMatchId INT NOT NULL,
 	BetType INT NOT NULL,
-	RCDiscussionGroupId NVARCHAR(250) NULL,
+	RCDiscussionGroupId NVARCHAR(255) NULL,
 	BetOn NVARCHAR(100) NOT NULL,
 	HomeId INT NULL,
 	AwayId INT NULL,
 	GhostName NVARCHAR(100) NULL,
 	GhostDetail NVARCHAR(2000) NULL,
 	HdpOu MONEY NULL,
-	Odds NVARCHAR NULL,
+	Odds NVARCHAR(255) NULL,
 	Note NVARCHAR(MAX) NULL,
 	Remark NVARCHAR(MAX) NULL
 );
 
 CREATE INDEX idx_DiscussionId ON PreMatchDiscussionInfo(DiscussionId);
-CREATE INDEX idx_InfoSiteMatchId ON PreMatchDiscussionInfo(InfoSiteMatchId);
+CREATE INDEX idx_InfoSiteMatchId ON PreMatchDiscussionInfo(AdminSiteMatchId);
