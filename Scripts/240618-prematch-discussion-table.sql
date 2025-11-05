@@ -1,12 +1,12 @@
 ﻿/*<info serverAlias="DBOWP-bodb_OWP" executers="wsv_owp" isFunction="0"></info>*/
 
 /*
-Created: 20251017@Hank
-Task : Add columns to MaxbetSetting table for spread
+Created: 20251105@Hank
+Task : Create tables for pre-match discussion
 DB: bodb_OWP	
 
 Revisions:
-	 20251017@Hank: Add columns to MaxbetSetting table for spread - [Redmine: #241435]
+	 20251105@Hank: Create tables for pre-match discussion - [Redmine: #240618]
 */
 USE bodb_OWP
 GO
@@ -22,14 +22,16 @@ CREATE TABLE PreMatchDiscussion (
 CREATE TABLE PreMatchDiscussionInfo (
 	Id INT IDENTITY(1,1) PRIMARY KEY,
 	DiscussionId INT NOT NULL,
-	InfoSiteMatchId INT NOT NULL,
+	AdminSiteMatchId INT NOT NULL,
 	BetType INT NOT NULL,
-	RCDiscussionId INT NOT NULL,
+	RCDiscussionGroupId NVARCHAR(250) NULL,
 	BetOn NVARCHAR(100) NOT NULL,
-	GhostName NVARCHAR(100) NOT NULL,
-	GhostDetail NVARCHAR(2000) NOT NULL,
+	HomeId INT NULL,
+	AwayId INT NULL,
+	GhostName NVARCHAR(100) NULL,
+	GhostDetail NVARCHAR(2000) NULL,
 	HdpOu MONEY NULL,
-	Odds MONEY NULL,
+	Odds NVARCHAR NULL,
 	Note NVARCHAR(MAX) NULL,
 	Remark NVARCHAR(MAX) NULL
 );
