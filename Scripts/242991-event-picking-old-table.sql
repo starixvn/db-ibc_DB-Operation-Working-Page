@@ -13,7 +13,7 @@ GO
 
 CREATE TABLE EventPickingLog_Old
 (
-    Id INT IDENTITY(1,1) NOT NULL,
+    Id INT NOT NULL PRIMARY KEY,
     Date DATETIME NOT NULL,
     InfositeId INT NULL,
     UpdateTypeId INT NULL,
