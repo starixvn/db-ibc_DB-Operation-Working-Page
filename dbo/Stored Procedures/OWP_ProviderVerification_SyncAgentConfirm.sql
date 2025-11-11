@@ -15,6 +15,7 @@ Revisions:
 	20250515@Lilac.Nguyen: change confirm provider rule - [Redmine: #226465]
 	20250610@Lilac.Nguyen: change confirm provider rule - [Redmine: #227452]
 	20251002@Los: add new provider betrada2 - [Redmine: #240187]
+	20251110@Los: include rb2 id=10 - [Redmine: #243875]
 
 */
 
@@ -54,6 +55,7 @@ Revisions:
 				WHEN 3 THEN 1     -- 365GV
 				WHEN 15 THEN 5    -- IMG
 				WHEN 17 THEN 6    -- RB2
+				WHEN 10 THEN 6    -- RB2
 				WHEN 18 THEN 8    -- RTS
 				WHEN 19 THEN 3    -- BG
 				WHEN 20 THEN 2    -- Betradar
