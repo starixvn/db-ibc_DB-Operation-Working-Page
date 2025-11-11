@@ -13,6 +13,7 @@ GO
 
 CREATE TABLE PreMatchDiscussion (
 	Id INT IDENTITY(1,1) PRIMARY KEY,
+	IsIncludeTrader BIT NULL,
 	CreatedDate DATETIME NOT NULL DEFAULT GETDATE(),
 	CreatedBy INT NOT NULL,
 	UpdatedDate DATETIME NULL DEFAULT GETDATE(),
@@ -36,5 +37,5 @@ CREATE TABLE PreMatchDiscussionInfo (
 	Remark NVARCHAR(MAX) NULL
 );
 
-CREATE INDEX idx_DiscussionId ON PreMatchDiscussionInfo(DiscussionId);
-CREATE INDEX idx_InfoSiteMatchId ON PreMatchDiscussionInfo(AdminSiteMatchId);
+CREATE INDEX IX_DiscussionId ON PreMatchDiscussionInfo(DiscussionId);
+CREATE INDEX IX_AdminSiteMatchId ON PreMatchDiscussionInfo(AdminSiteMatchId);
