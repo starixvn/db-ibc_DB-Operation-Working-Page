@@ -33,7 +33,6 @@ ON [dbo].[EventPickingChildMatch] (
 [ParentId]
 ) 
 INCLUDE(
-	[Id],
 	[MinorBettypeId],
 	[MaxbetHdp],
 	[MaxbetOU],
