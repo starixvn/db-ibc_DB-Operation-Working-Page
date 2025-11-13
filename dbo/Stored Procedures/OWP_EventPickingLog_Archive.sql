@@ -15,38 +15,27 @@ AS
 
     BEGIN
         SET NOCOUNT ON;
-       
 
-        -- MOVE FileUpload
-        INSERT INTO EventPickingLog_Old
-        ([Id], 
-         [Date], 
-         [InfositeId], 
-         [UpdateTypeId], 
-         [ModifiedBy], 
-         [Action], 
-         [OldValue], 
-         [NewValue], 
-         [HomeUpdated], 
-         [AwayUpdated], 
-         [FromService]
+    DECLARE @BatchSize INT = 20000;
+    DECLARE @CutoffDate DATETIME = DATEADD(DAY, -40, @Date);
+
+    WHILE 1 = 1
+    BEGIN
+        WITH ToMove AS (
+            SELECT TOP (@BatchSize) *
+            FROM dbo.EventPickingLog WITH (ROWLOCK, READPAST)
+            WHERE [Date] < @CutoffDate
+            ORDER BY [Date]
         )
-        SELECT [Id], 
-               [Date], 
-               [InfositeId], 
-               [UpdateTypeId], 
-               [ModifiedBy], 
-               [Action], 
-               [OldValue], 
-               [NewValue], 
-               [HomeUpdated], 
-               [AwayUpdated], 
-               [FromService]
-        FROM dbo.EventPickingLog AS el WITH(NOLOCK)
-        WHERE DATEDIFF(DAY, el.Date, @Date) > 40;
+        INSERT INTO dbo.EventPickingLog_Old
+        SELECT * FROM ToMove;
 
-        -- DELETE EventPickingLog
-        DELETE FROM dbo.EventPickingLog
-        WHERE DATEDIFF(DAY, Date, @Date) > 40;
- 
-    END;
+        -- Delete those rows
+        DELETE FROM ToMove;
+
+        IF @@ROWCOUNT < @BatchSize BREAK;
+
+        WAITFOR DELAY '00:00:02';
+    END
+
+END;
