@@ -8,24 +8,27 @@ DB: bodb_OWP
   
 Revisions:  
  20251105@Hank: query discussion info  - [Redmine: #240618]  
+ 20251113@Hank: add CreatedBy column
 */
 BEGIN
     SET NOCOUNT ON;
-    SELECT [DiscussionId], 
-            [AdminSiteMatchId], 
-            [BetType], 
-            [RCDiscussionGroupId], 
-            [BetOn], 
-            [HomeId], 
-            [AwayId], 
-            [GhostName], 
-            [GhostDetail], 
-            [HdpOu], 
-            [Odds], 
-            [Note], 
-            [Remark]
-    FROM [dbo].[PreMatchDiscussionInfo] WITH(NOLOCK)
-    WHERE [AdminSiteMatchId] = @AdminSiteMatchId;
+    SELECT info.[DiscussionId], 
+            info.[AdminSiteMatchId], 
+            info.[BetType], 
+            info.[RCDiscussionGroupId], 
+            info.[BetOn], 
+            info.[HomeId], 
+            info.[AwayId], 
+            info.[GhostName], 
+            info.[GhostDetail], 
+            info.[HdpOu], 
+            info.[Odds], 
+            info.[Note], 
+            info.[Remark],
+            discussion.CreatedBy
+    FROM [dbo].[PreMatchDiscussionInfo] as info WITH(NOLOCK)
+    INNER JOIN [dbo].[PreMatchDiscussion]  as discussion WITH(NOLOCK) ON [info].[DiscussionId] = [discussion].[Id]
+    WHERE info.[AdminSiteMatchId] = @AdminSiteMatchId;
 
         SELECT om.AdminSiteMatchId AS AdminSiteMatchId,
                om.LeagueName,
