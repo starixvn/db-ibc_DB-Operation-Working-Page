@@ -58,7 +58,7 @@ AS
                l.[LSTNote], 
                l.[Remark2], 
                l.[Comment], 
-               l.[NoOfferLive],
+               ISNULL(l.[NoOfferLive], 0) AS NoOfferLive,
                o.OWPLeagueName, 
                ll.CategoryId 'LeagueGroupId', 
                rr.Value 'LeagueGroup'
