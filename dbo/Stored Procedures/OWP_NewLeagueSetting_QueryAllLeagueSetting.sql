@@ -71,6 +71,6 @@ AS
               AND o.OWPLeagueName LIKE '%' + @League + '%')
              OR (@IsEqualLeague = 1
                  AND o.OWPLeagueName = @League)
-        ORDER BY o.OWPLeagueName, 
-                 l.Id;
+        ORDER BY o.OWPLeagueName ASC, 
+                 l.Id ASC;
     END;
