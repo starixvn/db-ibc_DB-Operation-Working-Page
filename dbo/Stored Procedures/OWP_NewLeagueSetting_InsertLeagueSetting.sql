@@ -20,7 +20,7 @@ ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_InsertLeagueSetting] @LeagueSettingI
                                                                  @Remark2                  NVARCHAR(2000) = NULL, 
                                                                  @Comment                  NVARCHAR(2000) = NULL, 
                                                                  @FullConditionDescription NVARCHAR(2000) = NULL,
-																 @NoOfferLive              BIT
+																 @NoOfferLive              TINYINT
 AS
 
 /*      
@@ -96,7 +96,8 @@ AS
                             @LstNote, 
                             @Remark2, 
                             @Comment, 
-                            @FullConditionDescription
+                            @FullConditionDescription,
+                            @NoOfferLive
                FROM OWPLeague AS owpl WITH(NOLOCK)
                WHERE owpl.OWPLeagueName = @League;
         SELECT @LeagueSettingId = @@IDENTITY;
@@ -123,7 +124,8 @@ AS
                    l.[LSTNote], 
                    l.[Remark2], 
                    l.[Comment], 
-                   o.New_CategoryId 'LeagueGroupId'
+                   o.New_CategoryId 'LeagueGroupId',
+                   .NoOfferLive AS 'NoOfferLive'
             FROM LeagueManagementSetting l WITH(NOLOCK)
                  INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
             WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
