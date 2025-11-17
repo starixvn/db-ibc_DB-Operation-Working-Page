@@ -79,7 +79,8 @@ AS
          [LSTNote], 
          [Remark2], 
          [Comment], 
-         [FullConditionDescription]
+         [FullConditionDescription],
+         [NoOfferLive]
         )
                SELECT TOP 1 owpl.OWPLeagueId, 
                             @Spread_HDP_Value, 
@@ -123,9 +124,9 @@ AS
                    l.[WK_NoOfHDP_Note], 
                    l.[LSTNote], 
                    l.[Remark2], 
-                   l.[Comment], 
-                   o.New_CategoryId 'LeagueGroupId',
-                   .NoOfferLive AS 'NoOfferLive'
+                   l.[Comment],
+                   l.NoOfferLive AS 'NoOfferLive',
+                   o.New_CategoryId 'LeagueGroupId'
             FROM LeagueManagementSetting l WITH(NOLOCK)
                  INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
             WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
