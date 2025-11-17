@@ -17,6 +17,7 @@ AS
     20250822@Hank: Get league more short league, isblacklist, noofferlive- [Redmine: #234901]
 	20250822@Los: Get Remark2WD,Remark2WK - [Redmine: #237822]
 	20251002@Los: Remove Remark2WD,Remark2WK - [Redmine: #240366]
+	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
 */
 
     BEGIN

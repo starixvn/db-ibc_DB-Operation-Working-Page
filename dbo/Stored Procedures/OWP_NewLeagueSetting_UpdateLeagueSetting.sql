@@ -33,7 +33,7 @@ AS
 	20240707@Liam: Correct maxbet setting - [Redmine: #207941]
 	20250711@Hank: Update League Group into CategoryHistory - [Redmine: #232603]
 	20250821@Los: Update NoOfferLive, BlackList - [Redmine: #234901]
-
+	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
 */
 
     BEGIN
