@@ -39,7 +39,7 @@ AS
             l.OWPLeagueId, 
             o.OWPLeagueName 'League', 
             ISNULL(o.IsBlackList, 0) AS IsBlackList, 
-            ISNULL(o.NoOfferLive, 0) AS NoOfferLive, 
+            ISNULL(l.[NoOfferLive], 0) AS NoOfferLive,
             o.ShortLeague, 
             l.[FullConditionDescription], 
             l.[Spread_HDP] 'Spread_HDP_Value', 
