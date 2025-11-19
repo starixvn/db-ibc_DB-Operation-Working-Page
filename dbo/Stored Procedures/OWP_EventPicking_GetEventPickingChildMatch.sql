@@ -17,6 +17,8 @@ AS
 	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
 	20251022@Hank: Insert MaxbetOU into EventPickingChildMatch - [Redmine: #238985]
     20251028@Frankie: Get field IsSync - [Redmine: #238985]
+    20251119@Henry: get IsNoOffer from EventPickingNoOfferMatch - [Redmine: #239738]
+
 */
 
     BEGIN
@@ -60,11 +62,7 @@ AS
                im.Website2, 
                im.Website3, 
                im.Website4,
-               CASE
-                   WHEN us.Id IS NULL
-                   THEN l.NoOfferLive
-                   ELSE us.[IsNoOffer]
-               END AS 'IsNoOffer', 
+               us.[IsNoOffer] AS 'IsNoOffer',
                us.ChildMatchId, 
                im.IsTest AS IsTestMatch,
                CASE
