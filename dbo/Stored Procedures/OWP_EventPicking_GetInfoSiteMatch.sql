@@ -26,6 +26,7 @@ Revisions:
 	20250220@Los : exclude IDOL CHAMPIONSHIP (Including Penalty Shoot-out Results)  - [Feature: #217894]
 	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
 	20251024@Hank: get MaxbetOu - [Redmine: #238985]
+    20251119@Hank: get IsNoOffer from EventPickingNoOfferMatch - [Redmine: #239738]
 */
 
     BEGIN
@@ -66,11 +67,7 @@ Revisions:
                im.Website2, 
                im.Website3, 
                im.Website4,
-               CASE
-                   WHEN ofM.Id IS NULL
-                   THEN l.NoOfferLive
-                   ELSE ofM.[IsNoOffer]
-               END AS 'IsNoOffer', 
+               ofM.[IsNoOffer] AS 'IsNoOffer',
                ofM.ChildMatchId, 
                im.IsTest AS IsTestMatch,
                CASE
