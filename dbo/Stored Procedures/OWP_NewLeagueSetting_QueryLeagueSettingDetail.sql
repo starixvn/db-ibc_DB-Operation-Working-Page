@@ -13,6 +13,7 @@ AS
     20240429@Liam: Get new league Setting detail   - [Redmine: #202639]
     20250926@Hank: Add IsBlackList, NoOfferLive, ShortLeague, Remark2WD, Remark2WK - [Redmine: #236027]
 	20251002@Los: Remove Remark2WD,Remark2WK - [Redmine: #240366]
+	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
 
 */
 
@@ -39,7 +40,7 @@ AS
             l.OWPLeagueId, 
             o.OWPLeagueName 'League', 
             ISNULL(o.IsBlackList, 0) AS IsBlackList, 
-            ISNULL(o.NoOfferLive, 0) AS NoOfferLive, 
+            ISNULL(l.[NoOfferLive], 0) AS NoOfferLive,
             o.ShortLeague, 
             l.[FullConditionDescription], 
             l.[Spread_HDP] 'Spread_HDP_Value', 

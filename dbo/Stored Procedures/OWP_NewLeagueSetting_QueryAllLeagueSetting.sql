@@ -17,6 +17,7 @@ AS
     20250822@Hank: Get league more short league, isblacklist, noofferlive- [Redmine: #234901]
 	20250822@Los: Get Remark2WD,Remark2WK - [Redmine: #237822]
 	20251002@Los: Remove Remark2WD,Remark2WK - [Redmine: #240366]
+	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
 */
 
     BEGIN
@@ -42,7 +43,6 @@ AS
                l.OWPLeagueId, 
                o.OWPLeagueName 'League', 
                ISNULL(o.IsBlackList, 0) AS IsBlackList, 
-               ISNULL(o.NoOfferLive, 0) AS NoOfferLive, 
                o.ShortLeague, 
                l.[FullConditionDescription], 
                l.[Spread_HDP] 'Spread_HDP_Value', 
@@ -59,6 +59,7 @@ AS
                l.[LSTNote], 
                l.[Remark2], 
                l.[Comment], 
+               ISNULL(l.[NoOfferLive], 0) AS NoOfferLive,
                o.OWPLeagueName, 
                ll.CategoryId 'LeagueGroupId', 
                rr.Value 'LeagueGroup'
@@ -71,6 +72,6 @@ AS
               AND o.OWPLeagueName LIKE '%' + @League + '%')
              OR (@IsEqualLeague = 1
                  AND o.OWPLeagueName = @League)
-        ORDER BY o.OWPLeagueName, 
-                 l.Id;
+        ORDER BY o.OWPLeagueName ASC, 
+                 l.Id ASC;
     END;

@@ -20,7 +20,7 @@ ALTER PROCEDURE [dbo].[OWP_NewLeagueSetting_InsertLeagueSetting] @LeagueSettingI
                                                                  @Remark2                  NVARCHAR(2000) = NULL, 
                                                                  @Comment                  NVARCHAR(2000) = NULL, 
                                                                  @FullConditionDescription NVARCHAR(2000) = NULL,
-																 @NoOfferLive              BIT
+																 @NoOfferLive              TINYINT
 AS
 
 /*      
@@ -31,6 +31,7 @@ AS
  Revisions:
     20240801@Los: Insert league setting   - [Redmine: #207941]
 	20250821@Los: Update NoOfferLive, BlackList - [Redmine: #234901]
+	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
 
 */
 
@@ -79,7 +80,8 @@ AS
          [LSTNote], 
          [Remark2], 
          [Comment], 
-         [FullConditionDescription]
+         [FullConditionDescription],
+         [NoOfferLive]
         )
                SELECT TOP 1 owpl.OWPLeagueId, 
                             @Spread_HDP_Value, 
@@ -96,7 +98,8 @@ AS
                             @LstNote, 
                             @Remark2, 
                             @Comment, 
-                            @FullConditionDescription
+                            @FullConditionDescription,
+                            @NoOfferLive
                FROM OWPLeague AS owpl WITH(NOLOCK)
                WHERE owpl.OWPLeagueName = @League;
         SELECT @LeagueSettingId = @@IDENTITY;
@@ -122,7 +125,8 @@ AS
                    l.[WK_NoOfHDP_Note], 
                    l.[LSTNote], 
                    l.[Remark2], 
-                   l.[Comment], 
+                   l.[Comment],
+                   l.NoOfferLive AS 'NoOfferLive',
                    o.New_CategoryId 'LeagueGroupId'
             FROM LeagueManagementSetting l WITH(NOLOCK)
                  INNER JOIN OWPLeague o WITH(NOLOCK) ON l.OWPLeagueId = o.OWPLeagueId
