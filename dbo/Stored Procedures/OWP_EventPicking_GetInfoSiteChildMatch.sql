@@ -30,11 +30,7 @@ AS
                m.SubType, 
                m.MinorBettypeId, 
                EventDateTime,
-              CASE
-                   WHEN us.Id IS NULL
-                   THEN l.NoOfferLive
-                   ELSE us.[IsNoOffer]
-               END AS 'IsNoOffer', 
+               us.[IsNoOffer] AS 'IsNoOffer',
                m.ChildMatchId
         FROM InfoSiteChildMatch m WITH(NOLOCK)
              INNER JOIN dbo.OWPTeam h WITH(NOLOCK) ON m.OWPHomeId = h.OWPTeamId
