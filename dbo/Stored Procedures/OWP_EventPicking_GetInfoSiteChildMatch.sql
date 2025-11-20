@@ -13,6 +13,8 @@ AS
     20221102@Mira: Event picking new - [Redmine: #179302]
 	20240328@Johnny: reduce select match - [Redmine: #202638]
 	20250911@los: Event picking auto mark no offer  [Redmine: #236469]
+    20251120@Hank: get IsNoOffer from EventPickingNoOfferMatch - [Redmine: #239738]
+
 */
 
     BEGIN
