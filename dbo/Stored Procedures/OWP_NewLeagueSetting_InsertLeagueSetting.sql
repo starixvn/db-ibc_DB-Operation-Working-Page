@@ -32,6 +32,7 @@ AS
     20240801@Los: Insert league setting   - [Redmine: #207941]
 	20250821@Los: Update NoOfferLive, BlackList - [Redmine: #234901]
 	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
+    20251124@Hank: Remove NoOfferLive from OWPLeague - [Redmine: #239738]
 
 */
 
