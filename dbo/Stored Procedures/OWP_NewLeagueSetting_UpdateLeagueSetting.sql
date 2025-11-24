@@ -81,10 +81,6 @@ AS
                      @OWPLeagueId, 
                      @LeagueGroupId;
         END;
-        UPDATE OWPLeague
-          SET 
-              NoOfferLive = @NoOfferLive
-        WHERE OWPLeagueId = @OWPLeagueId;
         UPDATE LeagueManagementSetting
           SET 
               MaxbetWD_HDP = @MaxbetWD_HDP_Value, 

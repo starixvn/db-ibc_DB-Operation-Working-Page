@@ -57,8 +57,8 @@ AS
         ELSE
         BEGIN
             -- Insert new league
-            INSERT INTO OWPLeague (OWPLeagueName, New_CategoryId, NoOfferLive)
-            VALUES (@League, @LeagueGroupId, @NoOfferLive);
+            INSERT INTO OWPLeague (OWPLeagueName, New_CategoryId)
+            VALUES (@League, @LeagueGroupId);
             
             SELECT @OWPLeagueId = SCOPE_IDENTITY();
         END
