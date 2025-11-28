@@ -33,7 +33,7 @@ AS
 	20250821@Los: Update NoOfferLive, BlackList - [Redmine: #234901]
 	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
     20251124@Hank: Remove NoOfferLive from OWPLeague - [Redmine: #239738]
-
+    20251127@Frankie: Prevent League Group Override When Updating League Settings - [Redmine: #245405]
 */
 
     BEGIN
@@ -104,8 +104,6 @@ AS
                FROM OWPLeague AS owpl WITH(NOLOCK)
                WHERE owpl.OWPLeagueName = @League;
         SELECT @LeagueSettingId = @@IDENTITY;
-
-		EXEC dbo.OWP_OWPLeague_UpdateGroup @ActorId, @OWPLeagueId, @LeagueGroupId
 
         -- log new league setting 
         SET @XmlSettingNew =

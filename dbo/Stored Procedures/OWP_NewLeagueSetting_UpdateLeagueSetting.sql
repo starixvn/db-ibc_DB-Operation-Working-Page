@@ -35,6 +35,7 @@ AS
 	20250821@Los: Update NoOfferLive, BlackList - [Redmine: #234901]
 	20251117@Hank: Change NoofferLive from league to setting - [Redmine: #242201]
     20251124@Hank: Remove NoOfferLive from OWPLeague - [Redmine: #239738]
+    20251127@Frankie: Prevent League Group Override When Updating League Settings - [Redmine: #245405]
 */
 
     BEGIN
@@ -68,20 +69,7 @@ AS
             WHERE l.Id = @LeagueSettingId FOR XML PATH('z'), ROOT('r')
         );
         SET @LogSettingDataOld = REPLACE(CONVERT(NVARCHAR(MAX), @XmlSettingOld), '" />', '"/"');
-        IF NOT EXISTS
-        (
-            SELECT 1
-            FROM LeagueCategoryHistory
-            WHERE OWPLeagueId = @OWPLeagueId
-                  AND CategoryId = @LeagueGroupId
-                  AND EndDate IS NULL
-        )
-            BEGIN
-                EXEC dbo.OWP_OWPLeague_UpdateGroup 
-                     @ActorId, 
-                     @OWPLeagueId, 
-                     @LeagueGroupId;
-        END;
+
         UPDATE LeagueManagementSetting
           SET 
               MaxbetWD_HDP = @MaxbetWD_HDP_Value, 
